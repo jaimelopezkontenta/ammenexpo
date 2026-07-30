@@ -1,0 +1,146 @@
+{
+  "common": {
+    "appName": "Ammen",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "save": "Save",
+    "back": "Back",
+    "close": "Close",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "share": "Share",
+    "today": "Today",
+    "day": "Day {{number}}",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "language": "Language"
+  },
+  "tabs": {
+    "today": "Today",
+    "circle": "Circle",
+    "groups": "Groups",
+    "profile": "Profile"
+  },
+  "circle": {
+    "title": "Your circle",
+    "subtitle": "Plans from friends and groups you can pray for today.",
+    "empty": "Nobody in your circle yet. Share your plan or accept an invitation."
+  },
+  "profile": {
+    "title": "Your profile",
+    "subtitle": "Adjust your reminder, your language and your account."
+  },
+  "auth": {
+    "signInTitle": "Welcome back",
+    "signUpTitle": "Create your account",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "forgotPassword": "Forgot your password?",
+    "continueWithApple": "Continue with Apple",
+    "continueWithGoogle": "Continue with Google",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?"
+  },
+  "onboarding": {
+    "welcomeTitle": "Let's build your plan",
+    "welcomeBody": "Four quick questions so your prayer plan is truly yours.",
+    "nameQuestion": "What should we call you?",
+    "seasonQuestion": "What are you going through right now?",
+    "topicsQuestion": "What would you like to pray about?",
+    "timeQuestion": "When do you usually pray?",
+    "minutesQuestion": "How long do you want to spend each day?",
+    "finish": "Create my plan"
+  },
+  "plan": {
+    "todayTitle": "Today's prayer",
+    "scripture": "Scripture",
+    "prayer": "Prayer",
+    "reflection": "To reflect on",
+    "markDone": "I prayed today",
+    "markedDone": "You prayed today 🙏",
+    "streak": "{{count}} day streak",
+    "streak_other": "{{count}} day streak",
+    "locked": "This day opens on {{date}}",
+    "generating": "Preparing your plan…",
+    "generatingHint": "This takes a few seconds. Please keep the app open.",
+    "visibility": {
+      "private": "Just me",
+      "friends": "Chosen friends",
+      "group": "A group",
+      "link": "Anyone with the link"
+    }
+  },
+  "share": {
+    "title": "Share my plan",
+    "subtitle": "Whoever receives it can pray for you each day.",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "revoke": "Disable link",
+    "message": "I'm praying about {{theme}} for {{days}} days. Will you join me today?",
+    "previewTitle": "{{name}} is asking for prayer",
+    "previewCta": "I prayed for you",
+    "previewSignupHint": "Create your account in 10 seconds to let them know."
+  },
+  "intercession": {
+    "prayFor": "I prayed for you",
+    "prayedFor": "You already prayed for {{name}} today",
+    "whoPrayed": "Who prayed for you",
+    "nobodyYet": "Nobody has prayed today yet. Share your plan.",
+    "prayBack": "Pray for their plan"
+  },
+  "groups": {
+    "title": "Prayer groups",
+    "create": "Create group",
+    "name": "Group name",
+    "description": "Description",
+    "visibilityPrivate": "Private, invite only",
+    "visibilityPublic": "Public, anyone can find it",
+    "invite": "Invite",
+    "members": "{{count}} member",
+    "members_other": "{{count}} members",
+    "groupStreak": "Group streak: {{count}}",
+    "prayedToday": "Already prayed today",
+    "leave": "Leave group",
+    "report": "Report"
+  },
+  "feed": {
+    "title": "Requests",
+    "newPost": "Ask for prayer",
+    "anonymous": "Post anonymously",
+    "prayCount": "{{count}} person has prayed",
+    "prayCount_other": "{{count}} people have prayed",
+    "comment": "Comment",
+    "empty": "No requests yet. Be the first."
+  },
+  "testimony": {
+    "title": "Answered prayer",
+    "markAnswered": "Mark as answered",
+    "body": "Tell what happened",
+    "shareCard": "Share testimony"
+  },
+  "invite": {
+    "title": "Invite someone to pray with you",
+    "body": "Shared prayer carries further. Invite whoever comes to mind.",
+    "cta": "Invite friends"
+  },
+  "paywall": {
+    "title": "Ammen Plus",
+    "subtitle": "Unlimited plans generated for your season.",
+    "restore": "Restore purchase",
+    "subscribe": "Subscribe",
+    "freeNote": "Praying for others and groups are free forever."
+  },
+  "notifications": {
+    "prayedForYou": "{{name}} prayed for you — {{planTitle}}",
+    "dailyDigest": "{{count}} person prayed for you yesterday",
+    "dailyDigest_other": "{{count}} people prayed for you yesterday",
+    "reminder": "It's your time to pray",
+    "intercessorReminder": "Today is day {{day}} of {{name}}'s plan"
+  },
+  "button": {
+    "spanish": "Switch language to Spanish",
+    "english": "Switch language to English"
+  }
+}

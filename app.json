@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Ammen",
+    "slug": "ammen",
+    "version": "1.0.0",
+
+    "scheme": "ammen",
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-localization"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+
+      "tsconfigPaths": true
+    },
+
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+
+    "userInterfaceStyle": "light",
+
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    }
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "common": {
+    "appName": "Ammen",
+    "continue": "Continuar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "retry": "Reintentar",
+    "loading": "Cargando…",
+    "share": "Compartir",
+    "today": "Hoy",
+    "day": "Día {{number}}",
+    "errorGeneric": "Algo salió mal. Vuelve a intentarlo.",
+    "language": "Idioma"
+  },
+  "tabs": {
+    "today": "Hoy",
+    "circle": "Círculo",
+    "groups": "Grupos",
+    "profile": "Perfil"
+  },
+  "circle": {
+    "title": "Tu círculo",
+    "subtitle": "Planes de amigos y grupos por los que puedes orar hoy.",
+    "empty": "Todavía no hay nadie en tu círculo. Comparte tu plan o acepta una invitación."
+  },
+  "profile": {
+    "title": "Tu perfil",
+    "subtitle": "Ajusta tu recordatorio, tu idioma y tu cuenta."
+  },
+  "auth": {
+    "signInTitle": "Bienvenido de vuelta",
+    "signUpTitle": "Crea tu cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "signIn": "Entrar",
+    "signUp": "Crear cuenta",
+    "signOut": "Cerrar sesión",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "continueWithApple": "Continuar con Apple",
+    "continueWithGoogle": "Continuar con Google",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?"
+  },
+  "onboarding": {
+    "welcomeTitle": "Vamos a preparar tu plan",
+    "welcomeBody": "Cuatro preguntas rápidas para que tu plan de oración sea tuyo de verdad.",
+    "nameQuestion": "¿Cómo quieres que te llamemos?",
+    "seasonQuestion": "¿Qué estás viviendo ahora mismo?",
+    "topicsQuestion": "¿Por qué te gustaría orar?",
+    "timeQuestion": "¿A qué hora sueles orar?",
+    "minutesQuestion": "¿Cuánto tiempo quieres dedicarle al día?",
+    "finish": "Crear mi plan"
+  },
+  "plan": {
+    "todayTitle": "Tu oración de hoy",
+    "scripture": "Palabra",
+    "prayer": "Oración",
+    "reflection": "Para reflexionar",
+    "markDone": "Ya oré hoy",
+    "markedDone": "Oraste hoy 🙏",
+    "streak": "{{count}} día de racha",
+    "streak_other": "{{count}} días de racha",
+    "locked": "Este día se abre el {{date}}",
+    "generating": "Preparando tu plan…",
+    "generatingHint": "Esto tarda unos segundos. No cierres la app.",
+    "visibility": {
+      "private": "Solo para mí",
+      "friends": "Amigos elegidos",
+      "group": "Un grupo",
+      "link": "Cualquiera con el enlace"
+    }
+  },
+  "share": {
+    "title": "Compartir mi plan",
+    "subtitle": "Quien lo reciba podrá orar por ti cada día.",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado",
+    "revoke": "Desactivar enlace",
+    "message": "Estoy orando por {{theme}} estos {{days}} días. ¿Me acompañas hoy?",
+    "previewTitle": "{{name}} te pide oración",
+    "previewCta": "Oré por ti",
+    "previewSignupHint": "Crea tu cuenta en 10 segundos para avisarle."
+  },
+  "intercession": {
+    "prayFor": "Oré por ti",
+    "prayedFor": "Ya oraste por {{name}} hoy",
+    "whoPrayed": "Quién oró por ti",
+    "nobodyYet": "Todavía nadie ha orado hoy. Comparte tu plan.",
+    "prayBack": "Orar por su plan"
+  },
+  "groups": {
+    "title": "Grupos de oración",
+    "create": "Crear grupo",
+    "name": "Nombre del grupo",
+    "description": "Descripción",
+    "visibilityPrivate": "Privado, solo por invitación",
+    "visibilityPublic": "Público, cualquiera puede encontrarlo",
+    "invite": "Invitar",
+    "members": "{{count}} miembro",
+    "members_other": "{{count}} miembros",
+    "groupStreak": "Racha del grupo: {{count}}",
+    "prayedToday": "Ya oraron hoy",
+    "leave": "Salir del grupo",
+    "report": "Reportar"
+  },
+  "feed": {
+    "title": "Peticiones",
+    "newPost": "Pedir oración",
+    "anonymous": "Publicar en anónimo",
+    "prayCount": "{{count}} persona ha orado",
+    "prayCount_other": "{{count}} personas han orado",
+    "comment": "Comentar",
+    "empty": "Aún no hay peticiones. Sé el primero."
+  },
+  "testimony": {
+    "title": "Oración respondida",
+    "markAnswered": "Marcar como respondida",
+    "body": "Cuenta qué pasó",
+    "shareCard": "Compartir testimonio"
+  },
+  "invite": {
+    "title": "Invita a alguien a orar contigo",
+    "body": "La oración compartida sostiene más. Invita a quien te venga a la mente.",
+    "cta": "Invitar amigos"
+  },
+  "paywall": {
+    "title": "Ammen Plus",
+    "subtitle": "Planes ilimitados generados para tu momento.",
+    "restore": "Restaurar compra",
+    "subscribe": "Suscribirme",
+    "freeNote": "Orar por otros y los grupos son gratis para siempre."
+  },
+  "notifications": {
+    "prayedForYou": "{{name}} oró por ti — {{planTitle}}",
+    "dailyDigest": "Ayer {{count}} persona oró por ti",
+    "dailyDigest_other": "Ayer {{count}} personas oraron por ti",
+    "reminder": "Es tu momento de oración",
+    "intercessorReminder": "Hoy es el día {{day}} del plan de {{name}}"
+  },
+  "button": {
+    "spanish": "Cambiar idioma a español",
+    "english": "Cambiar idioma a inglés"
+  }
+}
