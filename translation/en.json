@@ -41,7 +41,17 @@
     "continueWithApple": "Continue with Apple",
     "continueWithGoogle": "Continue with Google",
     "noAccount": "Don't have an account?",
-    "hasAccount": "Already have an account?"
+    "hasAccount": "Already have an account?",
+    "emailPlaceholder": "you@email.com",
+    "passwordPlaceholder": "At least 8 characters",
+    "emailRequired": "Enter your email.",
+    "emailInvalid": "That email doesn't look valid.",
+    "passwordTooShort": "Your password needs at least 8 characters.",
+    "invalidCredentials": "Wrong email or password.",
+    "emailTaken": "An account with that email already exists.",
+    "checkEmail": "We sent you an email to confirm your account.",
+    "signUpIntro": "Join and let others pray with you.",
+    "signInIntro": "Good to see you again."
   },
   "onboarding": {
     "welcomeTitle": "Let's build your plan",
@@ -51,7 +61,38 @@
     "topicsQuestion": "What would you like to pray about?",
     "timeQuestion": "When do you usually pray?",
     "minutesQuestion": "How long do you want to spend each day?",
-    "finish": "Create my plan"
+    "finish": "Create my plan",
+    "step": "Step {{current}} of {{total}}",
+    "next": "Next",
+    "namePlaceholder": "Your name",
+    "topicsHint": "Pick as many as you like.",
+    "seasons": {
+      "grief": "Grief or loss",
+      "anxiety": "Anxiety",
+      "work": "Work",
+      "family": "Family",
+      "health": "Health",
+      "decision": "An important decision",
+      "gratitude": "Gratitude",
+      "faith": "Growing in faith"
+    },
+    "topics": {
+      "peace": "Peace",
+      "wisdom": "Wisdom",
+      "health": "Health",
+      "family": "Family",
+      "provision": "Provision",
+      "forgiveness": "Forgiveness",
+      "purpose": "Purpose",
+      "gratitude": "Gratitude"
+    },
+    "hours": {
+      "early": "Early, 6:00",
+      "morning": "Morning, 8:00",
+      "noon": "Midday, 12:00",
+      "evening": "Evening, 18:00",
+      "night": "Night, 21:00"
+    }
   },
   "plan": {
     "todayTitle": "Today's prayer",
@@ -81,7 +122,11 @@
     "message": "I'm praying about {{theme}} for {{days}} days. Will you join me today?",
     "previewTitle": "{{name}} is asking for prayer",
     "previewCta": "I prayed for you",
-    "previewSignupHint": "Create your account in 10 seconds to let them know."
+    "previewSignupHint": "Create your account in 10 seconds to let them know.",
+    "previewNotFound": "This link is no longer available.",
+    "previewNotFoundHint": "Whoever shared it may have turned it off.",
+    "viewPlan": "View the plan",
+    "alreadyMember": "I already have an account"
   },
   "intercession": {
     "prayFor": "I prayed for you",

@@ -14,7 +14,9 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "db:test": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/rls.sql"
+    "db:test": "npm run db:test:rls && npm run db:test:flows",
+    "db:test:rls": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/rls.sql",
+    "db:test:flows": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/flows.sql"
   },
   "dependencies": {
     "@expo/log-box": "^56.0.12",
@@ -23,6 +25,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/native": "^7.1.6",
     "@supabase/supabase-js": "^2.38.4",
+    "@tanstack/react-query": "^5.101.4",
     "expo": "~56.0.4",
     "expo-constants": "~56.0.15",
     "expo-font": "~56.0.5",

@@ -41,7 +41,17 @@
     "continueWithApple": "Continuar con Apple",
     "continueWithGoogle": "Continuar con Google",
     "noAccount": "¿No tienes cuenta?",
-    "hasAccount": "¿Ya tienes cuenta?"
+    "hasAccount": "¿Ya tienes cuenta?",
+    "emailPlaceholder": "tu@correo.com",
+    "passwordPlaceholder": "Mínimo 8 caracteres",
+    "emailRequired": "Escribe tu correo.",
+    "emailInvalid": "Ese correo no parece válido.",
+    "passwordTooShort": "La contraseña necesita al menos 8 caracteres.",
+    "invalidCredentials": "Correo o contraseña incorrectos.",
+    "emailTaken": "Ya existe una cuenta con ese correo.",
+    "checkEmail": "Te enviamos un correo para confirmar tu cuenta.",
+    "signUpIntro": "Únete y deja que otros oren contigo.",
+    "signInIntro": "Nos alegra verte de nuevo."
   },
   "onboarding": {
     "welcomeTitle": "Vamos a preparar tu plan",
@@ -51,7 +61,38 @@
     "topicsQuestion": "¿Por qué te gustaría orar?",
     "timeQuestion": "¿A qué hora sueles orar?",
     "minutesQuestion": "¿Cuánto tiempo quieres dedicarle al día?",
-    "finish": "Crear mi plan"
+    "finish": "Crear mi plan",
+    "step": "Paso {{current}} de {{total}}",
+    "next": "Siguiente",
+    "namePlaceholder": "Tu nombre",
+    "topicsHint": "Elige los que quieras.",
+    "seasons": {
+      "grief": "Duelo o pérdida",
+      "anxiety": "Ansiedad",
+      "work": "Trabajo",
+      "family": "Familia",
+      "health": "Salud",
+      "decision": "Una decisión importante",
+      "gratitude": "Gratitud",
+      "faith": "Crecer en la fe"
+    },
+    "topics": {
+      "peace": "Paz",
+      "wisdom": "Sabiduría",
+      "health": "Salud",
+      "family": "Familia",
+      "provision": "Provisión",
+      "forgiveness": "Perdón",
+      "purpose": "Propósito",
+      "gratitude": "Gratitud"
+    },
+    "hours": {
+      "early": "Temprano, 6:00",
+      "morning": "Por la mañana, 8:00",
+      "noon": "A mediodía, 12:00",
+      "evening": "Por la tarde, 18:00",
+      "night": "Por la noche, 21:00"
+    }
   },
   "plan": {
     "todayTitle": "Tu oración de hoy",
@@ -81,7 +122,11 @@
     "message": "Estoy orando por {{theme}} estos {{days}} días. ¿Me acompañas hoy?",
     "previewTitle": "{{name}} te pide oración",
     "previewCta": "Oré por ti",
-    "previewSignupHint": "Crea tu cuenta en 10 segundos para avisarle."
+    "previewSignupHint": "Crea tu cuenta en 10 segundos para avisarle.",
+    "previewNotFound": "Este enlace ya no está disponible.",
+    "previewNotFoundHint": "Puede que quien lo compartió lo haya desactivado.",
+    "viewPlan": "Ver el plan",
+    "alreadyMember": "Ya tengo cuenta"
   },
   "intercession": {
     "prayFor": "Oré por ti",
