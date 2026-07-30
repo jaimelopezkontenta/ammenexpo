@@ -123,7 +123,8 @@
     "action": "Hoy haz esto",
     "rename": "Cambiar el nombre",
     "dayOf": "Día {{current}} de {{total}}",
-    "titlePlaceholder": "Nombre del plan"
+    "titlePlaceholder": "Nombre del plan",
+    "stillPreparing": "Seguimos preparando los días siguientes."
   },
   "share": {
     "title": "Compartir mi plan",

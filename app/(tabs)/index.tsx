@@ -32,8 +32,11 @@ export default function Today() {
   const userId = session?.user.id;
 
   const { data: plan, isLoading } = useOwnPlan(userId);
+  // Days appear one stretch at a time, so today's day is readable long before
+  // the whole plan is written. Waiting for 'active' would hide a plan the user
+  // could already be praying.
   const { data: day } = useTodayDay(
-    plan?.status === "active" ? plan.id : undefined,
+    plan && plan.status !== "failed" ? plan.id : undefined,
   );
   const { data: prayed } = usePrayedToday(day?.id);
 
@@ -74,8 +77,9 @@ export default function Today() {
     );
   }
 
-  // Generation runs in the background, so this state survives closing the app.
-  if (plan?.status === "generating" && !stuck) {
+  // Only block while there is nothing to pray yet. Generation runs in the
+  // background, so this state survives closing the app.
+  if (plan?.status === "generating" && !day && !stuck) {
     return (
       <View className="flex-1 items-center justify-center gap-4 bg-white px-8">
         <ActivityIndicator color="#0f172a" />
@@ -89,7 +93,7 @@ export default function Today() {
     );
   }
 
-  if (!plan || plan.status === "failed" || stuck) {
+  if (!plan || (plan.status === "failed" && !day) || (stuck && !day)) {
     const limitReached = generate.error instanceof PlanLimitReached;
     const failed = plan?.status === "failed" || stuck;
 
@@ -145,6 +149,7 @@ export default function Today() {
             current: day.day_number,
             total: plan.duration_days,
           })}
+          {plan.status === "generating" ? ` · ${t("plan.stillPreparing")}` : ""}
         </Text>
 
         <Text className="text-3xl font-bold leading-9 text-slate-900">

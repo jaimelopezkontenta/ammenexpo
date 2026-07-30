@@ -16,7 +16,8 @@
     "db:reset": "supabase db reset",
     "db:test": "npm run db:test:rls && npm run db:test:flows",
     "db:test:rls": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/rls.sql",
-    "db:test:flows": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/flows.sql"
+    "db:test:flows": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/flows.sql",
+    "test:chunks": "supabase db reset && bash supabase/tests/chunks.sh"
   },
   "dependencies": {
     "@expo/log-box": "^56.0.12",

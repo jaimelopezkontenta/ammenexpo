@@ -72,12 +72,23 @@ No entras en polémicas doctrinales entre denominaciones. Te mantienes en lo que
 No culpabilizas. Nunca insinúas que lo que alguien sufre se deba a su falta de fe.
 Escribes con calidez y sobriedad, sin exageraciones ni lenguaje grandilocuente.`;
 
+type PreviousDay = {
+  day_number: number;
+  title: string;
+  scripture_ref: string | null;
+};
+
 type UserPromptInput = {
   displayName: string;
   durationDays: number;
   season: string | null;
   topics: string[];
   minutes?: number | null;
+  /** Absolute day numbers this call must produce. */
+  fromDay: number;
+  toDay: number;
+  /** Days already written, so the arc continues and passages do not repeat. */
+  previousDays: PreviousDay[];
 };
 
 const SEASON_LABELS: Record<string, string> = {
@@ -108,6 +119,9 @@ export const buildUserPrompt = ({
   season,
   topics,
   minutes,
+  fromDay,
+  toDay,
+  previousDays,
 }: UserPromptInput) => {
   const seasonLine = season
     ? (SEASON_LABELS[season] ?? `describe su momento como "${season}"`)
@@ -117,14 +131,40 @@ export const buildUserPrompt = ({
     ? topics.map((topic) => TOPIC_LABELS[topic] ?? topic).join(", ")
     : "no ha elegido temas concretos";
 
-  return `Crea un plan de oración de ${durationDays} días para ${displayName}.
+  const profile = `Crea un plan de oración de ${durationDays} días para ${displayName}.
 
 Sobre ${displayName}:
 - Momento vital: ${seasonLine}.
 - Quiere orar por: ${topicLine}.
-- Tiempo disponible al día: ${minutes ?? 10} minutos aproximadamente.
+- Tiempo disponible al día: ${minutes ?? 10} minutos aproximadamente.`;
 
-Genera exactamente ${durationDays} días, numerados del 1 al ${durationDays}.`;
+  // The plan is written in stretches so each request stays well inside the
+  // function's time budget. The model still needs the whole shape in mind, so
+  // it is told the total length and what has already been written.
+  if (previousDays.length === 0) {
+    return `${profile}
+
+El plan completo tiene ${durationDays} días, pero en esta respuesta escribes SOLO los días ${fromDay} a ${toDay}, numerados con esos mismos números. Escríbelos como el comienzo de un plan de ${durationDays} días, no como un plan completo de ${toDay - fromDay + 1} días.`;
+  }
+
+  const written = previousDays
+    .map(
+      (day) =>
+        `- Día ${day.day_number}: "${day.title}"${
+          day.scripture_ref ? ` (${day.scripture_ref})` : ""
+        }`,
+    )
+    .join("\n");
+
+  return `${profile}
+
+Ya has escrito estos días del plan:
+
+${written}
+
+Ahora escribes SOLO los días ${fromDay} a ${toDay} de ${durationDays}, numerados con esos mismos números.
+
+Continúa el arco donde lo dejaste: ni repitas lo ya dicho ni empieces de cero. No vuelvas a usar ninguna de las referencias bíblicas anteriores. Si estos son los últimos días del plan, ciérralo abriendo hacia la esperanza.`;
 };
 
 /**
