@@ -99,7 +99,6 @@
     "todayTitle": "Tu oración de hoy",
     "scripture": "Palabra",
     "prayer": "Oración",
-    "reflection": "Para reflexionar",
     "markDone": "Ya oré hoy",
     "markedDone": "Oraste hoy 🙏",
     "streak": "{{count}} día de racha",
@@ -119,7 +118,12 @@
       "friends": "Amigos elegidos",
       "group": "Un grupo",
       "link": "Cualquiera con el enlace"
-    }
+    },
+    "meaning": "Qué significa",
+    "action": "Hoy haz esto",
+    "rename": "Cambiar el nombre",
+    "dayOf": "Día {{current}} de {{total}}",
+    "titlePlaceholder": "Nombre del plan"
   },
   "share": {
     "title": "Compartir mi plan",

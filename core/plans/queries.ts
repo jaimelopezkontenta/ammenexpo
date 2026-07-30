@@ -38,8 +38,9 @@ export type PlanDay = {
   title: string;
   scripture_ref: string | null;
   scripture_text: string | null;
+  interpretation: string | null;
+  daily_action: string | null;
   prayer_body: string;
-  reflection_question: string | null;
   unlock_date: string;
   intercession_count: number;
 };
@@ -88,7 +89,7 @@ export const useTodayDay = (planId: string | undefined) =>
       const { data, error } = await supabase
         .from("prayer_plan_days")
         .select(
-          "id, day_number, title, scripture_ref, scripture_text, prayer_body, reflection_question, unlock_date, intercession_count",
+          "id, day_number, title, scripture_ref, scripture_text, interpretation, daily_action, prayer_body, unlock_date, intercession_count",
         )
         .eq("plan_id", planId!)
         .order("day_number", { ascending: false })
@@ -167,6 +168,25 @@ export const useAbandonPlan = (userId: string | undefined) => {
       const { error } = await supabase
         .from("prayer_plans")
         .update({ status: "failed", generation_error: "abandoned" })
+        .eq("id", planId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["ownPlan", userId] });
+    },
+  });
+};
+
+/** The AI proposes a title; the owner can always change it. */
+export const useRenamePlan = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ planId, title }: { planId: string; title: string }) => {
+      const { error } = await supabase
+        .from("prayer_plans")
+        .update({ title: title.trim().slice(0, 140) })
         .eq("id", planId);
 
       if (error) throw error;

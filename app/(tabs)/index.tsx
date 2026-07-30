@@ -1,7 +1,16 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 import { Button } from "@/components/Button";
+import { DaySection } from "@/components/DaySection";
+import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   isStuckGenerating,
@@ -11,6 +20,7 @@ import {
   useMarkPrayed,
   useOwnPlan,
   usePrayedToday,
+  useRenamePlan,
   useTodayDay,
 } from "@/core/plans/queries";
 
@@ -29,7 +39,10 @@ export default function Today() {
 
   const generate = useGeneratePlan(userId);
   const abandon = useAbandonPlan(userId);
+  const rename = useRenamePlan(userId);
   const markPrayed = useMarkPrayed(day?.id, userId);
+
+  const [draftTitle, setDraftTitle] = useState<string | null>(null);
 
   const stuck = isStuckGenerating(plan);
 
@@ -41,6 +54,16 @@ export default function Today() {
     }
 
     generate.mutate(DEFAULT_PLAN_DAYS);
+  };
+
+  const saveTitle = async () => {
+    if (!plan || draftTitle === null) return;
+
+    if (draftTitle.trim().length > 0 && draftTitle.trim() !== plan.title) {
+      await rename.mutateAsync({ planId: plan.id, title: draftTitle });
+    }
+
+    setDraftTitle(null);
   };
 
   if (isLoading) {
@@ -113,51 +136,85 @@ export default function Today() {
   return (
     <ScrollView
       className="flex-1 bg-white"
-      contentContainerClassName="gap-6 px-7 py-10"
+      contentContainerClassName="gap-7 px-7 py-10"
+      keyboardShouldPersistTaps="handled"
     >
       <View className="gap-1">
-        <Text className="text-sm font-medium text-slate-400">
-          {t("common.day", { number: day.day_number })}
+        <Text className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {t("plan.dayOf", {
+            current: day.day_number,
+            total: plan.duration_days,
+          })}
         </Text>
-        <Text className="text-2xl font-bold text-slate-900">{day.title}</Text>
-        <Text className="text-base text-slate-500">{plan.title}</Text>
+
+        <Text className="text-3xl font-bold leading-9 text-slate-900">
+          {day.title}
+        </Text>
+
+        {draftTitle === null ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("plan.rename")}
+            onPress={() => setDraftTitle(plan.title)}
+          >
+            <Text className="text-base text-slate-500">{plan.title} ✎</Text>
+          </Pressable>
+        ) : (
+          <View className="mt-2 gap-2">
+            <TextField
+              label={t("plan.titlePlaceholder")}
+              value={draftTitle}
+              onChangeText={setDraftTitle}
+              maxLength={140}
+              autoFocus
+              onSubmitEditing={() => void saveTitle()}
+              returnKeyType="done"
+            />
+            <Button
+              title={t("common.save")}
+              loading={rename.isPending}
+              onPress={() => void saveTitle()}
+            />
+          </View>
+        )}
       </View>
 
       {day.scripture_text ? (
-        <View className="gap-2 rounded-2xl bg-slate-50 p-5">
-          <Text className="text-sm font-medium text-slate-400">
-            {t("plan.scripture")}
-          </Text>
-          <Text className="text-base leading-6 text-slate-800">
+        <DaySection label={t("plan.scripture")} tone="scripture">
+          <Text className="text-lg leading-7 text-slate-800">
             {day.scripture_text}
           </Text>
           {day.scripture_ref ? (
-            <Text className="text-sm text-slate-500">{day.scripture_ref}</Text>
+            <Text className="text-sm font-medium text-slate-500">
+              {day.scripture_ref}
+            </Text>
           ) : null}
-        </View>
+        </DaySection>
       ) : null}
 
-      <View className="gap-2">
-        <Text className="text-sm font-medium text-slate-400">
-          {t("plan.prayer")}
-        </Text>
-        <Text className="text-base leading-7 text-slate-800">
+      {day.interpretation ? (
+        <DaySection label={t("plan.meaning")}>
+          <Text className="text-base leading-7 text-slate-700">
+            {day.interpretation}
+          </Text>
+        </DaySection>
+      ) : null}
+
+      {day.daily_action ? (
+        <DaySection label={t("plan.action")} tone="action">
+          <Text className="text-lg leading-7 text-amber-950">
+            {day.daily_action}
+          </Text>
+        </DaySection>
+      ) : null}
+
+      <DaySection label={t("plan.prayer")}>
+        <Text className="text-base leading-8 text-slate-800">
           {day.prayer_body}
         </Text>
-      </View>
+      </DaySection>
 
-      {day.reflection_question ? (
-        <View className="gap-2">
-          <Text className="text-sm font-medium text-slate-400">
-            {t("plan.reflection")}
-          </Text>
-          <Text className="text-base leading-6 text-slate-800">
-            {day.reflection_question}
-          </Text>
-        </View>
-      ) : null}
-
-      <View className="pt-4">
+      <View className="pb-4 pt-2">
         {prayed ? (
           <Text className="text-center text-base font-medium text-slate-600">
             {t("plan.markedDone")}

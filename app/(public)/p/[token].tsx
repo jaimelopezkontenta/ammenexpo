@@ -93,13 +93,13 @@ export default function SharedPlanPreviewScreen() {
           </View>
         ) : null}
 
-        {data.reflection_question ? (
+        {data.interpretation ? (
           <View className="gap-2">
             <Text className="text-sm font-medium text-slate-400">
-              {t("plan.reflection")}
+              {t("plan.meaning")}
             </Text>
             <Text className="text-base leading-6 text-slate-800">
-              {data.reflection_question}
+              {data.interpretation}
             </Text>
           </View>
         ) : null}

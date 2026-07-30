@@ -173,8 +173,9 @@ const fillPlan = async ({
         // Canonical spelling from our own Bible table, not the model's.
         scripture_ref: day.canonical_ref,
         scripture_text: day.scripture_text,
+        interpretation: day.interpretation,
+        daily_action: day.daily_action,
         prayer_body: day.prayer_body,
-        reflection_question: day.reflection_question,
         unlock_date: unlock.toISOString().slice(0, 10),
       };
     }),

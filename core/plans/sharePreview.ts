@@ -13,7 +13,7 @@ export type SharedPlanPreview = {
   day_title: string;
   scripture_ref: string | null;
   scripture_text: string | null;
-  reflection_question: string | null;
+  interpretation: string | null;
   intercession_count: number;
 };
 

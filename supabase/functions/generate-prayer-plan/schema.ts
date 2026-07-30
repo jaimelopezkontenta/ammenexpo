@@ -32,22 +32,32 @@ export const PLAN_JSON_SCHEMA = {
               "Referencia bíblica en español, formato 'Libro Capítulo:Versículo' " +
               "o 'Libro Capítulo:Inicio-Fin'. Nunca incluyas el texto del versículo.",
           },
+          interpretation: {
+            type: "string",
+            description:
+              "Qué significa el pasaje, en español llano, entre 40 y 90 palabras. " +
+              "Sin tecnicismos teológicos y conectado con la situación de la persona.",
+          },
+          daily_action: {
+            type: "string",
+            description:
+              "Una sola acción concreta y pequeña para hoy, en español, en una o " +
+              "dos frases. Debe poder hacerse en pocos minutos, depender solo de " +
+              "la persona y no costar dinero.",
+          },
           prayer_body: {
             type: "string",
             description:
               "Oración en primera persona, en español, entre 60 y 150 palabras.",
-          },
-          reflection_question: {
-            type: "string",
-            description: "Una sola pregunta de reflexión, en español.",
           },
         },
         required: [
           "day_number",
           "title",
           "scripture_ref",
+          "interpretation",
+          "daily_action",
           "prayer_body",
-          "reflection_question",
         ],
         additionalProperties: false,
       },
@@ -61,8 +71,9 @@ export type GeneratedDay = {
   day_number: number;
   title: string;
   scripture_ref: string;
+  interpretation: string;
+  daily_action: string;
   prayer_body: string;
-  reflection_question: string;
 };
 
 export type GeneratedPlan = {
@@ -86,8 +97,9 @@ export const isGeneratedPlan = (value: unknown): value is GeneratedPlan => {
         typeof d.day_number === "number" &&
         typeof d.title === "string" &&
         typeof d.scripture_ref === "string" &&
-        typeof d.prayer_body === "string" &&
-        typeof d.reflection_question === "string"
+        typeof d.interpretation === "string" &&
+        typeof d.daily_action === "string" &&
+        typeof d.prayer_body === "string"
       );
     })
   );
