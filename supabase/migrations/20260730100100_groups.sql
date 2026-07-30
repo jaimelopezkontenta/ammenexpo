@@ -129,11 +129,15 @@ create trigger on_group_created
 
 alter table public.groups enable row level security;
 
+-- `owner_id` is checked directly so that `INSERT ... RETURNING` works: the
+-- creator's membership row is written by an AFTER INSERT trigger, so relying
+-- on is_group_member() alone would reject the creator's own returning clause.
 create policy "members read their groups, anyone reads public groups"
   on public.groups for select
   to authenticated
   using (
     visibility = 'public'
+    or owner_id = (select auth.uid())
     or public.is_group_member(id)
   );
 

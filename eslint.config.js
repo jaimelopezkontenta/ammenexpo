@@ -12,6 +12,9 @@ module.exports = defineConfig([
       ".expo/*",
       "supabase/.temp/*",
       "supabase/.branches/*",
+      // Deno, not React Native: different runtime, different module resolution.
+      // The Deno toolchain validates these when the functions are served.
+      "supabase/functions/*",
     ],
   },
   {

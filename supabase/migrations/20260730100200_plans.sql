@@ -20,6 +20,9 @@ create table public.prayer_plans (
   status public.plan_status not null default 'active',
   generated_by public.plan_source not null default 'ai',
   source_prompt jsonb,
+  -- Set when status = 'failed', so the app can tell the user what happened
+  -- instead of showing a plan that never arrives.
+  generation_error text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint prayer_plans_group_required
@@ -147,6 +150,23 @@ as $$
   );
 $$;
 
+-- Only reads plan_shares, never prayer_plans. See the note on the prayer_plans
+-- SELECT policy for why that distinction matters.
+create function public.has_plan_share(pid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.plan_shares s
+    where s.plan_id = pid
+      and s.shared_with_user_id = (select auth.uid())
+  );
+$$;
+
 create function public.can_read_plan_day(did uuid)
 returns boolean
 language sql
@@ -165,8 +185,10 @@ $$;
 
 revoke execute on function public.can_read_plan(uuid) from public;
 revoke execute on function public.can_read_plan_day(uuid) from public;
+revoke execute on function public.has_plan_share(uuid) from public;
 grant execute on function public.can_read_plan(uuid) to authenticated;
 grant execute on function public.can_read_plan_day(uuid) to authenticated;
+grant execute on function public.has_plan_share(uuid) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- prayer_logs — "I prayed my own day", feeds the personal streak
@@ -296,10 +318,24 @@ create trigger intercessions_count
 
 alter table public.prayer_plans enable row level security;
 
+-- Evaluated against the row's OWN columns rather than by re-querying
+-- prayer_plans. A policy that reads its own table breaks `INSERT ...
+-- RETURNING`: the SELECT check runs against the new row, but a STABLE function
+-- querying the table cannot see it yet, so the insert is rejected — and
+-- Postgres reports that with the same message as a WITH CHECK failure, which
+-- makes it look like a broken insert permission.
 create policy "plans are readable by owner and people they are shared with"
   on public.prayer_plans for select
   to authenticated
-  using (public.can_read_plan(id));
+  using (
+    owner_id = (select auth.uid())
+    or public.has_plan_share(id)
+    or (group_id is not null and public.is_group_member(group_id))
+    or (
+      visibility = 'friends'
+      and public.are_friends(owner_id, (select auth.uid()))
+    )
+  );
 
 create policy "users create their own plans"
   on public.prayer_plans for insert

@@ -14,7 +14,16 @@ create extension if not exists pgcrypto with schema extensions;
 
 create type public.friendship_status as enum ('pending', 'accepted', 'blocked');
 create type public.plan_visibility as enum ('private', 'friends', 'group', 'link');
-create type public.plan_status as enum ('active', 'completed', 'archived');
+-- 'generating' exists because plan generation is asynchronous: an Edge Function
+-- has a hard request wall clock (~150s) and a long plan can exceed it, so the
+-- row is created first and filled in by a background task.
+create type public.plan_status as enum (
+  'generating',
+  'failed',
+  'active',
+  'completed',
+  'archived'
+);
 create type public.plan_source as enum ('ai', 'manual');
 create type public.group_visibility as enum ('private', 'public');
 create type public.group_role as enum ('owner', 'admin', 'member');

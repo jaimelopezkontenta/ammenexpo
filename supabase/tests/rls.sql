@@ -268,7 +268,39 @@ $$;
 commit;
 
 -- ===========================================================================
--- 8. Every public table has RLS enabled
+-- 8. INSERT ... RETURNING works for the owner
+--
+-- Regression: the SELECT policy used to re-query prayer_plans through a STABLE
+-- function, which cannot see the row being inserted. Every client library
+-- returns the created row by default, so this broke plan creation outright
+-- while reporting itself as a WITH CHECK violation.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+with created as (
+  insert into public.prayer_plans (owner_id, title, duration_days, start_date, visibility)
+  values ('11111111-1111-1111-1111-111111111111', 'con returning', 3, current_date, 'private')
+  returning id
+)
+select pg_temp.assert(
+  (select count(*) from created) = 1,
+  'a plan can be created with INSERT ... RETURNING');
+
+with created as (
+  insert into public.groups (owner_id, name) values
+    ('11111111-1111-1111-1111-111111111111', 'Grupo con returning')
+  returning id
+)
+select pg_temp.assert(
+  (select count(*) from created) = 1,
+  'a group can be created with INSERT ... RETURNING');
+
+rollback;
+
+-- ===========================================================================
+-- 9. Every public table has RLS enabled
 -- ===========================================================================
 select pg_temp.assert(
   (select count(*) from pg_tables t

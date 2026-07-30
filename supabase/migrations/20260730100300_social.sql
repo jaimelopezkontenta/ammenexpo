@@ -526,6 +526,9 @@ create policy "users read their own subscription"
 -- Realtime
 -- ---------------------------------------------------------------------------
 
+-- prayer_plans is here so the app can watch a plan flip from 'generating' to
+-- 'active' without polling.
+alter publication supabase_realtime add table public.prayer_plans;
 alter publication supabase_realtime add table public.intercessions;
 alter publication supabase_realtime add table public.notifications;
 alter publication supabase_realtime add table public.messages;
