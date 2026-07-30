@@ -16,14 +16,15 @@
   },
   "tabs": {
     "today": "Hoy",
-    "circle": "Círculo",
-    "groups": "Grupos",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "pray": "Orar",
+    "circles": "Círculos"
   },
-  "circle": {
-    "title": "Tu círculo",
-    "subtitle": "Planes de amigos y grupos por los que puedes orar hoy.",
-    "empty": "Todavía no hay nadie en tu círculo. Comparte tu plan o acepta una invitación."
+  "pray": {
+    "title": "Orar por otros",
+    "subtitle": "Planes que otras personas han compartido contigo.",
+    "empty": "Todavía nadie ha compartido su plan contigo.",
+    "emptyBody": "Cuando alguien lo haga, aparecerá aquí para que ores por su día."
   },
   "profile": {
     "title": "Tu perfil",
@@ -142,20 +143,43 @@
     "nobodyYet": "Todavía nadie ha orado hoy. Comparte tu plan.",
     "prayBack": "Orar por su plan"
   },
-  "groups": {
-    "title": "Grupos de oración",
-    "create": "Crear grupo",
-    "name": "Nombre del grupo",
+  "circles": {
+    "title": "Tus círculos",
+    "subtitle": "Familia, célula, amigos. Con quien compartes tus planes.",
+    "empty": "Todavía no tienes círculos.",
+    "emptyBody": "Crea uno para compartir tus planes con las personas de confianza.",
+    "create": "Crear círculo",
+    "createTitle": "Nuevo círculo",
+    "name": "Nombre",
+    "namePlaceholder": "Familia, célula, amigos…",
     "description": "Descripción",
-    "visibilityPrivate": "Privado, solo por invitación",
-    "visibilityPublic": "Público, cualquiera puede encontrarlo",
+    "descriptionPlaceholder": "Opcional",
+    "visibility": "¿Quién puede unirse?",
+    "visibilityPrivate": "Solo por invitación",
+    "visibilityPrivateHint": "Nadie lo encuentra; entras únicamente con el enlace.",
+    "visibilityPublic": "Cualquiera puede encontrarlo",
+    "visibilityPublicHint": "Aparecerá en las búsquedas. Requiere que modere quien lo crea.",
     "invite": "Invitar",
+    "inviteLink": "Enlace de invitación",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado",
+    "shareMessage": "Te invito a mi círculo de oración \"{{name}}\" en Ammen.",
     "members": "{{count}} miembro",
     "members_other": "{{count}} miembros",
-    "groupStreak": "Racha del grupo: {{count}}",
+    "membersTitle": "Miembros",
+    "owner": "Creador",
+    "admin": "Administrador",
+    "streak": "Racha del círculo: {{count}}",
     "prayedToday": "Ya oraron hoy",
-    "leave": "Salir del grupo",
-    "report": "Reportar"
+    "leave": "Salir del círculo",
+    "leaveConfirm": "¿Seguro que quieres salir?",
+    "report": "Reportar",
+    "joinTitle": "Te invitan a \"{{name}}\"",
+    "joinBody": "Un círculo de oración de {{count}} persona.",
+    "joinBody_other": "Un círculo de oración de {{count}} personas.",
+    "join": "Unirme",
+    "joined": "Ya eres parte de este círculo",
+    "inviteNotFound": "Esta invitación ya no es válida."
   },
   "feed": {
     "title": "Peticiones",

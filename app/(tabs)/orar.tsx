@@ -2,13 +2,10 @@ import { useTranslation } from "react-i18next";
 
 import { ScreenPlaceholder } from "@/components/ScreenPlaceholder";
 
-export default function Circle() {
+export default function Pray() {
   const { t } = useTranslation();
 
   return (
-    <ScreenPlaceholder
-      title={t("circle.title")}
-      subtitle={t("circle.subtitle")}
-    />
+    <ScreenPlaceholder title={t("pray.title")} subtitle={t("pray.subtitle")} />
   );
 }

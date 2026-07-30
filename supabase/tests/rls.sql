@@ -300,6 +300,101 @@ select pg_temp.assert(
 rollback;
 
 -- ===========================================================================
+-- 8b. A plan shared with several circles
+--
+-- Regression: plan_shares.group_id existed but nothing read it — access checks
+-- only looked at prayer_plans.group_id, which holds a single circle. Sharing
+-- with two circles wrote both rows and granted access to nobody, silently.
+-- ===========================================================================
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values
+  ('44444444-4444-4444-4444-444444444444', 'dani@test.local', 'authenticated', 'authenticated', '{"display_name":"Dani"}'),
+  ('55555555-5555-5555-5555-555555555555', 'eva@test.local',  'authenticated', 'authenticated', '{"display_name":"Eva"}');
+
+insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility)
+values ('aaaa0000-0000-0000-0000-000000000002',
+        '11111111-1111-1111-1111-111111111111',
+        'Plan compartido con circulos', 1, current_date, 'private');
+
+insert into public.prayer_plan_days (plan_id, day_number, title, prayer_body, unlock_date)
+values ('aaaa0000-0000-0000-0000-000000000002', 1, 'Día uno', 'Privado', current_date);
+
+-- Ana owns both circles; the on_group_created trigger adds her as a member.
+insert into public.groups (id, owner_id, name)
+values ('99990000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Familia'),
+       ('99990000-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'Célula');
+
+insert into public.group_members (group_id, user_id) values
+  ('99990000-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222'),
+  ('99990000-0000-0000-0000-000000000002', '44444444-4444-4444-4444-444444444444');
+
+insert into public.plan_shares (plan_id, group_id, created_by) values
+  ('aaaa0000-0000-0000-0000-000000000002', '99990000-0000-0000-0000-000000000001',
+   '11111111-1111-1111-1111-111111111111'),
+  ('aaaa0000-0000-0000-0000-000000000002', '99990000-0000-0000-0000-000000000002',
+   '11111111-1111-1111-1111-111111111111');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+select pg_temp.assert(
+  (select count(*) from public.prayer_plans
+    where id = 'aaaa0000-0000-0000-0000-000000000002') = 1,
+  'a member of the first circle sees the shared plan');
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+select pg_temp.assert(
+  (select count(*) from public.prayer_plans
+    where id = 'aaaa0000-0000-0000-0000-000000000002') = 1,
+  'a member of the second circle sees it too');
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_plan_days
+    where plan_id = 'aaaa0000-0000-0000-0000-000000000002') = 1,
+  'and can read the unlocked day, so they can pray for it');
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+select pg_temp.assert(
+  (select count(*) from public.prayer_plans
+    where id = 'aaaa0000-0000-0000-0000-000000000002') = 0,
+  'someone in neither circle does not');
+commit;
+
+-- Sharing into a circle you do not belong to must be rejected.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+do $$
+begin
+  insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility)
+  values ('aaaa0000-0000-0000-0000-000000000003',
+          '55555555-5555-5555-5555-555555555555', 'Plan de Eva', 1, current_date, 'private');
+
+  insert into public.plan_shares (plan_id, group_id, created_by)
+  values ('aaaa0000-0000-0000-0000-000000000003',
+          '99990000-0000-0000-0000-000000000001',
+          '55555555-5555-5555-5555-555555555555');
+
+  raise exception 'FAIL  sharing into a circle you do not belong to was allowed';
+exception when insufficient_privilege then
+  raise notice 'PASS  cannot share a plan into a circle you do not belong to';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
 -- 9. Every public table has RLS enabled
 -- ===========================================================================
 select pg_temp.assert(

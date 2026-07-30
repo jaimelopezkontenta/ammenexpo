@@ -16,14 +16,15 @@
   },
   "tabs": {
     "today": "Today",
-    "circle": "Circle",
-    "groups": "Groups",
-    "profile": "Profile"
+    "profile": "Profile",
+    "pray": "Pray",
+    "circles": "Circles"
   },
-  "circle": {
-    "title": "Your circle",
-    "subtitle": "Plans from friends and groups you can pray for today.",
-    "empty": "Nobody in your circle yet. Share your plan or accept an invitation."
+  "pray": {
+    "title": "Pray for others",
+    "subtitle": "Plans other people have shared with you.",
+    "empty": "Nobody has shared a plan with you yet.",
+    "emptyBody": "When someone does, it will show up here so you can pray for their day."
   },
   "profile": {
     "title": "Your profile",
@@ -142,20 +143,43 @@
     "nobodyYet": "Nobody has prayed today yet. Share your plan.",
     "prayBack": "Pray for their plan"
   },
-  "groups": {
-    "title": "Prayer groups",
-    "create": "Create group",
-    "name": "Group name",
+  "circles": {
+    "title": "Your circles",
+    "subtitle": "Family, small group, friends. Who you share your plans with.",
+    "empty": "You don't have any circles yet.",
+    "emptyBody": "Create one to share your plans with the people you trust.",
+    "create": "Create circle",
+    "createTitle": "New circle",
+    "name": "Name",
+    "namePlaceholder": "Family, small group, friends…",
     "description": "Description",
-    "visibilityPrivate": "Private, invite only",
-    "visibilityPublic": "Public, anyone can find it",
+    "descriptionPlaceholder": "Optional",
+    "visibility": "Who can join?",
+    "visibilityPrivate": "Invite only",
+    "visibilityPrivateHint": "Nobody can find it; you join only with the link.",
+    "visibilityPublic": "Anyone can find it",
+    "visibilityPublicHint": "It will show up in search. Whoever creates it must moderate it.",
     "invite": "Invite",
+    "inviteLink": "Invite link",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "shareMessage": "I'm inviting you to my prayer circle \"{{name}}\" on Ammen.",
     "members": "{{count}} member",
     "members_other": "{{count}} members",
-    "groupStreak": "Group streak: {{count}}",
+    "membersTitle": "Members",
+    "owner": "Creator",
+    "admin": "Admin",
+    "streak": "Circle streak: {{count}}",
     "prayedToday": "Already prayed today",
-    "leave": "Leave group",
-    "report": "Report"
+    "leave": "Leave circle",
+    "leaveConfirm": "Are you sure you want to leave?",
+    "report": "Report",
+    "joinTitle": "You're invited to \"{{name}}\"",
+    "joinBody": "A prayer circle with {{count}} person.",
+    "joinBody_other": "A prayer circle with {{count}} people.",
+    "join": "Join",
+    "joined": "You're already part of this circle",
+    "inviteNotFound": "This invitation is no longer valid."
   },
   "feed": {
     "title": "Requests",

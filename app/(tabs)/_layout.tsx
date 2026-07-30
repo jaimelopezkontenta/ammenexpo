@@ -21,19 +21,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="circulo"
+        name="orar"
         options={{
-          title: t("tabs.circle"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} />,
+          title: t("tabs.pray"),
+          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="grupos"
+        name="circulos"
         options={{
-          title: t("tabs.groups"),
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="comments" color={color} />
-          ),
+          title: t("tabs.circles"),
+          tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} />,
         }}
       />
       <Tabs.Screen
