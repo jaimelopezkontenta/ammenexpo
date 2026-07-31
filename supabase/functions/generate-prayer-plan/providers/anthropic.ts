@@ -7,7 +7,28 @@ import {
   ProviderRefusal,
 } from "./types.ts";
 
-const MODEL = "claude-sonnet-5";
+/**
+ * Tried in order. Overload is per-model capacity, not per-account, so when
+ * Sonnet is busy Haiku very often is not — and it is the *same* API, the same
+ * schema and the same cached system prompt, so nothing about the contract
+ * changes: still Spanish, still a reference and never the verse text, still
+ * every prohibition in the prompt. A cheaper day beats no day.
+ *
+ * Falling back to a different vendor would mean a second prompt to maintain and
+ * re-validate on every change, no prompt cache, and quality drift nobody could
+ * see. Falling back within Anthropic costs one entry in this list.
+ *
+ * The request shape differs by model: adaptive thinking and `effort` are 4.6+,
+ * and Haiku 4.5 rejects both with a 400.
+ */
+const MODELS = [
+  {
+    id: "claude-sonnet-5",
+    thinking: { type: "adaptive" as const },
+    effort: "medium" as const,
+  },
+  { id: "claude-haiku-4-5", thinking: undefined, effort: undefined },
+];
 
 /**
  * `overloaded_error` means the API was momentarily busy, not that anything is
@@ -60,16 +81,15 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const createAnthropicProvider = (apiKey: string): PlanProvider => {
   const client = new Anthropic({ apiKey });
 
-  const attempt = async ({
-    system,
-    messages,
-    schema,
-  }: GenerateArgs): Promise<GenerateResult> => {
+  const attempt = async (
+    { system, messages, schema }: GenerateArgs,
+    model: (typeof MODELS)[number],
+  ): Promise<GenerateResult> => {
     // Streaming is not optional here: a 30-day plan is a lot of output
     // tokens, and a non-streaming request at this max_tokens risks an HTTP
     // timeout well before the model is done.
     const stream = client.messages.stream({
-      model: MODEL,
+      model: model.id,
       max_tokens: 64000,
       // Identical for every user, so it caches. Volatile content lives in
       // the user turn, after this breakpoint.
@@ -80,9 +100,9 @@ export const createAnthropicProvider = (apiKey: string): PlanProvider => {
           cache_control: { type: "ephemeral" },
         },
       ],
-      thinking: { type: "adaptive" },
+      ...(model.thinking ? { thinking: model.thinking } : {}),
       output_config: {
-        effort: "medium",
+        ...(model.effort ? { effort: model.effort } : {}),
         format: { type: "json_schema", schema },
       },
       messages,
@@ -120,24 +140,28 @@ export const createAnthropicProvider = (apiKey: string): PlanProvider => {
     generate: async (args: GenerateArgs): Promise<GenerateResult> => {
       let lastError: unknown;
 
-      for (let n = 1; n <= MAX_ATTEMPTS; n++) {
-        try {
-          return await attempt(args);
-        } catch (error) {
-          // A refusal is a decision, not a hiccup: repeating the same request
-          // would only get the same answer back.
-          if (error instanceof ProviderRefusal || !isRetryable(error)) {
-            throw error;
-          }
+      for (const model of MODELS) {
+        for (let n = 1; n <= MAX_ATTEMPTS; n++) {
+          try {
+            return await attempt(args, model);
+          } catch (error) {
+            // A refusal is a decision, not a hiccup: repeating the same request
+            // would only get the same answer back, from any model.
+            if (error instanceof ProviderRefusal || !isRetryable(error)) {
+              throw error;
+            }
 
-          lastError = error;
+            lastError = error;
 
-          if (n < MAX_ATTEMPTS) {
-            const backoff = 1000 * 2 ** (n - 1);
-            console.warn(`anthropic busy, retrying in ${backoff}ms`);
-            await wait(backoff);
+            if (n < MAX_ATTEMPTS) {
+              const backoff = 1000 * 2 ** (n - 1);
+              console.warn(`${model.id} busy, retrying in ${backoff}ms`);
+              await wait(backoff);
+            }
           }
         }
+
+        console.warn(`${model.id} unavailable, falling back`);
       }
 
       throw lastError;

@@ -100,8 +100,24 @@ type PlanRow = {
 
 type Visibility = "private" | "circles" | "link";
 
+/**
+ * How many fresh isolates the very first stretch gets before the plan is
+ * declared failed.
+ *
+ * Later stretches already degrade well — a plan a few days short is far better
+ * than one thrown away — but the first stretch is all-or-nothing: without it
+ * there is no day to pray. The provider has already retried and already tried
+ * the fallback model by the time we get here, so this is the outer ring: a new
+ * isolate with a full wall clock, in case the problem was the isolate itself.
+ */
+const FIRST_CHUNK_ISOLATES = 3;
+
 /** Asks this same function to write the next stretch, in a fresh isolate. */
-const requestNextChunk = async (planId: string, authHeader: string) => {
+const requestNextChunk = async (
+  planId: string,
+  authHeader: string,
+  attempt = 1,
+) => {
   try {
     await fetch(
       `${Deno.env.get("SUPABASE_URL")}/functions/v1/generate-prayer-plan`,
@@ -112,7 +128,7 @@ const requestNextChunk = async (planId: string, authHeader: string) => {
           apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ continue_plan_id: planId }),
+        body: JSON.stringify({ continue_plan_id: planId, attempt }),
       },
     );
   } catch (error) {
@@ -129,6 +145,7 @@ type ChunkArgs = {
   fromDay: number;
   toDay: number;
   authHeader: string;
+  attempt?: number;
 };
 
 const writeChunk = async ({
@@ -139,6 +156,7 @@ const writeChunk = async ({
   fromDay,
   toDay,
   authHeader,
+  attempt = 1,
 }: ChunkArgs) => {
   const isFirstChunk = fromDay === 1;
 
@@ -148,6 +166,16 @@ const writeChunk = async ({
     // plan that is a few days shorter than requested.
     if (!isFirstChunk) {
       console.error(`stretch ${fromDay}-${toDay} failed: ${reason}`);
+      return;
+    }
+
+    // A refusal will not change on a retry, so it fails immediately; anything
+    // else gets another isolate before we tell someone their plan is broken.
+    if (reason !== "refused" && attempt < FIRST_CHUNK_ISOLATES) {
+      console.warn(
+        `first stretch failed (${reason}), isolate ${attempt}/${FIRST_CHUNK_ISOLATES}`,
+      );
+      await requestNextChunk(plan.id, authHeader, attempt + 1);
       return;
     }
 
@@ -420,6 +448,10 @@ Deno.serve(async (req) => {
         fromDay,
         toDay,
         authHeader,
+        // Carried across isolates so the first stretch knows how many goes it
+        // has already had; anything else is a fresh continuation.
+        attempt:
+          typeof body?.attempt === "number" ? Math.round(body.attempt) : 1,
       }),
     );
 
