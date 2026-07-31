@@ -87,9 +87,17 @@ type PlanRow = {
   start_date: string;
   status: string;
   source_prompt: {
-    answers?: { season?: string; topics?: string[]; minutes?: number };
+    answers?: {
+      season?: string;
+      topics?: string[];
+      gender?: string;
+      custom_topic?: string;
+      minutes?: number;
+    };
   } | null;
 };
+
+type Visibility = "private" | "circles" | "link";
 
 /** Asks this same function to write the next stretch, in a fresh isolate. */
 const requestNextChunk = async (planId: string, authHeader: string) => {
@@ -162,6 +170,8 @@ const writeChunk = async ({
     durationDays: plan.duration_days,
     season: answers.season ?? null,
     topics: answers.topics ?? [],
+    gender: answers.gender ?? null,
+    customTopic: answers.custom_topic ?? null,
     minutes: answers.minutes ?? null,
     fromDay,
     toDay,
@@ -457,7 +467,46 @@ Deno.serve(async (req) => {
     return json({ error: "profile_unavailable" }, 500);
   }
 
-  const answers = settings?.onboarding_answers ?? {};
+  // The onboarding answers are the baseline; anything chosen for this specific
+  // plan overrides them, which is what stops a second plan from reading like a
+  // copy of the first.
+  const onboarding = (settings?.onboarding_answers ?? {}) as Record<
+    string,
+    unknown
+  >;
+
+  const requestedTopics = Array.isArray(body?.topics)
+    ? (body.topics as unknown[]).filter(
+        (topic): topic is string => typeof topic === "string",
+      )
+    : null;
+
+  const customTopic =
+    typeof body?.custom_topic === "string"
+      ? body.custom_topic.trim().slice(0, 200)
+      : null;
+
+  const answers = {
+    ...onboarding,
+    ...(requestedTopics?.length ? { topics: requestedTopics } : {}),
+    ...(customTopic ? { custom_topic: customTopic } : {}),
+  };
+
+  const visibility: Visibility =
+    body?.visibility === "circles" || body?.visibility === "link"
+      ? body.visibility
+      : "private";
+
+  const circleIds = Array.isArray(body?.circle_ids)
+    ? (body.circle_ids as unknown[]).filter(
+        (id): id is string => typeof id === "string",
+      )
+    : [];
+
+  if (visibility === "circles" && circleIds.length === 0) {
+    return json({ error: "no_circles_selected" }, 400);
+  }
+
   const startDate = new Date().toISOString().slice(0, 10);
 
   const { data: created, error: planError } = await supabase
@@ -467,7 +516,9 @@ Deno.serve(async (req) => {
       title: "…",
       duration_days: durationDays,
       start_date: startDate,
-      visibility: "private",
+      // 'circles' is an app-level concept; at the row level a plan shared with
+      // circles is simply not private, and plan_shares says with whom.
+      visibility: visibility === "link" ? "link" : "private",
       status: "generating",
       generated_by: "ai",
       source_prompt: { answers },
@@ -478,6 +529,36 @@ Deno.serve(async (req) => {
   if (planError || !created) {
     console.error("could not create plan row", planError);
     return json({ error: "persist_failed" }, 500);
+  }
+
+  if (visibility === "circles") {
+    // RLS rejects a circle the caller does not belong to, so a bad id fails
+    // here rather than silently sharing into someone else's circle.
+    const { error: shareError } = await supabase.from("plan_shares").insert(
+      circleIds.map((groupId) => ({
+        plan_id: created.id,
+        group_id: groupId,
+        created_by: user.id,
+      })),
+    );
+
+    if (shareError) {
+      console.error("could not share with the chosen circles", shareError);
+      await supabase.from("prayer_plans").delete().eq("id", created.id);
+      return json({ error: "invalid_circles" }, 400);
+    }
+  }
+
+  let shareToken: string | null = null;
+
+  if (visibility === "link") {
+    const { data: link } = await supabase
+      .from("share_links")
+      .insert({ scope: "plan", plan_id: created.id, created_by: user.id })
+      .select("token")
+      .single();
+
+    shareToken = link?.token ?? null;
   }
 
   runInBackground(
@@ -492,5 +573,8 @@ Deno.serve(async (req) => {
     }),
   );
 
-  return json({ plan_id: created.id, status: "generating" }, 202);
+  return json(
+    { plan_id: created.id, status: "generating", share_token: shareToken },
+    202,
+  );
 });

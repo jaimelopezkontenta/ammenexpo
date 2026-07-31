@@ -125,14 +125,24 @@ export class PlanLimitReached extends Error {
   }
 }
 
+export type PlanVisibility = "private" | "circles" | "link";
+
+export type NewPlanInput = {
+  duration_days: number;
+  topics?: string[];
+  custom_topic?: string;
+  visibility?: PlanVisibility;
+  circle_ids?: string[];
+};
+
 export const useGeneratePlan = (userId: string | undefined) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (durationDays: number) => {
+    mutationFn: async (input: NewPlanInput) => {
       const { data, error } = await supabase.functions.invoke(
         "generate-prayer-plan",
-        { body: { duration_days: durationDays } },
+        { body: input },
       );
 
       if (error) {

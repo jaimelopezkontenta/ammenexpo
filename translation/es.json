@@ -93,6 +93,13 @@
       "noon": "A mediodía, 12:00",
       "evening": "Por la tarde, 18:00",
       "night": "Por la noche, 21:00"
+    },
+    "genderQuestion": "¿Cómo prefieres que te hablemos?",
+    "genderHint": "Para que las oraciones estén bien escritas para ti.",
+    "gender": {
+      "feminine": "En femenino",
+      "masculine": "En masculino",
+      "neutral": "En neutro"
     }
   },
   "plan": {
@@ -223,5 +230,25 @@
   "button": {
     "spanish": "Cambiar idioma a español",
     "english": "Cambiar idioma a inglés"
+  },
+  "newPlan": {
+    "title": "Nuevo plan",
+    "topicQuestion": "¿Sobre qué quieres orar?",
+    "topicHint": "Elige los que quieras.",
+    "customLabel": "¿Hay algo concreto?",
+    "customPlaceholder": "Mi hermana está enferma, una decisión sobre mudarme…",
+    "customHint": "Opcional. Es lo que hará que este plan no se parezca a ningún otro.",
+    "durationQuestion": "¿Cuántos días?",
+    "days": "{{count}} días",
+    "visibilityQuestion": "¿Quién puede verlo?",
+    "visPrivate": "Solo yo",
+    "visPrivateHint": "Nadie más lo verá. Puedes compartirlo más adelante.",
+    "visCircles": "Mis círculos",
+    "visCirclesHint": "Los miembros podrán orar por ti cada día.",
+    "visLink": "Cualquiera con el enlace",
+    "visLinkHint": "Podrás enviarlo por WhatsApp y desactivarlo cuando quieras.",
+    "noCircles": "Todavía no tienes círculos. Créalo privado y compártelo después.",
+    "chooseCircles": "Elige al menos un círculo.",
+    "create": "Crear el plan"
   }
 }

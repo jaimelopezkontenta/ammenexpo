@@ -93,6 +93,13 @@
       "noon": "Midday, 12:00",
       "evening": "Evening, 18:00",
       "night": "Night, 21:00"
+    },
+    "genderQuestion": "How should we address you?",
+    "genderHint": "So the prayers are written correctly for you.",
+    "gender": {
+      "feminine": "Feminine",
+      "masculine": "Masculine",
+      "neutral": "Neutral"
     }
   },
   "plan": {
@@ -223,5 +230,25 @@
   "button": {
     "spanish": "Switch language to Spanish",
     "english": "Switch language to English"
+  },
+  "newPlan": {
+    "title": "New plan",
+    "topicQuestion": "What do you want to pray about?",
+    "topicHint": "Pick as many as you like.",
+    "customLabel": "Anything specific?",
+    "customPlaceholder": "My sister is ill, a decision about moving…",
+    "customHint": "Optional. This is what will make this plan unlike any other.",
+    "durationQuestion": "How many days?",
+    "days": "{{count}} days",
+    "visibilityQuestion": "Who can see it?",
+    "visPrivate": "Only me",
+    "visPrivateHint": "Nobody else will see it. You can share it later.",
+    "visCircles": "My circles",
+    "visCirclesHint": "Members will be able to pray for you each day.",
+    "visLink": "Anyone with the link",
+    "visLinkHint": "You can send it on WhatsApp and turn it off whenever you want.",
+    "noCircles": "You have no circles yet. Create it private and share it later.",
+    "chooseCircles": "Pick at least one circle.",
+    "create": "Create the plan"
   }
 }

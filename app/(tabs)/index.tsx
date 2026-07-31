@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,8 +24,6 @@ import {
   useRenamePlan,
   useTodayDay,
 } from "@/core/plans/queries";
-
-const DEFAULT_PLAN_DAYS = 7;
 
 export default function Today() {
   const { t } = useTranslation();
@@ -56,7 +55,7 @@ export default function Today() {
       await abandon.mutateAsync(plan.id);
     }
 
-    generate.mutate(DEFAULT_PLAN_DAYS);
+    router.push("/plan/nuevo");
   };
 
   const saveTitle = async () => {

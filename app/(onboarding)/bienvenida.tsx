@@ -31,6 +31,8 @@ const TOPIC_KEYS = [
   "gratitude",
 ] as const;
 
+const GENDER_KEYS = ["feminine", "masculine", "neutral"] as const;
+
 const REMINDER_HOURS: { key: string; hour: number }[] = [
   { key: "early", hour: 6 },
   { key: "morning", hour: 8 },
@@ -47,6 +49,10 @@ export default function Onboarding() {
 
   const [step, setStep] = useState(1);
   const [displayName, setDisplayName] = useState("");
+  // Spanish inflects for gender constantly ("sola", "acompañada"), so a plan
+  // written for the wrong one grates on every single day. Guessing from the
+  // name works for "Marta" and fails for "Alex", so we ask.
+  const [gender, setGender] = useState<string | null>(null);
   const [season, setSeason] = useState<string | null>(null);
   const [topics, setTopics] = useState<string[]>([]);
   const [reminderKey, setReminderKey] = useState("morning");
@@ -69,7 +75,7 @@ export default function Onboarding() {
   }));
 
   const canContinue =
-    (step === 1 && displayName.trim().length > 0) ||
+    (step === 1 && displayName.trim().length > 0 && gender !== null) ||
     (step === 2 && season !== null) ||
     (step === 3 && topics.length > 0) ||
     step === 4;
@@ -92,7 +98,7 @@ export default function Onboarding() {
     // user arrived with, so the two can never end up out of sync.
     const { error: rpcError } = await supabase.rpc("complete_onboarding", {
       p_display_name: displayName.trim(),
-      p_answers: { season, topics, reminder_key: reminderKey },
+      p_answers: { season, topics, gender, reminder_key: reminderKey },
       p_timezone: Localization.getCalendars()[0]?.timeZone ?? "UTC",
       p_reminder_hour: reminderHour,
       p_locale: i18n.resolvedLanguage ?? "es",
@@ -136,6 +142,23 @@ export default function Onboarding() {
             autoCapitalize="words"
             autoComplete="name"
           />
+
+          <View className="gap-2">
+            <Text className="text-sm font-medium text-slate-600">
+              {t("onboarding.genderQuestion")}
+            </Text>
+            <Text className="text-sm text-slate-500">
+              {t("onboarding.genderHint")}
+            </Text>
+            <ChoiceChips
+              options={GENDER_KEYS.map((key) => ({
+                value: key,
+                label: t(`onboarding.gender.${key}`),
+              }))}
+              selected={gender ? [gender] : []}
+              onToggle={setGender}
+            />
+          </View>
         </View>
       ) : null}
 
