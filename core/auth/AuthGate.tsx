@@ -25,6 +25,14 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
   }
 
+  // The one auth screen you arrive at *with* a session: the recovery link signs
+  // you in and then asks for the new password. Sending it to "/" like the rest
+  // of the group meant the password was never actually changed, so the next
+  // sign-out locked the person out all over again.
+  if (segments[1] === "nueva-contrasena") {
+    return <>{children}</>;
+  }
+
   if (isLoading) {
     return <Loading />;
   }

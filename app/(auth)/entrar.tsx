@@ -113,6 +113,14 @@ export default function SignIn() {
           />
         </View>
 
+        {/* The key has been translated in both languages since the beginning
+            with nothing behind it, so losing your password lost the account. */}
+        <View className="mt-6 items-center">
+          <Link href="/recuperar" className="text-slate-500 underline">
+            {t("auth.forgotPassword")}
+          </Link>
+        </View>
+
         <View className="mt-8 flex-row items-center justify-center gap-2">
           <Text className="text-slate-500">{t("auth.noAccount")}</Text>
           <Link href="/crear-cuenta" className="font-semibold text-slate-900">

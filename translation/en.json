@@ -35,7 +35,14 @@
   },
   "profile": {
     "title": "Your profile",
-    "subtitle": "Your language and your account."
+    "subtitle": "Your language and your account.",
+    "name": "What we call you",
+    "reminder": "Your time to pray",
+    "reminderHint": "We will use it to remind you once notifications are on.",
+    "saved": "Saved.",
+    "delete": "Delete my account",
+    "deleteConfirm": "Yes, delete everything",
+    "deleteWarning": "Your plans, your circles and everything anyone prayed for you will go. This cannot be undone."
   },
   "auth": {
     "signInTitle": "Welcome back",
@@ -59,7 +66,14 @@
     "emailTaken": "An account with that email already exists.",
     "checkEmail": "We sent you an email to confirm your account.",
     "signUpIntro": "Join and let others pray with you.",
-    "signInIntro": "Good to see you again."
+    "signInIntro": "Good to see you again.",
+    "recoverTitle": "Recover your password",
+    "recoverBody": "We will send you a link so you can choose a new one.",
+    "recoverCta": "Send me the link",
+    "recoverSentBody": "If that address has an account, the link is on its way. Check your email.",
+    "recoverExpired": "That link is no longer valid. Ask for a new one.",
+    "newPasswordTitle": "Choose a new password",
+    "newPasswordBody": "You will use it next time you sign in."
   },
   "onboarding": {
     "welcomeTitle": "Let's build your plan",

@@ -471,6 +471,67 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- Leaving, and taking everything with you
+--
+-- The app collects health, family and faith. Under the GDPR that is
+-- special-category data, and there was no way out of it from inside the app.
+-- ===========================================================================
+-- Read auth.users as the superuser: `authenticated` has no access to it, which
+-- is exactly why the account deletion has to be a definer function.
+begin;
+
+select pg_temp.assert(
+  (select count(*) from auth.users where id = '22222222-2222-2222-2222-222222222222') = 1,
+  'Beto exists before he asks to leave');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select public.delete_my_account();
+
+commit;
+
+begin;
+
+select pg_temp.assert(
+  (select count(*) from auth.users where id = '22222222-2222-2222-2222-222222222222') = 0,
+  'and afterwards he does not');
+
+select pg_temp.assert(
+  (select count(*) from public.profiles where id = '22222222-2222-2222-2222-222222222222') = 0,
+  'his profile went with him');
+
+select pg_temp.assert(
+  (select count(*) from public.intercessions where intercessor_id = '22222222-2222-2222-2222-222222222222') = 0,
+  'and so did every prayer he offered');
+
+-- The one that matters if the cascade is ever loosened: no row anywhere should
+-- point at a user that no longer exists.
+select pg_temp.assert(
+  (select count(*) from public.profiles pr
+     left join auth.users u on u.id = pr.id where u.id is null) = 0,
+  'nothing is left pointing at a deleted account');
+
+select pg_temp.assert(
+  (select count(*) from auth.users where id = '11111111-1111-1111-1111-111111111111') = 1,
+  'and Ana is untouched');
+
+commit;
+
+begin;
+set local role anon;
+
+select pg_temp.assert(
+  pg_temp.raises($q$ select public.delete_my_account() $q$),
+  'nobody without a session can call it');
+
+commit;
+
 \echo ''
 \echo '================================'
 \echo ' ALL RLS ASSERTIONS PASSED'
