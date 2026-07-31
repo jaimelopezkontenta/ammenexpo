@@ -135,7 +135,9 @@ export default function Circles() {
         <Text className="text-2xl font-bold text-slate-900">
           {t("circles.title")}
         </Text>
-        <Text className="text-base text-slate-500">{t("circles.subtitle")}</Text>
+        <Text className="text-base text-slate-500">
+          {t("circles.subtitle")}
+        </Text>
       </View>
 
       {circles && circles.length > 0 ? (
@@ -169,7 +171,10 @@ export default function Circles() {
       )}
 
       <View className="mt-auto pt-6">
-        <Button title={t("circles.create")} onPress={() => setIsCreating(true)} />
+        <Button
+          title={t("circles.create")}
+          onPress={() => setIsCreating(true)}
+        />
       </View>
     </ScrollView>
   );

@@ -3,11 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/utils/supabase";
 
 export type PlanStatus =
-  | "generating"
-  | "failed"
-  | "active"
-  | "completed"
-  | "archived";
+  "generating" | "failed" | "active" | "completed" | "archived";
 
 export type OwnPlan = {
   id: string;
@@ -200,7 +196,13 @@ export const useRenamePlan = (userId: string | undefined) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ planId, title }: { planId: string; title: string }) => {
+    mutationFn: async ({
+      planId,
+      title,
+    }: {
+      planId: string;
+      title: string;
+    }) => {
       const { error } = await supabase
         .from("prayer_plans")
         .update({ title: title.trim().slice(0, 140) })

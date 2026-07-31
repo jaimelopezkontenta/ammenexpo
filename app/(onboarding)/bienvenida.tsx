@@ -217,7 +217,9 @@ export default function Onboarding() {
 
       <View className="mt-auto gap-3 pt-10">
         <Button
-          title={step === TOTAL_STEPS ? t("onboarding.finish") : t("onboarding.next")}
+          title={
+            step === TOTAL_STEPS ? t("onboarding.finish") : t("onboarding.next")
+          }
           disabled={!canContinue}
           loading={isSubmitting}
           onPress={() => {

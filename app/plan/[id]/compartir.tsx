@@ -113,7 +113,9 @@ export default function SharePlan() {
           <Text className="text-lg font-semibold text-slate-900">
             {plan.title}
           </Text>
-          <Text className="text-base text-slate-500">{t("share.subtitle")}</Text>
+          <Text className="text-base text-slate-500">
+            {t("share.subtitle")}
+          </Text>
         </View>
 
         <View className="gap-3">

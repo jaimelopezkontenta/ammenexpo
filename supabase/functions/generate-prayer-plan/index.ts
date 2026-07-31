@@ -427,10 +427,15 @@ Deno.serve(async (req) => {
 
   // --- New plan ------------------------------------------------------------
   const durationDays =
-    typeof body?.duration_days === "number" ? Math.round(body.duration_days) : 7;
+    typeof body?.duration_days === "number"
+      ? Math.round(body.duration_days)
+      : 7;
 
   if (durationDays < MIN_DAYS || durationDays > MAX_DAYS) {
-    return json({ error: "invalid_duration", min: MIN_DAYS, max: MAX_DAYS }, 400);
+    return json(
+      { error: "invalid_duration", min: MIN_DAYS, max: MAX_DAYS },
+      400,
+    );
   }
 
   // Generation is the expensive part, so it is what the paywall guards, and the

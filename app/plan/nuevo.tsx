@@ -96,7 +96,9 @@ export default function NewPlan() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t("newPlan.title"), headerShown: true }} />
+      <Stack.Screen
+        options={{ title: t("newPlan.title"), headerShown: true }}
+      />
       <ScrollView
         className="flex-1 bg-white"
         contentContainerClassName="gap-8 px-7 py-8"

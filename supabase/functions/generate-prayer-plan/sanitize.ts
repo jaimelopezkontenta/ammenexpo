@@ -7,7 +7,7 @@
  *
  * None of these sequences occur in Spanish prose, so cutting at them is safe.
  */
-const GARBAGE_MARKERS = ['},{', '"},', '",{', '"}]', '}]', '},'];
+const GARBAGE_MARKERS = ["},{", '"},', '",{', '"}]', "}]", "},"];
 
 // Quotes are included on both ends: losing one from a passage that genuinely
 // opened with a quotation mark is a far smaller problem than showing `{"` to

@@ -59,7 +59,10 @@ export const WhoPrayed = ({ people, onReport }: Props) => {
                     onPress={() => {
                       if (confirming === person.intercession_id) {
                         onReport(person.intercession_id);
-                        setReported((list) => [...list, person.intercession_id]);
+                        setReported((list) => [
+                          ...list,
+                          person.intercession_id,
+                        ]);
                         setConfirming(null);
                       } else {
                         setConfirming(person.intercession_id);

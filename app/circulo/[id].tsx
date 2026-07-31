@@ -128,7 +128,10 @@ export default function CircleDetail() {
         ) : null}
 
         <View className="mt-auto gap-3 pt-6">
-          <Button title={t("circles.invite")} onPress={() => void handleInvite()} />
+          <Button
+            title={t("circles.invite")}
+            onPress={() => void handleInvite()}
+          />
           <Button
             title={t("circles.leave")}
             variant="ghost"

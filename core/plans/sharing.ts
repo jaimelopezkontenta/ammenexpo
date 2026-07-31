@@ -58,7 +58,9 @@ export const useCreateShareLink = (planId: string | undefined) => {
       return data as ShareLink;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["planShareLink", planId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["planShareLink", planId],
+      });
     },
   });
 };
@@ -81,7 +83,9 @@ export const useRevokeShareLink = (planId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["planShareLink", planId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["planShareLink", planId],
+      });
     },
   });
 };

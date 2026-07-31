@@ -31,7 +31,9 @@ export const LanguageSwitcher = () => {
               }`}
             >
               <Text
-                className={isActive ? "font-semibold text-white" : "text-slate-700"}
+                className={
+                  isActive ? "font-semibold text-white" : "text-slate-700"
+                }
               >
                 {LABELS[code]}
               </Text>

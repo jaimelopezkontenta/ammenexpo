@@ -29,7 +29,13 @@ const LABEL: Record<ButtonVariant, string> = {
 
 export const Button = forwardRef<View, ButtonProps>(
   (
-    { title, variant = "primary", loading = false, disabled, ...touchableProps },
+    {
+      title,
+      variant = "primary",
+      loading = false,
+      disabled,
+      ...touchableProps
+    },
     ref,
   ) => {
     const isDisabled = disabled || loading;

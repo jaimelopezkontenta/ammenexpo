@@ -15,6 +15,10 @@ export const init18n = ({ resources, fallbackLng }: Init18n) => {
     pluralChecker(resources);
   }
 
+  // i18next also exports a standalone `use`, so the linter suspects this is the
+  // wrong one. It is not: chaining off the default instance is how i18next is
+  // meant to be initialised.
+  // eslint-disable-next-line import/no-named-as-default-member
   return i18n
     .use(createLanguageDetector({ resources, fallbackLng }))
     .use(initReactI18next)

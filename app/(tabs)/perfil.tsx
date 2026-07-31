@@ -18,7 +18,9 @@ export default function Profile() {
         <Text className="text-2xl font-bold text-slate-900">
           {t("profile.title")}
         </Text>
-        <Text className="text-base text-slate-500">{t("profile.subtitle")}</Text>
+        <Text className="text-base text-slate-500">
+          {t("profile.subtitle")}
+        </Text>
         {session?.user.email ? (
           <Text className="text-sm text-slate-400">{session.user.email}</Text>
         ) : null}

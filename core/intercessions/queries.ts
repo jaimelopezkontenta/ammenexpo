@@ -107,7 +107,9 @@ export const usePrayForSomeone = (userId: string | undefined) => {
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["sharedWithMe", userId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["sharedWithMe", userId],
+      });
     },
   });
 };

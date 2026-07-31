@@ -118,11 +118,11 @@ const TOPIC_LABELS: Record<string, string> = {
 
 const GENDER_LINES: Record<string, string> = {
   feminine:
-    "Diríjete a ella en femenino. Los adjetivos y participios que la describan van en femenino (\"sola\", \"acompañada\", \"cansada\").",
+    'Diríjete a ella en femenino. Los adjetivos y participios que la describan van en femenino ("sola", "acompañada", "cansada").',
   masculine:
-    "Diríjete a él en masculino. Los adjetivos y participios que lo describan van en masculino (\"solo\", \"acompañado\", \"cansado\").",
+    'Diríjete a él en masculino. Los adjetivos y participios que lo describan van en masculino ("solo", "acompañado", "cansado").',
   neutral:
-    "Escribe evitando marcas de género al referirte a la persona. Reformula en lugar de usar \"@\" o \"x\": en vez de \"no estás solo\", escribe \"no caminas sin compañía\".",
+    'Escribe evitando marcas de género al referirte a la persona. Reformula en lugar de usar "@" o "x": en vez de "no estás solo", escribe "no caminas sin compañía".',
 };
 
 export const buildUserPrompt = ({
@@ -145,8 +145,7 @@ export const buildUserPrompt = ({
     ? topics.map((topic) => TOPIC_LABELS[topic] ?? topic).join(", ")
     : "no ha elegido temas concretos";
 
-  const genderLine =
-    GENDER_LINES[gender ?? ""] ?? GENDER_LINES.neutral;
+  const genderLine = GENDER_LINES[gender ?? ""] ?? GENDER_LINES.neutral;
 
   // Deliberately fenced and labelled as the person's own words. It is user
   // input on its way to a model: it describes what to pray about and is never
@@ -204,7 +203,9 @@ export const buildRepairPrompt = (
 ) => `Algunas referencias bíblicas del plan que generaste no existen o no se pudieron encontrar en la Biblia:
 
 ${invalid
-  .map((day) => `- Día ${day.day_number} ("${day.title}"): "${day.scripture_ref}"`)
+  .map(
+    (day) => `- Día ${day.day_number} ("${day.title}"): "${day.scripture_ref}"`,
+  )
   .join("\n")}
 
 Devuelve el MISMO plan completo en JSON, cambiando únicamente esas referencias por otras que existan de verdad y encajen con el día. No cambies los títulos, las oraciones ni las preguntas de reflexión de ningún día.`;
