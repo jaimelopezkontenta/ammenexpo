@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -11,7 +12,6 @@ import {
   View,
 } from "react-native";
 
-import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -51,6 +51,10 @@ export default function CircleChat() {
   const isAdmin = (members ?? []).some(
     (m) => m.user_id === userId && m.role !== "member",
   );
+
+  // A send button that does nothing on an empty draft reads as broken; dimming
+  // it says the same thing without the tap.
+  const canSend = draft.trim().length > 0 && !send.isPending;
 
   const handleSend = async () => {
     const body = draft.trim();
@@ -230,24 +234,50 @@ export default function CircleChat() {
           </Text>
         ) : null}
 
-        <View className="flex-row items-end gap-3 border-t border-slate-100 px-7 py-4">
+        <View className="flex-row items-end gap-2 border-t border-slate-100 px-5 py-3">
           {/* A bare TextInput rather than TextField: the composer wants no
               visible label above it, and the accessible name is what matters. */}
           <TextInput
-            className="max-h-32 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900"
+            className="max-h-32 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900"
             accessibilityLabel={t("chat.inputLabel")}
             value={draft}
             onChangeText={setDraft}
             placeholder={t("chat.placeholder")}
             placeholderTextColor="#94a3b8"
             multiline
+            // react-native-web renders a multiline input as `rows={2}`, so an
+            // empty composer stood two lines tall next to a one-line button.
+            // Most messages are one line; it grows from there on native and
+            // scrolls inside `max-h-32` on the web.
+            numberOfLines={1}
             maxLength={4000}
           />
-          <Button
-            title={t("chat.send")}
-            loading={send.isPending}
+
+          {/* Not the shared Button: that one is `w-full`, sized for a screen's
+              primary action, so in this row it claimed everything and left the
+              composer 33px wide. A send control belongs to its own label. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("chat.send")}
+            accessibilityState={{
+              disabled: !canSend,
+              busy: send.isPending,
+            }}
+            aria-busy={send.isPending}
+            disabled={!canSend}
             onPress={() => void handleSend()}
-          />
+            className={`h-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 px-5 ${
+              canSend ? "" : "opacity-40"
+            }`}
+          >
+            {send.isPending ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text className="text-base font-semibold text-white">
+                {t("chat.send")}
+              </Text>
+            )}
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </>
