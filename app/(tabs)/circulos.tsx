@@ -67,11 +67,11 @@ export default function Circles() {
   if (isCreating) {
     return (
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-6 px-7 py-10"
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-2xl font-bold text-slate-900">
+        <Text className="text-2xl font-bold text-ink">
           {t("circles.createTitle")}
         </Text>
 
@@ -93,7 +93,7 @@ export default function Circles() {
         />
 
         <View className="gap-3">
-          <Text className="text-sm font-medium text-slate-600">
+          <Text className="text-sm font-medium text-ink-muted">
             {t("circles.visibility")}
           </Text>
           <ChoiceChips
@@ -105,7 +105,7 @@ export default function Circles() {
             onToggle={(value) => setVisibility(value as CircleVisibility)}
           />
           {/* Public circles carry a moderation duty, so say so before creating. */}
-          <Text className="text-sm text-slate-500">
+          <Text className="text-sm text-ink-muted">
             {visibility === "private"
               ? t("circles.visibilityPrivateHint")
               : t("circles.visibilityPublicHint")}
@@ -137,14 +137,14 @@ export default function Circles() {
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      className="flex-1 bg-paper"
       contentContainerClassName="flex-grow gap-4 px-7 py-10"
     >
       <View className="gap-1">
-        <Text className="text-2xl font-bold text-slate-900">
+        <Text className="text-2xl font-bold text-ink">
           {t("circles.title")}
         </Text>
-        <Text className="text-base text-slate-500">
+        <Text className="text-base text-ink-muted">
           {t("circles.subtitle")}
         </Text>
       </View>
@@ -162,18 +162,18 @@ export default function Circles() {
                   into a circle was invisible when swiping for controls. */}
               <Pressable
                 accessibilityRole="link"
-                className="gap-1 rounded-2xl border border-slate-200 p-5"
+                className="gap-1 rounded-2xl border border-ink-line p-5"
               >
                 <View className="flex-row items-center justify-between gap-3">
-                  <Text className="flex-1 text-lg font-semibold text-slate-900">
+                  <Text className="flex-1 text-lg font-semibold text-ink">
                     {circle.name}
                   </Text>
                   {/* Without this there was no way to know somebody had written
                       without opening every circle to check. */}
                   {(unread?.[circle.id] ?? 0) > 0 ? (
-                    <View className="rounded-full bg-slate-900 px-2.5 py-1">
+                    <View className="rounded-full bg-ink px-2.5 py-1">
                       <Text
-                        className="text-xs font-semibold text-white"
+                        className="text-xs font-semibold text-paper"
                         accessibilityLabel={t("chat.unread", {
                           count: unread![circle.id],
                         })}
@@ -183,7 +183,7 @@ export default function Circles() {
                     </View>
                   ) : null}
                 </View>
-                <Text className="text-sm text-slate-500">
+                <Text className="text-sm text-ink-muted">
                   {t("circles.members", { count: circle.member_count })}
                 </Text>
               </Pressable>
@@ -192,10 +192,10 @@ export default function Circles() {
         </View>
       ) : (
         <View className="items-center gap-2 py-10">
-          <Text className="text-center text-lg font-semibold text-slate-700">
+          <Text className="text-center text-lg font-semibold text-ink-muted">
             {t("circles.empty")}
           </Text>
-          <Text className="text-center text-base text-slate-500">
+          <Text className="text-center text-base text-ink-muted">
             {t("circles.emptyBody")}
           </Text>
         </View>

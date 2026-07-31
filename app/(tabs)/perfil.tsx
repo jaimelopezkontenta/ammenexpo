@@ -96,16 +96,16 @@ export default function Profile() {
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      className="flex-1 bg-paper"
       contentContainerClassName="flex-grow gap-8 px-7 py-10"
       keyboardShouldPersistTaps="handled"
     >
       <View className="gap-1">
-        <Text className="text-2xl font-bold text-slate-900">
+        <Text className="text-2xl font-bold text-ink">
           {t("profile.title")}
         </Text>
         {session?.user.email ? (
-          <Text className="text-sm text-slate-400">{session.user.email}</Text>
+          <Text className="text-sm text-ink-soft">{session.user.email}</Text>
         ) : null}
       </View>
 
@@ -117,7 +117,7 @@ export default function Profile() {
       />
 
       <View className="gap-3">
-        <Text className="text-sm font-medium text-slate-600">
+        <Text className="text-sm font-medium text-ink-muted">
           {t("profile.reminder")}
         </Text>
         <ChoiceChips
@@ -138,7 +138,7 @@ export default function Profile() {
         />
         {/* Honest about what it does today: the hour is stored and nothing
             reads it until push exists. */}
-        <Text className="text-sm text-slate-500">
+        <Text className="text-sm text-ink-muted">
           {t("profile.reminderHint")}
         </Text>
       </View>
@@ -152,7 +152,7 @@ export default function Profile() {
       ) : null}
 
       {notice ? (
-        <Text className="text-sm text-slate-600" accessibilityRole="alert">
+        <Text className="text-sm text-ink-muted" accessibilityRole="alert">
           {notice}
         </Text>
       ) : null}

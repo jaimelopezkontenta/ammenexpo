@@ -53,7 +53,7 @@ export default function NewPassword() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-paper"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
@@ -61,10 +61,10 @@ export default function NewPassword() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="gap-2">
-          <Text className="text-3xl font-bold text-slate-900">
+          <Text className="text-3xl font-bold text-ink">
             {t("auth.newPasswordTitle")}
           </Text>
-          <Text className="text-base leading-6 text-slate-500">
+          <Text className="text-base leading-6 text-ink-muted">
             {t("auth.newPasswordBody")}
           </Text>
         </View>

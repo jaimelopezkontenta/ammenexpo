@@ -40,7 +40,7 @@ export default function NewPrayerRequest() {
     <>
       <Stack.Screen options={{ title: t("feed.newPost"), headerShown: true }} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="flex-grow gap-6 px-7 py-8"
         keyboardShouldPersistTaps="handled"
       >
@@ -61,16 +61,14 @@ export default function NewPrayerRequest() {
             accessibilityLabel={t("feed.anonymous")}
             onPress={() => setIsAnonymous((current) => !current)}
             className={`rounded-2xl border px-4 py-3.5 ${
-              isAnonymous
-                ? "border-slate-900 bg-slate-900"
-                : "border-slate-200 bg-white"
+              isAnonymous ? "border-ink bg-ink" : "border-ink-line bg-paper"
             }`}
           >
             <Text
               className={
                 isAnonymous
-                  ? "text-base font-semibold text-white"
-                  : "text-base text-slate-700"
+                  ? "text-base font-semibold text-paper"
+                  : "text-base text-ink-muted"
               }
             >
               {t("feed.anonymous")}
@@ -81,7 +79,7 @@ export default function NewPrayerRequest() {
               there is no id to block either, and somebody deciding to post
               anonymously deserves to know that cuts both ways. */}
           {isAnonymous ? (
-            <Text className="text-sm leading-5 text-slate-500">
+            <Text className="text-sm leading-5 text-ink-muted">
               {t("feed.anonymousHint")}
             </Text>
           ) : null}

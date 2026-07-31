@@ -16,12 +16,10 @@ export const ScreenPlaceholder: React.FC<ScreenPlaceholderProps> = ({
   children,
 }) => {
   return (
-    <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
-      <Text className="text-center text-2xl font-bold text-slate-900">
-        {title}
-      </Text>
+    <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
+      <Text className="text-center text-2xl font-bold text-ink">{title}</Text>
       {subtitle ? (
-        <Text className="text-center text-base leading-6 text-slate-500">
+        <Text className="text-center text-base leading-6 text-ink-muted">
           {subtitle}
         </Text>
       ) : null}

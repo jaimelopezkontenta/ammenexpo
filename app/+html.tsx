@@ -43,12 +43,14 @@ export default function Root({ children }: { children: React.ReactNode }) {
   );
 }
 
+// El papel cálido del tema, y no el blanco del scaffold: en web el `body`
+// asoma por los bordes y en el arranque, así que dejarlo en #fff dejaba una
+// costura blanca alrededor de una app que ya no es blanca.
+//
+// Sin rama de modo oscuro: la app todavía no lo tiene, y pintar el fondo de
+// negro debajo de pantallas claras da un destello negro al cargar, que es peor
+// que no tenerlo.
 const responsiveBackground = `
 body {
-  background-color: #fff;
-}
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #000;
-  }
+  background-color: #FBF8F4;
 }`;

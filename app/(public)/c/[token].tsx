@@ -57,8 +57,8 @@ export default function CircleInvite() {
 
   if (!circle) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
-        <Text className="text-center text-xl font-bold text-slate-900">
+      <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
+        <Text className="text-center text-xl font-bold text-ink">
           {t("circles.inviteNotFound")}
         </Text>
 
@@ -86,15 +86,15 @@ export default function CircleInvite() {
   }
 
   return (
-    <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
-      <Text className="text-center text-2xl font-bold text-slate-900">
+    <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
+      <Text className="text-center text-2xl font-bold text-ink">
         {t("circles.joinTitle", { name: circle.name })}
       </Text>
-      <Text className="text-center text-base text-slate-500">
+      <Text className="text-center text-base text-ink-muted">
         {t("circles.joinBody", { count: circle.member_count })}
       </Text>
       {circle.description ? (
-        <Text className="text-center text-base text-slate-600">
+        <Text className="text-center text-base text-ink-muted">
           {circle.description}
         </Text>
       ) : null}

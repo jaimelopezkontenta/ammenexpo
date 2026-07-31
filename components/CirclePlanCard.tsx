@@ -39,11 +39,11 @@ export const CirclePlanCard = ({
     }
 
     return (
-      <View className="gap-2 rounded-2xl border border-slate-200 p-5">
-        <Text className="text-base font-semibold text-slate-900">
+      <View className="gap-2 rounded-2xl border border-ink-line p-5">
+        <Text className="text-base font-semibold text-ink">
           {t("circles.planEmpty")}
         </Text>
-        <Text className="text-base leading-6 text-slate-500">
+        <Text className="text-base leading-6 text-ink-muted">
           {t("circles.planEmptyBody")}
         </Text>
         <Link
@@ -57,35 +57,33 @@ export const CirclePlanCard = ({
   }
 
   return (
-    <View className="gap-3 rounded-2xl border border-slate-200 p-5">
+    <View className="gap-3 rounded-2xl border border-ink-line p-5">
       <View className="gap-1">
-        <Text className="text-sm font-medium text-slate-400">
+        <Text className="text-sm font-medium text-ink-soft">
           {t("circles.planLabel")}
         </Text>
-        <Text className="text-lg font-semibold text-slate-900">
-          {plan.title}
-        </Text>
+        <Text className="text-lg font-semibold text-ink">{plan.title}</Text>
       </View>
 
       {/* A streak nobody can see is a counter, not a streak. */}
       {circle.streak_count > 0 ? (
-        <Text className="text-sm text-slate-500">
+        <Text className="text-sm text-ink-muted">
           {t("circles.streak", { count: circle.streak_count })}
         </Text>
       ) : null}
 
       {plan.status === "generating" && !plan.day_id ? (
-        <Text className="text-base text-slate-500">{t("plan.generating")}</Text>
+        <Text className="text-base text-ink-muted">{t("plan.generating")}</Text>
       ) : null}
 
       {plan.day_id ? (
         <>
-          <Text className="text-base text-slate-800">
+          <Text className="text-base text-ink">
             {t("common.day", { number: plan.day_number })} · {plan.day_title}
           </Text>
 
           {plan.prayed_count > 0 ? (
-            <Text className="text-sm text-slate-500">
+            <Text className="text-sm text-ink-muted">
               {t("circles.prayedToday", { count: plan.prayed_count })}
             </Text>
           ) : null}
@@ -97,7 +95,7 @@ export const CirclePlanCard = ({
           ) : null}
 
           {plan.prayed_today ? (
-            <Text className="text-base font-medium text-slate-500">
+            <Text className="text-base font-medium text-ink-muted">
               {t("plan.markedDone")}
             </Text>
           ) : (

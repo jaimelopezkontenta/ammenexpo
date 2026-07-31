@@ -137,20 +137,18 @@ export default function SharePlan() {
     <>
       <Stack.Screen options={{ title: t("share.title"), headerShown: true }} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-8 px-7 py-8"
       >
         <View className="gap-1">
-          <Text className="text-lg font-semibold text-slate-900">
-            {plan.title}
-          </Text>
-          <Text className="text-base text-slate-500">
+          <Text className="text-lg font-semibold text-ink">{plan.title}</Text>
+          <Text className="text-base text-ink-muted">
             {stillWriting ? t("share.stillWriting") : t("share.subtitle")}
           </Text>
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-slate-900">
+          <Text className="text-lg font-semibold text-ink">
             {t("share.circlesTitle")}
           </Text>
 
@@ -165,7 +163,7 @@ export default function SharePlan() {
                 onToggle={(circleId) => void handleToggleCircle(circleId)}
                 multiple
               />
-              <Text className="text-sm text-slate-500">
+              <Text className="text-sm text-ink-muted">
                 {t("share.circlesHint")}
               </Text>
             </>
@@ -173,31 +171,31 @@ export default function SharePlan() {
             // A failed read used to render "Todavía no tienes círculos", which
             // is a different and untrue thing to say — and it says it on the
             // screen where someone is deciding who gets to see their request.
-            <Text className="text-sm text-slate-500">
+            <Text className="text-sm text-ink-muted">
               {circlesFailed ? t("common.errorBody") : t("newPlan.noCircles")}
             </Text>
           )}
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-slate-900">
+          <Text className="text-lg font-semibold text-ink">
             {t("share.linkTitle")}
           </Text>
 
           {linkLoading ? (
             <ActivityIndicator
-              color="#0f172a"
+              color="#1C1917"
               accessibilityLabel={t("common.loading")}
             />
           ) : linkUrl ? (
             <>
-              <View className="gap-2 rounded-2xl bg-slate-50 p-5">
-                <Text className="text-sm text-slate-600" selectable>
+              <View className="gap-2 rounded-2xl bg-paper-sunken p-5">
+                <Text className="text-sm text-ink-muted" selectable>
                   {linkUrl}
                 </Text>
               </View>
 
-              <Text className="text-sm text-slate-500">
+              <Text className="text-sm text-ink-muted">
                 {t("share.linkWarning")}
               </Text>
 
@@ -219,7 +217,7 @@ export default function SharePlan() {
             </>
           ) : (
             <>
-              <Text className="text-sm text-slate-500">
+              <Text className="text-sm text-ink-muted">
                 {t("share.noLinkHint")}
               </Text>
               <Button
@@ -232,7 +230,7 @@ export default function SharePlan() {
         </View>
 
         {notice ? (
-          <Text className="text-sm text-slate-600" accessibilityRole="alert">
+          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
             {notice}
           </Text>
         ) : null}

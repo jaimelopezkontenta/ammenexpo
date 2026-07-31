@@ -182,18 +182,18 @@ export default function CircleDetail() {
     <>
       <Stack.Screen options={{ title: circle.name, headerShown: true }} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="flex-grow gap-6 px-7 py-8"
       >
         {/* The name is already in the navigation header; repeating it here as a
             heading just pushed the useful content down. */}
         <View className="gap-1">
           {circle.description ? (
-            <Text className="text-base text-slate-500">
+            <Text className="text-base text-ink-muted">
               {circle.description}
             </Text>
           ) : null}
-          <Text className="text-sm text-slate-400">
+          <Text className="text-sm text-ink-soft">
             {t("circles.members", { count: circle.member_count })} ·{" "}
             {circle.visibility === "private"
               ? t("circles.visibilityPrivate")
@@ -213,7 +213,7 @@ export default function CircleDetail() {
         />
 
         <View className="gap-3">
-          <Text className="text-sm font-medium text-slate-400">
+          <Text className="text-sm font-medium text-ink-soft">
             {t("circles.membersTitle")}
           </Text>
           {/* A failed roster read used to render an empty list —
@@ -222,7 +222,7 @@ export default function CircleDetail() {
               moment they most likely need it. */}
           {membersFailed ? (
             <Text
-              className="text-base leading-6 text-slate-500"
+              className="text-base leading-6 text-ink-muted"
               accessibilityRole="alert"
             >
               {t("common.errorBody")}
@@ -232,11 +232,11 @@ export default function CircleDetail() {
           {(members ?? []).map((member) => (
             <View key={member.user_id} className="gap-1">
               <View className="flex-row items-center justify-between">
-                <Text className="text-base text-slate-800">
+                <Text className="text-base text-ink">
                   {member.display_name}
                 </Text>
                 {member.role !== "member" ? (
-                  <Text className="text-sm text-slate-400">
+                  <Text className="text-sm text-ink-soft">
                     {member.role === "owner"
                       ? t("circles.owner")
                       : t("circles.admin")}
@@ -253,7 +253,7 @@ export default function CircleDetail() {
                     accessibilityRole="button"
                     onPress={() => void handleBlock(member.user_id)}
                   >
-                    <Text className="text-sm text-slate-400">
+                    <Text className="text-sm text-ink-soft">
                       {t("moderation.block")}
                     </Text>
                   </Pressable>
@@ -263,7 +263,7 @@ export default function CircleDetail() {
                       accessibilityRole="button"
                       onPress={() => void handleRemove(member.user_id)}
                     >
-                      <Text className="text-sm text-slate-400">
+                      <Text className="text-sm text-ink-soft">
                         {pendingRemoval === member.user_id
                           ? t("circles.removeConfirmCta")
                           : t("circles.remove")}
@@ -280,12 +280,12 @@ export default function CircleDetail() {
             nothing about before — including whether your own plan is among
             them, the answer to "is this circle seeing my requests?". */}
         <View className="gap-3">
-          <Text className="text-sm font-medium text-slate-400">
+          <Text className="text-sm font-medium text-ink-soft">
             {t("circles.sharedTitle")}
           </Text>
 
           {(sharedPlans ?? []).length === 0 ? (
-            <Text className="text-base text-slate-500">
+            <Text className="text-base text-ink-muted">
               {t("circles.sharedEmpty")}
             </Text>
           ) : null}
@@ -295,7 +295,7 @@ export default function CircleDetail() {
               key={shared.plan_id}
               accessibilityRole="link"
               accessibilityLabel={`${shared.plan_title}. ${shared.owner_name}`}
-              className="gap-0.5 rounded-2xl border border-slate-200 p-4"
+              className="gap-0.5 rounded-2xl border border-ink-line p-4"
               onPress={() =>
                 shared.is_mine
                   ? router.push("/")
@@ -305,10 +305,10 @@ export default function CircleDetail() {
                     })
               }
             >
-              <Text className="text-base font-medium text-slate-800">
+              <Text className="text-base font-medium text-ink">
                 {shared.plan_title}
               </Text>
-              <Text className="text-sm text-slate-500">
+              <Text className="text-sm text-ink-muted">
                 {shared.is_mine ? t("circles.sharedMine") : shared.owner_name}
               </Text>
             </Pressable>
@@ -330,18 +330,18 @@ export default function CircleDetail() {
         </Link>
 
         {inviteUrl ? (
-          <View className="gap-2 rounded-2xl bg-slate-50 p-5">
-            <Text className="text-sm font-medium text-slate-400">
+          <View className="gap-2 rounded-2xl bg-paper-sunken p-5">
+            <Text className="text-sm font-medium text-ink-soft">
               {t("circles.inviteLink")}
             </Text>
-            <Text className="text-sm text-slate-600" selectable>
+            <Text className="text-sm text-ink-muted" selectable>
               {inviteUrl}
             </Text>
           </View>
         ) : null}
 
         {notice ? (
-          <Text className="text-sm text-slate-600" accessibilityRole="alert">
+          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
             {notice}
           </Text>
         ) : null}
@@ -354,7 +354,7 @@ export default function CircleDetail() {
 
         {confirmingLeave ? (
           <Text
-            className="text-sm text-slate-600"
+            className="text-sm text-ink-muted"
             accessibilityRole="alert"
             accessibilityLiveRegion="polite"
           >

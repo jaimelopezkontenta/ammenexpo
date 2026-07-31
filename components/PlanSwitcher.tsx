@@ -54,15 +54,13 @@ export const PlanSwitcher = ({
             accessibilityLabel={plan.title}
             onPress={() => onSelect(plan.id)}
             className={`rounded-full border px-4 py-2 ${
-              isActive
-                ? "border-slate-900 bg-slate-900"
-                : "border-slate-200 bg-white"
+              isActive ? "border-ink bg-ink" : "border-ink-line bg-paper"
             }`}
           >
             <Text
               numberOfLines={1}
               className={`max-w-48 text-sm ${
-                isActive ? "font-semibold text-white" : "text-slate-600"
+                isActive ? "font-semibold text-paper" : "text-ink-muted"
               }`}
             >
               {plan.title}

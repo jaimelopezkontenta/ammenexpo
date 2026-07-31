@@ -89,10 +89,10 @@ export default function PrayerRequests() {
     <>
       <Stack.Screen options={{ title, headerShown: true }} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="flex-grow gap-5 px-7 py-8"
       >
-        <Text className="text-base leading-6 text-slate-500">
+        <Text className="text-base leading-6 text-ink-muted">
           {t("feed.subtitle")}
         </Text>
 
@@ -100,14 +100,14 @@ export default function PrayerRequests() {
             a real property of this screen, and pretending otherwise would be
             the dishonest version. */}
         {!circulo ? (
-          <Text className="text-sm leading-5 text-slate-400">
+          <Text className="text-sm leading-5 text-ink-soft">
             {t("feed.wallNoAdmin")}
           </Text>
         ) : null}
 
         {notice ? (
           <Text
-            className="text-sm text-slate-600"
+            className="text-sm text-ink-muted"
             accessibilityRole="alert"
             accessibilityLiveRegion="polite"
           >
@@ -123,10 +123,10 @@ export default function PrayerRequests() {
 
         {(requests ?? []).length === 0 ? (
           <View className="gap-2 py-6">
-            <Text className="text-lg font-semibold text-slate-700">
+            <Text className="text-lg font-semibold text-ink-muted">
               {circulo ? t("feed.emptyCircle") : t("feed.empty")}
             </Text>
-            <Text className="text-base leading-6 text-slate-500">
+            <Text className="text-base leading-6 text-ink-muted">
               {t("feed.emptyBody")}
             </Text>
           </View>

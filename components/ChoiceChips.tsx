@@ -56,13 +56,13 @@ export const ChoiceChips = ({
             onPress={() => onToggle(option.value)}
             className={`rounded-full border px-4 py-2.5 ${
               isSelected
-                ? "border-slate-900 bg-slate-900"
-                : "border-slate-200 bg-white"
+                ? "border-ink bg-ink"
+                : "border-ink-line bg-paper-raised"
             } ${isDisabled ? "opacity-40" : ""}`}
           >
             <Text
               className={
-                isSelected ? "font-semibold text-white" : "text-slate-700"
+                isSelected ? "font-semibold text-paper" : "text-ink-muted"
               }
             >
               {option.label}

@@ -43,10 +43,10 @@ export default function PlanDays() {
         options={{ title: plan?.title ?? t("plan.days"), headerShown: true }}
       />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-3 px-7 py-8"
       >
-        <Text className="text-sm text-slate-500">
+        <Text className="text-sm text-ink-muted">
           {t("plan.daysHint", {
             count: (days ?? []).filter((day) => day.unlocked).length,
           })}
@@ -61,12 +61,12 @@ export default function PlanDays() {
             return (
               <View
                 key={day.day_number}
-                className="gap-1 rounded-2xl border border-dashed border-slate-200 p-5"
+                className="gap-1 rounded-2xl border border-dashed border-ink-line p-5"
               >
-                <Text className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+                <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
                   {t("common.day", { number: day.day_number })}
                 </Text>
-                <Text className="text-base text-slate-400">
+                <Text className="text-base text-ink-soft">
                   {t("plan.locked", {
                     date: new Date(day.unlock_date).toLocaleDateString(
                       i18n.language,
@@ -83,7 +83,7 @@ export default function PlanDays() {
               key={day.day_number}
               accessibilityRole="link"
               accessibilityLabel={`${t("common.day", { number: day.day_number })}. ${day.title}`}
-              className="gap-1 rounded-2xl border border-slate-200 p-5"
+              className="gap-1 rounded-2xl border border-ink-line p-5"
               onPress={() =>
                 router.push({
                   pathname: "/plan/[id]/dia/[numero]",
@@ -92,24 +92,24 @@ export default function PlanDays() {
               }
             >
               <View className="flex-row items-center justify-between">
-                <Text className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
                   {t("common.day", { number: day.day_number })}
                 </Text>
                 {/* A quiet mark, not a scoreboard: this is a record of what you
                     prayed, not a list of what you owe. */}
                 {day.prayed ? (
-                  <Text className="text-sm text-slate-400">
+                  <Text className="text-sm text-ink-soft">
                     {t("plan.dayPrayed")}
                   </Text>
                 ) : null}
               </View>
 
-              <Text className="text-lg font-semibold text-slate-900">
+              <Text className="text-lg font-semibold text-ink">
                 {day.title}
               </Text>
 
               {day.scripture_ref ? (
-                <Text className="text-sm text-slate-500">
+                <Text className="text-sm text-ink-muted">
                   {day.scripture_ref}
                 </Text>
               ) : null}

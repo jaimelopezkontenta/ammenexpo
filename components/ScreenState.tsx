@@ -17,14 +17,14 @@ export const LoadingState = ({ label }: { label?: string }) => {
 
   return (
     <View
-      className="flex-1 items-center justify-center bg-white"
+      className="flex-1 items-center justify-center bg-paper"
       accessibilityRole="progressbar"
       accessibilityLabel={label ?? t("common.loading")}
       // Announced on arrival, so a screen reader user is not left on a screen
       // that seems empty while it is in fact working.
       accessibilityLiveRegion="polite"
     >
-      <ActivityIndicator color="#0f172a" />
+      <ActivityIndicator color="#1C1917" />
     </View>
   );
 };
@@ -39,14 +39,14 @@ export const ErrorState = ({ onRetry, message }: ErrorStateProps) => {
   const { t } = useTranslation();
 
   return (
-    <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
+    <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
       <Text
-        className="text-center text-xl font-bold text-slate-900"
+        className="text-center text-xl font-bold text-ink"
         accessibilityRole="alert"
       >
         {t("common.errorTitle")}
       </Text>
-      <Text className="text-center text-base leading-6 text-slate-500">
+      <Text className="text-center text-base leading-6 text-ink-muted">
         {message ?? t("common.errorBody")}
       </Text>
       {onRetry ? (

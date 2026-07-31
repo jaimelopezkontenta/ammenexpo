@@ -63,12 +63,12 @@ export default function NewTestimony() {
         options={{ title: t("testimony.title"), headerShown: true }}
       />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="flex-grow gap-6 px-7 py-8"
         keyboardShouldPersistTaps="handled"
       >
         {plan ? (
-          <Text className="text-sm text-slate-500">
+          <Text className="text-sm text-ink-muted">
             {t("testimony.duringPlan", { title: plan.title })}
           </Text>
         ) : null}
@@ -85,7 +85,7 @@ export default function NewTestimony() {
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-slate-900">
+          <Text className="text-lg font-semibold text-ink">
             {t("testimony.whoSees")}
           </Text>
           <ChoiceChips
@@ -97,7 +97,7 @@ export default function NewTestimony() {
             selected={[visibility]}
             onToggle={(value) => setVisibility(value as TestimonyVisibility)}
           />
-          <Text className="text-sm text-slate-500">{hint}</Text>
+          <Text className="text-sm text-ink-muted">{hint}</Text>
         </View>
 
         {error ? (

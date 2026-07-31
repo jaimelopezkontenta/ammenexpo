@@ -178,7 +178,7 @@ export default function ChapterReader() {
       />
       <ScrollView
         ref={scrollRef}
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-4 px-7 py-8"
         onContentSizeChange={scrollToTarget}
       >
@@ -189,7 +189,7 @@ export default function ChapterReader() {
             <View
               key={row.verse}
               className={`flex-row gap-3 rounded-xl px-2 py-1 ${
-                highlighted ? "bg-amber-50" : ""
+                highlighted ? "bg-clay-soft" : ""
               }`}
               // Measured only for the verse we were sent to. Collecting all 176
               // layouts of Salmos 119 to use one would be waste.
@@ -202,10 +202,10 @@ export default function ChapterReader() {
                   : undefined
               }
             >
-              <Text className="pt-1 text-xs font-semibold text-slate-400">
+              <Text className="pt-1 text-xs font-semibold text-ink-muted">
                 {row.verse}
               </Text>
-              <Text className="flex-1 text-lg leading-8 text-slate-800">
+              <Text className="flex-1 font-serif text-lg leading-reading text-ink">
                 {row.text}
               </Text>
             </View>

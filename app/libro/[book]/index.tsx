@@ -27,8 +27,8 @@ export default function BookChapters() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <View className="flex-1 items-center justify-center bg-white">
-          <ActivityIndicator color="#0f172a" />
+        <View className="flex-1 items-center justify-center bg-paper">
+          <ActivityIndicator color="#1C1917" />
         </View>
       </>
     );
@@ -44,8 +44,8 @@ export default function BookChapters() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <View className="flex-1 items-center justify-center gap-4 bg-white px-8">
-          <Text className="text-center text-base text-slate-500">
+        <View className="flex-1 items-center justify-center gap-4 bg-paper px-8">
+          <Text className="text-center text-base text-ink-muted">
             {t("common.notFoundTitle")}
           </Text>
           <View className="w-full">
@@ -69,10 +69,10 @@ export default function BookChapters() {
     <>
       <Stack.Screen options={{ title: entry.modern_name, headerShown: true }} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-4 px-7 py-8"
       >
-        <Text className="text-sm text-slate-400">
+        <Text className="text-sm text-ink-soft">
           {t("bible.chapters", { count: entry.chapter_count })}
         </Text>
 
@@ -82,7 +82,7 @@ export default function BookChapters() {
               key={chapter}
               accessibilityRole="button"
               accessibilityLabel={t("bible.chapter", { number: chapter })}
-              className="h-14 w-14 items-center justify-center rounded-2xl border border-slate-200"
+              className="h-14 w-14 items-center justify-center rounded-2xl border border-ink-line"
               onPress={() =>
                 router.push({
                   pathname: "/libro/[book]/[chapter]",
@@ -90,7 +90,7 @@ export default function BookChapters() {
                 })
               }
             >
-              <Text className="text-base text-slate-800">{chapter}</Text>
+              <Text className="text-base text-ink">{chapter}</Text>
             </Pressable>
           ))}
         </View>

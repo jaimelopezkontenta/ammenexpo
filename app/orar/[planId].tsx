@@ -97,18 +97,18 @@ export default function PrayForSomeone() {
     <>
       <Stack.Screen options={{ title: plan.owner_name, headerShown: true }} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-7 px-7 py-8"
         keyboardShouldPersistTaps="handled"
       >
         <View className="gap-1">
-          <Text className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
             {t("common.day", { number: plan.day_number })}
           </Text>
-          <Text className="text-3xl font-bold leading-9 text-slate-900">
+          <Text className="text-3xl font-bold leading-9 text-ink">
             {plan.day_title}
           </Text>
-          <Text className="text-base text-slate-500">{plan.plan_title}</Text>
+          <Text className="text-base text-ink-muted">{plan.plan_title}</Text>
         </View>
 
         {/* The shared component rather than an inlined copy: this screen used
@@ -127,7 +127,7 @@ export default function PrayForSomeone() {
           <DaySection
             label={t("intercession.prayerFor", { name: plan.owner_name })}
           >
-            <Text className="text-lg leading-8 text-slate-800">
+            <Text className="font-serif text-lg leading-reading text-ink">
               {plan.intercessor_prayer}
             </Text>
           </DaySection>
@@ -135,7 +135,7 @@ export default function PrayForSomeone() {
 
         {plan.already_prayed || sent ? (
           <Text
-            className="text-center text-base font-medium text-slate-600"
+            className="text-center text-base font-medium text-ink-muted"
             accessibilityRole="alert"
             accessibilityLiveRegion="polite"
           >
@@ -164,14 +164,12 @@ export default function PrayForSomeone() {
                     accessibilityLabel={label}
                     onPress={() => setMessage(chosen ? "" : label)}
                     className={`rounded-full border px-4 py-2.5 ${
-                      chosen
-                        ? "border-slate-900 bg-slate-900"
-                        : "border-slate-200 bg-white"
+                      chosen ? "border-ink bg-ink" : "border-ink-line bg-paper"
                     }`}
                   >
                     <Text
                       className={
-                        chosen ? "font-semibold text-white" : "text-slate-700"
+                        chosen ? "font-semibold text-paper" : "text-ink-muted"
                       }
                     >
                       {label}
@@ -194,7 +192,7 @@ export default function PrayForSomeone() {
                 explanation. The counter only appears once it is close enough
                 to matter. */}
             {message.length > MESSAGE_MAX - 60 ? (
-              <Text className="text-right text-sm text-slate-400">
+              <Text className="text-right text-sm text-ink-soft">
                 {t("intercession.remaining", {
                   count: MESSAGE_MAX - message.length,
                 })}

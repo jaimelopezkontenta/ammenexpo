@@ -14,7 +14,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
       <View className="w-full gap-1.5">
         {/* aria-hidden on web: the visible label would otherwise be read once as
             loose text and again as the input's accessible name. */}
-        <Text className="text-sm font-medium text-slate-600" aria-hidden>
+        <Text className="text-sm font-medium text-ink-muted" aria-hidden>
           {label}
         </Text>
         <TextInput
@@ -28,10 +28,10 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
           accessibilityHint={error ?? undefined}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor="#726A62"
           {...inputProps}
-          className={`w-full rounded-2xl border bg-white px-4 py-3.5 text-base text-slate-900 ${
-            error ? "border-red-400" : "border-slate-200"
+          className={`w-full rounded-2xl border bg-paper-raised px-4 py-3.5 text-base text-ink ${
+            error ? "border-red-400" : "border-ink-line"
           } ${inputProps.className ?? ""}`}
         />
         {error ? (

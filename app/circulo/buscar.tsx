@@ -58,17 +58,17 @@ export default function FindCircles() {
     <>
       <Stack.Screen options={{ title: t("circles.find"), headerShown: true }} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-5 px-7 py-8"
         keyboardShouldPersistTaps="handled"
       >
         <TextInput
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base text-slate-900"
+          className="w-full rounded-2xl border border-ink-line bg-paper px-4 py-3.5 text-base text-ink"
           accessibilityLabel={t("circles.findPlaceholder")}
           value={query}
           onChangeText={setQuery}
           placeholder={t("circles.findPlaceholder")}
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor="#726A62"
           autoCorrect={false}
         />
 
@@ -86,7 +86,7 @@ export default function FindCircles() {
             always means something real: either nobody has opened a public
             circle yet, or this search found none. */}
         {!isLoading && !isError && (circles ?? []).length === 0 ? (
-          <Text className="text-base leading-6 text-slate-500">
+          <Text className="text-base leading-6 text-ink-muted">
             {query.trim() ? t("circles.findEmpty") : t("circles.findNone")}
           </Text>
         ) : null}
@@ -94,19 +94,19 @@ export default function FindCircles() {
         {(circles ?? []).map((circle) => (
           <View
             key={circle.id}
-            className="gap-2 rounded-2xl border border-slate-200 p-5"
+            className="gap-2 rounded-2xl border border-ink-line p-5"
           >
-            <Text className="text-lg font-semibold text-slate-900">
+            <Text className="text-lg font-semibold text-ink">
               {circle.name}
             </Text>
 
             {circle.description ? (
-              <Text className="text-base leading-6 text-slate-500">
+              <Text className="text-base leading-6 text-ink-muted">
                 {circle.description}
               </Text>
             ) : null}
 
-            <Text className="text-sm text-slate-400">
+            <Text className="text-sm text-ink-soft">
               {t("circles.members", { count: circle.member_count })}
             </Text>
 
@@ -120,7 +120,7 @@ export default function FindCircles() {
                   })
                 }
               >
-                <Text className="text-base font-medium text-slate-900">
+                <Text className="text-base font-medium text-ink">
                   {t("circles.alreadyIn")}
                 </Text>
               </Pressable>
@@ -134,7 +134,7 @@ export default function FindCircles() {
               >
                 <Text
                   className={`text-base font-medium ${
-                    joining !== null ? "text-slate-400" : "text-slate-900"
+                    joining !== null ? "text-ink-soft" : "text-ink"
                   }`}
                 >
                   {joining === circle.id

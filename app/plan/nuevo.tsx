@@ -115,15 +115,15 @@ export default function NewPlan() {
         options={{ title: t("newPlan.title"), headerShown: true }}
       />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-8 px-7 py-8"
         keyboardShouldPersistTaps="handled"
       >
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-slate-900">
+          <Text className="text-lg font-semibold text-ink">
             {t("newPlan.topicQuestion")}
           </Text>
-          <Text className="text-sm text-slate-500">
+          <Text className="text-sm text-ink-muted">
             {t("newPlan.topicHint")}
           </Text>
           <ChoiceChips
@@ -146,13 +146,13 @@ export default function NewPlan() {
             maxLength={CUSTOM_TOPIC_MAX}
             multiline
           />
-          <Text className="text-sm text-slate-500">
+          <Text className="text-sm text-ink-muted">
             {t("newPlan.customHint")}
           </Text>
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-slate-900">
+          <Text className="text-lg font-semibold text-ink">
             {t("newPlan.durationQuestion")}
           </Text>
           <ChoiceChips
@@ -169,7 +169,7 @@ export default function NewPlan() {
             yo" here would be offering a contradiction. */}
         {circulo ? null : (
           <View className="gap-3">
-            <Text className="text-lg font-semibold text-slate-900">
+            <Text className="text-lg font-semibold text-ink">
               {t("newPlan.visibilityQuestion")}
             </Text>
             <ChoiceChips
@@ -181,7 +181,7 @@ export default function NewPlan() {
               selected={[visibility]}
               onToggle={(value) => setVisibility(value as PlanVisibility)}
             />
-            <Text className="text-sm text-slate-500">{visibilityHint}</Text>
+            <Text className="text-sm text-ink-muted">{visibilityHint}</Text>
 
             {visibility === "circles" ? (
               hasCircles ? (
@@ -200,7 +200,7 @@ export default function NewPlan() {
                 // Without a way out this option is a dead end: nothing to pick,
                 // and creating the plan is blocked on picking something.
                 <View className="gap-3">
-                  <Text className="text-sm text-slate-500">
+                  <Text className="text-sm text-ink-muted">
                     {t("newPlan.noCircles")}
                   </Text>
                   <Button
@@ -222,13 +222,13 @@ export default function NewPlan() {
 
         {atLimit ? (
           <View
-            className="gap-2 rounded-2xl bg-slate-50 p-5"
+            className="gap-2 rounded-2xl bg-paper-sunken p-5"
             accessibilityRole="alert"
           >
-            <Text className="text-base font-semibold text-slate-900">
+            <Text className="text-base font-semibold text-ink">
               {t("plan.limitTitle")}
             </Text>
-            <Text className="text-base leading-6 text-slate-600">
+            <Text className="text-base leading-6 text-ink-muted">
               {t("plan.limitBody")}
             </Text>
             <Link href="/plus" asChild>

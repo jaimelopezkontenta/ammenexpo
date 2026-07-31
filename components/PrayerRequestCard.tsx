@@ -32,9 +32,9 @@ export const PrayerRequestCard = ({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
-    <View className="gap-3 rounded-2xl border border-slate-200 p-5">
+    <View className="gap-3 rounded-2xl border border-ink-line p-5">
       <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-medium text-slate-400">
+        <Text className="text-sm font-medium text-ink-soft">
           {/* Somebody who asked anonymously has no name to show and no id to
               correlate — that is the whole point of the checkbox. */}
           {request.is_anonymous
@@ -43,16 +43,18 @@ export const PrayerRequestCard = ({
         </Text>
 
         {request.answered_at ? (
-          <Text className="text-sm font-medium text-slate-500">
+          <Text className="text-sm font-medium text-ink-muted">
             {t("feed.answered")}
           </Text>
         ) : null}
       </View>
 
-      <Text className="text-base leading-7 text-slate-800">{request.body}</Text>
+      <Text className="font-serif text-base leading-reading text-ink">
+        {request.body}
+      </Text>
 
       {request.prayer_count > 0 ? (
-        <Text className="text-sm text-slate-500">
+        <Text className="text-sm text-ink-muted">
           {t("feed.prayCount", { count: request.prayer_count })}
         </Text>
       ) : null}
@@ -65,12 +67,12 @@ export const PrayerRequestCard = ({
         aria-checked={request.i_prayed}
         onPress={onTogglePrayer}
         className={`items-center rounded-2xl px-4 py-3 ${
-          request.i_prayed ? "bg-slate-100" : "bg-slate-900"
+          request.i_prayed ? "bg-paper-sunken" : "bg-ink"
         }`}
       >
         <Text
           className={`text-base font-semibold ${
-            request.i_prayed ? "text-slate-600" : "text-white"
+            request.i_prayed ? "text-ink-muted" : "text-paper"
           }`}
         >
           {request.i_prayed ? t("feed.prayed") : t("feed.pray")}
@@ -79,7 +81,7 @@ export const PrayerRequestCard = ({
 
       <View className="flex-row flex-wrap gap-4">
         <Pressable accessibilityRole="link" onPress={onOpen}>
-          <Text className="text-sm text-slate-400 underline">
+          <Text className="text-sm text-ink-soft underline">
             {request.comment_count > 0
               ? t("feed.commentCount", { count: request.comment_count })
               : t("feed.comment")}
@@ -90,7 +92,7 @@ export const PrayerRequestCard = ({
           <>
             {request.answered_at ? null : (
               <Pressable accessibilityRole="button" onPress={onMarkAnswered}>
-                <Text className="text-sm text-slate-400 underline">
+                <Text className="text-sm text-ink-soft underline">
                   {t("feed.markAnswered")}
                 </Text>
               </Pressable>
@@ -111,7 +113,7 @@ export const PrayerRequestCard = ({
                 className={
                   confirmingDelete
                     ? "text-sm font-semibold text-red-500"
-                    : "text-sm text-slate-400 underline"
+                    : "text-sm text-ink-soft underline"
                 }
                 accessibilityLiveRegion={confirmingDelete ? "polite" : "none"}
               >
@@ -122,7 +124,7 @@ export const PrayerRequestCard = ({
         ) : (
           <>
             <Pressable accessibilityRole="button" onPress={onReport}>
-              <Text className="text-sm text-slate-400 underline">
+              <Text className="text-sm text-ink-soft underline">
                 {t("moderation.report")}
               </Text>
             </Pressable>
@@ -136,7 +138,7 @@ export const PrayerRequestCard = ({
                 accessibilityLabel={`${t("moderation.block")} ${request.author_name ?? ""}`}
                 onPress={() => onBlock(request.author_id!)}
               >
-                <Text className="text-sm text-slate-400 underline">
+                <Text className="text-sm text-ink-soft underline">
                   {t("moderation.block")}
                 </Text>
               </Pressable>
@@ -144,7 +146,7 @@ export const PrayerRequestCard = ({
 
             {canHide ? (
               <Pressable accessibilityRole="button" onPress={onHide}>
-                <Text className="text-sm text-slate-400 underline">
+                <Text className="text-sm text-ink-soft underline">
                   {t("moderation.hide")}
                 </Text>
               </Pressable>

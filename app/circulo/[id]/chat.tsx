@@ -153,7 +153,7 @@ export default function CircleChat() {
         options={{ title: circle?.name ?? t("chat.title"), headerShown: true }}
       />
       <KeyboardAvoidingView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         {/* The first virtualized list in the project. Everything else is a
@@ -168,7 +168,7 @@ export default function CircleChat() {
           keyExtractor={(item) => item.id}
           ListEmptyComponent={
             <View className="items-center gap-2 py-16">
-              <Text className="text-center text-base text-slate-500">
+              <Text className="text-center text-base text-ink-muted">
                 {t("chat.empty")}
               </Text>
             </View>
@@ -177,7 +177,7 @@ export default function CircleChat() {
             <View className={item.is_mine ? "items-end" : "items-start"}>
               <View className="max-w-[85%] gap-1">
                 {!item.is_mine ? (
-                  <Text className="text-xs font-medium text-slate-400">
+                  <Text className="text-xs font-medium text-ink-soft">
                     {item.sender_name}
                   </Text>
                 ) : null}
@@ -195,12 +195,12 @@ export default function CircleChat() {
                     setOpenMenu(openMenu === item.id ? null : item.id)
                   }
                   className={`rounded-2xl px-4 py-3 ${
-                    item.is_mine ? "bg-slate-900" : "bg-slate-100"
+                    item.is_mine ? "bg-ink" : "bg-paper-sunken"
                   }`}
                 >
                   <Text
                     className={`text-base leading-6 ${
-                      item.is_mine ? "text-white" : "text-slate-800"
+                      item.is_mine ? "text-paper" : "text-ink"
                     }`}
                   >
                     {item.body}
@@ -220,7 +220,7 @@ export default function CircleChat() {
                         )
                       }
                     >
-                      <Text className="text-sm text-slate-400">
+                      <Text className="text-sm text-ink-soft">
                         {t("moderation.report")}
                       </Text>
                     </Pressable>
@@ -233,7 +233,7 @@ export default function CircleChat() {
                         )
                       }
                     >
-                      <Text className="text-sm text-slate-400">
+                      <Text className="text-sm text-ink-soft">
                         {t("moderation.block")}
                       </Text>
                     </Pressable>
@@ -247,7 +247,7 @@ export default function CircleChat() {
                           )
                         }
                       >
-                        <Text className="text-sm text-slate-400">
+                        <Text className="text-sm text-ink-soft">
                           {t("moderation.hide")}
                         </Text>
                       </Pressable>
@@ -261,7 +261,7 @@ export default function CircleChat() {
 
         {notice ? (
           <Text
-            className="px-7 pb-2 text-sm text-slate-600"
+            className="px-7 pb-2 text-sm text-ink-muted"
             accessibilityRole="alert"
             accessibilityLiveRegion="polite"
           >
@@ -278,16 +278,16 @@ export default function CircleChat() {
           </Text>
         ) : null}
 
-        <View className="flex-row items-end gap-2 border-t border-slate-100 px-5 py-3">
+        <View className="flex-row items-end gap-2 border-t border-ink-line px-5 py-3">
           {/* A bare TextInput rather than TextField: the composer wants no
               visible label above it, and the accessible name is what matters. */}
           <TextInput
-            className="max-h-32 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900"
+            className="max-h-32 min-w-0 flex-1 rounded-2xl border border-ink-line bg-paper px-4 py-3 text-base text-ink"
             accessibilityLabel={t("chat.inputLabel")}
             value={draft}
             onChangeText={setDraft}
             placeholder={t("chat.placeholder")}
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor="#726A62"
             multiline
             // react-native-web renders a multiline input as `rows={2}`, so an
             // empty composer stood two lines tall next to a one-line button.
@@ -310,14 +310,14 @@ export default function CircleChat() {
             aria-busy={send.isPending}
             disabled={!canSend}
             onPress={() => void handleSend()}
-            className={`h-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 px-5 ${
+            className={`h-12 shrink-0 items-center justify-center rounded-2xl bg-ink px-5 ${
               canSend ? "" : "opacity-40"
             }`}
           >
             {send.isPending ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text className="text-base font-semibold text-white">
+              <Text className="text-base font-semibold text-paper">
                 {t("chat.send")}
               </Text>
             )}

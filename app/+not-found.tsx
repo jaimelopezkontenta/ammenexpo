@@ -8,11 +8,11 @@ export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t("common.appName") }} />
-      <View className="flex-1 items-center justify-center gap-4 bg-white px-8">
-        <Text className="text-center text-xl font-bold text-slate-900">
+      <View className="flex-1 items-center justify-center gap-4 bg-paper px-8">
+        <Text className="text-center text-xl font-bold text-ink">
           {t("common.notFoundTitle")}
         </Text>
-        <Link href="/" className="text-base font-semibold text-slate-600">
+        <Link href="/" className="text-base font-semibold text-ink-muted">
           {t("common.notFoundLink")}
         </Link>
       </View>

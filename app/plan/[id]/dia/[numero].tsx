@@ -51,17 +51,17 @@ export default function PlanDayDetail() {
         }}
       />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="gap-7 px-7 py-8"
       >
         <View className="gap-1">
-          <Text className="text-3xl font-bold leading-9 text-slate-900">
+          <Text className="font-serif-bold text-3xl leading-10 text-ink">
             {day.title}
           </Text>
           {/* Read-only on purpose. Marking a past day prayed belongs on Hoy,
               where "today" is what the streak is actually counting. */}
           {prayed ? (
-            <Text className="text-base font-medium text-slate-500">
+            <Text className="text-base font-medium text-ink-muted">
               {t("plan.dayPrayed")}
             </Text>
           ) : null}

@@ -68,14 +68,14 @@ export default function SharedPlanPreviewScreen() {
   // is gone when the network hiccuped is both wrong and unrecoverable.
   if (isError) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
+      <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
         <Text
-          className="text-center text-xl font-bold text-slate-900"
+          className="text-center text-xl font-bold text-ink"
           accessibilityRole="alert"
         >
           {t("common.errorTitle")}
         </Text>
-        <Text className="text-center text-base leading-6 text-slate-500">
+        <Text className="text-center text-base leading-6 text-ink-muted">
           {t("common.errorBody")}
         </Text>
         <View className="mt-4 w-full">
@@ -87,11 +87,11 @@ export default function SharedPlanPreviewScreen() {
 
   if (!data) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
-        <Text className="text-center text-xl font-bold text-slate-900">
+      <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
+        <Text className="text-center text-xl font-bold text-ink">
           {t("share.previewNotFound")}
         </Text>
-        <Text className="text-center text-base leading-6 text-slate-500">
+        <Text className="text-center text-base leading-6 text-ink-muted">
           {t("share.previewNotFoundHint")}
         </Text>
 
@@ -106,7 +106,7 @@ export default function SharedPlanPreviewScreen() {
             />
           ) : (
             <>
-              <Text className="text-center text-base text-slate-500">
+              <Text className="text-center text-base text-ink-muted">
                 {t("share.deadLinkInvite")}
               </Text>
               <Link href="/crear-cuenta" asChild>
@@ -124,37 +124,37 @@ export default function SharedPlanPreviewScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      className="flex-1 bg-paper"
       contentContainerClassName="flex-grow px-7 py-14"
     >
-      <Text className="text-sm font-medium text-slate-400">
+      <Text className="text-sm font-medium text-ink-soft">
         {t("common.day", { number: data.day_number })}
       </Text>
 
-      <Text className="mt-2 text-3xl font-bold text-slate-900">
+      <Text className="mt-2 text-3xl font-bold text-ink">
         {t("share.previewTitle", { name: data.owner_name })}
       </Text>
 
       <View className="mt-8 gap-6">
         <View className="gap-1.5">
-          <Text className="text-xl font-semibold text-slate-900">
+          <Text className="text-xl font-semibold text-ink">
             {data.day_title}
           </Text>
           {data.plan_theme ? (
-            <Text className="text-base text-slate-500">{data.plan_theme}</Text>
+            <Text className="text-base text-ink-muted">{data.plan_theme}</Text>
           ) : null}
         </View>
 
         {data.scripture_text ? (
-          <View className="gap-2 rounded-2xl bg-slate-50 p-5">
-            <Text className="text-sm font-medium text-slate-400">
+          <View className="gap-2 rounded-2xl bg-paper-sunken p-5">
+            <Text className="text-sm font-medium text-ink-soft">
               {t("plan.scripture")}
             </Text>
-            <Text className="text-base leading-6 text-slate-800">
+            <Text className="text-base leading-6 text-ink">
               {data.scripture_text}
             </Text>
             {data.scripture_ref ? (
-              <Text className="text-sm text-slate-500">
+              <Text className="text-sm text-ink-muted">
                 {data.scripture_ref}
               </Text>
             ) : null}
@@ -165,11 +165,11 @@ export default function SharedPlanPreviewScreen() {
             open the link could read about the person but not actually pray for
             them without signing up first. */}
         {data.intercessor_prayer ? (
-          <View className="gap-2 rounded-2xl bg-slate-50 p-5">
-            <Text className="text-sm font-medium text-slate-400">
+          <View className="gap-2 rounded-2xl bg-paper-sunken p-5">
+            <Text className="text-sm font-medium text-ink-soft">
               {t("intercession.prayerFor", { name: data.owner_name })}
             </Text>
-            <Text className="text-lg leading-8 text-slate-800">
+            <Text className="font-serif text-lg leading-reading text-ink">
               {data.intercessor_prayer}
             </Text>
           </View>
@@ -194,7 +194,7 @@ export default function SharedPlanPreviewScreen() {
           />
         ) : (
           <>
-            <Text className="text-center text-base text-slate-500">
+            <Text className="text-center text-base text-ink-muted">
               {t("share.previewSignupHint", { name: data.owner_name })}
             </Text>
             <Link href="/crear-cuenta" asChild>

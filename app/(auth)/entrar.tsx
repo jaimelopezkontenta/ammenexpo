@@ -56,7 +56,7 @@ export default function SignIn() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-paper"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
@@ -64,10 +64,10 @@ export default function SignIn() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="gap-2">
-          <Text className="text-3xl font-bold text-slate-900">
+          <Text className="text-3xl font-bold text-ink">
             {t("auth.signInTitle")}
           </Text>
-          <Text className="text-base text-slate-500">
+          <Text className="text-base text-ink-muted">
             {t("auth.signInIntro")}
           </Text>
         </View>
@@ -116,14 +116,14 @@ export default function SignIn() {
         {/* The key has been translated in both languages since the beginning
             with nothing behind it, so losing your password lost the account. */}
         <View className="mt-6 items-center">
-          <Link href="/recuperar" className="text-slate-500 underline">
+          <Link href="/recuperar" className="text-ink-muted underline">
             {t("auth.forgotPassword")}
           </Link>
         </View>
 
         <View className="mt-8 flex-row items-center justify-center gap-2">
-          <Text className="text-slate-500">{t("auth.noAccount")}</Text>
-          <Link href="/crear-cuenta" className="font-semibold text-slate-900">
+          <Text className="text-ink-muted">{t("auth.noAccount")}</Text>
+          <Link href="/crear-cuenta" className="font-semibold text-ink">
             {t("auth.signUp")}
           </Link>
         </View>

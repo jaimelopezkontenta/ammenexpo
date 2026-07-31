@@ -91,13 +91,13 @@ export default function PrayerRequestComments() {
     <>
       <Stack.Screen options={{ title: t("feed.comment"), headerShown: true }} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="flex-grow gap-5 px-7 py-8"
         keyboardShouldPersistTaps="handled"
       >
         {notice ? (
           <Text
-            className="text-sm text-slate-600"
+            className="text-sm text-ink-muted"
             accessibilityRole="alert"
             accessibilityLiveRegion="polite"
           >
@@ -113,12 +113,10 @@ export default function PrayerRequestComments() {
 
         {(comments ?? []).map((comment) => (
           <View key={comment.id} className="gap-1">
-            <Text className="text-sm font-medium text-slate-400">
+            <Text className="text-sm font-medium text-ink-soft">
               {comment.author_name}
             </Text>
-            <Text className="text-base leading-6 text-slate-800">
-              {comment.body}
-            </Text>
+            <Text className="text-base leading-6 text-ink">{comment.body}</Text>
 
             {!comment.is_mine ? (
               <View className="flex-row gap-4 pt-0.5">
@@ -132,7 +130,7 @@ export default function PrayerRequestComments() {
                     )
                   }
                 >
-                  <Text className="text-sm text-slate-400 underline">
+                  <Text className="text-sm text-ink-soft underline">
                     {t("moderation.report")}
                   </Text>
                 </Pressable>
@@ -147,7 +145,7 @@ export default function PrayerRequestComments() {
                     )
                   }
                 >
-                  <Text className="text-sm text-slate-400 underline">
+                  <Text className="text-sm text-ink-soft underline">
                     {t("moderation.block")}
                   </Text>
                 </Pressable>
@@ -158,12 +156,12 @@ export default function PrayerRequestComments() {
 
         <View className="mt-auto flex-row items-end gap-2 pt-6">
           <TextInput
-            className="max-h-32 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900"
+            className="max-h-32 min-w-0 flex-1 rounded-2xl border border-ink-line bg-paper px-4 py-3 text-base text-ink"
             accessibilityLabel={t("feed.comment")}
             value={draft}
             onChangeText={setDraft}
             placeholder={t("feed.commentPlaceholder")}
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor="#726A62"
             multiline
             numberOfLines={1}
             maxLength={COMMENT_MAX}

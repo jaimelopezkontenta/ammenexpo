@@ -82,16 +82,16 @@ export default function Testimonies() {
         options={{ title: t("testimony.title"), headerShown: true }}
       />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-paper"
         contentContainerClassName="flex-grow gap-5 px-7 py-8"
       >
-        <Text className="text-base text-slate-500">
+        <Text className="text-base text-ink-muted">
           {t("testimony.subtitle")}
         </Text>
 
         {notice ? (
           <Text
-            className="text-sm text-slate-600"
+            className="text-sm text-ink-muted"
             accessibilityRole="alert"
             accessibilityLiveRegion="polite"
           >
@@ -107,10 +107,10 @@ export default function Testimonies() {
 
         {(testimonies ?? []).length === 0 ? (
           <View className="gap-2 py-6">
-            <Text className="text-lg font-semibold text-slate-700">
+            <Text className="text-lg font-semibold text-ink-muted">
               {t("testimony.empty")}
             </Text>
-            <Text className="text-base leading-6 text-slate-500">
+            <Text className="text-base leading-6 text-ink-muted">
               {t("testimony.emptyBody")}
             </Text>
           </View>
@@ -119,18 +119,18 @@ export default function Testimonies() {
         {(testimonies ?? []).map((entry) => (
           <View
             key={entry.id}
-            className="gap-2 rounded-2xl border border-slate-200 p-5"
+            className="gap-2 rounded-2xl border border-ink-line p-5"
           >
-            <Text className="text-sm font-medium text-slate-400">
+            <Text className="text-sm font-medium text-ink-soft">
               {entry.author_name}
             </Text>
 
-            <Text className="text-base leading-7 text-slate-800">
+            <Text className="font-serif text-base leading-reading text-ink">
               {entry.body}
             </Text>
 
             {entry.plan_title ? (
-              <Text className="text-sm text-slate-500">
+              <Text className="text-sm text-ink-muted">
                 {t("testimony.duringPlan", { title: entry.plan_title })}
               </Text>
             ) : null}
@@ -156,7 +156,7 @@ export default function Testimonies() {
                         )
                       }
                     >
-                      <Text className="text-sm text-slate-400 underline">
+                      <Text className="text-sm text-ink-soft underline">
                         {t("testimony.makePrivate")}
                       </Text>
                     </Pressable>
@@ -181,7 +181,7 @@ export default function Testimonies() {
                       className={
                         confirmingDelete === entry.id
                           ? "text-sm font-semibold text-red-500"
-                          : "text-sm text-slate-400 underline"
+                          : "text-sm text-ink-soft underline"
                       }
                       accessibilityLiveRegion={
                         confirmingDelete === entry.id ? "polite" : "none"
@@ -204,7 +204,7 @@ export default function Testimonies() {
                       )
                     }
                   >
-                    <Text className="text-sm text-slate-400 underline">
+                    <Text className="text-sm text-ink-soft underline">
                       {t("moderation.report")}
                     </Text>
                   </Pressable>
@@ -219,7 +219,7 @@ export default function Testimonies() {
                       )
                     }
                   >
-                    <Text className="text-sm text-slate-400 underline">
+                    <Text className="text-sm text-ink-soft underline">
                       {t("moderation.block")}
                     </Text>
                   </Pressable>

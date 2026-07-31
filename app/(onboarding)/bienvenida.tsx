@@ -117,21 +117,21 @@ export default function Onboarding() {
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      className="flex-1 bg-paper"
       contentContainerClassName="flex-grow px-7 py-14"
       keyboardShouldPersistTaps="handled"
     >
-      <Text className="text-sm font-medium text-slate-400">
+      <Text className="text-sm font-medium text-ink-soft">
         {t("onboarding.step", { current: step, total: TOTAL_STEPS })}
       </Text>
 
       {step === 1 ? (
         <View className="mt-4 gap-6">
           <View className="gap-2">
-            <Text className="text-3xl font-bold text-slate-900">
+            <Text className="text-3xl font-bold text-ink">
               {t("onboarding.welcomeTitle")}
             </Text>
-            <Text className="text-base text-slate-500">
+            <Text className="text-base text-ink-muted">
               {t("onboarding.welcomeBody")}
             </Text>
           </View>
@@ -145,10 +145,10 @@ export default function Onboarding() {
           />
 
           <View className="gap-2">
-            <Text className="text-sm font-medium text-slate-600">
+            <Text className="text-sm font-medium text-ink-muted">
               {t("onboarding.genderQuestion")}
             </Text>
-            <Text className="text-sm text-slate-500">
+            <Text className="text-sm text-ink-muted">
               {t("onboarding.genderHint")}
             </Text>
             <ChoiceChips
@@ -166,10 +166,10 @@ export default function Onboarding() {
       {step === 2 ? (
         <View className="mt-4 gap-6">
           <View className="gap-2">
-            <Text className="text-2xl font-bold text-slate-900">
+            <Text className="text-2xl font-bold text-ink">
               {t("onboarding.seasonQuestion")}
             </Text>
-            <Text className="text-base text-slate-500">
+            <Text className="text-base text-ink-muted">
               {t("onboarding.seasonHint", { count: SEASON_MAX })}
             </Text>
           </View>
@@ -188,7 +188,7 @@ export default function Onboarding() {
               explanation reads as a broken chip. */}
           {seasons.length >= SEASON_MAX ? (
             <Text
-              className="text-sm text-slate-500"
+              className="text-sm text-ink-muted"
               accessibilityLiveRegion="polite"
             >
               {t("onboarding.seasonMax", { count: SEASON_MAX })}
@@ -200,10 +200,10 @@ export default function Onboarding() {
       {step === 3 ? (
         <View className="mt-4 gap-6">
           <View className="gap-2">
-            <Text className="text-2xl font-bold text-slate-900">
+            <Text className="text-2xl font-bold text-ink">
               {t("onboarding.topicsQuestion")}
             </Text>
-            <Text className="text-base text-slate-500">
+            <Text className="text-base text-ink-muted">
               {t("onboarding.topicsHint")}
             </Text>
           </View>
@@ -229,7 +229,7 @@ export default function Onboarding() {
               maxLength={CUSTOM_TOPIC_MAX}
               multiline
             />
-            <Text className="text-sm text-slate-500">
+            <Text className="text-sm text-ink-muted">
               {t("onboarding.customHint")}
             </Text>
           </View>
@@ -239,10 +239,10 @@ export default function Onboarding() {
       {step === 4 ? (
         <View className="mt-4 gap-6">
           <View className="gap-2">
-            <Text className="text-2xl font-bold text-slate-900">
+            <Text className="text-2xl font-bold text-ink">
               {t("onboarding.timeQuestion")}
             </Text>
-            <Text className="text-base text-slate-500">
+            <Text className="text-base text-ink-muted">
               {t("onboarding.timeHint", { count: REMINDER_MAX })}
             </Text>
           </View>

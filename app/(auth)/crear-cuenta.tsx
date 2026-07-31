@@ -74,7 +74,7 @@ export default function SignUp() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-paper"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
@@ -82,10 +82,10 @@ export default function SignUp() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="gap-2">
-          <Text className="text-3xl font-bold text-slate-900">
+          <Text className="text-3xl font-bold text-ink">
             {t("auth.signUpTitle")}
           </Text>
-          <Text className="text-base text-slate-500">
+          <Text className="text-base text-ink-muted">
             {t("auth.signUpIntro")}
           </Text>
         </View>
@@ -125,7 +125,7 @@ export default function SignUp() {
             </Text>
           ) : null}
           {notice ? (
-            <Text className="text-sm text-slate-600" accessibilityRole="alert">
+            <Text className="text-sm text-ink-muted" accessibilityRole="alert">
               {notice}
             </Text>
           ) : null}
@@ -138,8 +138,8 @@ export default function SignUp() {
         </View>
 
         <View className="mt-8 flex-row items-center justify-center gap-2">
-          <Text className="text-slate-500">{t("auth.hasAccount")}</Text>
-          <Link href="/entrar" className="font-semibold text-slate-900">
+          <Text className="text-ink-muted">{t("auth.hasAccount")}</Text>
+          <Link href="/entrar" className="font-semibold text-ink">
             {t("auth.signIn")}
           </Link>
         </View>

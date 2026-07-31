@@ -16,15 +16,15 @@ interface ButtonProps extends TouchableOpacityProps {
 }
 
 const CONTAINER: Record<ButtonVariant, string> = {
-  primary: "bg-slate-900",
-  secondary: "bg-slate-100",
+  primary: "bg-ink",
+  secondary: "bg-paper-sunken",
   ghost: "bg-transparent",
 };
 
 const LABEL: Record<ButtonVariant, string> = {
-  primary: "text-white",
-  secondary: "text-slate-900",
-  ghost: "text-slate-600",
+  primary: "text-paper",
+  secondary: "text-ink",
+  ghost: "text-ink-muted",
 };
 
 export const Button = forwardRef<View, ButtonProps>(
@@ -58,7 +58,7 @@ export const Button = forwardRef<View, ButtonProps>(
       >
         {loading ? (
           <ActivityIndicator
-            color={variant === "primary" ? "#ffffff" : "#0f172a"}
+            color={variant === "primary" ? "#FBF8F4" : "#1C1917"}
           />
         ) : (
           <Text className={`text-base font-semibold ${LABEL[variant]}`}>

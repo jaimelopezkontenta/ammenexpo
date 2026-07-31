@@ -23,30 +23,28 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
     <Pressable
       accessibilityRole="link"
       accessibilityLabel={`${plan.owner_name}. ${plan.day_title}`}
-      className="gap-3 rounded-3xl bg-slate-50 p-5"
+      className="gap-3 rounded-3xl bg-paper-sunken p-5"
       onPress={onOpen}
     >
       <View className="gap-1">
-        <Text className="text-lg font-semibold text-slate-900">
+        <Text className="text-lg font-semibold text-ink">
           {plan.owner_name}
         </Text>
-        <Text className="text-sm text-slate-500">{plan.plan_title}</Text>
+        <Text className="text-sm text-ink-muted">{plan.plan_title}</Text>
       </View>
 
       <View className="gap-1">
-        <Text className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
           {t("common.day", { number: plan.day_number })}
         </Text>
-        <Text className="text-base leading-6 text-slate-800">
-          {plan.day_title}
-        </Text>
+        <Text className="text-base leading-6 text-ink">{plan.day_title}</Text>
       </View>
 
       <Text
         className={
           plan.already_prayed
-            ? "text-sm font-medium text-slate-500"
-            : "text-sm font-semibold text-slate-900"
+            ? "text-sm font-medium text-ink-muted"
+            : "text-sm font-semibold text-ink"
         }
       >
         {plan.already_prayed

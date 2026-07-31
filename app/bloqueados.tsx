@@ -46,10 +46,10 @@ export default function BlockedPeople() {
 
       {!isLoading && !isError ? (
         <ScrollView
-          className="flex-1 bg-white"
+          className="flex-1 bg-paper"
           contentContainerClassName="gap-4 px-7 py-8"
         >
-          <Text className="text-base leading-6 text-slate-500">
+          <Text className="text-base leading-6 text-ink-muted">
             {t("moderation.blockedHint")}
           </Text>
 
@@ -60,7 +60,7 @@ export default function BlockedPeople() {
           ) : null}
 
           {(blocks ?? []).length === 0 ? (
-            <Text className="text-base text-slate-500">
+            <Text className="text-base text-ink-muted">
               {t("moderation.blockedEmpty")}
             </Text>
           ) : null}
@@ -70,15 +70,13 @@ export default function BlockedPeople() {
               key={entry.blocked_id}
               className="flex-row items-center justify-between"
             >
-              <Text className="text-base text-slate-800">
-                {entry.display_name}
-              </Text>
+              <Text className="text-base text-ink">{entry.display_name}</Text>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`${t("moderation.unblock")} ${entry.display_name}`}
                 onPress={() => void handleUnblock(entry.blocked_id)}
               >
-                <Text className="text-sm text-slate-400">
+                <Text className="text-sm text-ink-soft">
                   {t("moderation.unblock")}
                 </Text>
               </Pressable>

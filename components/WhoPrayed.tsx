@@ -24,7 +24,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
 
   if (people.length === 0) {
     return (
-      <Text className="text-base leading-6 text-slate-500">
+      <Text className="text-base leading-6 text-ink-muted">
         {t("intercession.nobodyYet")}
       </Text>
     );
@@ -37,7 +37,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
 
         return (
           <View key={person.intercession_id} className="gap-1">
-            <Text className="text-base font-medium text-slate-800">
+            <Text className="text-base font-medium text-ink">
               {t("intercession.personPrayed", {
                 name: person.intercessor_name,
               })}
@@ -47,7 +47,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                 is no "reported" placeholder to keep: the text is simply gone
                 and the prayer stays. */}
             {person.message ? (
-              <Text className="text-base leading-6 text-slate-600">
+              <Text className="text-base leading-6 text-ink-muted">
                 «{person.message}»
               </Text>
             ) : null}
@@ -77,7 +77,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                     className={
                       isConfirming
                         ? "text-sm font-semibold text-red-500"
-                        : "text-sm text-slate-400 underline"
+                        : "text-sm text-ink-soft underline"
                     }
                     // Nothing announced the label flipping, so a screen reader
                     // user tapped "Reportar", heard silence, and had no way to
@@ -96,7 +96,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                 accessibilityLabel={`${t("moderation.block")} ${person.intercessor_name}`}
                 onPress={() => onBlock(person.intercessor_id)}
               >
-                <Text className="text-sm text-slate-400 underline">
+                <Text className="text-sm text-ink-soft underline">
                   {t("moderation.block")}
                 </Text>
               </Pressable>

@@ -35,11 +35,11 @@ export default function Pray() {
 
   if (!plans || plans.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
-        <Text className="text-center text-2xl font-bold text-slate-900">
+      <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
+        <Text className="text-center text-2xl font-bold text-ink">
           {t("pray.empty")}
         </Text>
-        <Text className="text-center text-base leading-6 text-slate-500">
+        <Text className="text-center text-base leading-6 text-ink-muted">
           {t("pray.emptyBody")}
         </Text>
         {/* Nobody has shared with you yet, so the useful move is to share
@@ -73,26 +73,24 @@ export default function Pray() {
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      className="flex-1 bg-paper"
       contentContainerClassName="gap-5 px-7 py-8"
       keyboardShouldPersistTaps="handled"
     >
       <View className="gap-1">
-        <Text className="text-2xl font-bold text-slate-900">
-          {t("pray.title")}
-        </Text>
-        <Text className="text-base text-slate-500">{t("pray.subtitle")}</Text>
+        <Text className="text-2xl font-bold text-ink">{t("pray.title")}</Text>
+        <Text className="text-base text-ink-muted">{t("pray.subtitle")}</Text>
       </View>
 
       {/* The finish line. The server already sorts prayed-for last, but the
           screen looked identical to one with work outstanding — just greyer —
           so there was no moment where you were told you were done. */}
       {plans.every((plan) => plan.already_prayed) ? (
-        <View className="gap-1 rounded-2xl bg-slate-50 p-5">
-          <Text className="text-base font-semibold text-slate-900">
+        <View className="gap-1 rounded-2xl bg-paper-sunken p-5">
+          <Text className="text-base font-semibold text-ink">
             {t("intercession.allPrayed")}
           </Text>
-          <Text className="text-base leading-6 text-slate-500">
+          <Text className="text-base leading-6 text-ink-muted">
             {t("intercession.allPrayedBody")}
           </Text>
         </View>

@@ -10,16 +10,17 @@ interface DaySectionProps {
 
 const CONTAINER: Record<Tone, string> = {
   plain: "gap-2",
-  scripture: "gap-2 rounded-2xl bg-slate-50 p-5",
+  scripture: "gap-3 rounded-2xl bg-paper-sunken p-6",
   // The action is the only part of the day that leaves the phone, so it is the
-  // one block that visually asks for something.
-  action: "gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-5",
+  // one block that visually asks for something — and the only place the accent
+  // is spent.
+  action: "gap-2 rounded-2xl border border-clay/25 bg-clay-soft p-5",
 };
 
 const LABEL: Record<Tone, string> = {
-  plain: "text-slate-400",
-  scripture: "text-slate-400",
-  action: "text-amber-700",
+  plain: "text-ink-soft",
+  scripture: "text-ink-soft",
+  action: "text-clay-deep",
 };
 
 export const DaySection = ({
