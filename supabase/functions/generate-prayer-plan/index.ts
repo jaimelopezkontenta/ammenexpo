@@ -189,6 +189,17 @@ const writeChunk = async ({
     return;
   }
 
+  if (result.usage) {
+    // cache_read_input_tokens should be non-zero from the second stretch
+    // onward. If it stays at zero something varies inside the system prompt,
+    // and the per-user cost roughly triples.
+    console.log(
+      `stretch ${fromDay}-${toDay} · ${result.model} · in ${result.usage.input_tokens} ` +
+        `out ${result.usage.output_tokens} · cache read ${result.usage.cache_read_input_tokens} ` +
+        `write ${result.usage.cache_creation_input_tokens}`,
+    );
+  }
+
   let generated;
 
   try {
