@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -319,6 +319,20 @@ export default function Today() {
         ) : null}
 
         <View className="gap-3">
+          {/* The moment with the most intention the product has, and until now
+              it was spent on a frozen screen. Asking here rather than anywhere
+              else is the whole point: thirty days of praying for something is
+              exactly when you know whether it was answered. */}
+          <Link
+            href={{
+              pathname: "/testimonios/nuevo",
+              params: { plan: plan.id },
+            }}
+            asChild
+          >
+            <Button title={t("testimony.askAfterPlan")} variant="secondary" />
+          </Link>
+
           <Button
             title={t("plan.finishedCta")}
             onPress={() => void startGeneration()}

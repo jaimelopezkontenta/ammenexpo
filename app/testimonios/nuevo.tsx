@@ -1,0 +1,120 @@
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ScrollView, Text, View } from "react-native";
+
+import { Button } from "@/components/Button";
+import { ChoiceChips } from "@/components/ChoiceChips";
+import { TextField } from "@/components/TextField";
+import { useSession } from "@/core/auth/SessionProvider";
+import { usePlanSummary } from "@/core/plans/sharing";
+import {
+  TESTIMONY_MAX,
+  useWriteTestimony,
+  type TestimonyVisibility,
+} from "@/core/testimonies/queries";
+
+/**
+ * Answered prayer.
+ *
+ * Reached from the screen that closes a plan — the moment with the most
+ * intention the product has — and from the testimonies list.
+ *
+ * The visibility picker defaults to circles and says what each option means
+ * before anything is written. The table used to default to public, which is a
+ * surprise nobody forgives on the most intimate thing somebody has typed here.
+ */
+export default function NewTestimony() {
+  const { t } = useTranslation();
+  const { session } = useSession();
+  const userId = session?.user.id;
+  const { plan: planId } = useLocalSearchParams<{ plan?: string }>();
+
+  const { data: plan } = usePlanSummary(planId);
+  const write = useWriteTestimony(userId);
+
+  const [body, setBody] = useState("");
+  const [visibility, setVisibility] = useState<TestimonyVisibility>("circles");
+  const [error, setError] = useState<string | null>(null);
+
+  const hint =
+    visibility === "private"
+      ? t("testimony.visPrivateHint")
+      : visibility === "circles"
+        ? t("testimony.visCirclesHint")
+        : t("testimony.visPublicHint");
+
+  const handleSave = async () => {
+    if (body.trim().length === 0) return;
+
+    setError(null);
+
+    try {
+      await write.mutateAsync({ body, visibility, planId });
+      router.replace("/testimonios");
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
+
+  return (
+    <>
+      <Stack.Screen
+        options={{ title: t("testimony.title"), headerShown: true }}
+      />
+      <ScrollView
+        className="flex-1 bg-white"
+        contentContainerClassName="flex-grow gap-6 px-7 py-8"
+        keyboardShouldPersistTaps="handled"
+      >
+        {plan ? (
+          <Text className="text-sm text-slate-500">
+            {t("testimony.duringPlan", { title: plan.title })}
+          </Text>
+        ) : null}
+
+        <View className="gap-2">
+          <TextField
+            label={t("testimony.body")}
+            value={body}
+            onChangeText={setBody}
+            placeholder={t("testimony.placeholder")}
+            maxLength={TESTIMONY_MAX}
+            multiline
+          />
+        </View>
+
+        <View className="gap-3">
+          <Text className="text-lg font-semibold text-slate-900">
+            {t("testimony.whoSees")}
+          </Text>
+          <ChoiceChips
+            options={[
+              { value: "private", label: t("testimony.visPrivate") },
+              { value: "circles", label: t("testimony.visCircles") },
+              { value: "public", label: t("testimony.visPublic") },
+            ]}
+            selected={[visibility]}
+            onToggle={(value) => setVisibility(value as TestimonyVisibility)}
+          />
+          <Text className="text-sm text-slate-500">{hint}</Text>
+        </View>
+
+        {error ? (
+          <Text className="text-sm text-red-500" accessibilityRole="alert">
+            {error}
+          </Text>
+        ) : null}
+
+        <View className="mt-auto pt-6">
+          <Button
+            title={t("testimony.save")}
+            disabled={body.trim().length === 0}
+            loading={write.isPending}
+            onPress={() => void handleSave()}
+          />
+        </View>
+      </ScrollView>
+    </>
+  );
+}

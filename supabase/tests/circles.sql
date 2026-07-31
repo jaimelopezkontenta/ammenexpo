@@ -859,6 +859,144 @@ select pg_temp.assert(
 commit;
 
 -- ===========================================================================
+-- El cuarto bucle: la oración respondida
+--
+-- La tabla lleva desde la Fase 1 con RLS completa y sin un solo escritor. Y
+-- nacía `is_public default true`: alguien escribe lo más íntimo que tiene y se
+-- publica por omisión. Ahora el valor por defecto son los círculos.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.testimonies (user_id, body)
+values (:ANA, 'Mi madre salió del hospital ayer.');
+
+-- La assertion que importa. No es un detalle de esquema: es la diferencia
+-- entre una app en la que confías y una que te expuso sin preguntarte.
+select pg_temp.assert(
+  (select visibility from public.testimonies limit 1) = 'circles',
+  'a testimony is not public by default');
+
+commit;
+
+-- Eva no está en ningún círculo con nadie: es la única forma de comprobar el
+-- caso negativo, porque a estas alturas del fixture todos los demás comparten
+-- algo con Ana.
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values ('55555555-5555-5555-5555-555555555555', 'eva@test.local',
+        'authenticated', 'authenticated', '{"display_name":"Eva"}');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.testimonies) = 0,
+  'somebody who shares no circle with her sees nothing');
+
+commit;
+
+-- Carla sí: está en la célula del jueves con Ana.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.visible_testimonies()) = 1,
+  'somebody who prayed alongside her does see it');
+
+select pg_temp.assert(
+  not (select is_mine from public.visible_testimonies()),
+  'and it is not marked as hers');
+
+commit;
+
+-- Guardado solo para ti: ni siquiera quien comparte círculo.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+update public.testimonies set visibility = 'private';
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.testimonies) = 0,
+  'made private, it goes back to being hers alone');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.testimonies) = 1,
+  'she can always read her own');
+
+update public.testimonies set visibility = 'public';
+
+commit;
+
+-- Y en público, cualquiera — incluida Eva, que no comparte nada con ella. Si
+-- esta assertion usara a alguien de su círculo no tendría dientes: lo leería
+-- igual con 'circles'.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.testimonies) = 1,
+  'made public, a stranger reads it');
+
+-- Bloquear vale aquí también, y lo resuelve la policy: ninguna pantalla tiene
+-- que acordarse.
+insert into public.blocks (blocker_id, blocked_id)
+values ('55555555-5555-5555-5555-555555555555', :ANA);
+
+select pg_temp.assert(
+  (select count(*) from public.testimonies) = 0,
+  'unless she blocked her, and no screen has to remember that');
+
+delete from public.blocks
+ where blocker_id = '55555555-5555-5555-5555-555555555555';
+
+commit;
+
+-- La regla 1, para la tabla que estrena escritor: una policy de SELECT que
+-- decidiera consultando su propia tabla rompería el insert, y Postgres lo
+-- reporta igual que un fallo de WITH CHECK.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.testimonies (user_id, body)
+    values ('33333333-3333-3333-3333-333333333333', 'Encontré trabajo.')
+    returning id
+  $q$),
+  'insert ... returning works on testimonies');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.testimonies (user_id, body)
+    values ('11111111-1111-1111-1111-111111111111', 'No es mío')
+  $q$),
+  'and nobody can write one in somebody else''s name');
+
+commit;
+
+-- ===========================================================================
 -- RLS sigue puesta en todas las tablas
 --
 -- `blocks` es nueva, y una tabla sin RLS en este esquema significa que

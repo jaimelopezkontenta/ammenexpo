@@ -168,6 +168,10 @@ export default function Profile() {
       {/* Blocking happens in the moment, from a message or from a roster. The
           undo has to live somewhere calm, and this is the only screen that
           belongs to you rather than to a circle. */}
+      <Link href="/testimonios" asChild>
+        <Button title={t("testimony.title")} variant="ghost" />
+      </Link>
+
       <Link href="/plus" asChild>
         <Button title={t("profile.plus")} variant="ghost" />
       </Link>
