@@ -532,6 +532,50 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- The history, and the line it must not cross
+--
+-- Being able to reread yesterday is the point; being able to read tomorrow
+-- would quietly undo one-day-per-day, which is the mechanic the whole product
+-- rests on.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')) = 2,
+  'Ana sees the days she has reached, not just the last one');
+
+select pg_temp.assert(
+  (select max(day_number) from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')) = 2::smallint,
+  'and tomorrow is not among them');
+
+select pg_temp.assert(
+  (select day_number from public.get_my_day('aaaa0000-0000-0000-0000-000000000001', 1::smallint)) = 1::smallint,
+  'she can open an earlier day by its number');
+
+select pg_temp.assert(
+  (select count(*) from public.get_my_day('aaaa0000-0000-0000-0000-000000000001', 3::smallint)) = 0,
+  'asking for a day that has not unlocked returns nothing');
+
+select pg_temp.assert(
+  (select day_number from public.get_my_day('aaaa0000-0000-0000-0000-000000000001')) = 2::smallint,
+  'and asking for no day in particular still means today');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')) = 0,
+  'a plan shared with Beto is still not his history');
+
+commit;
+
 \echo ''
 \echo '================================'
 \echo ' ALL RLS ASSERTIONS PASSED'

@@ -152,7 +152,13 @@
     "titlePlaceholder": "Nombre del plan",
     "stillPreparing": "Seguimos preparando los días siguientes.",
     "streak": "{{count}} día de racha",
-    "streak_plural": "{{count}} días de racha"
+    "streak_plural": "{{count}} días de racha",
+    "days": "Días anteriores",
+    "daysHint": "{{count}} día que ya has recorrido.",
+    "daysHint_plural": "{{count}} días que ya has recorrido.",
+    "dayPrayed": "Orado",
+    "dayNotFound": "Ese día todavía no está.",
+    "seeDays": "Ver los días anteriores"
   },
   "share": {
     "title": "Compartir mi plan",

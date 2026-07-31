@@ -243,3 +243,52 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
 };
 
 export const todayIso = today;
+
+export type PlanDaySummary = {
+  id: string;
+  day_number: number;
+  title: string;
+  scripture_ref: string | null;
+  prayed: boolean;
+};
+
+/**
+ * Every day of the plan that has unlocked, newest first.
+ *
+ * Future days stay hidden even here: unlocking one a day is the mechanic, and
+ * a history screen must not become the way around it.
+ */
+export const usePlanDays = (planId: string | undefined) =>
+  useQuery({
+    queryKey: ["planDays", planId],
+    enabled: Boolean(planId),
+    queryFn: async (): Promise<PlanDaySummary[]> => {
+      const { data, error } = await supabase.rpc("my_plan_days", {
+        p_plan_id: planId!,
+      });
+
+      if (error) throw error;
+
+      return (data ?? []) as PlanDaySummary[];
+    },
+  });
+
+/** A specific day of your own plan, by its number. */
+export const usePlanDay = (
+  planId: string | undefined,
+  dayNumber: number | undefined,
+) =>
+  useQuery({
+    queryKey: ["planDay", planId, dayNumber],
+    enabled: Boolean(planId) && Number.isInteger(dayNumber),
+    queryFn: async (): Promise<PlanDay | null> => {
+      const { data, error } = await supabase.rpc("get_my_day", {
+        p_plan_id: planId!,
+        p_day_number: dayNumber!,
+      });
+
+      if (error) throw error;
+
+      return ((data ?? []) as PlanDay[])[0] ?? null;
+    },
+  });

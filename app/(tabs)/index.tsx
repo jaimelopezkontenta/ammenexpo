@@ -11,12 +11,12 @@ import {
 
 import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
+import { DayView } from "@/components/DayView";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { WhoPrayed } from "@/components/WhoPrayed";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBibleBooks } from "@/core/bible/queries";
-import { parseCanonicalRef } from "@/core/bible/reference";
 import {
   useReportIntercession,
   useWhoPrayedForMe,
@@ -65,7 +65,6 @@ export default function Today() {
 
   const stuck = isStuckGenerating(plan);
   const days = liveStreak(streak);
-  const scripture = parseCanonicalRef(day?.scripture_ref, books ?? []);
 
   const startGeneration = async () => {
     setActionError(null);
@@ -222,67 +221,7 @@ export default function Today() {
         )}
       </View>
 
-      {day.scripture_text ? (
-        <DaySection label={t("plan.scripture")} tone="scripture">
-          <Text className="text-lg leading-7 text-slate-800">
-            {day.scripture_text}
-          </Text>
-          {day.scripture_ref ? (
-            <Text className="text-sm font-medium text-slate-500">
-              {day.scripture_ref}
-            </Text>
-          ) : null}
-
-          {/* The verse is shown out of context: this is the way into the
-              chapter around it. If the reference cannot be parsed there is no
-              link at all — guessing would open the wrong chapter. */}
-          {scripture ? (
-            <Pressable
-              accessibilityRole="button"
-              // Without an explicit label the name is built from the children,
-              // so the arrow became part of it: "Leer el capítulo flecha hacia
-              // la derecha".
-              accessibilityLabel={t("bible.readInContext")}
-              onPress={() =>
-                router.push({
-                  pathname: "/libro/[book]/[chapter]",
-                  params: {
-                    book: String(scripture.bookId),
-                    chapter: String(scripture.chapter),
-                    verse: String(scripture.verse),
-                  },
-                })
-              }
-            >
-              <Text className="text-sm font-medium text-slate-600">
-                {t("bible.readInContext")} <Text aria-hidden>→</Text>
-              </Text>
-            </Pressable>
-          ) : null}
-        </DaySection>
-      ) : null}
-
-      {day.interpretation ? (
-        <DaySection label={t("plan.meaning")}>
-          <Text className="text-base leading-7 text-slate-700">
-            {day.interpretation}
-          </Text>
-        </DaySection>
-      ) : null}
-
-      {day.daily_action ? (
-        <DaySection label={t("plan.action")} tone="action">
-          <Text className="text-lg leading-7 text-amber-950">
-            {day.daily_action}
-          </Text>
-        </DaySection>
-      ) : null}
-
-      <DaySection label={t("plan.prayer")}>
-        <Text className="text-base leading-8 text-slate-800">
-          {day.prayer_body}
-        </Text>
-      </DaySection>
+      <DayView day={day} books={books ?? []} />
 
       <View className="pb-2 pt-2">
         {prayed ? (
@@ -309,6 +248,22 @@ export default function Today() {
         >
           {actionError}
         </Text>
+      ) : null}
+
+      {/* Only offered once there is a yesterday to go back to. */}
+      {day.day_number > 1 ? (
+        <View className="pb-2">
+          <Button
+            title={t("plan.seeDays")}
+            variant="secondary"
+            onPress={() =>
+              router.push({
+                pathname: "/plan/[id]/dias",
+                params: { id: plan.id },
+              })
+            }
+          />
+        </View>
       ) : null}
 
       <View className="pb-2">

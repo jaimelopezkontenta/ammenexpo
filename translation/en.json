@@ -152,7 +152,13 @@
     "titlePlaceholder": "Plan name",
     "stillPreparing": "We are still preparing the later days.",
     "streak": "{{count}} day streak",
-    "streak_plural": "{{count}} day streak"
+    "streak_plural": "{{count}} day streak",
+    "days": "Earlier days",
+    "daysHint": "{{count}} day you have already walked.",
+    "daysHint_plural": "{{count}} days you have already walked.",
+    "dayPrayed": "Prayed",
+    "dayNotFound": "That day is not there yet.",
+    "seeDays": "See the earlier days"
   },
   "share": {
     "title": "Share my plan",
