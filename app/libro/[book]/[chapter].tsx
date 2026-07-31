@@ -1,9 +1,10 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   chapterLabel,
@@ -42,7 +43,20 @@ export default function ChapterReader() {
   const targetVerse = verse ? Number(verse) : null;
 
   const { data: books } = useBibleBooks();
-  const { data: verses, isLoading } = useChapter(bookId, chapterNumber);
+  const {
+    data: verses,
+    isLoading,
+    isError,
+    refetch,
+  } = useChapter(bookId, chapterNumber);
+
+  // A malformed deep link gives NaN, which disables the query — and a disabled
+  // query reports isLoading false, so the screen used to sail past the spinner
+  // straight into a blank page with working prev/next buttons to nowhere.
+  const validParams =
+    Number.isInteger(bookId) &&
+    Number.isInteger(chapterNumber) &&
+    chapterNumber > 0;
   const { mutate: savePosition } = useSaveReadingPosition(userId);
 
   const scrollRef = useRef<ScrollView>(null);
@@ -115,11 +129,38 @@ export default function ChapterReader() {
       params: { book: String(ref.bookId), chapter: String(ref.chapter) },
     });
 
-  if (isLoading) {
+  if (!validParams) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
+      <>
+        <Stack.Screen
+          options={{ title: t("common.notFoundTitle"), headerShown: true }}
+        />
+        <ErrorState message={t("bible.chapterNotFound")} />
+      </>
+    );
+  }
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  // An error and an empty chapter look the same from here, and both used to
+  // render nothing at all — with an empty title, since chapterLabel returns ""
+  // for a book the list does not have.
+  if (isError || (verses ?? []).length === 0) {
+    return (
+      <>
+        <Stack.Screen
+          options={{
+            title: chapterLabel(all, current) || t("bible.title"),
+            headerShown: true,
+          }}
+        />
+        <ErrorState
+          onRetry={isError ? () => void refetch() : undefined}
+          message={isError ? undefined : t("bible.chapterNotFound")}
+        />
+      </>
     );
   }
 

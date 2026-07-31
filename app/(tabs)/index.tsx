@@ -11,6 +11,7 @@ import {
 
 import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { WhoPrayed } from "@/components/WhoPrayed";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -23,9 +24,7 @@ import {
 import { liveStreak, useStreak } from "@/core/profile/queries";
 import {
   isStuckGenerating,
-  PlanLimitReached,
   useAbandonPlan,
-  useGeneratePlan,
   useMarkPrayed,
   useOwnPlan,
   usePrayedToday,
@@ -38,12 +37,18 @@ export default function Today() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: plan, isLoading } = useOwnPlan(userId);
+  const {
+    data: plan,
+    isLoading,
+    isError,
+    refetch: refetchPlan,
+  } = useOwnPlan(userId);
   // Days appear one stretch at a time, so today's day is readable long before
   // the whole plan is written. Waiting for 'active' would hide a plan the user
   // could already be praying.
-  const { data: day } = useTodayDay(
+  const { data: day, refetch: refetchDay } = useTodayDay(
     plan && plan.status !== "failed" ? plan.id : undefined,
+    plan?.status === "generating",
   );
   const { data: prayed } = usePrayedToday(day?.id);
   const { data: streak } = useStreak(userId);
@@ -51,43 +56,59 @@ export default function Today() {
   const { data: books } = useBibleBooks();
 
   const report = useReportIntercession(userId);
-  const generate = useGeneratePlan(userId);
   const abandon = useAbandonPlan(userId);
   const rename = useRenamePlan(userId);
   const markPrayed = useMarkPrayed(day?.id, userId);
 
   const [draftTitle, setDraftTitle] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const stuck = isStuckGenerating(plan);
   const days = liveStreak(streak);
   const scripture = parseCanonicalRef(day?.scripture_ref, books ?? []);
 
   const startGeneration = async () => {
-    // A crashed generation would otherwise sit in 'generating' forever and
-    // count against the free allowance.
-    if (plan && (plan.status === "failed" || stuck)) {
-      await abandon.mutateAsync(plan.id);
-    }
+    setActionError(null);
 
-    router.push("/plan/nuevo");
+    try {
+      // A crashed generation would otherwise sit in 'generating' forever and
+      // count against the free allowance.
+      if (plan && (plan.status === "failed" || stuck)) {
+        await abandon.mutateAsync(plan.id);
+      }
+
+      router.push("/plan/nuevo");
+    } catch {
+      // Uncaught, the navigation never ran — so "Reintentar" was inert exactly
+      // when the backend was unhealthy, which is the only time it is offered.
+      setActionError(t("common.errorGeneric"));
+    }
   };
 
   const saveTitle = async () => {
     if (!plan || draftTitle === null) return;
 
-    if (draftTitle.trim().length > 0 && draftTitle.trim() !== plan.title) {
-      await rename.mutateAsync({ planId: plan.id, title: draftTitle });
-    }
+    setActionError(null);
 
-    setDraftTitle(null);
+    try {
+      if (draftTitle.trim().length > 0 && draftTitle.trim() !== plan.title) {
+        await rename.mutateAsync({ planId: plan.id, title: draftTitle });
+      }
+
+      setDraftTitle(null);
+    } catch {
+      // Leaving the editor open is the right call here: the text they typed is
+      // still in it, so they can try again without retyping.
+      setActionError(t("common.errorGeneric"));
+    }
   };
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
-    );
+    return <LoadingState />;
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={() => void refetchPlan()} />;
   }
 
   // Only block while there is nothing to pray yet. Generation runs in the
@@ -95,7 +116,10 @@ export default function Today() {
   if (plan?.status === "generating" && !day && !stuck) {
     return (
       <View className="flex-1 items-center justify-center gap-4 bg-white px-8">
-        <ActivityIndicator color="#0f172a" />
+        <ActivityIndicator
+          color="#0f172a"
+          accessibilityLabel={t("plan.generating")}
+        />
         <Text className="text-center text-xl font-semibold text-slate-900">
           {t("plan.generating")}
         </Text>
@@ -107,47 +131,47 @@ export default function Today() {
   }
 
   if (!plan || (plan.status === "failed" && !day) || (stuck && !day)) {
-    const limitReached = generate.error instanceof PlanLimitReached;
+    // The limit branch used to live here reading `generate.error`, but this
+    // screen never calls `generate` — it only navigates to the form — so it was
+    // permanently unreachable. The limit is surfaced where it is actually
+    // raised, in plan/nuevo.tsx.
     const failed = plan?.status === "failed" || stuck;
 
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
         <Text className="text-center text-2xl font-bold text-slate-900">
-          {limitReached
-            ? t("plan.limitTitle")
-            : failed
-              ? t("plan.failedTitle")
-              : t("plan.noPlanTitle")}
+          {failed ? t("plan.failedTitle") : t("plan.noPlanTitle")}
         </Text>
         <Text className="text-center text-base leading-6 text-slate-500">
-          {limitReached
-            ? t("plan.limitBody")
-            : failed
-              ? t("plan.failedBody")
-              : t("plan.noPlanBody")}
+          {failed ? t("plan.failedBody") : t("plan.noPlanBody")}
         </Text>
 
-        {!limitReached ? (
-          <View className="mt-6 w-full">
-            <Button
-              title={failed ? t("common.retry") : t("plan.createCta")}
-              loading={generate.isPending || abandon.isPending}
-              onPress={() => void startGeneration()}
-            />
-          </View>
+        {actionError ? (
+          <Text
+            className="text-center text-sm text-red-500"
+            accessibilityRole="alert"
+          >
+            {actionError}
+          </Text>
         ) : null}
+
+        <View className="mt-6 w-full">
+          <Button
+            title={failed ? t("common.retry") : t("plan.createCta")}
+            loading={abandon.isPending}
+            onPress={() => void startGeneration()}
+          />
+        </View>
       </View>
     );
   }
 
+  // The plan is active but no day has come back. This used to render the word
+  // "Cargando…" and stop — no spinner, no retry, no way to tell whether it was
+  // working. useTodayDay now polls while generating, so reaching here means
+  // something is genuinely wrong.
   if (!day) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white px-8">
-        <Text className="text-center text-base text-slate-500">
-          {t("common.loading")}
-        </Text>
-      </View>
-    );
+    return <ErrorState onRetry={() => void refetchDay()} />;
   }
 
   return (
@@ -215,6 +239,10 @@ export default function Today() {
           {scripture ? (
             <Pressable
               accessibilityRole="button"
+              // Without an explicit label the name is built from the children,
+              // so the arrow became part of it: "Leer el capítulo flecha hacia
+              // la derecha".
+              accessibilityLabel={t("bible.readInContext")}
               onPress={() =>
                 router.push({
                   pathname: "/libro/[book]/[chapter]",
@@ -227,7 +255,7 @@ export default function Today() {
               }
             >
               <Text className="text-sm font-medium text-slate-600">
-                {t("bible.readInContext")} →
+                {t("bible.readInContext")} <Text aria-hidden>→</Text>
               </Text>
             </Pressable>
           ) : null}
@@ -265,10 +293,23 @@ export default function Today() {
           <Button
             title={t("plan.markDone")}
             loading={markPrayed.isPending}
-            onPress={() => markPrayed.mutate()}
+            onPress={() =>
+              markPrayed.mutate(undefined, {
+                onError: () => setActionError(t("common.errorGeneric")),
+              })
+            }
           />
         )}
       </View>
+
+      {actionError ? (
+        <Text
+          className="text-center text-sm text-red-500"
+          accessibilityRole="alert"
+        >
+          {actionError}
+        </Text>
+      ) : null}
 
       <View className="pb-2">
         <Button

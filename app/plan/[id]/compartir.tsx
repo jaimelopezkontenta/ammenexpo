@@ -5,6 +5,7 @@ import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useMyCircles } from "@/core/circles/queries";
 import {
@@ -23,7 +24,7 @@ export default function SharePlan() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: plan, isLoading } = usePlanSummary(id);
+  const { data: plan, isLoading, isError, refetch } = usePlanSummary(id);
   const { data: circles } = useMyCircles(userId);
   const { data: sharedCircles } = usePlanCircles(id);
   const { data: link, isLoading: linkLoading } = usePlanShareLink(id);
@@ -36,20 +37,22 @@ export default function SharePlan() {
   const [error, setError] = useState<string | null>(null);
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
-    );
+    return <LoadingState />;
   }
 
-  if (!plan) {
+  // Both used to render as one headerless line of grey text, so a network
+  // stumble said your own plan did not exist and gave you no way out.
+  if (isError || !plan) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-8">
-        <Text className="text-center text-base text-slate-500">
-          {t("share.previewNotFound")}
-        </Text>
-      </View>
+      <>
+        <Stack.Screen
+          options={{ title: t("share.title"), headerShown: true }}
+        />
+        <ErrorState
+          onRetry={isError ? () => void refetch() : undefined}
+          message={isError ? undefined : t("share.previewNotFound")}
+        />
+      </>
     );
   }
 
@@ -156,7 +159,10 @@ export default function SharePlan() {
           </Text>
 
           {linkLoading ? (
-            <ActivityIndicator color="#0f172a" />
+            <ActivityIndicator
+              color="#0f172a"
+              accessibilityLabel={t("common.loading")}
+            />
           ) : linkUrl ? (
             <>
               <View className="gap-2 rounded-2xl bg-slate-50 p-5">

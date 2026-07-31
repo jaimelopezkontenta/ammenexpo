@@ -159,8 +159,19 @@ export const useJoinCircle = (userId: string | undefined) => {
 
       return data as string;
     },
-    onSuccess: () => {
+    onSuccess: (circleId) => {
+      // Joining a circle is *how* other people's plans become visible to you,
+      // so refreshing only the circle list left the Orar tab insisting nobody
+      // had shared anything — with a button sending you back to circles. That
+      // dead end was the end of the acquisition loop.
       void queryClient.invalidateQueries({ queryKey: ["circles", userId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["sharedWithMe", userId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["circleMembers", circleId],
+      });
     },
   });
 };
@@ -170,16 +181,32 @@ export const useLeaveCircle = (userId: string | undefined) => {
 
   return useMutation({
     mutationFn: async (circleId: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("group_members")
         .delete()
         .eq("group_id", circleId)
-        .eq("user_id", userId!);
+        .eq("user_id", userId!)
+        .select("user_id");
 
       if (error) throw error;
+
+      // A delete that RLS filtered to nothing comes back as success with no
+      // rows. Without this the app would say you left and leave you in.
+      if (!data || data.length === 0) {
+        throw new Error("leave_circle_no_rows");
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_result, circleId) => {
+      // The mirror of joining: those plans are no longer readable, so leaving
+      // them listed would show a live "Oré por ti" that fails on tap.
       void queryClient.invalidateQueries({ queryKey: ["circles", userId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["sharedWithMe", userId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["circleMembers", circleId],
+      });
     },
   });
 };

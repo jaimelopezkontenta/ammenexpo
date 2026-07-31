@@ -1,10 +1,11 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { PrayForCard } from "@/components/PrayForCard";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   AlreadyPrayed,
@@ -17,7 +18,12 @@ export default function Pray() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: plans, isLoading } = usePlansSharedWithMe(userId);
+  const {
+    data: plans,
+    isLoading,
+    isError,
+    refetch,
+  } = usePlansSharedWithMe(userId);
   const pray = usePrayForSomeone(userId);
 
   const [pendingDayId, setPendingDayId] = useState<string | null>(null);
@@ -41,11 +47,14 @@ export default function Pray() {
   };
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
-    );
+    return <LoadingState />;
+  }
+
+  // Before this, a failed read fell straight through to the empty state and told
+  // people nobody had shared anything with them — a false statement, with no way
+  // to find out otherwise.
+  if (isError) {
+    return <ErrorState onRetry={() => void refetch()} />;
   }
 
   if (!plans || plans.length === 0) {

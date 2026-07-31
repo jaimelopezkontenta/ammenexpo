@@ -106,7 +106,11 @@ export const usePrayForSomeone = (userId: string | undefined) => {
         throw error;
       }
     },
-    onSuccess: () => {
+    // onSettled, not onSuccess: pressing twice throws AlreadyPrayed, which the
+    // screen deliberately swallows. With the refresh on the success path only,
+    // the card kept offering "Oré por ti" and every further press did nothing
+    // visible — indistinguishable from a broken button.
+    onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: ["sharedWithMe", userId],
       });
@@ -117,9 +121,16 @@ export const usePrayForSomeone = (userId: string | undefined) => {
 /**
  * Free text travelling from one user to another is a moderation surface, so it
  * has to be reportable from the screen where it is read.
+ *
+ * Reporting used to file a row and change nothing the reporter could see: the
+ * message stayed, and came back on the next refetch. It now also hides the text
+ * for them, server-side, so no cache is holding it and it cannot reappear. The
+ * prayer itself still counts — only the words go away.
  */
-export const useReportIntercession = (userId: string | undefined) =>
-  useMutation({
+export const useReportIntercession = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationFn: async ({
       intercessionId,
       reason,
@@ -135,5 +146,18 @@ export const useReportIntercession = (userId: string | undefined) =>
       });
 
       if (error) throw error;
+
+      const { error: hideError } = await supabase
+        .from("intercessions")
+        .update({ message_hidden_at: new Date().toISOString() })
+        .eq("id", intercessionId);
+
+      if (hideError) throw hideError;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["whoPrayedForMe", userId],
+      });
     },
   });
+};

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import { TextField } from "@/components/TextField";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   MIN_SEARCH_LENGTH,
@@ -60,17 +61,17 @@ export default function Bible() {
 
   const [query, setQuery] = useState("");
 
-  const { data: books, isLoading } = useBibleBooks();
+  const { data: books, isLoading, isError, refetch } = useBibleBooks();
   const { data: position } = useReadingPosition(userId);
   const { data: results, isFetching } = useBibleSearch(query);
   const { data: jump } = useReferenceJump(query);
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
-    );
+    return <LoadingState />;
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={() => void refetch()} />;
   }
 
   const all = books ?? [];
@@ -128,7 +129,10 @@ export default function Bible() {
             {t("bible.searchHint")}
           </Text>
         ) : isFetching && !results ? (
-          <ActivityIndicator color="#0f172a" />
+          <ActivityIndicator
+            color="#0f172a"
+            accessibilityLabel={t("common.loading")}
+          />
         ) : (results ?? []).length === 0 ? (
           // Saying "nothing found" underneath "Go to Juan 3" is noise: the
           // reference is what they were asking for.

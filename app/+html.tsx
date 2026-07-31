@@ -1,12 +1,20 @@
 import { ScrollViewStyleReset } from "expo-router/html";
 
+import { fallbackLng } from "@/translation";
+
 // This file is web-only and used to configure the root HTML for every
 // web page during static rendering.
 // The contents of this function only run in Node.js environments and
 // do not have access to the DOM or browser APIs.
 export default function Root({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // The scaffold hardcoded "en", so the whole Spanish product shipped
+    // declaring itself English: screen readers pronounced it with English
+    // phonemes and Chrome offered to translate Spanish into Spanish. This runs
+    // in Node at build time, so it cannot know the visitor's choice — it uses
+    // the product's own language, and core/i18n keeps it in sync afterwards
+    // when someone switches.
+    <html lang={fallbackLng}>
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />

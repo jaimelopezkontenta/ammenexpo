@@ -10,10 +10,30 @@ type Init18n = {
   fallbackLng: string;
 };
 
+/**
+ * Keeps the document's declared language in step with the chosen one.
+ *
+ * `+html.tsx` can only stamp the default at build time, so without this a
+ * visitor who switches to English keeps being served a page that says it is in
+ * Spanish — and assistive technology believes the attribute, not the words.
+ * No-op outside the browser.
+ */
+const syncDocumentLanguage = (language: string) => {
+  const doc = (
+    globalThis as { document?: { documentElement?: { lang: string } } }
+  ).document;
+
+  if (doc?.documentElement) {
+    doc.documentElement.lang = language;
+  }
+};
+
 export const init18n = ({ resources, fallbackLng }: Init18n) => {
   if (__DEV__) {
     pluralChecker(resources);
   }
+
+  i18n.on("languageChanged", syncDocumentLanguage);
 
   // i18next also exports a standalone `use`, so the linter suspects this is the
   // wrong one. It is not: chaining off the default instance is how i18next is

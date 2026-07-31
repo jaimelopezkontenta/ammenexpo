@@ -14,7 +14,9 @@
     "errorGeneric": "Algo salió mal. Vuelve a intentarlo.",
     "language": "Idioma",
     "notFoundTitle": "Esta página no existe.",
-    "notFoundLink": "Volver al inicio"
+    "notFoundLink": "Volver al inicio",
+    "errorTitle": "Algo no ha ido bien",
+    "errorBody": "No hemos podido cargar esto. Vuelve a intentarlo."
   },
   "tabs": {
     "today": "Hoy",
@@ -60,7 +62,7 @@
   },
   "onboarding": {
     "welcomeTitle": "Vamos a preparar tu plan",
-    "welcomeBody": "Cuatro preguntas rápidas para que tu plan de oración sea tuyo de verdad.",
+    "welcomeBody": "Unas preguntas rápidas para que tu plan de oración sea tuyo de verdad.",
     "nameQuestion": "¿Cómo quieres que te llamemos?",
     "seasonQuestion": "¿Qué estás viviendo ahora mismo?",
     "topicsQuestion": "¿Por qué te gustaría orar?",
@@ -159,7 +161,9 @@
     "createLink": "Crear enlace",
     "linkRevoked": "Enlace desactivado",
     "shareFailed": "No se pudo compartir. Copia el enlace de arriba a mano.",
-    "open": "Compartir este plan"
+    "open": "Compartir este plan",
+    "goHome": "Ir a mi plan",
+    "deadLinkInvite": "Puedes crear el tuyo y compartirlo con quien quieras."
   },
   "intercession": {
     "prayFor": "Oré por ti",
@@ -172,7 +176,7 @@
     "messagePlaceholder": "Escribe algo breve…",
     "personPrayed": "{{name}} oró por ti",
     "report": "Reportar",
-    "reportConfirm": "¿Seguro? Toca otra vez",
+    "reportConfirm": "¿Seguro? Toca otra vez.",
     "reported": "Reportado",
     "quick": {
       "withYou": "🙏 Estoy contigo",
@@ -194,17 +198,17 @@
     "descriptionPlaceholder": "Opcional",
     "visibility": "¿Quién puede unirse?",
     "visibilityPrivate": "Solo por invitación",
-    "visibilityPrivateHint": "Nadie lo encuentra; entras únicamente con el enlace.",
+    "visibilityPrivateHint": "No aparece en ninguna búsqueda: solo se entra con el enlace.",
     "visibilityPublic": "Cualquiera puede encontrarlo",
-    "visibilityPublicHint": "Aparecerá en las búsquedas. Requiere que modere quien lo crea.",
+    "visibilityPublicHint": "Aparecerá en las búsquedas. Quien lo cree tendrá que moderarlo.",
     "invite": "Invitar",
     "inviteLink": "Enlace de invitación",
     "copyLink": "Copiar enlace",
     "linkCopied": "Enlace copiado",
     "shareMessage": "Te invito a mi círculo de oración \"{{name}}\" en Ammen.",
     "membersTitle": "Miembros",
-    "owner": "Creador",
-    "admin": "Administrador",
+    "owner": "Creó el círculo",
+    "admin": "Modera el círculo",
     "streak": "Racha del círculo: {{count}}",
     "prayedToday": "Ya oraron hoy",
     "leave": "Salir del círculo",
@@ -217,12 +221,14 @@
     "members": "{{count}} miembro",
     "members_plural": "{{count}} miembros",
     "joinBody": "Un círculo de oración de {{count}} persona.",
-    "joinBody_plural": "Un círculo de oración de {{count}} personas."
+    "joinBody_plural": "Un círculo de oración de {{count}} personas.",
+    "leaveConfirmCta": "Sí, salir del círculo",
+    "joinFailed": "No hemos podido unirte. Puede que la invitación ya no valga."
   },
   "feed": {
     "title": "Peticiones",
     "newPost": "Pedir oración",
-    "anonymous": "Publicar en anónimo",
+    "anonymous": "Publicar sin mi nombre",
     "comment": "Comentar",
     "empty": "Aún no hay peticiones. Sé el primero.",
     "prayCount": "{{count}} persona ha orado",
@@ -236,15 +242,15 @@
   },
   "invite": {
     "title": "Invita a alguien a orar contigo",
-    "body": "La oración compartida sostiene más. Invita a quien te venga a la mente.",
+    "body": "Orar acompañado pesa menos.",
     "cta": "Invitar amigos"
   },
   "paywall": {
     "title": "Ammen Plus",
-    "subtitle": "Planes ilimitados generados para tu momento.",
+    "subtitle": "Planes ilimitados, hechos para lo que estás viviendo.",
     "restore": "Restaurar compra",
     "subscribe": "Suscribirme",
-    "freeNote": "Orar por otros y los grupos son gratis para siempre."
+    "freeNote": "Orar por otros y crear círculos es gratis para siempre."
   },
   "notifications": {
     "prayedForYou": "{{name}} oró por ti — {{planTitle}}",
@@ -265,7 +271,7 @@
     "customPlaceholder": "Mi hermana está enferma, una decisión sobre mudarme…",
     "customHint": "Opcional. Es lo que hará que este plan no se parezca a ningún otro.",
     "durationQuestion": "¿Cuántos días?",
-    "days": "{{count}} días",
+    "days": "{{count}} día",
     "visibilityQuestion": "¿Quién puede verlo?",
     "visPrivate": "Solo yo",
     "visPrivateHint": "Nadie más lo verá. Puedes compartirlo más adelante.",
@@ -275,13 +281,14 @@
     "visLinkHint": "Podrás enviarlo por WhatsApp y desactivarlo cuando quieras.",
     "noCircles": "Todavía no tienes círculos. Créalo privado y compártelo después.",
     "chooseCircles": "Elige al menos un círculo.",
-    "create": "Crear el plan"
+    "create": "Crear el plan",
+    "days_plural": "{{count}} días"
   },
   "bible": {
     "title": "Biblia",
     "subtitle": "Reina-Valera 1909",
     "searchPlaceholder": "Buscar una palabra o una cita",
-    "searchHint": "Escribe al menos tres letras. También puedes poner una cita, como «Juan 3».",
+    "searchHint": "Escribe al menos tres letras. También puedes escribir una cita, como «Juan 3».",
     "oldTestament": "Antiguo Testamento",
     "newTestament": "Nuevo Testamento",
     "continueReading": "Continuar leyendo",
@@ -296,6 +303,7 @@
     "previous": "Anterior",
     "next": "Siguiente",
     "readInContext": "Leer el capítulo",
-    "searchLabel": "Buscar"
+    "searchLabel": "Buscar",
+    "chapterNotFound": "No encontramos ese capítulo."
   }
 }

@@ -1,9 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { LoadingState } from "@/components/ScreenState";
 import { rememberShareToken } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useSharedPlanPreview } from "@/core/plans/sharePreview";
@@ -13,8 +15,10 @@ export default function SharedPlanPreviewScreen() {
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const { session } = useSession();
-  const { data, isLoading } = useSharedPlanPreview(token);
+  const { data, isLoading, isError, refetch } = useSharedPlanPreview(token);
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemError, setRedeemError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Stash the token before anything else: if this visitor signs up, onboarding
   // redeems it and they end up genuinely connected to whoever shared the plan.
@@ -28,28 +32,92 @@ export default function SharedPlanPreviewScreen() {
     if (!token) return;
 
     setIsRedeeming(true);
-    await supabase.rpc("redeem_share_token", { p_token: token });
+    setRedeemError(null);
+
+    const { data: outcome, error } = await supabase.rpc("redeem_share_token", {
+      p_token: token,
+    });
+
     setIsRedeeming(false);
+
+    // The RPC answers `{ok:false, reason}` for a revoked or expired token
+    // *without* raising, so ignoring both the error and the payload made a dead
+    // link and a successful redemption produce identical UX: a spinner, then
+    // the home screen.
+    if (error || !(outcome as { ok?: boolean } | null)?.ok) {
+      setRedeemError(t("share.previewNotFoundHint"));
+      return;
+    }
+
+    // Redeeming is what makes this plan — and possibly a circle — visible.
+    // Navigating without refreshing landed people on a Hoy and an Orar tab that
+    // still believed nothing had been shared with them.
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] }),
+      queryClient.invalidateQueries({ queryKey: ["circles"] }),
+    ]);
+
     router.replace("/");
   };
 
   if (isLoading) {
+    return <LoadingState />;
+  }
+
+  // A failed request is not a dead link, and telling a stranger someone's link
+  // is gone when the network hiccuped is both wrong and unrecoverable.
+  if (isError) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
+      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
+        <Text
+          className="text-center text-xl font-bold text-slate-900"
+          accessibilityRole="alert"
+        >
+          {t("common.errorTitle")}
+        </Text>
+        <Text className="text-center text-base leading-6 text-slate-500">
+          {t("common.errorBody")}
+        </Text>
+        <View className="mt-4 w-full">
+          <Button title={t("common.retry")} onPress={() => void refetch()} />
+        </View>
       </View>
     );
   }
 
   if (!data) {
     return (
-      <View className="flex-1 items-center justify-center gap-2 bg-white px-8">
+      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
         <Text className="text-center text-xl font-bold text-slate-900">
           {t("share.previewNotFound")}
         </Text>
-        <Text className="text-center text-base text-slate-500">
+        <Text className="text-center text-base leading-6 text-slate-500">
           {t("share.previewNotFoundHint")}
         </Text>
+
+        {/* This group has no header, so without a way forward a visitor who
+            opened an expired WhatsApp link was simply stuck on two lines of
+            grey text — on the surface that brings people into the product. */}
+        <View className="mt-6 w-full gap-3">
+          {session ? (
+            <Button
+              title={t("share.goHome")}
+              onPress={() => router.replace("/")}
+            />
+          ) : (
+            <>
+              <Text className="text-center text-base text-slate-500">
+                {t("share.deadLinkInvite")}
+              </Text>
+              <Link href="/crear-cuenta" asChild>
+                <Button title={t("share.previewCta")} />
+              </Link>
+              <Link href="/entrar" asChild>
+                <Button title={t("share.alreadyMember")} variant="ghost" />
+              </Link>
+            </>
+          )}
+        </View>
       </View>
     );
   }
@@ -106,6 +174,15 @@ export default function SharedPlanPreviewScreen() {
       </View>
 
       <View className="mt-auto gap-3 pt-12">
+        {redeemError ? (
+          <Text
+            className="text-center text-sm text-red-500"
+            accessibilityRole="alert"
+          >
+            {redeemError}
+          </Text>
+        ) : null}
+
         {session ? (
           <Button
             title={t("share.viewPlan")}

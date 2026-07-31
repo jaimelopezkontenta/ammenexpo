@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -31,18 +32,36 @@ export const SessionProvider = ({
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  /** Who the cache currently belongs to. */
+  const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
+      lastUserId.current = data.session?.user.id ?? null;
       setSession(data.session);
       setIsLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, nextSession) => {
+        const nextUserId = nextSession?.user.id ?? null;
+
+        // Clearing only inside signOut() left every other way a session ends —
+        // an expired refresh token, a sign-out pushed from another device — with
+        // the cache intact. Several keys are not user-scoped (a circle, its
+        // members, a plan's share link), so the next account to sign in on this
+        // device would have been served the previous one's data.
+        //
+        // Skipped when there was no previous user: at startup there is nothing
+        // cached to leak, and clearing would cancel the first fetches.
+        if (lastUserId.current !== null && lastUserId.current !== nextUserId) {
+          queryClient.clear();
+        }
+
+        lastUserId.current = nextUserId;
         setSession(nextSession);
         setIsLoading(false);
       },
@@ -52,7 +71,7 @@ export const SessionProvider = ({
       active = false;
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   const userId = session?.user.id ?? null;
 
@@ -62,11 +81,17 @@ export const SessionProvider = ({
     queryKey: ["onboarding", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data: settings } = await supabase
+      const { data: settings, error } = await supabase
         .from("profile_settings")
         .select("onboarding_answers")
         .eq("id", userId!)
         .maybeSingle();
+
+      // Swallowing this used to turn any network blip into "false", which the
+      // gate below reads as "never onboarded" — dropping someone with a year of
+      // history back into step 1 of 4, with no way to skip it. A failed read
+      // must stay a failure so the query retries instead of deciding.
+      if (error) throw error;
 
       return Boolean(settings?.onboarding_answers);
     },

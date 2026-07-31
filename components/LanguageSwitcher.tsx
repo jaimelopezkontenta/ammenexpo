@@ -17,14 +17,27 @@ export const LanguageSwitcher = () => {
       <Text className="text-center text-sm font-medium text-slate-500">
         {t("common.language")}
       </Text>
-      <View className="flex-row justify-center gap-3">
+      <View
+        className="flex-row justify-center gap-3"
+        accessibilityRole="radiogroup"
+      >
         {supportedLanguages.map((code) => {
           const isActive = code === current;
           return (
             <Pressable
               key={code}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isActive }}
+              // A radio, not a button: these are a choice with a current value.
+              // And both state props are needed — react-native-web 0.21 stopped
+              // mapping accessibilityState, so on web the active language was
+              // announced exactly like the inactive one.
+              accessibilityRole="radio"
+              accessibilityState={{ selected: isActive, checked: isActive }}
+              aria-checked={isActive}
+              // The endonym alone announces as a noun; these say what tapping
+              // does. Both keys have existed, unused, since the beginning.
+              accessibilityLabel={t(
+                code === "es" ? "button.spanish" : "button.english",
+              )}
               onPress={() => i18n.changeLanguage(code)}
               className={`rounded-full px-4 py-2 ${
                 isActive ? "bg-slate-900" : "bg-slate-100"

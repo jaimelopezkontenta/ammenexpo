@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 import { Text, TextInput, TextInputProps, View } from "react-native";
 
 interface TextFieldProps extends TextInputProps {
@@ -8,19 +8,42 @@ interface TextFieldProps extends TextInputProps {
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(
   ({ label, error, ...inputProps }, ref) => {
+    const errorId = useId();
+
     return (
       <View className="w-full gap-1.5">
-        <Text className="text-sm font-medium text-slate-600">{label}</Text>
+        {/* aria-hidden on web: the visible label would otherwise be read once as
+            loose text and again as the input's accessible name. */}
+        <Text className="text-sm font-medium text-slate-600" aria-hidden>
+          {label}
+        </Text>
         <TextInput
           ref={ref}
           accessibilityLabel={label}
+          // Without these the error was an orphan: a screen reader user focusing
+          // the field was never told it was in error, nor what the message
+          // floating below it referred to. React Native has no `invalid`
+          // accessibility state, so native gets the message as a hint — read
+          // straight after the label — and web gets the ARIA pair.
+          accessibilityHint={error ?? undefined}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : undefined}
           placeholderTextColor="#94a3b8"
           {...inputProps}
           className={`w-full rounded-2xl border bg-white px-4 py-3.5 text-base text-slate-900 ${
             error ? "border-red-400" : "border-slate-200"
           } ${inputProps.className ?? ""}`}
         />
-        {error ? <Text className="text-sm text-red-500">{error}</Text> : null}
+        {error ? (
+          <Text
+            nativeID={errorId}
+            id={errorId}
+            className="text-sm text-red-500"
+            accessibilityRole="alert"
+          >
+            {error}
+          </Text>
+        ) : null}
       </View>
     );
   },

@@ -75,12 +75,21 @@ export const useRevokeShareLink = (planId: string | undefined) => {
 
   return useMutation({
     mutationFn: async (linkId: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("share_links")
         .update({ revoked_at: new Date().toISOString() })
-        .eq("id", linkId);
+        .eq("id", linkId)
+        .select("id");
 
       if (error) throw error;
+
+      // PostgREST answers 204 with no error when RLS filtered every row, so
+      // without this the screen said "link turned off", refetched, and the link
+      // reappeared — someone believing they had closed the tap on a personal
+      // prayer request when they had not.
+      if (!data || data.length === 0) {
+        throw new Error("revoke_no_rows");
+      }
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({

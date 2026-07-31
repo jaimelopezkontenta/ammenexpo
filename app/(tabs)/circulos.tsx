@@ -1,16 +1,11 @@
 import { Link } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -24,7 +19,7 @@ export default function Circles() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: circles, isLoading } = useMyCircles(userId);
+  const { data: circles, isLoading, isError, refetch } = useMyCircles(userId);
   const createCircle = useCreateCircle(userId);
 
   const [isCreating, setIsCreating] = useState(false);
@@ -48,11 +43,13 @@ export default function Circles() {
   };
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
-    );
+    return <LoadingState />;
+  }
+
+  // A failed read used to fall through to "you have no circles yet", which is
+  // a different and untrue thing to say.
+  if (isError) {
+    return <ErrorState onRetry={() => void refetch()} />;
   }
 
   if (isCreating) {
@@ -148,7 +145,13 @@ export default function Circles() {
               href={{ pathname: "/circulo/[id]", params: { id: circle.id } }}
               asChild
             >
-              <Pressable className="gap-1 rounded-2xl border border-slate-200 p-5">
+              {/* The only interactive element in the app with no role: a screen
+                  reader announced the whole list as static text, so the way
+                  into a circle was invisible when swiping for controls. */}
+              <Pressable
+                accessibilityRole="link"
+                className="gap-1 rounded-2xl border border-slate-200 p-5"
+              >
                 <Text className="text-lg font-semibold text-slate-900">
                   {circle.name}
                 </Text>

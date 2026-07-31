@@ -14,7 +14,9 @@
     "errorGeneric": "Something went wrong. Please try again.",
     "language": "Language",
     "notFoundTitle": "This page doesn't exist.",
-    "notFoundLink": "Back to home"
+    "notFoundLink": "Back to home",
+    "errorTitle": "Something went wrong",
+    "errorBody": "We could not load this. Please try again."
   },
   "tabs": {
     "today": "Today",
@@ -60,7 +62,7 @@
   },
   "onboarding": {
     "welcomeTitle": "Let's build your plan",
-    "welcomeBody": "Four quick questions so your prayer plan is truly yours.",
+    "welcomeBody": "A few quick questions so your prayer plan is genuinely yours.",
     "nameQuestion": "What should we call you?",
     "seasonQuestion": "What are you going through right now?",
     "topicsQuestion": "What would you like to pray about?",
@@ -159,7 +161,9 @@
     "createLink": "Create link",
     "linkRevoked": "Link turned off",
     "shareFailed": "Could not share. Copy the link above by hand.",
-    "open": "Share this plan"
+    "open": "Share this plan",
+    "goHome": "Go to my plan",
+    "deadLinkInvite": "You can create your own and share it with whoever you like."
   },
   "intercession": {
     "prayFor": "I prayed for you",
@@ -172,7 +176,7 @@
     "messagePlaceholder": "Write something short…",
     "personPrayed": "{{name}} prayed for you",
     "report": "Report",
-    "reportConfirm": "Sure? Tap again",
+    "reportConfirm": "Are you sure? Tap again.",
     "reported": "Reported",
     "quick": {
       "withYou": "🙏 I am with you",
@@ -194,17 +198,17 @@
     "descriptionPlaceholder": "Optional",
     "visibility": "Who can join?",
     "visibilityPrivate": "Invite only",
-    "visibilityPrivateHint": "Nobody can find it; you join only with the link.",
+    "visibilityPrivateHint": "It shows up in no search: the link is the only way in.",
     "visibilityPublic": "Anyone can find it",
-    "visibilityPublicHint": "It will show up in search. Whoever creates it must moderate it.",
+    "visibilityPublicHint": "It will show up in searches. Whoever creates it has to moderate it.",
     "invite": "Invite",
     "inviteLink": "Invite link",
     "copyLink": "Copy link",
     "linkCopied": "Link copied",
     "shareMessage": "I'm inviting you to my prayer circle \"{{name}}\" on Ammen.",
     "membersTitle": "Members",
-    "owner": "Creator",
-    "admin": "Admin",
+    "owner": "Created the circle",
+    "admin": "Moderates the circle",
     "streak": "Circle streak: {{count}}",
     "prayedToday": "Already prayed today",
     "leave": "Leave circle",
@@ -217,12 +221,14 @@
     "members": "{{count}} member",
     "members_plural": "{{count}} members",
     "joinBody": "A prayer circle with {{count}} person.",
-    "joinBody_plural": "A prayer circle with {{count}} people."
+    "joinBody_plural": "A prayer circle with {{count}} people.",
+    "leaveConfirmCta": "Yes, leave the circle",
+    "joinFailed": "We could not add you. The invite may no longer be valid."
   },
   "feed": {
     "title": "Requests",
     "newPost": "Ask for prayer",
-    "anonymous": "Post anonymously",
+    "anonymous": "Post without my name",
     "comment": "Comment",
     "empty": "No requests yet. Be the first.",
     "prayCount": "{{count}} person has prayed",
@@ -236,15 +242,15 @@
   },
   "invite": {
     "title": "Invite someone to pray with you",
-    "body": "Shared prayer carries further. Invite whoever comes to mind.",
+    "body": "Prayer weighs less when someone carries it with you.",
     "cta": "Invite friends"
   },
   "paywall": {
     "title": "Ammen Plus",
-    "subtitle": "Unlimited plans generated for your season.",
+    "subtitle": "Unlimited plans, made for what you are going through.",
     "restore": "Restore purchase",
     "subscribe": "Subscribe",
-    "freeNote": "Praying for others and groups are free forever."
+    "freeNote": "Praying for others and creating circles is free forever."
   },
   "notifications": {
     "prayedForYou": "{{name}} prayed for you — {{planTitle}}",
@@ -265,7 +271,7 @@
     "customPlaceholder": "My sister is ill, a decision about moving…",
     "customHint": "Optional. This is what will make this plan unlike any other.",
     "durationQuestion": "How many days?",
-    "days": "{{count}} days",
+    "days": "{{count}} day",
     "visibilityQuestion": "Who can see it?",
     "visPrivate": "Only me",
     "visPrivateHint": "Nobody else will see it. You can share it later.",
@@ -275,13 +281,14 @@
     "visLinkHint": "You can send it on WhatsApp and turn it off whenever you want.",
     "noCircles": "You have no circles yet. Create it private and share it later.",
     "chooseCircles": "Pick at least one circle.",
-    "create": "Create the plan"
+    "create": "Create the plan",
+    "days_plural": "{{count}} days"
   },
   "bible": {
     "title": "Bible",
     "subtitle": "Reina-Valera 1909",
     "searchPlaceholder": "Search a word or a reference",
-    "searchHint": "Type at least three letters. You can also enter a reference, like \"John 3\".",
+    "searchHint": "Type at least three letters. You can also type a reference, like \"John 3\".",
     "oldTestament": "Old Testament",
     "newTestament": "New Testament",
     "continueReading": "Continue reading",
@@ -296,6 +303,7 @@
     "previous": "Previous",
     "next": "Next",
     "readInContext": "Read the chapter",
-    "searchLabel": "Search"
+    "searchLabel": "Search",
+    "chapterNotFound": "We could not find that chapter."
   }
 }

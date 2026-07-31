@@ -1,9 +1,10 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   useCircle,
@@ -18,27 +19,32 @@ export default function CircleDetail() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: circle, isLoading } = useCircle(id);
+  const { data: circle, isLoading, isError, refetch } = useCircle(id);
   const { data: members } = useCircleMembers(id);
   const leave = useLeaveCircle(userId);
 
   const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
-    );
+    return <LoadingState />;
   }
 
-  if (!circle) {
+  // These two used to be one branch with no header and no controls, so a flaky
+  // connection told you your own circle did not exist and left you stuck on a
+  // line of grey text with no way back.
+  if (isError || !circle) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-8">
-        <Text className="text-center text-base text-slate-500">
-          {t("circles.inviteNotFound")}
-        </Text>
-      </View>
+      <>
+        <Stack.Screen
+          options={{ title: t("circles.title"), headerShown: true }}
+        />
+        <ErrorState
+          onRetry={isError ? () => void refetch() : undefined}
+          message={isError ? undefined : t("circles.inviteNotFound")}
+        />
+      </>
     );
   }
 
@@ -62,8 +68,28 @@ export default function CircleDetail() {
   };
 
   const handleLeave = async () => {
-    await leave.mutateAsync(circle.id);
-    router.replace("/circulos");
+    // Leaving a private circle cannot be undone without a fresh invite, and it
+    // used to happen on a single tap of a ghost button. `circles.leaveConfirm`
+    // has been translated in both languages all along, waiting.
+    if (!confirmingLeave) {
+      setNotice(null);
+      setError(null);
+      setConfirmingLeave(true);
+      return;
+    }
+
+    setError(null);
+
+    try {
+      await leave.mutateAsync(circle.id);
+      router.replace("/circulos");
+    } catch {
+      // Uncaught, this was an unhandled rejection: the button stopped spinning,
+      // nothing was said, and the person stayed in the circle believing they
+      // had left.
+      setConfirmingLeave(false);
+      setError(t("common.errorGeneric"));
+    }
   };
 
   return (
@@ -127,14 +153,34 @@ export default function CircleDetail() {
           </Text>
         ) : null}
 
+        {error ? (
+          <Text className="text-sm text-red-500" accessibilityRole="alert">
+            {error}
+          </Text>
+        ) : null}
+
+        {confirmingLeave ? (
+          <Text
+            className="text-sm text-slate-600"
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {t("circles.leaveConfirm")}
+          </Text>
+        ) : null}
+
         <View className="mt-auto gap-3 pt-6">
           <Button
             title={t("circles.invite")}
             onPress={() => void handleInvite()}
           />
           <Button
-            title={t("circles.leave")}
-            variant="ghost"
+            title={
+              confirmingLeave
+                ? t("circles.leaveConfirmCta")
+                : t("circles.leave")
+            }
+            variant={confirmingLeave ? "secondary" : "ghost"}
             loading={leave.isPending}
             onPress={() => void handleLeave()}
           />

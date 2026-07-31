@@ -76,11 +76,20 @@ export const useOwnPlan = (userId: string | undefined) =>
 /**
  * The latest unlocked day. Future days are invisible by policy, so this is
  * simply the highest day number the database is willing to return.
+ *
+ * `isGenerating` matters more than it looks. This query switches on as soon as
+ * the plan row exists — which is *before* any day has been written — so it
+ * caches null. Nothing ever invalidated this key, and useOwnPlan stops polling
+ * the moment the status leaves 'generating', so that null used to survive
+ * forever: you created your first plan and Hoy sat on "Cargando…" until the app
+ * was killed. Polling until the first day arrives is what closes that hole.
  */
-export const useTodayDay = (planId: string | undefined) =>
+export const useTodayDay = (planId: string | undefined, isGenerating = false) =>
   useQuery({
     queryKey: ["todayDay", planId],
     enabled: Boolean(planId),
+    refetchInterval: (query) =>
+      isGenerating && !query.state.data ? 3000 : false,
     queryFn: async (): Promise<PlanDay | null> => {
       const { data, error } = await supabase
         .from("prayer_plan_days")

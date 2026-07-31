@@ -240,6 +240,76 @@ select pg_temp.assert(
 commit;
 
 -- ===========================================================================
+-- "Who prayed for you" runs on the reader's calendar too
+--
+-- This was missed when the rest of the timezone work landed. With the old
+-- `current_date` default, a viewer whose local date is behind the server's
+-- stopped seeing today's intercessions partway through their own evening.
+-- ===========================================================================
+begin;
+
+-- Mara is on Kiritimati or Midway (whichever is on a different day from the
+-- server right now — see the block above), and Hiro prays for her.
+-- The cut has to be the viewer's own midnight. Placing one intercession an hour
+-- either side of it is what tells the two rules apart: under the old
+-- `current_date` both land on the same side of the server's midnight instead,
+-- for any viewer who is not on UTC.
+insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility, status)
+values ('ffff0000-0000-0000-0000-000000000003', :MARA, 'Plan de Mara', 3,
+        public.local_today(:MARA) - 1, 'link', 'active');
+
+insert into public.prayer_plan_days (id, plan_id, day_number, title, prayer_body, unlock_date)
+values ('dddd1111-0000-0000-0000-000000000001',
+        'ffff0000-0000-0000-0000-000000000003', 1, 'Ayer', 'Oración',
+        public.local_today(:MARA) - 1),
+       ('dddd1111-0000-0000-0000-000000000002',
+        'ffff0000-0000-0000-0000-000000000003', 2, 'Su hoy', 'Oración',
+        public.local_today(:MARA));
+
+insert into public.plan_shares (plan_id, shared_with_user_id, created_by)
+values ('ffff0000-0000-0000-0000-000000000003', :HIRO, :MARA);
+
+insert into public.intercessions (plan_day_id, plan_owner_id, intercessor_id, created_at)
+select 'dddd1111-0000-0000-0000-000000000001', :MARA, :HIRO,
+       (public.local_today(:MARA)::timestamp - interval '1 hour')
+         at time zone public.valid_timezone(ps.timezone)
+from public.profile_settings ps where ps.id = :MARA;
+
+insert into public.intercessions (plan_day_id, plan_owner_id, intercessor_id, created_at)
+select 'dddd1111-0000-0000-0000-000000000002', :MARA, :HIRO,
+       (public.local_today(:MARA)::timestamp + interval '1 hour')
+         at time zone public.valid_timezone(ps.timezone)
+from public.profile_settings ps where ps.id = :MARA;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"bbbb2222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.local_today(:MARA) <> current_date,
+  'Mara really is on a different calendar day from the server');
+
+select pg_temp.assert(
+  (select count(*) from public.who_prayed_for_me()) = 1,
+  'exactly one of the two intercessions counts as today');
+
+select pg_temp.assert(
+  (select day_number from public.who_prayed_for_me()) = 2::smallint,
+  'and it is the one after her own midnight, not the server''s');
+
+select pg_temp.assert(
+  (select intercessor_name from public.who_prayed_for_me()) = 'Hiro',
+  'reported by name');
+
+select pg_temp.assert(
+  (select count(*) from public.who_prayed_for_me(public.local_today(:MARA) - 1)) = 2,
+  'asking from yesterday brings back both');
+
+commit;
+
+-- ===========================================================================
 -- The streak counts the user's own days
 -- ===========================================================================
 begin;

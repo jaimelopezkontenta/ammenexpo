@@ -20,7 +20,6 @@ export const WhoPrayed = ({ people, onReport }: Props) => {
   const { t } = useTranslation();
 
   const [confirming, setConfirming] = useState<string | null>(null);
-  const [reported, setReported] = useState<string[]>([]);
 
   if (people.length === 0) {
     return (
@@ -33,7 +32,7 @@ export const WhoPrayed = ({ people, onReport }: Props) => {
   return (
     <View className="gap-4">
       {people.map((person) => {
-        const isReported = reported.includes(person.intercession_id);
+        const isConfirming = confirming === person.intercession_id;
 
         return (
           <View key={person.intercession_id} className="gap-1">
@@ -43,39 +42,44 @@ export const WhoPrayed = ({ people, onReport }: Props) => {
               })}
             </Text>
 
+            {/* A reported message stops coming back from the server, so there
+                is no "reported" placeholder to keep: the text is simply gone
+                and the prayer stays. */}
             {person.message ? (
               <>
                 <Text className="text-base leading-6 text-slate-600">
-                  “{person.message}”
+                  «{person.message}»
                 </Text>
 
-                {isReported ? (
-                  <Text className="text-sm text-slate-400">
-                    {t("intercession.reported")}
-                  </Text>
-                ) : (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => {
-                      if (confirming === person.intercession_id) {
-                        onReport(person.intercession_id);
-                        setReported((list) => [
-                          ...list,
-                          person.intercession_id,
-                        ]);
-                        setConfirming(null);
-                      } else {
-                        setConfirming(person.intercession_id);
-                      }
-                    }}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: isConfirming }}
+                  aria-expanded={isConfirming}
+                  onPress={() => {
+                    if (isConfirming) {
+                      onReport(person.intercession_id);
+                      setConfirming(null);
+                    } else {
+                      setConfirming(person.intercession_id);
+                    }
+                  }}
+                >
+                  <Text
+                    className={
+                      isConfirming
+                        ? "text-sm font-semibold text-red-500"
+                        : "text-sm text-slate-400 underline"
+                    }
+                    // Nothing announced the label flipping, so a screen reader
+                    // user tapped "Reportar", heard silence, and had no way to
+                    // know a second tap was needed.
+                    accessibilityLiveRegion={isConfirming ? "polite" : "none"}
                   >
-                    <Text className="text-sm text-slate-400">
-                      {confirming === person.intercession_id
-                        ? t("intercession.reportConfirm")
-                        : t("intercession.report")}
-                    </Text>
-                  </Pressable>
-                )}
+                    {isConfirming
+                      ? t("intercession.reportConfirm")
+                      : t("intercession.report")}
+                  </Text>
+                </Pressable>
               </>
             ) : null}
           </View>

@@ -1,9 +1,10 @@
 import { Link, router, useLocalSearchParams } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { rememberShareToken } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleInvitePreview, useJoinCircle } from "@/core/circles/queries";
@@ -14,8 +15,14 @@ export default function CircleInvite() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: circle, isLoading } = useCircleInvitePreview(token);
+  const {
+    data: circle,
+    isLoading,
+    isError,
+    refetch,
+  } = useCircleInvitePreview(token);
   const join = useJoinCircle(userId);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   // Same as the shared-plan preview: keep the token across signup so the new
   // account lands inside the circle instead of on an empty home screen.
@@ -28,24 +35,52 @@ export default function CircleInvite() {
   const handleJoin = async () => {
     if (!token) return;
 
-    const circleId = await join.mutateAsync(token);
-    router.replace({ pathname: "/circulo/[id]", params: { id: circleId } });
+    setJoinError(null);
+
+    try {
+      const circleId = await join.mutateAsync(token);
+      router.replace({ pathname: "/circulo/[id]", params: { id: circleId } });
+    } catch {
+      // Uncaught, an expired token or an already-a-member answer became an
+      // unhandled rejection: the button un-spun and nothing was said.
+      setJoinError(t("circles.joinFailed"));
+    }
   };
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
-    );
+    return <LoadingState />;
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={() => void refetch()} />;
   }
 
   if (!circle) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-8">
+      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
         <Text className="text-center text-xl font-bold text-slate-900">
           {t("circles.inviteNotFound")}
         </Text>
+
+        {/* No header in this group, so without these a dead invite left a
+            stranger on a single line of text with nowhere to go. */}
+        <View className="mt-6 w-full gap-3">
+          {session ? (
+            <Button
+              title={t("share.goHome")}
+              onPress={() => router.replace("/")}
+            />
+          ) : (
+            <>
+              <Link href="/crear-cuenta" asChild>
+                <Button title={t("share.previewCta")} />
+              </Link>
+              <Link href="/entrar" asChild>
+                <Button title={t("share.alreadyMember")} variant="ghost" />
+              </Link>
+            </>
+          )}
+        </View>
       </View>
     );
   }
@@ -61,6 +96,15 @@ export default function CircleInvite() {
       {circle.description ? (
         <Text className="text-center text-base text-slate-600">
           {circle.description}
+        </Text>
+      ) : null}
+
+      {joinError ? (
+        <Text
+          className="text-center text-sm text-red-500"
+          accessibilityRole="alert"
+        >
+          {joinError}
         </Text>
       ) : null}
 

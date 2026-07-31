@@ -44,7 +44,12 @@ export const Button = forwardRef<View, ButtonProps>(
       <TouchableOpacity
         ref={ref}
         accessibilityRole="button"
+        // The title is the only accessible name, and it is unmounted while
+        // loading — so without this the button announced as "button, busy" with
+        // no indication of *which* button, on every confirmation in the app.
+        accessibilityLabel={title}
         accessibilityState={{ disabled: Boolean(isDisabled), busy: loading }}
+        aria-busy={loading}
         {...touchableProps}
         disabled={isDisabled}
         className={`w-full flex-row items-center justify-center rounded-2xl px-5 py-4 ${

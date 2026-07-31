@@ -27,21 +27,61 @@ const collectKeys = (value: unknown, prefix = ""): string[] => {
   );
 };
 
-export const pluralChecker = (resources: Resource) => {
-  const wrong = Object.entries(resources).flatMap(([language, bundle]) =>
-    collectKeys(bundle)
-      .filter((key) => WRONG_SUFFIXES.some((suffix) => key.endsWith(suffix)))
-      .map((key) => `${language}:${key}`),
-  );
+/**
+ * A singular slot that is already written as a plural. `"{{count}} días"` with
+ * no `_plural` sibling reads correctly only for as long as nobody passes 1 —
+ * `newPlan.days` sat like that unnoticed because the durations on offer were
+ * 7, 14, 21 and 30.
+ */
+const looksPlural = (value: unknown) =>
+  typeof value === "string" && /\{\{count\}\}[^.!?]*s\b/u.test(value);
 
-  if (wrong.length > 0) {
-    console.error(
-      `[i18n] These keys use the i18next v4 plural suffixes, but this app runs ` +
-        `in compatibilityJSON v3, where plurals are "key" and "key_plural". ` +
-        `They will never be read, and every count will render the singular: ` +
-        wrong.join(", "),
+const valueAt = (bundle: unknown, path: string) =>
+  path
+    .split(".")
+    .reduce<unknown>(
+      (node, part) =>
+        typeof node === "object" && node !== null
+          ? (node as Record<string, unknown>)[part]
+          : undefined,
+      bundle,
     );
+
+export const pluralChecker = (resources: Resource) => {
+  const problems: string[] = [];
+
+  for (const [language, bundle] of Object.entries(resources)) {
+    const keys = collectKeys(bundle);
+    const present = new Set(keys);
+
+    for (const key of keys) {
+      if (WRONG_SUFFIXES.some((suffix) => key.endsWith(suffix))) {
+        problems.push(
+          `${language}:${key} uses a v4 suffix; this app runs compatibilityJSON v3, ` +
+            `where plurals are "key" and "key_plural". It will never be read, ` +
+            `so every count renders the singular.`,
+        );
+        continue;
+      }
+
+      // The inverse mistake, which the suffix check alone cannot see: a lone
+      // key whose text is already plural.
+      if (
+        !key.endsWith("_plural") &&
+        !present.has(`${key}_plural`) &&
+        looksPlural(valueAt(bundle, key))
+      ) {
+        problems.push(
+          `${language}:${key} has no "_plural" sibling but its text already reads ` +
+            `as a plural, so a count of 1 will render it verbatim.`,
+        );
+      }
+    }
   }
 
-  return wrong;
+  if (problems.length > 0) {
+    console.error(`[i18n] ${problems.join("\n[i18n] ")}`);
+  }
+
+  return problems;
 };
