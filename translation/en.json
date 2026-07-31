@@ -12,7 +12,9 @@
     "today": "Today",
     "day": "Day {{number}}",
     "errorGeneric": "Something went wrong. Please try again.",
-    "language": "Language"
+    "language": "Language",
+    "notFoundTitle": "This page doesn't exist.",
+    "notFoundLink": "Back to home"
   },
   "tabs": {
     "today": "Today",
@@ -28,7 +30,7 @@
   },
   "profile": {
     "title": "Your profile",
-    "subtitle": "Adjust your reminder, your language and your account."
+    "subtitle": "Your language and your account."
   },
   "auth": {
     "signInTitle": "Welcome back",

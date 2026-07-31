@@ -65,10 +65,9 @@ export default function CircleDetail() {
         className="flex-1 bg-white"
         contentContainerClassName="flex-grow gap-6 px-7 py-8"
       >
+        {/* The name is already in the navigation header; repeating it here as a
+            heading just pushed the useful content down. */}
         <View className="gap-1">
-          <Text className="text-2xl font-bold text-slate-900">
-            {circle.name}
-          </Text>
           {circle.description ? (
             <Text className="text-base text-slate-500">
               {circle.description}

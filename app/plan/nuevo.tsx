@@ -106,6 +106,7 @@ export default function NewPlan() {
             }))}
             selected={topics}
             onToggle={(value) => setTopics((list) => toggle(list, value))}
+            multiple
           />
         </View>
 
@@ -163,11 +164,21 @@ export default function NewPlan() {
                 onToggle={(value) =>
                   setSelectedCircles((list) => toggle(list, value))
                 }
+                multiple
               />
             ) : (
-              <Text className="text-sm text-slate-500">
-                {t("newPlan.noCircles")}
-              </Text>
+              // Without a way out this option is a dead end: nothing to pick,
+              // and creating the plan is blocked on picking something.
+              <View className="gap-3">
+                <Text className="text-sm text-slate-500">
+                  {t("newPlan.noCircles")}
+                </Text>
+                <Button
+                  title={t("circles.create")}
+                  variant="secondary"
+                  onPress={() => router.push("/circulos")}
+                />
+              </View>
             )
           ) : null}
         </View>

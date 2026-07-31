@@ -12,7 +12,9 @@
     "today": "Hoy",
     "day": "Día {{number}}",
     "errorGeneric": "Algo salió mal. Vuelve a intentarlo.",
-    "language": "Idioma"
+    "language": "Idioma",
+    "notFoundTitle": "Esta página no existe.",
+    "notFoundLink": "Volver al inicio"
   },
   "tabs": {
     "today": "Hoy",
@@ -28,7 +30,7 @@
   },
   "profile": {
     "title": "Tu perfil",
-    "subtitle": "Ajusta tu recordatorio, tu idioma y tu cuenta."
+    "subtitle": "Tu idioma y tu cuenta."
   },
   "auth": {
     "signInTitle": "Bienvenido de vuelta",

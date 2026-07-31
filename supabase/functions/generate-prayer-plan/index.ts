@@ -11,6 +11,7 @@ import {
   type ProviderMessage,
   ProviderRefusal,
 } from "./providers/types.ts";
+import { sanitizeGeneratedText } from "./sanitize.ts";
 import { isGeneratedPlan, PLAN_JSON_SCHEMA } from "./schema.ts";
 import { resolveDays, unresolved, type ResolvedDay } from "./scripture.ts";
 
@@ -275,13 +276,14 @@ const writeChunk = async ({
     return {
       plan_id: plan.id,
       day_number: dayNumber,
-      title: day.title,
+      title: sanitizeGeneratedText(day.title),
       // Canonical spelling from our own Bible table, not the model's.
       scripture_ref: day.canonical_ref,
+      // Straight from the RVR1909 table, so it needs no cleaning.
       scripture_text: day.scripture_text,
-      interpretation: day.interpretation,
-      daily_action: day.daily_action,
-      prayer_body: day.prayer_body,
+      interpretation: sanitizeGeneratedText(day.interpretation),
+      daily_action: sanitizeGeneratedText(day.daily_action),
+      prayer_body: sanitizeGeneratedText(day.prayer_body),
       unlock_date: unlock.toISOString().slice(0, 10),
     };
   });
@@ -304,8 +306,8 @@ const writeChunk = async ({
     await supabase
       .from("prayer_plans")
       .update({
-        title: generated.title.slice(0, 140),
-        theme: generated.theme?.slice(0, 140) ?? null,
+        title: (sanitizeGeneratedText(generated.title) ?? "").slice(0, 140),
+        theme: sanitizeGeneratedText(generated.theme)?.slice(0, 140) ?? null,
         status: "active",
         source_prompt: {
           ...(plan.source_prompt ?? {}),

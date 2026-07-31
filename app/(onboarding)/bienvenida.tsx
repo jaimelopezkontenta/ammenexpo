@@ -191,6 +191,7 @@ export default function Onboarding() {
             options={topicOptions}
             selected={topics}
             onToggle={toggleTopic}
+            multiple
           />
         </View>
       ) : null}
