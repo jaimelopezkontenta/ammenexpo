@@ -3,6 +3,7 @@ import { initReactI18next } from "react-i18next";
 
 import { fallbackChecker } from "./fallbackChecker";
 import { createLanguageDetector } from "./languageDetector";
+import { pluralChecker } from "./pluralChecker";
 
 type Init18n = {
   resources: Resource;
@@ -10,6 +11,10 @@ type Init18n = {
 };
 
 export const init18n = ({ resources, fallbackLng }: Init18n) => {
+  if (__DEV__) {
+    pluralChecker(resources);
+  }
+
   return i18n
     .use(createLanguageDetector({ resources, fallbackLng }))
     .use(initReactI18next)

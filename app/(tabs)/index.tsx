@@ -12,7 +12,13 @@ import {
 import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
 import { TextField } from "@/components/TextField";
+import { WhoPrayed } from "@/components/WhoPrayed";
 import { useSession } from "@/core/auth/SessionProvider";
+import {
+  useReportIntercession,
+  useWhoPrayedForMe,
+} from "@/core/intercessions/queries";
+import { liveStreak, useStreak } from "@/core/profile/queries";
 import {
   isStuckGenerating,
   PlanLimitReached,
@@ -38,7 +44,10 @@ export default function Today() {
     plan && plan.status !== "failed" ? plan.id : undefined,
   );
   const { data: prayed } = usePrayedToday(day?.id);
+  const { data: streak } = useStreak(userId);
+  const { data: prayedForMe } = useWhoPrayedForMe(userId);
 
+  const report = useReportIntercession(userId);
   const generate = useGeneratePlan(userId);
   const abandon = useAbandonPlan(userId);
   const rename = useRenamePlan(userId);
@@ -47,6 +56,7 @@ export default function Today() {
   const [draftTitle, setDraftTitle] = useState<string | null>(null);
 
   const stuck = isStuckGenerating(plan);
+  const days = liveStreak(streak);
 
   const startGeneration = async () => {
     // A crashed generation would otherwise sit in 'generating' forever and
@@ -149,6 +159,7 @@ export default function Today() {
             total: plan.duration_days,
           })}
           {plan.status === "generating" ? ` · ${t("plan.stillPreparing")}` : ""}
+          {days > 0 ? ` · ${t("plan.streak", { count: days })}` : ""}
         </Text>
 
         <Text className="text-3xl font-bold leading-9 text-slate-900">
@@ -218,7 +229,7 @@ export default function Today() {
         </Text>
       </DaySection>
 
-      <View className="pb-4 pt-2">
+      <View className="pb-2 pt-2">
         {prayed ? (
           <Text className="text-center text-base font-medium text-slate-600">
             {t("plan.markedDone")}
@@ -231,6 +242,27 @@ export default function Today() {
           />
         )}
       </View>
+
+      {/* Seeing who showed up for you is the reason to come back tomorrow, so
+          it lives on this screen rather than behind a notification. */}
+      <DaySection label={t("intercession.whoPrayed")}>
+        <WhoPrayed
+          people={prayedForMe ?? []}
+          onReport={(intercessionId) => report.mutate({ intercessionId })}
+        />
+      </DaySection>
+
+      {/* "Pray for their plan" needs a "their": with an empty list the button
+          refers to nobody. */}
+      {(prayedForMe ?? []).length > 0 ? (
+        <View className="pb-4">
+          <Button
+            title={t("intercession.prayBack")}
+            variant="secondary"
+            onPress={() => router.push("/orar")}
+          />
+        </View>
+      ) : null}
     </ScrollView>
   );
 }

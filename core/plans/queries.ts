@@ -220,6 +220,9 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["prayedToday", dayId] });
+      // The streak is bumped by a trigger, so the cached value is stale the
+      // moment this succeeds.
+      void queryClient.invalidateQueries({ queryKey: ["streak", userId] });
     },
   });
 };

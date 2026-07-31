@@ -26,7 +26,8 @@
     "title": "Orar por otros",
     "subtitle": "Planes que otras personas han compartido contigo.",
     "empty": "Todavía nadie ha compartido su plan contigo.",
-    "emptyBody": "Cuando alguien lo haga, aparecerá aquí para que ores por su día."
+    "emptyBody": "Cuando alguien lo haga, aparecerá aquí para que ores por su día.",
+    "emptyCta": "Crear un círculo"
   },
   "profile": {
     "title": "Tu perfil",
@@ -110,8 +111,6 @@
     "prayer": "Oración",
     "markDone": "Ya oré hoy",
     "markedDone": "Oraste hoy 🙏",
-    "streak": "{{count}} día de racha",
-    "streak_other": "{{count}} días de racha",
     "locked": "Este día se abre el {{date}}",
     "generating": "Preparando tu plan…",
     "generatingHint": "Puede tardar un minuto. Puedes cerrar la app; te esperará aquí.",
@@ -133,7 +132,9 @@
     "rename": "Cambiar el nombre",
     "dayOf": "Día {{current}} de {{total}}",
     "titlePlaceholder": "Nombre del plan",
-    "stillPreparing": "Seguimos preparando los días siguientes."
+    "stillPreparing": "Seguimos preparando los días siguientes.",
+    "streak": "{{count}} día de racha",
+    "streak_plural": "{{count}} días de racha"
   },
   "share": {
     "title": "Compartir mi plan",
@@ -155,7 +156,20 @@
     "prayedFor": "Ya oraste por {{name}} hoy",
     "whoPrayed": "Quién oró por ti",
     "nobodyYet": "Todavía nadie ha orado hoy. Comparte tu plan.",
-    "prayBack": "Orar por su plan"
+    "prayBack": "Orar por su plan",
+    "addMessage": "Añadir un mensaje",
+    "messageLabel": "Tu mensaje (opcional)",
+    "messagePlaceholder": "Escribe algo breve…",
+    "personPrayed": "{{name}} oró por ti",
+    "report": "Reportar",
+    "reportConfirm": "¿Seguro? Toca otra vez",
+    "reported": "Reportado",
+    "quick": {
+      "withYou": "🙏 Estoy contigo",
+      "strength": "💪 Fuerza",
+      "godHears": "🕊️ Dios te escucha",
+      "hugs": "❤️ Un abrazo"
+    }
   },
   "circles": {
     "title": "Tus círculos",
@@ -178,8 +192,6 @@
     "copyLink": "Copiar enlace",
     "linkCopied": "Enlace copiado",
     "shareMessage": "Te invito a mi círculo de oración \"{{name}}\" en Ammen.",
-    "members": "{{count}} miembro",
-    "members_other": "{{count}} miembros",
     "membersTitle": "Miembros",
     "owner": "Creador",
     "admin": "Administrador",
@@ -189,20 +201,22 @@
     "leaveConfirm": "¿Seguro que quieres salir?",
     "report": "Reportar",
     "joinTitle": "Te invitan a \"{{name}}\"",
-    "joinBody": "Un círculo de oración de {{count}} persona.",
-    "joinBody_other": "Un círculo de oración de {{count}} personas.",
     "join": "Unirme",
     "joined": "Ya eres parte de este círculo",
-    "inviteNotFound": "Esta invitación ya no es válida."
+    "inviteNotFound": "Esta invitación ya no es válida.",
+    "members": "{{count}} miembro",
+    "members_plural": "{{count}} miembros",
+    "joinBody": "Un círculo de oración de {{count}} persona.",
+    "joinBody_plural": "Un círculo de oración de {{count}} personas."
   },
   "feed": {
     "title": "Peticiones",
     "newPost": "Pedir oración",
     "anonymous": "Publicar en anónimo",
-    "prayCount": "{{count}} persona ha orado",
-    "prayCount_other": "{{count}} personas han orado",
     "comment": "Comentar",
-    "empty": "Aún no hay peticiones. Sé el primero."
+    "empty": "Aún no hay peticiones. Sé el primero.",
+    "prayCount": "{{count}} persona ha orado",
+    "prayCount_plural": "{{count}} personas han orado"
   },
   "testimony": {
     "title": "Oración respondida",
@@ -224,10 +238,10 @@
   },
   "notifications": {
     "prayedForYou": "{{name}} oró por ti — {{planTitle}}",
-    "dailyDigest": "Ayer {{count}} persona oró por ti",
-    "dailyDigest_other": "Ayer {{count}} personas oraron por ti",
     "reminder": "Es tu momento de oración",
-    "intercessorReminder": "Hoy es el día {{day}} del plan de {{name}}"
+    "intercessorReminder": "Hoy es el día {{day}} del plan de {{name}}",
+    "dailyDigest": "Ayer {{count}} persona oró por ti",
+    "dailyDigest_plural": "Ayer {{count}} personas oraron por ti"
   },
   "button": {
     "spanish": "Cambiar idioma a español",

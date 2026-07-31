@@ -26,7 +26,8 @@
     "title": "Pray for others",
     "subtitle": "Plans other people have shared with you.",
     "empty": "Nobody has shared a plan with you yet.",
-    "emptyBody": "When someone does, it will show up here so you can pray for their day."
+    "emptyBody": "When someone does, it will show up here so you can pray for their day.",
+    "emptyCta": "Create a circle"
   },
   "profile": {
     "title": "Your profile",
@@ -110,8 +111,6 @@
     "prayer": "Prayer",
     "markDone": "I prayed today",
     "markedDone": "You prayed today 🙏",
-    "streak": "{{count}} day streak",
-    "streak_other": "{{count}} day streak",
     "locked": "This day opens on {{date}}",
     "generating": "Preparing your plan…",
     "generatingHint": "This can take a minute. You can close the app; it will be waiting here.",
@@ -133,7 +132,9 @@
     "rename": "Rename",
     "dayOf": "Day {{current}} of {{total}}",
     "titlePlaceholder": "Plan name",
-    "stillPreparing": "We are still preparing the later days."
+    "stillPreparing": "We are still preparing the later days.",
+    "streak": "{{count}} day streak",
+    "streak_plural": "{{count}} day streak"
   },
   "share": {
     "title": "Share my plan",
@@ -155,7 +156,20 @@
     "prayedFor": "You already prayed for {{name}} today",
     "whoPrayed": "Who prayed for you",
     "nobodyYet": "Nobody has prayed today yet. Share your plan.",
-    "prayBack": "Pray for their plan"
+    "prayBack": "Pray for their plan",
+    "addMessage": "Add a message",
+    "messageLabel": "Your message (optional)",
+    "messagePlaceholder": "Write something short…",
+    "personPrayed": "{{name}} prayed for you",
+    "report": "Report",
+    "reportConfirm": "Sure? Tap again",
+    "reported": "Reported",
+    "quick": {
+      "withYou": "🙏 I am with you",
+      "strength": "💪 Strength",
+      "godHears": "🕊️ God hears you",
+      "hugs": "❤️ A hug"
+    }
   },
   "circles": {
     "title": "Your circles",
@@ -178,8 +192,6 @@
     "copyLink": "Copy link",
     "linkCopied": "Link copied",
     "shareMessage": "I'm inviting you to my prayer circle \"{{name}}\" on Ammen.",
-    "members": "{{count}} member",
-    "members_other": "{{count}} members",
     "membersTitle": "Members",
     "owner": "Creator",
     "admin": "Admin",
@@ -189,20 +201,22 @@
     "leaveConfirm": "Are you sure you want to leave?",
     "report": "Report",
     "joinTitle": "You're invited to \"{{name}}\"",
-    "joinBody": "A prayer circle with {{count}} person.",
-    "joinBody_other": "A prayer circle with {{count}} people.",
     "join": "Join",
     "joined": "You're already part of this circle",
-    "inviteNotFound": "This invitation is no longer valid."
+    "inviteNotFound": "This invitation is no longer valid.",
+    "members": "{{count}} member",
+    "members_plural": "{{count}} members",
+    "joinBody": "A prayer circle with {{count}} person.",
+    "joinBody_plural": "A prayer circle with {{count}} people."
   },
   "feed": {
     "title": "Requests",
     "newPost": "Ask for prayer",
     "anonymous": "Post anonymously",
-    "prayCount": "{{count}} person has prayed",
-    "prayCount_other": "{{count}} people have prayed",
     "comment": "Comment",
-    "empty": "No requests yet. Be the first."
+    "empty": "No requests yet. Be the first.",
+    "prayCount": "{{count}} person has prayed",
+    "prayCount_plural": "{{count}} people have prayed"
   },
   "testimony": {
     "title": "Answered prayer",
@@ -224,10 +238,10 @@
   },
   "notifications": {
     "prayedForYou": "{{name}} prayed for you — {{planTitle}}",
-    "dailyDigest": "{{count}} person prayed for you yesterday",
-    "dailyDigest_other": "{{count}} people prayed for you yesterday",
     "reminder": "It's your time to pray",
-    "intercessorReminder": "Today is day {{day}} of {{name}}'s plan"
+    "intercessorReminder": "Today is day {{day}} of {{name}}'s plan",
+    "dailyDigest": "{{count}} person prayed for you yesterday",
+    "dailyDigest_plural": "{{count}} people prayed for you yesterday"
   },
   "button": {
     "spanish": "Switch language to Spanish",
