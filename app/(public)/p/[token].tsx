@@ -161,17 +161,6 @@ export default function SharedPlanPreviewScreen() {
           </View>
         ) : null}
 
-        {data.interpretation ? (
-          <View className="gap-2">
-            <Text className="text-sm font-medium text-slate-400">
-              {t("plan.meaning")}
-            </Text>
-            <Text className="text-base leading-6 text-slate-800">
-              {data.interpretation}
-            </Text>
-          </View>
-        ) : null}
-
         {/* Without this the page was a shop window: someone who cared enough to
             open the link could read about the person but not actually pray for
             them without signing up first. */}

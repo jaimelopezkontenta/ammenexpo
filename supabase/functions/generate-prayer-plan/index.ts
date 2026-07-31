@@ -28,7 +28,10 @@ const json = (body: unknown, status = 200) =>
     headers: { ...CORS, "Content-Type": "application/json" },
   });
 
-const FREE_PLAN_LIMIT = 1;
+// Three, as the plan has said all along. One meant hitting the wall on your
+// second plan — before you had a week of using the app to judge it by, and with
+// no way to pay past it, since nothing writes `subscriptions` yet.
+const FREE_PLAN_LIMIT = 3;
 const MIN_DAYS = 3;
 const MAX_DAYS = 30;
 

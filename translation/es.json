@@ -247,7 +247,16 @@
     "joinBody": "Un círculo de oración de {{count}} persona.",
     "joinBody_plural": "Un círculo de oración de {{count}} personas.",
     "leaveConfirmCta": "Sí, salir del círculo",
-    "joinFailed": "No hemos podido unirte. Puede que la invitación ya no valga."
+    "joinFailed": "No hemos podido unirte. Puede que la invitación ya no valga.",
+    "find": "Buscar círculos",
+    "findCta": "Buscar círculos públicos",
+    "findPlaceholder": "Busca por nombre",
+    "findEmpty": "No hemos encontrado ningún círculo con ese nombre.",
+    "findNone": "Todavía no hay círculos públicos. El primero puede ser el tuyo.",
+    "alreadyIn": "Ya estás dentro",
+    "remove": "Expulsar",
+    "removeConfirmCta": "Sí, expulsar",
+    "removeFailed": "No hemos podido expulsar a esta persona."
   },
   "feed": {
     "title": "Peticiones",
@@ -329,5 +338,27 @@
     "readInContext": "Leer el capítulo",
     "searchLabel": "Buscar",
     "chapterNotFound": "No encontramos ese capítulo."
+  },
+  "chat": {
+    "title": "Chat",
+    "open": "Abrir el chat",
+    "empty": "Todavía no hay mensajes. Escribe el primero.",
+    "inputLabel": "Escribe un mensaje",
+    "placeholder": "Escribe un mensaje…",
+    "send": "Enviar",
+    "sendFailed": "No hemos podido enviar tu mensaje.",
+    "messageActions": "Mensaje de {{name}}. Toca para reportar o bloquear."
+  },
+  "moderation": {
+    "block": "Bloquear",
+    "blockDone": "Listo. No volverás a ver a esta persona.",
+    "unblock": "Desbloquear",
+    "report": "Reportar",
+    "reportDone": "Gracias. Lo revisaremos.",
+    "hide": "Ocultar para todos",
+    "hideDone": "Mensaje oculto para todo el círculo.",
+    "blockedTitle": "Personas bloqueadas",
+    "blockedEmpty": "No has bloqueado a nadie.",
+    "blockedHint": "No verás sus mensajes, ni sus planes, ni cuando oren por ti. A ellas no se les avisa."
   }
 }

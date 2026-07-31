@@ -14,7 +14,7 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "db:test": "npm run db:test:rls && npm run db:test:flows && npm run db:test:streak && npm run db:test:timezone && npm run db:test:bible",
+    "db:test": "npm run db:test:rls && npm run db:test:flows && npm run db:test:streak && npm run db:test:timezone && npm run db:test:bible && npm run db:test:circles",
     "db:test:rls": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/rls.sql",
     "db:test:flows": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/flows.sql",
     "test:chunks": "supabase db reset && bash supabase/tests/chunks.sh",
@@ -23,7 +23,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run db:test",
-    "db:test:bible": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/bible.sql"
+    "db:test:bible": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/bible.sql",
+    "db:test:circles": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/circles.sql"
   },
   "dependencies": {
     "@expo/log-box": "^56.0.12",

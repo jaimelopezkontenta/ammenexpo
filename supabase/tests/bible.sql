@@ -91,6 +91,19 @@ begin;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 
+-- La eñe no es una n acentuada: la configuración `spanish` la conserva, así
+-- que hasta la migración de unaccent `senor` devolvía CERO de los 1.412
+-- versículos que dicen "Señor". La palabra más frecuente del corpus, y la que
+-- cualquiera escribe sin eñe en un teclado de móvil.
+select pg_temp.assert(
+  (select count(*) from public.search_bible('senor')) > 0,
+  'searching "senor" finds "Señor"');
+
+select pg_temp.assert(
+  (select count(*) from public.search_bible('senor'))
+    = (select count(*) from public.search_bible('señor')),
+  'and finds exactly the same verses as typing the eñe');
+
 select pg_temp.assert(
   (select count(*) from public.search_bible('corazon')) > 0,
   'searching without accents finds something');

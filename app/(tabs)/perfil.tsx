@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
@@ -156,6 +156,13 @@ export default function Profile() {
       ) : null}
 
       <LanguageSwitcher />
+
+      {/* Blocking happens in the moment, from a message or from a roster. The
+          undo has to live somewhere calm, and this is the only screen that
+          belongs to you rather than to a circle. */}
+      <Link href="/bloqueados" asChild>
+        <Button title={t("moderation.blockedTitle")} variant="ghost" />
+      </Link>
 
       <View className="mt-auto gap-3 pt-6">
         <Button

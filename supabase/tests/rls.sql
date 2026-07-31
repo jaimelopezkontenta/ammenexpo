@@ -445,6 +445,14 @@ select pg_temp.assert(
   not pg_temp.raises($q$ select intercessor_prayer from public.prayer_plan_days $q$),
   'the prayer written for him to pray is his to read');
 
+-- The interpretation joined them. It is written in the second person *to Ana*
+-- — "si hoy sientes el pecho apretado" — and names what the intercessor prayer
+-- is careful not to: it said "tu padre" while the prayer said "alguien a quien
+-- ama". Beto was reading Ana's mail with her request spelled out in it.
+select pg_temp.assert(
+  pg_temp.raises($q$ select interpretation from public.prayer_plan_days $q$),
+  'nor what the day was saying to her');
+
 commit;
 
 begin;
@@ -468,6 +476,18 @@ set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","r
 select pg_temp.assert(
   (select count(*) from public.get_my_day('aaaa0000-0000-0000-0000-000000000001')) = 0,
   'and Beto gets nothing from it, shared plan or not');
+
+-- Belt and braces: the column grant is what enforces it, but the two RPCs run
+-- as the *definer* in one case, so a column list quietly re-added there would
+-- reopen the door without any grant changing.
+select pg_temp.assert(
+  pg_temp.raises($q$ select interpretation from public.plans_shared_with_me() $q$),
+  'the Orar tab does not carry the interpretation either');
+
+select pg_temp.assert(
+  pg_temp.raises(
+    $q$ select interpretation from public.get_shared_plan_preview('x') $q$),
+  'and neither does the public link, which is read by strangers');
 
 commit;
 

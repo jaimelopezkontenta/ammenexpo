@@ -1,0 +1,134 @@
+import { router, Stack } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+
+import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { useSession } from "@/core/auth/SessionProvider";
+import {
+  useJoinPublicCircle,
+  useSearchPublicCircles,
+} from "@/core/circles/queries";
+
+/**
+ * The directory that makes "aparecerá en las búsquedas" true.
+ *
+ * That line has been on the circle creation screen since the first version,
+ * describing something that did not exist. Building it rather than deleting it
+ * is the more useful half of the choice, but it is also the half that lets
+ * strangers into a room where people write down what they are afraid of — so
+ * blocking, reporting and removing members shipped alongside it.
+ */
+export default function FindCircles() {
+  const { t } = useTranslation();
+  const { session } = useSession();
+  const userId = session?.user.id;
+
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const {
+    data: circles,
+    isLoading,
+    isError,
+    refetch,
+  } = useSearchPublicCircles(query);
+  const join = useJoinPublicCircle(userId);
+
+  const handleJoin = async (circleId: string) => {
+    setError(null);
+
+    try {
+      await join.mutateAsync(circleId);
+      router.push({ pathname: "/circulo/[id]", params: { id: circleId } });
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
+
+  return (
+    <>
+      <Stack.Screen options={{ title: t("circles.find"), headerShown: true }} />
+      <ScrollView
+        className="flex-1 bg-white"
+        contentContainerClassName="gap-5 px-7 py-8"
+        keyboardShouldPersistTaps="handled"
+      >
+        <TextInput
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base text-slate-900"
+          accessibilityLabel={t("circles.findPlaceholder")}
+          value={query}
+          onChangeText={setQuery}
+          placeholder={t("circles.findPlaceholder")}
+          placeholderTextColor="#94a3b8"
+          autoCorrect={false}
+        />
+
+        {error ? (
+          <Text className="text-sm text-red-500" accessibilityRole="alert">
+            {error}
+          </Text>
+        ) : null}
+
+        {isLoading ? <LoadingState /> : null}
+
+        {isError ? <ErrorState onRetry={() => void refetch()} /> : null}
+
+        {/* An empty query browses instead of filtering, so "no results" here
+            always means something real: either nobody has opened a public
+            circle yet, or this search found none. */}
+        {!isLoading && !isError && (circles ?? []).length === 0 ? (
+          <Text className="text-base leading-6 text-slate-500">
+            {query.trim() ? t("circles.findEmpty") : t("circles.findNone")}
+          </Text>
+        ) : null}
+
+        {(circles ?? []).map((circle) => (
+          <View
+            key={circle.id}
+            className="gap-2 rounded-2xl border border-slate-200 p-5"
+          >
+            <Text className="text-lg font-semibold text-slate-900">
+              {circle.name}
+            </Text>
+
+            {circle.description ? (
+              <Text className="text-base leading-6 text-slate-500">
+                {circle.description}
+              </Text>
+            ) : null}
+
+            <Text className="text-sm text-slate-400">
+              {t("circles.members", { count: circle.member_count })}
+            </Text>
+
+            {circle.is_member ? (
+              <Pressable
+                accessibilityRole="link"
+                onPress={() =>
+                  router.push({
+                    pathname: "/circulo/[id]",
+                    params: { id: circle.id },
+                  })
+                }
+              >
+                <Text className="text-base font-medium text-slate-900">
+                  {t("circles.alreadyIn")}
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void handleJoin(circle.id)}
+              >
+                <Text className="text-base font-medium text-slate-900">
+                  {t("circles.join")}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        ))}
+      </ScrollView>
+    </>
+  );
+}

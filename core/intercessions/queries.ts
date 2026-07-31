@@ -14,7 +14,6 @@ export type SharedPlan = {
   day_title: string;
   scripture_ref: string | null;
   scripture_text: string | null;
-  interpretation: string | null;
   intercessor_prayer: string | null;
   already_prayed: boolean;
 };

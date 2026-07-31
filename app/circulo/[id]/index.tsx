@@ -1,16 +1,19 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   useCircle,
+  useCircleInviteToken,
   useCircleMembers,
   useLeaveCircle,
+  useRemoveMember,
 } from "@/core/circles/queries";
+import { useBlockUser } from "@/core/moderation/blocks";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
 
 export default function CircleDetail() {
@@ -21,11 +24,15 @@ export default function CircleDetail() {
 
   const { data: circle, isLoading, isError, refetch } = useCircle(id);
   const { data: members } = useCircleMembers(id);
+  const { data: inviteToken } = useCircleInviteToken(id);
   const leave = useLeaveCircle(userId);
+  const removeMember = useRemoveMember(id);
+  const block = useBlockUser(userId);
 
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingLeave, setConfirmingLeave] = useState(false);
+  const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
 
   if (isLoading) {
     return <LoadingState />;
@@ -48,9 +55,47 @@ export default function CircleDetail() {
     );
   }
 
-  const inviteUrl = buildShareUrl(`/c/${circle.invite_token}`);
+  // The token no longer travels with the circle row, so it can be missing for
+  // a moment. Showing the invite block with a half-built URL in it would hand
+  // somebody a link to nowhere, which is worse than showing it a beat later.
+  const inviteUrl = inviteToken ? buildShareUrl(`/c/${inviteToken}`) : null;
+
+  const isAdmin = (members ?? []).some(
+    (m) => m.user_id === userId && m.role !== "member",
+  );
+
+  const handleRemove = async (memberId: string) => {
+    if (pendingRemoval !== memberId) {
+      setNotice(null);
+      setError(null);
+      setPendingRemoval(memberId);
+      return;
+    }
+
+    setError(null);
+    setPendingRemoval(null);
+
+    try {
+      await removeMember.mutateAsync(memberId);
+    } catch {
+      setError(t("circles.removeFailed"));
+    }
+  };
+
+  const handleBlock = async (memberId: string) => {
+    setError(null);
+
+    try {
+      await block.mutateAsync(memberId);
+      setNotice(t("moderation.blockDone"));
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
 
   const handleInvite = async () => {
+    if (!inviteUrl) return;
+
     const outcome = await shareOrCopy(
       t("circles.shareMessage", { name: circle.name }),
       inviteUrl,
@@ -120,32 +165,69 @@ export default function CircleDetail() {
             {t("circles.membersTitle")}
           </Text>
           {(members ?? []).map((member) => (
-            <View
-              key={member.user_id}
-              className="flex-row items-center justify-between"
-            >
-              <Text className="text-base text-slate-800">
-                {member.display_name}
-              </Text>
-              {member.role !== "member" ? (
-                <Text className="text-sm text-slate-400">
-                  {member.role === "owner"
-                    ? t("circles.owner")
-                    : t("circles.admin")}
+            <View key={member.user_id} className="gap-1">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-base text-slate-800">
+                  {member.display_name}
                 </Text>
+                {member.role !== "member" ? (
+                  <Text className="text-sm text-slate-400">
+                    {member.role === "owner"
+                      ? t("circles.owner")
+                      : t("circles.admin")}
+                  </Text>
+                ) : null}
+              </View>
+
+              {/* Now that strangers can find and join a public circle, the two
+                  ways out have to be reachable from the roster itself — not
+                  buried behind a message somebody has to receive first. */}
+              {member.user_id !== userId ? (
+                <View className="flex-row gap-4">
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => void handleBlock(member.user_id)}
+                  >
+                    <Text className="text-sm text-slate-400">
+                      {t("moderation.block")}
+                    </Text>
+                  </Pressable>
+
+                  {isAdmin && member.role !== "owner" ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => void handleRemove(member.user_id)}
+                    >
+                      <Text className="text-sm text-slate-400">
+                        {pendingRemoval === member.user_id
+                          ? t("circles.removeConfirmCta")
+                          : t("circles.remove")}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </View>
               ) : null}
             </View>
           ))}
         </View>
 
-        <View className="gap-2 rounded-2xl bg-slate-50 p-5">
-          <Text className="text-sm font-medium text-slate-400">
-            {t("circles.inviteLink")}
-          </Text>
-          <Text className="text-sm text-slate-600" selectable>
-            {inviteUrl}
-          </Text>
-        </View>
+        <Link
+          href={{ pathname: "/circulo/[id]/chat", params: { id: id! } }}
+          asChild
+        >
+          <Button title={t("chat.open")} variant="secondary" />
+        </Link>
+
+        {inviteUrl ? (
+          <View className="gap-2 rounded-2xl bg-slate-50 p-5">
+            <Text className="text-sm font-medium text-slate-400">
+              {t("circles.inviteLink")}
+            </Text>
+            <Text className="text-sm text-slate-600" selectable>
+              {inviteUrl}
+            </Text>
+          </View>
+        ) : null}
 
         {notice ? (
           <Text className="text-sm text-slate-600" accessibilityRole="alert">
@@ -170,10 +252,12 @@ export default function CircleDetail() {
         ) : null}
 
         <View className="mt-auto gap-3 pt-6">
-          <Button
-            title={t("circles.invite")}
-            onPress={() => void handleInvite()}
-          />
+          {inviteUrl ? (
+            <Button
+              title={t("circles.invite")}
+              onPress={() => void handleInvite()}
+            />
+          ) : null}
           <Button
             title={
               confirmingLeave

@@ -9,7 +9,6 @@ export type Circle = {
   name: string;
   description: string | null;
   visibility: CircleVisibility;
-  invite_token: string;
   member_count: number;
   owner_id: string;
 };
@@ -21,8 +20,12 @@ export type CircleMember = {
   avatar_url: string | null;
 };
 
+// `invite_token` is deliberately absent. The SELECT policy lets anyone read
+// any *public* circle, so a table-wide read handed out the invite token of
+// every public circle in the directory. It now comes from
+// `circle_invite_token()`, which requires membership.
 const CIRCLE_COLUMNS =
-  "id, name, description, visibility, invite_token, member_count, owner_id";
+  "id, name, description, visibility, member_count, owner_id";
 
 /** RLS returns only circles the caller belongs to (plus public ones). */
 export const useMyCircles = (userId: string | undefined) =>
@@ -207,6 +210,110 @@ export const useLeaveCircle = (userId: string | undefined) => {
       void queryClient.invalidateQueries({
         queryKey: ["circleMembers", circleId],
       });
+    },
+  });
+};
+
+export type PublicCircle = {
+  id: string;
+  name: string;
+  description: string | null;
+  member_count: number;
+  is_member: boolean;
+  total_count: number;
+};
+
+/**
+ * The directory `circulos.tsx` has been promising since the first screen:
+ * "aparecerá en las búsquedas".
+ *
+ * An empty query browses instead of filtering — searching and getting nothing
+ * reads as "there are none", which is a different and wrong answer.
+ */
+export const useSearchPublicCircles = (query: string) =>
+  useQuery({
+    queryKey: ["publicCircles", query],
+    queryFn: async (): Promise<PublicCircle[]> => {
+      const { data, error } = await supabase.rpc("search_public_circles", {
+        p_query: query,
+      });
+
+      if (error) throw error;
+
+      return (data ?? []) as PublicCircle[];
+    },
+  });
+
+/** Joining a public circle needs no token: the INSERT policy allows it. */
+export const useJoinPublicCircle = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (circleId: string) => {
+      const { error } = await supabase
+        .from("group_members")
+        .insert({ group_id: circleId, user_id: userId! });
+
+      if (error) throw error;
+    },
+    onSuccess: (_result, circleId) => {
+      void queryClient.invalidateQueries({ queryKey: ["circles", userId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["sharedWithMe", userId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["publicCircles"] });
+      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+    },
+  });
+};
+
+/** The invite token, which no longer travels with the circle row. */
+export const useCircleInviteToken = (circleId: string | undefined) =>
+  useQuery({
+    queryKey: ["circleInviteToken", circleId],
+    enabled: Boolean(circleId),
+    staleTime: Infinity,
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase.rpc("circle_invite_token", {
+        p_group_id: circleId!,
+      });
+
+      if (error) throw error;
+
+      return (data as string | null) ?? null;
+    },
+  });
+
+/**
+ * Removing somebody from a circle.
+ *
+ * A trigger refuses to remove the owner, so this can fail for a reason the
+ * screen has to show rather than swallow — an admin who thinks they removed
+ * someone who is still in the room is the worst possible outcome here.
+ */
+export const useRemoveMember = (circleId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (memberId: string) => {
+      const { data, error } = await supabase
+        .from("group_members")
+        .delete()
+        .eq("group_id", circleId!)
+        .eq("user_id", memberId)
+        .select("user_id");
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error("remove_member_no_rows");
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["circleMembers", circleId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
     },
   });
 };

@@ -1,0 +1,255 @@
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+import { Button } from "@/components/Button";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { useSession } from "@/core/auth/SessionProvider";
+import {
+  useCircleChatRealtime,
+  useCircleConversation,
+  useCircleMessages,
+  useHideMessage,
+  useReportMessage,
+  useSendMessage,
+} from "@/core/circles/chat";
+import { useCircle, useCircleMembers } from "@/core/circles/queries";
+import { useBlockUser } from "@/core/moderation/blocks";
+
+export default function CircleChat() {
+  const { t } = useTranslation();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { session } = useSession();
+  const userId = session?.user.id;
+
+  const { data: circle } = useCircle(id);
+  const { data: members } = useCircleMembers(id);
+  const { data: conversationId } = useCircleConversation(id);
+  const { data: messages, isLoading, isError, refetch } = useCircleMessages(id);
+
+  useCircleChatRealtime(id, conversationId);
+
+  const send = useSendMessage(id, conversationId, userId);
+  const hide = useHideMessage(id);
+  const report = useReportMessage(userId);
+  const block = useBlockUser(userId);
+
+  const [draft, setDraft] = useState("");
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const isAdmin = (members ?? []).some(
+    (m) => m.user_id === userId && m.role !== "member",
+  );
+
+  const handleSend = async () => {
+    const body = draft.trim();
+    if (!body) return;
+
+    setError(null);
+    // Cleared before the round trip so typing the next line is not blocked by
+    // the network, and restored if the send actually fails.
+    setDraft("");
+
+    try {
+      await send.mutateAsync(body);
+    } catch {
+      setDraft(body);
+      setError(t("chat.sendFailed"));
+    }
+  };
+
+  const runModeration = async (label: string, action: () => Promise<void>) => {
+    setError(null);
+    setOpenMenu(null);
+
+    try {
+      await action();
+      setNotice(label);
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        <Stack.Screen options={{ title: t("chat.title"), headerShown: true }} />
+        <LoadingState />
+      </>
+    );
+  }
+
+  if (isError) {
+    return (
+      <>
+        <Stack.Screen options={{ title: t("chat.title"), headerShown: true }} />
+        <ErrorState onRetry={() => void refetch()} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Stack.Screen
+        options={{ title: circle?.name ?? t("chat.title"), headerShown: true }}
+      />
+      <KeyboardAvoidingView
+        className="flex-1 bg-white"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        {/* The first virtualized list in the project. Everything else is a
+            ScrollView with a .map(), which is fine for a 30-day plan and not
+            fine for a conversation that only grows. Inverted because the RPC
+            returns newest first and because a chat is read from the bottom. */}
+        <FlatList
+          className="flex-1"
+          contentContainerClassName="gap-4 px-7 py-6"
+          data={messages ?? []}
+          inverted
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            <View className="items-center gap-2 py-16">
+              <Text className="text-center text-base text-slate-500">
+                {t("chat.empty")}
+              </Text>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <View className={item.is_mine ? "items-end" : "items-start"}>
+              <View className="max-w-[85%] gap-1">
+                {!item.is_mine ? (
+                  <Text className="text-xs font-medium text-slate-400">
+                    {item.sender_name}
+                  </Text>
+                ) : null}
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("chat.messageActions", {
+                    name: item.sender_name,
+                  })}
+                  // A tap, not a long press. Long press is invisible — on the
+                  // web it is not even a convention — and the stores require
+                  // reporting and blocking to be *findable*, which a gesture
+                  // nothing on screen hints at is not.
+                  onPress={() =>
+                    setOpenMenu(openMenu === item.id ? null : item.id)
+                  }
+                  className={`rounded-2xl px-4 py-3 ${
+                    item.is_mine ? "bg-slate-900" : "bg-slate-100"
+                  }`}
+                >
+                  <Text
+                    className={`text-base leading-6 ${
+                      item.is_mine ? "text-white" : "text-slate-800"
+                    }`}
+                  >
+                    {item.body}
+                  </Text>
+                </Pressable>
+
+                {/* Behind a tap rather than always visible: every message
+                    carrying three moderation links would make the circle read
+                    like a place where trouble is expected. */}
+                {openMenu === item.id && !item.is_mine ? (
+                  <View className="flex-row flex-wrap gap-4 pt-1">
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() =>
+                        void runModeration(t("moderation.reportDone"), () =>
+                          report.mutateAsync(item.id),
+                        )
+                      }
+                    >
+                      <Text className="text-sm text-slate-400">
+                        {t("moderation.report")}
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() =>
+                        void runModeration(t("moderation.blockDone"), () =>
+                          block.mutateAsync(item.sender_id),
+                        )
+                      }
+                    >
+                      <Text className="text-sm text-slate-400">
+                        {t("moderation.block")}
+                      </Text>
+                    </Pressable>
+
+                    {isAdmin ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() =>
+                          void runModeration(t("moderation.hideDone"), () =>
+                            hide.mutateAsync(item.id),
+                          )
+                        }
+                      >
+                        <Text className="text-sm text-slate-400">
+                          {t("moderation.hide")}
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ) : null}
+              </View>
+            </View>
+          )}
+        />
+
+        {notice ? (
+          <Text
+            className="px-7 pb-2 text-sm text-slate-600"
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {notice}
+          </Text>
+        ) : null}
+
+        {error ? (
+          <Text
+            className="px-7 pb-2 text-sm text-red-500"
+            accessibilityRole="alert"
+          >
+            {error}
+          </Text>
+        ) : null}
+
+        <View className="flex-row items-end gap-3 border-t border-slate-100 px-7 py-4">
+          {/* A bare TextInput rather than TextField: the composer wants no
+              visible label above it, and the accessible name is what matters. */}
+          <TextInput
+            className="max-h-32 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900"
+            accessibilityLabel={t("chat.inputLabel")}
+            value={draft}
+            onChangeText={setDraft}
+            placeholder={t("chat.placeholder")}
+            placeholderTextColor="#94a3b8"
+            multiline
+            maxLength={4000}
+          />
+          <Button
+            title={t("chat.send")}
+            loading={send.isPending}
+            onPress={() => void handleSend()}
+          />
+        </View>
+      </KeyboardAvoidingView>
+    </>
+  );
+}

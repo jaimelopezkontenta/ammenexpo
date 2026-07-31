@@ -247,7 +247,16 @@
     "joinBody": "A prayer circle with {{count}} person.",
     "joinBody_plural": "A prayer circle with {{count}} people.",
     "leaveConfirmCta": "Yes, leave the circle",
-    "joinFailed": "We could not add you. The invite may no longer be valid."
+    "joinFailed": "We could not add you. The invite may no longer be valid.",
+    "find": "Find circles",
+    "findCta": "Find public circles",
+    "findPlaceholder": "Search by name",
+    "findEmpty": "No circle matches that name.",
+    "findNone": "There are no public circles yet. Yours could be the first.",
+    "alreadyIn": "You're already in",
+    "remove": "Remove",
+    "removeConfirmCta": "Yes, remove them",
+    "removeFailed": "We couldn't remove this person."
   },
   "feed": {
     "title": "Requests",
@@ -329,5 +338,27 @@
     "readInContext": "Read the chapter",
     "searchLabel": "Search",
     "chapterNotFound": "We could not find that chapter."
+  },
+  "chat": {
+    "title": "Chat",
+    "open": "Open the chat",
+    "empty": "No messages yet. Write the first one.",
+    "inputLabel": "Write a message",
+    "placeholder": "Write a message…",
+    "send": "Send",
+    "sendFailed": "We couldn't send your message.",
+    "messageActions": "Message from {{name}}. Tap to report or block."
+  },
+  "moderation": {
+    "block": "Block",
+    "blockDone": "Blocked. You won't see this person again.",
+    "unblock": "Unblock",
+    "report": "Report",
+    "reportDone": "Thank you. We'll look into it.",
+    "hide": "Hide for everyone",
+    "hideDone": "Message hidden for the whole circle.",
+    "blockedTitle": "Blocked people",
+    "blockedEmpty": "You haven't blocked anyone.",
+    "blockedHint": "You won't see their messages, their plans, or when they pray for you. They are never told."
   }
 }

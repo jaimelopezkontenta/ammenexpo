@@ -110,14 +110,6 @@ export default function PrayForSomeone() {
           </DaySection>
         ) : null}
 
-        {plan.interpretation ? (
-          <DaySection label={t("plan.meaning")}>
-            <Text className="text-base leading-7 text-slate-700">
-              {plan.interpretation}
-            </Text>
-          </DaySection>
-        ) : null}
-
         {/* Older plans were generated before this field existed, so the block
             simply does not appear for them. */}
         {plan.intercessor_prayer ? (

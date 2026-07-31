@@ -173,11 +173,17 @@ export default function Circles() {
         </View>
       )}
 
-      <View className="mt-auto pt-6">
+      {/* Two ways in, and the second one matters most on an empty account:
+          with no invite in your pocket, creating a circle nobody is in yet is
+          not much of a start. */}
+      <View className="mt-auto gap-3 pt-6">
         <Button
           title={t("circles.create")}
           onPress={() => setIsCreating(true)}
         />
+        <Link href="/circulo/buscar" asChild>
+          <Button title={t("circles.findCta")} variant="ghost" />
+        </Link>
       </View>
     </ScrollView>
   );
