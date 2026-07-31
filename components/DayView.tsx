@@ -7,6 +7,77 @@ import type { BibleBook } from "@/core/bible/navigation";
 import { parseCanonicalRef } from "@/core/bible/reference";
 import type { PlanDay } from "@/core/plans/queries";
 
+type ScriptureProps = {
+  scriptureText: string | null;
+  scriptureRef: string | null;
+  books: BibleBook[];
+};
+
+/**
+ * The verse, with the way into the chapter around it.
+ *
+ * Split out of `DayView` so somebody else's day can carry it too: the Orar
+ * screen and the public preview each inlined their own verse block, so the only
+ * place a reference was ever tappable was your own day — and the whole point of
+ * the link is that a verse quoted alone is missing its context.
+ */
+export const ScriptureSection = ({
+  scriptureText,
+  scriptureRef,
+  books,
+}: ScriptureProps) => {
+  const { t } = useTranslation();
+
+  // `books` lands a beat after the day does, and until it does
+  // `parseCanonicalRef` returns null for every reference — so the link used to
+  // appear a moment late, indistinguishable from a reference that genuinely has
+  // no chapter to open. Waiting for the list is the honest version.
+  const scripture =
+    books.length > 0 ? parseCanonicalRef(scriptureRef, books) : null;
+
+  if (!scriptureText) {
+    return null;
+  }
+
+  return (
+    <DaySection label={t("plan.scripture")} tone="scripture">
+      <Text className="text-lg leading-7 text-slate-800">{scriptureText}</Text>
+
+      {scriptureRef ? (
+        <Text className="text-sm font-medium text-slate-500">
+          {scriptureRef}
+        </Text>
+      ) : null}
+
+      {/* If the reference cannot be parsed there is no link at all — guessing
+          would open the wrong chapter. */}
+      {scripture ? (
+        <Pressable
+          accessibilityRole="button"
+          // Without an explicit label the name is built from the children, so
+          // the arrow became part of it: "Leer el capítulo flecha hacia la
+          // derecha".
+          accessibilityLabel={t("bible.readInContext")}
+          onPress={() =>
+            router.push({
+              pathname: "/libro/[book]/[chapter]",
+              params: {
+                book: String(scripture.bookId),
+                chapter: String(scripture.chapter),
+                verse: String(scripture.verse),
+              },
+            })
+          }
+        >
+          <Text className="text-sm font-medium text-slate-600">
+            {t("bible.readInContext")} <Text aria-hidden>→</Text>
+          </Text>
+        </Pressable>
+      ) : null}
+    </DaySection>
+  );
+};
+
 type Props = {
   day: PlanDay;
   books: BibleBook[];
@@ -20,49 +91,14 @@ type Props = {
  */
 export const DayView = ({ day, books }: Props) => {
   const { t } = useTranslation();
-  const scripture = parseCanonicalRef(day.scripture_ref, books);
 
   return (
     <>
-      {day.scripture_text ? (
-        <DaySection label={t("plan.scripture")} tone="scripture">
-          <Text className="text-lg leading-7 text-slate-800">
-            {day.scripture_text}
-          </Text>
-          {day.scripture_ref ? (
-            <Text className="text-sm font-medium text-slate-500">
-              {day.scripture_ref}
-            </Text>
-          ) : null}
-
-          {/* The verse is shown out of context: this is the way into the
-              chapter around it. If the reference cannot be parsed there is no
-              link at all — guessing would open the wrong chapter. */}
-          {scripture ? (
-            <Pressable
-              accessibilityRole="button"
-              // Without an explicit label the name is built from the children,
-              // so the arrow became part of it: "Leer el capítulo flecha hacia
-              // la derecha".
-              accessibilityLabel={t("bible.readInContext")}
-              onPress={() =>
-                router.push({
-                  pathname: "/libro/[book]/[chapter]",
-                  params: {
-                    book: String(scripture.bookId),
-                    chapter: String(scripture.chapter),
-                    verse: String(scripture.verse),
-                  },
-                })
-              }
-            >
-              <Text className="text-sm font-medium text-slate-600">
-                {t("bible.readInContext")} <Text aria-hidden>→</Text>
-              </Text>
-            </Pressable>
-          ) : null}
-        </DaySection>
-      ) : null}
+      <ScriptureSection
+        scriptureText={day.scripture_text}
+        scriptureRef={day.scripture_ref}
+        books={books}
+      />
 
       {day.interpretation ? (
         <DaySection label={t("plan.meaning")}>

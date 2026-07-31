@@ -30,7 +30,7 @@
     "subtitle": "Planes que otras personas han compartido contigo.",
     "empty": "Todavía nadie ha compartido su plan contigo.",
     "emptyBody": "Cuando alguien lo haga, aparecerá aquí para que ores por su día.",
-    "emptyCta": "Crear un círculo",
+    "emptyCta": "Compartir mi plan",
     "planGone": "Ya no tienes acceso a este plan."
   },
   "profile": {
@@ -174,7 +174,7 @@
   "share": {
     "title": "Compartir mi plan",
     "subtitle": "Quien lo reciba podrá orar por ti cada día.",
-    "copyLink": "Copiar enlace",
+    "copyLink": "Copiar el enlace",
     "linkCopied": "Enlace copiado",
     "revoke": "Desactivar enlace",
     "message": "Estoy orando por {{theme}} estos {{days}} días. ¿Me acompañas hoy?",
@@ -219,7 +219,12 @@
       "hugs": "❤️ Un abrazo"
     },
     "prayerFor": "Oración por {{name}}",
-    "openToPray": "Abrir para orar"
+    "openToPray": "Abrir para orar",
+    "prayedThanks": "Gracias. {{name}} lo verá hoy.",
+    "remaining": "Queda {{count}} carácter",
+    "remaining_plural": "Quedan {{count}} caracteres",
+    "allPrayed": "Ya has orado por todos hoy.",
+    "allPrayedBody": "Vuelve mañana, o comparte tu plan para que alguien ore por ti."
   },
   "circles": {
     "title": "Tus círculos",
@@ -273,7 +278,8 @@
     "planEmpty": "Este círculo no tiene plan",
     "planEmptyBody": "Un mismo recorrido para todos, día a día. Lo creas tú y lo reza el círculo entero.",
     "planCreate": "Crear el plan del círculo",
-    "prayedToday_plural": "{{count}} ya han orado hoy"
+    "prayedToday_plural": "{{count}} ya han orado hoy",
+    "joining": "Uniéndote…"
   },
   "feed": {
     "title": "Peticiones",

@@ -7,6 +7,7 @@ import { PrayForCard } from "@/components/PrayForCard";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { usePlansSharedWithMe } from "@/core/intercessions/queries";
+import { useMyPlans } from "@/core/plans/queries";
 
 export default function Pray() {
   const { t } = useTranslation();
@@ -19,6 +20,7 @@ export default function Pray() {
     isError,
     refetch,
   } = usePlansSharedWithMe(userId);
+  const { data: myPlans } = useMyPlans(userId);
 
   if (isLoading) {
     return <LoadingState />;
@@ -41,12 +43,25 @@ export default function Pray() {
           {t("pray.emptyBody")}
         </Text>
         {/* Nobody has shared with you yet, so the useful move is to share
-            yours — otherwise this screen is a wall. */}
+            yours — which is what the button says. It used to read "Crear un
+            círculo" and land on the circles *list*, two steps away from the
+            thing this screen is actually asking for. */}
         <View className="mt-6 w-full">
           <Button
-            title={t("pray.emptyCta")}
+            title={
+              (myPlans ?? []).length > 0
+                ? t("pray.emptyCta")
+                : t("plan.createCta")
+            }
             variant="secondary"
-            onPress={() => router.push("/circulos")}
+            onPress={() =>
+              (myPlans ?? []).length > 0
+                ? router.push({
+                    pathname: "/plan/[id]/compartir",
+                    params: { id: myPlans![0].id },
+                  })
+                : router.push("/plan/nuevo")
+            }
           />
         </View>
       </View>
@@ -65,6 +80,20 @@ export default function Pray() {
         </Text>
         <Text className="text-base text-slate-500">{t("pray.subtitle")}</Text>
       </View>
+
+      {/* The finish line. The server already sorts prayed-for last, but the
+          screen looked identical to one with work outstanding — just greyer —
+          so there was no moment where you were told you were done. */}
+      {plans.every((plan) => plan.already_prayed) ? (
+        <View className="gap-1 rounded-2xl bg-slate-50 p-5">
+          <Text className="text-base font-semibold text-slate-900">
+            {t("intercession.allPrayed")}
+          </Text>
+          <Text className="text-base leading-6 text-slate-500">
+            {t("intercession.allPrayedBody")}
+          </Text>
+        </View>
+      ) : null}
 
       {plans.map((plan) => (
         <PrayForCard

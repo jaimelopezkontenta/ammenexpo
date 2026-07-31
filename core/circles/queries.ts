@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 import { supabase } from "@/utils/supabase";
 
@@ -231,12 +232,24 @@ export type PublicCircle = {
  * An empty query browses instead of filtering — searching and getting nothing
  * reads as "there are none", which is a different and wrong answer.
  */
-export const useSearchPublicCircles = (query: string) =>
-  useQuery({
-    queryKey: ["publicCircles", query],
+export const useSearchPublicCircles = (query: string) => {
+  // One request per keystroke otherwise: the key is the raw query, so "oracion"
+  // was seven round trips, six of them already stale on arrival.
+  const [debounced, setDebounced] = useState(query);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(query), 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  return useQuery({
+    queryKey: ["publicCircles", debounced],
+    // Keeps the previous results on screen while the next ones land, instead
+    // of blinking through an empty list on every pause in typing.
+    placeholderData: (previous) => previous,
     queryFn: async (): Promise<PublicCircle[]> => {
       const { data, error } = await supabase.rpc("search_public_circles", {
-        p_query: query,
+        p_query: debounced,
       });
 
       if (error) throw error;
@@ -244,6 +257,7 @@ export const useSearchPublicCircles = (query: string) =>
       return (data ?? []) as PublicCircle[];
     },
   });
+};
 
 /** Joining a public circle needs no token: the INSERT policy allows it. */
 export const useJoinPublicCircle = (userId: string | undefined) => {

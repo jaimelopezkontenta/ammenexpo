@@ -30,7 +30,7 @@
     "subtitle": "Plans other people have shared with you.",
     "empty": "Nobody has shared a plan with you yet.",
     "emptyBody": "When someone does, it will show up here so you can pray for their day.",
-    "emptyCta": "Create a circle",
+    "emptyCta": "Share my plan",
     "planGone": "You no longer have access to this plan."
   },
   "profile": {
@@ -174,7 +174,7 @@
   "share": {
     "title": "Share my plan",
     "subtitle": "Whoever receives it can pray for you each day.",
-    "copyLink": "Copy link",
+    "copyLink": "Copy the link",
     "linkCopied": "Link copied",
     "revoke": "Disable link",
     "message": "I'm praying about {{theme}} for {{days}} days. Will you join me today?",
@@ -219,7 +219,12 @@
       "hugs": "❤️ A hug"
     },
     "prayerFor": "A prayer for {{name}}",
-    "openToPray": "Open to pray"
+    "openToPray": "Open to pray",
+    "prayedThanks": "Thank you. {{name}} will see it today.",
+    "remaining": "{{count}} character left",
+    "remaining_plural": "{{count}} characters left",
+    "allPrayed": "You've prayed for everyone today.",
+    "allPrayedBody": "Come back tomorrow, or share your plan so somebody can pray for you."
   },
   "circles": {
     "title": "Your circles",
@@ -273,7 +278,8 @@
     "planEmpty": "This circle has no plan",
     "planEmptyBody": "One walk for everyone, day by day. You create it and the whole circle prays it.",
     "planCreate": "Create the circle's plan",
-    "prayedToday_plural": "{{count}} have prayed today"
+    "prayedToday_plural": "{{count}} have prayed today",
+    "joining": "Joining…"
   },
   "feed": {
     "title": "Requests",

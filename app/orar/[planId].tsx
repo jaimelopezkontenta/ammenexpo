@@ -1,13 +1,15 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
+import { ScriptureSection } from "@/components/DayView";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
+import { useBibleBooks } from "@/core/bible/queries";
 import {
   AlreadyPrayed,
   MESSAGE_MAX,
@@ -39,6 +41,9 @@ export default function PrayForSomeone() {
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  const { data: books } = useBibleBooks();
 
   const plan = (plans ?? []).find((entry) => entry.plan_id === planId);
 
@@ -71,7 +76,11 @@ export default function PrayForSomeone() {
         dayId: plan.day_id,
         message: message.trim() || undefined,
       });
-      router.back();
+      // Going straight back gave no sign at all that it had worked: success and
+      // a double press were pixel-identical, on the one gesture the whole
+      // product rests on. A beat of confirmation, then out.
+      setSent(true);
+      setTimeout(() => router.back(), 1400);
     } catch (caught) {
       // Pressing twice means the same as pressing once, so it is not worth an
       // alarm — the list behind this screen refreshes either way.
@@ -102,18 +111,15 @@ export default function PrayForSomeone() {
           <Text className="text-base text-slate-500">{plan.plan_title}</Text>
         </View>
 
-        {plan.scripture_text ? (
-          <DaySection label={t("plan.scripture")} tone="scripture">
-            <Text className="text-lg leading-7 text-slate-800">
-              {plan.scripture_text}
-            </Text>
-            {plan.scripture_ref ? (
-              <Text className="text-sm font-medium text-slate-500">
-                {plan.scripture_ref}
-              </Text>
-            ) : null}
-          </DaySection>
-        ) : null}
+        {/* The shared component rather than an inlined copy: this screen used
+            to show the verse with no way into the chapter around it, so the
+            reference was tappable on your own day and dead on somebody
+            else's — for the same verse. */}
+        <ScriptureSection
+          scriptureText={plan.scripture_text}
+          scriptureRef={plan.scripture_ref}
+          books={books ?? []}
+        />
 
         {/* Older plans were generated before this field existed, so the block
             simply does not appear for them. */}
@@ -127,24 +133,50 @@ export default function PrayForSomeone() {
           </DaySection>
         ) : null}
 
-        {plan.already_prayed ? (
-          <Text className="text-center text-base font-medium text-slate-600">
-            {t("intercession.prayedFor", { name: plan.owner_name })}
+        {plan.already_prayed || sent ? (
+          <Text
+            className="text-center text-base font-medium text-slate-600"
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {sent
+              ? t("intercession.prayedThanks", { name: plan.owner_name })
+              : t("intercession.prayedFor", { name: plan.owner_name })}
           </Text>
         ) : (
           <View className="gap-3 pb-6">
+            {/* Chips and free text are alternatives, so picking one still
+                replaces the field — but it now shows which one is picked and
+                tapping it again clears it. Before, nothing on screen said a
+                chip was chosen and there was no way to undo one except
+                selecting the text and deleting it. */}
             <View className="flex-row flex-wrap gap-2">
               {QUICK_MESSAGE_KEYS.map((key) => {
                 const label = t(`intercession.quick.${key}`);
+                const chosen = message.trim() === label;
 
                 return (
-                  <Button
+                  <Pressable
                     key={key}
-                    title={label}
-                    variant="secondary"
-                    className="w-auto"
-                    onPress={() => setMessage(label)}
-                  />
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: chosen }}
+                    aria-checked={chosen}
+                    accessibilityLabel={label}
+                    onPress={() => setMessage(chosen ? "" : label)}
+                    className={`rounded-full border px-4 py-2.5 ${
+                      chosen
+                        ? "border-slate-900 bg-slate-900"
+                        : "border-slate-200 bg-white"
+                    }`}
+                  >
+                    <Text
+                      className={
+                        chosen ? "font-semibold text-white" : "text-slate-700"
+                      }
+                    >
+                      {label}
+                    </Text>
+                  </Pressable>
                 );
               })}
             </View>
@@ -157,6 +189,17 @@ export default function PrayForSomeone() {
               maxLength={MESSAGE_MAX}
               multiline
             />
+
+            {/* At 280 the field simply stopped accepting keystrokes with no
+                explanation. The counter only appears once it is close enough
+                to matter. */}
+            {message.length > MESSAGE_MAX - 60 ? (
+              <Text className="text-right text-sm text-slate-400">
+                {t("intercession.remaining", {
+                  count: MESSAGE_MAX - message.length,
+                })}
+              </Text>
+            ) : null}
 
             {error ? (
               <Text className="text-sm text-red-500" accessibilityRole="alert">

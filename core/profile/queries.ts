@@ -122,3 +122,41 @@ export const useDeleteAccount = () =>
       await supabase.auth.signOut();
     },
   });
+
+export type OnboardingAnswers = {
+  season?: string;
+  topics?: string[];
+  gender?: string;
+  minutes?: number;
+};
+
+/**
+ * What the person already told us during onboarding.
+ *
+ * The plan form asks "¿Sobre qué quieres orar?" over the *same* eight options
+ * onboarding just asked about — `TOPIC_KEYS` in `plan/nuevo.tsx` is identical
+ * to the list in `bienvenida.tsx`. Finishing four questions and immediately
+ * meeting a fifth that repeats two of them reads as an app that was not
+ * listening. The server merges these answers anyway; this only makes the form
+ * start from them instead of from nothing.
+ */
+export const useOnboardingAnswers = (userId: string | undefined) =>
+  useQuery({
+    queryKey: ["onboardingAnswers", userId],
+    enabled: Boolean(userId),
+    staleTime: Infinity,
+    queryFn: async (): Promise<OnboardingAnswers | null> => {
+      const { data, error } = await supabase
+        .from("profile_settings")
+        .select("onboarding_answers")
+        .eq("id", userId!)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      return (
+        (data as { onboarding_answers: OnboardingAnswers | null } | null)
+          ?.onboarding_answers ?? null
+      );
+    },
+  });

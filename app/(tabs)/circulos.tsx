@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -32,11 +32,21 @@ export default function Circles() {
     setError(null);
 
     try {
-      await createCircle.mutateAsync({ name, description, visibility });
+      const circle = await createCircle.mutateAsync({
+        name,
+        description,
+        visibility,
+      });
       setName("");
       setDescription("");
       setVisibility("private");
       setIsCreating(false);
+
+      // Straight into the circle rather than back to the list. A circle you
+      // just created is empty, and the one thing it needs is somebody in it —
+      // which used to be two more taps away, through a list you were already
+      // looking at.
+      router.push({ pathname: "/circulo/[id]", params: { id: circle.id } });
     } catch {
       setError(t("common.errorGeneric"));
     }

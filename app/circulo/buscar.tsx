@@ -26,6 +26,10 @@ export default function FindCircles() {
 
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // One mutation is shared by every card, so without tracking which one is in
+  // flight a slow join let somebody tap three circles and only the last
+  // navigation won.
+  const [joining, setJoining] = useState<string | null>(null);
 
   const {
     data: circles,
@@ -38,11 +42,15 @@ export default function FindCircles() {
   const handleJoin = async (circleId: string) => {
     setError(null);
 
+    setJoining(circleId);
+
     try {
       await join.mutateAsync(circleId);
       router.push({ pathname: "/circulo/[id]", params: { id: circleId } });
     } catch {
       setError(t("common.errorGeneric"));
+    } finally {
+      setJoining(null);
     }
   };
 
@@ -119,10 +127,19 @@ export default function FindCircles() {
             ) : (
               <Pressable
                 accessibilityRole="button"
+                accessibilityState={{ busy: joining === circle.id }}
+                aria-busy={joining === circle.id}
+                disabled={joining !== null}
                 onPress={() => void handleJoin(circle.id)}
               >
-                <Text className="text-base font-medium text-slate-900">
-                  {t("circles.join")}
+                <Text
+                  className={`text-base font-medium ${
+                    joining !== null ? "text-slate-400" : "text-slate-900"
+                  }`}
+                >
+                  {joining === circle.id
+                    ? t("circles.joining")
+                    : t("circles.join")}
                 </Text>
               </Pressable>
             )}

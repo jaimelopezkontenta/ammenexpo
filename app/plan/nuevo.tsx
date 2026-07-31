@@ -8,6 +8,7 @@ import { ChoiceChips } from "@/components/ChoiceChips";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useMyCircles } from "@/core/circles/queries";
+import { useOnboardingAnswers } from "@/core/profile/queries";
 import {
   PlanLimitReached,
   useGeneratePlan,
@@ -37,9 +38,14 @@ export default function NewPlan() {
   const { circulo } = useLocalSearchParams<{ circulo?: string }>();
 
   const { data: circles } = useMyCircles(userId);
+  const { data: answers } = useOnboardingAnswers(userId);
   const generate = useGeneratePlan(userId);
 
-  const [topics, setTopics] = useState<string[]>([]);
+  // `null` until touched, so the onboarding answers show through as the
+  // starting point without freezing: clearing every chip stays cleared.
+  const [draftTopics, setDraftTopics] = useState<string[] | null>(null);
+  const topics = draftTopics ?? answers?.topics ?? [];
+  const setTopics = (next: string[]) => setDraftTopics(next);
   const [customTopic, setCustomTopic] = useState("");
   const [duration, setDuration] = useState(7);
   const [visibility, setVisibility] = useState<PlanVisibility>("private");
@@ -135,7 +141,7 @@ export default function NewPlan() {
               label: t(`onboarding.topics.${key}`),
             }))}
             selected={topics}
-            onToggle={(value) => setTopics((list) => toggle(list, value))}
+            onToggle={(value) => setTopics(toggle(topics, value))}
             multiple
           />
         </View>
