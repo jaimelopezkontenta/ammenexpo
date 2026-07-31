@@ -157,7 +157,14 @@ export const useGeneratePlan = (userId: string | undefined) => {
         throw error;
       }
 
-      return data as { plan_id: string; status: string };
+      // The server creates the share link when visibility is "link" and hands
+      // back the token. Dropping it here is what left people with a "public
+      // link" they could never actually see.
+      return data as {
+        plan_id: string;
+        status: string;
+        share_token: string | null;
+      };
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["ownPlan", userId] });

@@ -149,7 +149,16 @@
     "previewNotFound": "Este enlace ya no está disponible.",
     "previewNotFoundHint": "Puede que quien lo compartió lo haya desactivado.",
     "viewPlan": "Ver el plan",
-    "alreadyMember": "Ya tengo cuenta"
+    "alreadyMember": "Ya tengo cuenta",
+    "circlesTitle": "Círculos",
+    "circlesHint": "Los miembros verán tu día de hoy y podrán orar por ti.",
+    "linkTitle": "Enlace público",
+    "linkWarning": "Cualquiera con este enlace puede ver tu día de hoy, tenga cuenta o no.",
+    "noLinkHint": "Aún no has creado un enlace para este plan.",
+    "createLink": "Crear enlace",
+    "linkRevoked": "Enlace desactivado",
+    "shareFailed": "No se pudo compartir. Copia el enlace de arriba a mano.",
+    "open": "Compartir este plan"
   },
   "intercession": {
     "prayFor": "Oré por ti",

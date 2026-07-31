@@ -149,7 +149,16 @@
     "previewNotFound": "This link is no longer available.",
     "previewNotFoundHint": "Whoever shared it may have turned it off.",
     "viewPlan": "View the plan",
-    "alreadyMember": "I already have an account"
+    "alreadyMember": "I already have an account",
+    "circlesTitle": "Circles",
+    "circlesHint": "Members will see your day and can pray for you.",
+    "linkTitle": "Public link",
+    "linkWarning": "Anyone with this link can see today, account or not.",
+    "noLinkHint": "You have not created a link for this plan yet.",
+    "createLink": "Create link",
+    "linkRevoked": "Link turned off",
+    "shareFailed": "Could not share. Copy the link above by hand.",
+    "open": "Share this plan"
   },
   "intercession": {
     "prayFor": "I prayed for you",

@@ -30,11 +30,15 @@ export const ChoiceChips = ({
         return (
           <Pressable
             key={option.value}
-            // A plain button never announces which chips are on: react-native-web
-            // only maps `checked` for roles that have a checked state, so a
-            // screen reader user was told nothing about the selection.
+            // Both props are needed, and neither alone is enough.
+            // `accessibilityState` is what iOS and Android read. On web,
+            // react-native-web 0.21 no longer maps it, so the DOM came out with
+            // role="checkbox" and no aria-checked at all — which announces worse
+            // than a plain button, because the reader says "checkbox" and then
+            // cannot say whether it is checked. `aria-checked` fixes web.
             accessibilityRole={multiple ? "checkbox" : "radio"}
             accessibilityState={{ checked: isSelected }}
+            aria-checked={isSelected}
             accessibilityLabel={option.label}
             onPress={() => onToggle(option.value)}
             className={`rounded-full border px-4 py-2.5 ${

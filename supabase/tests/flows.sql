@@ -148,6 +148,51 @@ select pg_temp.assert(
 
 commit;
 
+-- ===========================================================================
+-- The share screen: an owner creates, revokes, and nobody else can
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.share_links (scope, plan_id, created_by)
+values ('plan', 'aaaa0000-0000-0000-0000-000000000009', :ANA);
+
+select pg_temp.assert(
+  (select count(*) from public.share_links where created_by = :ANA) = 2,
+  'the owner can create a share link from the client');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+update public.share_links set revoked_at = now() where token = 'shared-with-carla';
+
+-- Not an error, just zero rows: the policy hides them from her entirely.
+select pg_temp.assert(
+  (select revoked_at is null from public.share_links where token = 'shared-with-carla') is null,
+  'someone else cannot revoke a link they did not create');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select revoked_at from public.share_links where token = 'shared-with-carla') is null,
+  'and the link really is still live');
+
+update public.share_links set revoked_at = now() where token = 'shared-with-carla';
+
+select pg_temp.assert(
+  (select count(*) from public.get_shared_plan_preview('shared-with-carla')) = 0,
+  'once the owner revokes it, the public preview closes');
+
+commit;
+
 \echo ''
 \echo '===================================='
 \echo ' ACQUISITION LOOP ASSERTIONS PASSED'

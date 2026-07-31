@@ -50,7 +50,15 @@ export default function CircleDetail() {
       inviteUrl,
     );
 
-    setNotice(outcome === "copied" ? t("circles.linkCopied") : null);
+    // "failed" used to fall into the same branch as a successful native share
+    // and show nothing at all, so a blocked clipboard looked like a dead button.
+    setNotice(
+      outcome === "copied"
+        ? t("circles.linkCopied")
+        : outcome === "failed"
+          ? t("share.shareFailed")
+          : null,
+    );
   };
 
   const handleLeave = async () => {

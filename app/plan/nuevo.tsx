@@ -59,13 +59,23 @@ export default function NewPlan() {
     }
 
     try {
-      await generate.mutateAsync({
+      const created = await generate.mutateAsync({
         duration_days: duration,
         topics,
         custom_topic: customTopic.trim() || undefined,
         visibility,
         circle_ids: visibility === "circles" ? selectedCircles : undefined,
       });
+
+      // Choosing a public link and then landing on Hoy left people with a link
+      // they had no way to reach. Hand it to them straight away.
+      if (visibility === "link") {
+        router.replace({
+          pathname: "/plan/[id]/compartir",
+          params: { id: created.plan_id },
+        });
+        return;
+      }
 
       router.replace("/");
     } catch (caught) {

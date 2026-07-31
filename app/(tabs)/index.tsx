@@ -243,6 +243,19 @@ export default function Today() {
         )}
       </View>
 
+      <View className="pb-2">
+        <Button
+          title={t("share.open")}
+          variant="secondary"
+          onPress={() =>
+            router.push({
+              pathname: "/plan/[id]/compartir",
+              params: { id: plan.id },
+            })
+          }
+        />
+      </View>
+
       {/* Seeing who showed up for you is the reason to come back tomorrow, so
           it lives on this screen rather than behind a notification. */}
       <DaySection label={t("intercession.whoPrayed")}>
