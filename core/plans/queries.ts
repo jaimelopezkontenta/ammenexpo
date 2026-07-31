@@ -344,18 +344,23 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
 export const todayIso = today;
 
 export type PlanDaySummary = {
-  id: string;
+  /** Null until the day opens: a locked day has no readable row. */
+  id: string | null;
   day_number: number;
-  title: string;
+  title: string | null;
   scripture_ref: string | null;
   prayed: boolean;
+  unlock_date: string;
+  unlocked: boolean;
 };
 
 /**
- * Every day of the plan that has unlocked, newest first.
+ * Every day of the plan, newest first — including the ones still to come.
  *
- * Future days stay hidden even here: unlocking one a day is the mechanic, and
- * a history screen must not become the way around it.
+ * The days ahead carry their number and their date and nothing else. Showing
+ * that day 12 opens on Thursday is what makes a plan feel like a path; showing
+ * what it says would be the way around the one-day-at-a-time mechanic the whole
+ * product rests on.
  */
 export const usePlanDays = (planId: string | undefined) =>
   useQuery({

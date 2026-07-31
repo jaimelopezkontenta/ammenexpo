@@ -565,12 +565,27 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 
 select pg_temp.assert(
-  (select count(*) from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')) = 2,
+  (select count(*) from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')
+    where unlocked) = 2,
   'Ana sees the days she has reached, not just the last one');
 
+-- Los días que faltan sí aparecen ahora, porque un plan de 30 días que se corta
+-- en el de hoy no parece que continúe. Lo que no aparece es su contenido.
 select pg_temp.assert(
-  (select max(day_number) from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')) = 2::smallint,
-  'and tomorrow is not among them');
+  (select count(*) from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')) = 3,
+  'and the ones still to come are listed too, so the plan looks like a path');
+
+select pg_temp.assert(
+  (select bool_and(title is null and scripture_ref is null and id is null)
+     from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')
+    where not unlocked),
+  'but a day that has not arrived leaks neither its title, its verse nor its id');
+
+select pg_temp.assert(
+  (select bool_and(unlock_date is not null)
+     from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')
+    where not unlocked),
+  'only when it opens');
 
 select pg_temp.assert(
   (select day_number from public.get_my_day('aaaa0000-0000-0000-0000-000000000001', 1::smallint)) = 1::smallint,

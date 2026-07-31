@@ -12,6 +12,7 @@ import {
   useCircleInviteToken,
   useCircleMembers,
   useCirclePlan,
+  useCircleSharedPlans,
   useLeaveCircle,
   useMarkCircleDay,
   useRemoveMember,
@@ -31,6 +32,7 @@ export default function CircleDetail() {
   const { data: inviteToken } = useCircleInviteToken(id);
   const { data: circlePlan } = useCirclePlan(id);
   const { data: canCreatePlan } = useCanCreateCirclePlan(id);
+  const { data: sharedPlans } = useCircleSharedPlans(id);
   const markCircleDay = useMarkCircleDay(id, userId);
   const leave = useLeaveCircle(userId);
   const removeMember = useRemoveMember(id);
@@ -271,6 +273,45 @@ export default function CircleDetail() {
                 </View>
               ) : null}
             </View>
+          ))}
+        </View>
+
+        {/* What is actually being shared in here, which the screen said
+            nothing about before — including whether your own plan is among
+            them, the answer to "is this circle seeing my requests?". */}
+        <View className="gap-3">
+          <Text className="text-sm font-medium text-slate-400">
+            {t("circles.sharedTitle")}
+          </Text>
+
+          {(sharedPlans ?? []).length === 0 ? (
+            <Text className="text-base text-slate-500">
+              {t("circles.sharedEmpty")}
+            </Text>
+          ) : null}
+
+          {(sharedPlans ?? []).map((shared) => (
+            <Pressable
+              key={shared.plan_id}
+              accessibilityRole="link"
+              accessibilityLabel={`${shared.plan_title}. ${shared.owner_name}`}
+              className="gap-0.5 rounded-2xl border border-slate-200 p-4"
+              onPress={() =>
+                shared.is_mine
+                  ? router.push("/")
+                  : router.push({
+                      pathname: "/orar/[planId]",
+                      params: { planId: shared.plan_id },
+                    })
+              }
+            >
+              <Text className="text-base font-medium text-slate-800">
+                {shared.plan_title}
+              </Text>
+              <Text className="text-sm text-slate-500">
+                {shared.is_mine ? t("circles.sharedMine") : shared.owner_name}
+              </Text>
+            </Pressable>
           ))}
         </View>
 

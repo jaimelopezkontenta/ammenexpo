@@ -423,3 +423,86 @@ export const useMarkCircleDay = (
     },
   });
 };
+
+export type CircleSharedPlan = {
+  plan_id: string;
+  plan_title: string;
+  owner_id: string;
+  owner_name: string;
+  is_mine: boolean;
+};
+
+/**
+ * What is being shared with this circle.
+ *
+ * The reverse lookup — plan to circles — has existed since the sharing screen
+ * was built. Circle to plans did not exist anywhere, so from inside a circle
+ * you could see who was in it and nothing at all about what was happening in
+ * it, including whether your own plan was among them.
+ */
+export const useCircleSharedPlans = (circleId: string | undefined) =>
+  useQuery({
+    queryKey: ["circleSharedPlans", circleId],
+    enabled: Boolean(circleId),
+    queryFn: async (): Promise<CircleSharedPlan[]> => {
+      const { data, error } = await supabase.rpc("circle_shared_plans", {
+        p_group_id: circleId!,
+      });
+
+      if (error) throw error;
+
+      return (data ?? []) as CircleSharedPlan[];
+    },
+  });
+
+/**
+ * Unread messages per circle, in one query: the tab badge needs the total and
+ * each row of the list needs its own.
+ *
+ * Counts only what the chat would actually show — nothing of yours, nothing a
+ * moderator hid, nothing from somebody you blocked. A dot for a message the
+ * screen will never render is a dot that cannot be cleared.
+ */
+export const useUnreadCounts = (userId: string | undefined) =>
+  useQuery({
+    queryKey: ["unreadCounts", userId],
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<Record<string, number>> => {
+      const { data, error } = await supabase.rpc("my_unread_counts");
+
+      if (error) throw error;
+
+      return Object.fromEntries(
+        ((data ?? []) as { group_id: string; unread: number }[]).map((row) => [
+          row.group_id,
+          row.unread,
+        ]),
+      );
+    },
+    // Nothing in this app refetches on focus, so without a poll the badge would
+    // be as old as the last time something else happened to invalidate it.
+    refetchInterval: 30000,
+  });
+
+/** Stamps the read marker. The row is created on demand: membership is derived. */
+export const useMarkConversationRead = (
+  circleId: string | undefined,
+  userId: string | undefined,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("mark_conversation_read", {
+        p_group_id: circleId!,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["unreadCounts", userId],
+      });
+    },
+  });
+};

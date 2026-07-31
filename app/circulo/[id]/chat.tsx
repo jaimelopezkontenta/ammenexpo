@@ -22,7 +22,11 @@ import {
   useReportMessage,
   useSendMessage,
 } from "@/core/circles/chat";
-import { useCircle, useCircleMembers } from "@/core/circles/queries";
+import {
+  useCircle,
+  useCircleMembers,
+  useMarkConversationRead,
+} from "@/core/circles/queries";
 import { useBlockUser } from "@/core/moderation/blocks";
 
 export default function CircleChat() {
@@ -43,6 +47,19 @@ export default function CircleChat() {
   const hide = useHideMessage(id);
   const report = useReportMessage(userId);
   const block = useBlockUser(userId);
+  const markRead = useMarkConversationRead(id, userId);
+
+  // On open, and again whenever the list changes underneath — a message that
+  // arrives over Realtime while the chat is on screen has been read by anybody
+  // looking at it.
+  const messageCount = messages?.length ?? 0;
+
+  useEffect(() => {
+    if (!id || !conversationId) return;
+    markRead.mutate();
+    // `markRead` is a fresh object every render; depending on it would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, conversationId, messageCount]);
 
   const [draft, setDraft] = useState("");
   const [openMenu, setOpenMenu] = useState<string | null>(null);

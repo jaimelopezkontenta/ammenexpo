@@ -301,7 +301,10 @@
     "planEmptyBody": "Un mismo recorrido para todos, día a día. Lo creas tú y lo reza el círculo entero.",
     "planCreate": "Crear el plan del círculo",
     "prayedToday_plural": "{{count}} ya han orado hoy",
-    "joining": "Uniéndote…"
+    "joining": "Uniéndote…",
+    "sharedTitle": "Se comparte con este círculo",
+    "sharedMine": "Tu plan",
+    "sharedEmpty": "Todavía no se comparte ningún plan aquí."
   },
   "feed": {
     "title": "Peticiones",
@@ -400,7 +403,9 @@
     "placeholder": "Escribe un mensaje…",
     "send": "Enviar",
     "sendFailed": "No hemos podido enviar tu mensaje.",
-    "messageActions": "Mensaje de {{name}}. Toca para reportar o bloquear."
+    "messageActions": "Mensaje de {{name}}. Toca para reportar o bloquear.",
+    "unread": "{{count}} mensaje sin leer",
+    "unread_plural": "{{count}} mensajes sin leer"
   },
   "moderation": {
     "block": "Bloquear",

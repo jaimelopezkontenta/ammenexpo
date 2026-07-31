@@ -301,7 +301,10 @@
     "planEmptyBody": "One walk for everyone, day by day. You create it and the whole circle prays it.",
     "planCreate": "Create the circle's plan",
     "prayedToday_plural": "{{count}} have prayed today",
-    "joining": "Joining…"
+    "joining": "Joining…",
+    "sharedTitle": "Shared with this circle",
+    "sharedMine": "Your plan",
+    "sharedEmpty": "No plan is being shared here yet."
   },
   "feed": {
     "title": "Requests",
@@ -400,7 +403,9 @@
     "placeholder": "Write a message…",
     "send": "Send",
     "sendFailed": "We couldn't send your message.",
-    "messageActions": "Message from {{name}}. Tap to report or block."
+    "messageActions": "Message from {{name}}. Tap to report or block.",
+    "unread": "{{count}} unread message",
+    "unread_plural": "{{count}} unread messages"
   },
   "moderation": {
     "block": "Block",

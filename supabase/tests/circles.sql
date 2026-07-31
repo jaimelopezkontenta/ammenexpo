@@ -723,6 +723,142 @@ commit;
 
 
 -- ===========================================================================
+-- Mensajes sin leer
+--
+-- La membresía del chat se deriva de la del círculo desde este mismo bloque,
+-- así que casi nadie tiene fila en `conversation_members`. La marca de lectura
+-- se crea cuando hace falta y es solo eso: una marca, no un segundo censo.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.messages (conversation_id, sender_id, body)
+values (public.circle_conversation(:CIRCLE_D), :ANA, 'Buenos días, célula');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+-- Sin marca de lectura, todo lo ajeno está sin leer: es la primera vez que
+-- Carla abre ese chat.
+select pg_temp.assert(
+  (select unread from public.my_unread_counts() where group_id = :CIRCLE_D) = 1,
+  'a chat never opened counts as unread');
+
+select public.mark_conversation_read(:CIRCLE_D);
+
+select pg_temp.assert(
+  (select unread from public.my_unread_counts() where group_id = :CIRCLE_D) = 0,
+  'and opening it clears the count');
+
+commit;
+
+-- Lo propio no cuenta: un punto rojo por lo que acabas de escribir tú es un
+-- punto rojo que no se puede quitar.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+insert into public.messages (conversation_id, sender_id, body)
+values (public.circle_conversation(:CIRCLE_D), :CARLA, 'Lo mío');
+
+select pg_temp.assert(
+  (select unread from public.my_unread_counts() where group_id = :CIRCLE_D) = 0,
+  'your own message does not mark your own chat unread');
+
+commit;
+
+-- Ni lo de alguien a quien has bloqueado, porque esa pantalla no se lo va a
+-- enseñar nunca y el punto se quedaría encendido para siempre.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.messages (conversation_id, sender_id, body)
+values (public.circle_conversation(:CIRCLE_D), :ANA, 'Algo más');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select unread from public.my_unread_counts() where group_id = :CIRCLE_D) = 1,
+  'somebody else writing does mark it unread');
+
+insert into public.blocks (blocker_id, blocked_id) values (:CARLA, :ANA);
+
+select pg_temp.assert(
+  (select unread from public.my_unread_counts() where group_id = :CIRCLE_D) = 0,
+  'but not once he is blocked, since it will never be shown');
+
+delete from public.blocks where blocker_id = :CARLA and blocked_id = :ANA;
+
+commit;
+
+-- Quien no está dentro no tiene contador que mirar.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.my_unread_counts()
+    where group_id = :CIRCLE_D) = 0,
+  'somebody who left the circle has no unread count for it');
+
+commit;
+
+
+-- ===========================================================================
+-- Qué se comparte con este círculo
+--
+-- La consulta inversa —de plan a círculos— existía desde el principio.
+-- Círculo→planes no existía en todo el proyecto, así que desde dentro de un
+-- círculo no se veía absolutamente nada de lo que pasa en él.
+-- ===========================================================================
+begin;
+
+insert into public.prayer_plans (id, owner_id, title, duration_days, start_date,
+                                 visibility, status)
+values ('aaaa0000-0000-0000-0000-0000000000f1', :CARLA, 'Plan de Carla', 3,
+        current_date, 'private', 'active');
+
+insert into public.plan_shares (plan_id, group_id, created_by)
+values ('aaaa0000-0000-0000-0000-0000000000f1', :CIRCLE_D, :CARLA);
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.circle_shared_plans(:CIRCLE_D)) = 1,
+  'the circle shows what is shared with it');
+
+-- Saber que estás compartiendo el tuyo ahí importa tanto como ver los de los
+-- demás: es lo que responde "¿esta gente está viendo mis peticiones?".
+select pg_temp.assert(
+  (select is_mine from public.circle_shared_plans(:CIRCLE_D)),
+  'and marks your own as yours');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.circle_shared_plans(:CIRCLE_D)) = 0,
+  'somebody outside the circle sees nothing of it');
+
+commit;
+
+-- ===========================================================================
 -- RLS sigue puesta en todas las tablas
 --
 -- `blocks` es nueva, y una tabla sin RLS en este esquema significa que

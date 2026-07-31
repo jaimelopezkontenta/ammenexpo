@@ -11,6 +11,7 @@ import { useSession } from "@/core/auth/SessionProvider";
 import {
   useCreateCircle,
   useMyCircles,
+  useUnreadCounts,
   type CircleVisibility,
 } from "@/core/circles/queries";
 
@@ -21,6 +22,7 @@ export default function Circles() {
 
   const { data: circles, isLoading, isError, refetch } = useMyCircles(userId);
   const createCircle = useCreateCircle(userId);
+  const { data: unread } = useUnreadCounts(userId);
 
   const [isCreating, setIsCreating] = useState(false);
   const [name, setName] = useState("");
@@ -162,9 +164,25 @@ export default function Circles() {
                 accessibilityRole="link"
                 className="gap-1 rounded-2xl border border-slate-200 p-5"
               >
-                <Text className="text-lg font-semibold text-slate-900">
-                  {circle.name}
-                </Text>
+                <View className="flex-row items-center justify-between gap-3">
+                  <Text className="flex-1 text-lg font-semibold text-slate-900">
+                    {circle.name}
+                  </Text>
+                  {/* Without this there was no way to know somebody had written
+                      without opening every circle to check. */}
+                  {(unread?.[circle.id] ?? 0) > 0 ? (
+                    <View className="rounded-full bg-slate-900 px-2.5 py-1">
+                      <Text
+                        className="text-xs font-semibold text-white"
+                        accessibilityLabel={t("chat.unread", {
+                          count: unread![circle.id],
+                        })}
+                      >
+                        {unread![circle.id]}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
                 <Text className="text-sm text-slate-500">
                   {t("circles.members", { count: circle.member_count })}
                 </Text>
