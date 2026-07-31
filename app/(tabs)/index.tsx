@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
 import { DayView } from "@/components/DayView";
+import { PlanSwitcher } from "@/components/PlanSwitcher";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { WhoPrayed } from "@/components/WhoPrayed";
@@ -25,10 +26,13 @@ import { liveStreak, useStreak } from "@/core/profile/queries";
 import {
   isStuckGenerating,
   useAbandonPlan,
+  useActivePlanId,
   useMarkPrayed,
-  useOwnPlan,
+  useMyPlans,
+  usePlanProgress,
   usePrayedToday,
   useRenamePlan,
+  useSetActivePlan,
   useTodayDay,
 } from "@/core/plans/queries";
 
@@ -38,11 +42,20 @@ export default function Today() {
   const userId = session?.user.id;
 
   const {
-    data: plan,
+    data: plans,
     isLoading,
     isError,
     refetch: refetchPlan,
-  } = useOwnPlan(userId);
+  } = useMyPlans(userId);
+  const { data: activePlanId } = useActivePlanId(userId);
+  const setActivePlan = useSetActivePlan(userId);
+
+  // Falls back to the newest plan, which is what this screen always showed and
+  // is the right default for someone who has never chosen.
+  const plan =
+    (plans ?? []).find((entry) => entry.id === activePlanId) ??
+    (plans ?? [])[0] ??
+    null;
   // Days appear one stretch at a time, so today's day is readable long before
   // the whole plan is written. Waiting for 'active' would hide a plan the user
   // could already be praying.
@@ -51,6 +64,7 @@ export default function Today() {
     plan?.status === "generating",
   );
   const { data: prayed } = usePrayedToday(day?.id);
+  const { data: progress } = usePlanProgress(plan?.id);
   const { data: streak } = useStreak(userId);
   const { data: prayedForMe } = useWhoPrayedForMe(userId);
   const { data: books } = useBibleBooks();
@@ -80,6 +94,20 @@ export default function Today() {
     } catch {
       // Uncaught, the navigation never ran — so "Reintentar" was inert exactly
       // when the backend was unhealthy, which is the only time it is offered.
+      setActionError(t("common.errorGeneric"));
+    }
+  };
+
+  const selectPlan = async (planId: string) => {
+    if (planId === plan?.id) return;
+
+    setActionError(null);
+
+    try {
+      await setActivePlan.mutateAsync(planId);
+    } catch {
+      // Silent here would be the worst outcome: the chips would snap back and
+      // the screen would keep showing the plan you just tried to leave.
       setActionError(t("common.errorGeneric"));
     }
   };
@@ -137,29 +165,41 @@ export default function Today() {
     const failed = plan?.status === "failed" || stuck;
 
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
-        <Text className="text-center text-2xl font-bold text-slate-900">
-          {failed ? t("plan.failedTitle") : t("plan.noPlanTitle")}
-        </Text>
-        <Text className="text-center text-base leading-6 text-slate-500">
-          {failed ? t("plan.failedBody") : t("plan.noPlanBody")}
-        </Text>
-
-        {actionError ? (
-          <Text
-            className="text-center text-sm text-red-500"
-            accessibilityRole="alert"
-          >
-            {actionError}
-          </Text>
+      <View className="flex-1 gap-3 bg-white px-8 py-10">
+        {/* A failed plan can be the newest one, and without a way off this
+            screen the plans that do work become unreachable. */}
+        {plan ? (
+          <PlanSwitcher
+            plans={plans ?? []}
+            activeId={plan.id}
+            onSelect={selectPlan}
+          />
         ) : null}
 
-        <View className="mt-6 w-full">
-          <Button
-            title={failed ? t("common.retry") : t("plan.createCta")}
-            loading={abandon.isPending}
-            onPress={() => void startGeneration()}
-          />
+        <View className="flex-1 items-center justify-center gap-3">
+          <Text className="text-center text-2xl font-bold text-slate-900">
+            {failed ? t("plan.failedTitle") : t("plan.noPlanTitle")}
+          </Text>
+          <Text className="text-center text-base leading-6 text-slate-500">
+            {failed ? t("plan.failedBody") : t("plan.noPlanBody")}
+          </Text>
+
+          {actionError ? (
+            <Text
+              className="text-center text-sm text-red-500"
+              accessibilityRole="alert"
+            >
+              {actionError}
+            </Text>
+          ) : null}
+
+          <View className="mt-6 w-full">
+            <Button
+              title={failed ? t("common.retry") : t("plan.createCta")}
+              loading={abandon.isPending}
+              onPress={() => void startGeneration()}
+            />
+          </View>
         </View>
       </View>
     );
@@ -173,12 +213,94 @@ export default function Today() {
     return <ErrorState onRetry={() => void refetchDay()} />;
   }
 
+  // The day a plan ends.
+  //
+  // Without this branch the screen simply kept showing the last day: get_my_day
+  // clamps to the newest unlocked one, usePrayedToday counts that day's log
+  // whenever it happened, so every morning after the plan was over it said
+  // "Oraste hoy 🙏" and offered nothing — while the streak quietly fell to zero
+  // because nothing was left to insert. It is also the moment with the most
+  // intention in the whole product, and it was being spent on a frozen screen.
+  if (progress?.finished) {
+    return (
+      <ScrollView
+        className="flex-1 bg-white"
+        contentContainerClassName="flex-grow gap-3 px-8 py-14"
+      >
+        <PlanSwitcher
+          plans={plans ?? []}
+          activeId={plan.id}
+          onSelect={selectPlan}
+        />
+
+        <View className="flex-1 items-center justify-center gap-3">
+          <Text className="text-center text-2xl font-bold text-slate-900">
+            {t("plan.finishedTitle")}
+          </Text>
+          <Text className="text-center text-base leading-6 text-slate-500">
+            {plan.title}
+          </Text>
+
+          {/* An honest count, not a congratulation. Someone who prayed 11 of 30
+              days is told 11 of 30 — rounding that up would make the one screen
+              that looks back the one screen that flatters. */}
+          <Text className="mt-4 text-center text-base leading-6 text-slate-600">
+            {t("plan.finishedDays", {
+              count: progress.days_prayed,
+              total: progress.days_total,
+            })}
+          </Text>
+
+          {progress.intercessions_received > 0 ? (
+            <Text className="text-center text-base leading-6 text-slate-600">
+              {t("plan.finishedIntercessions", {
+                count: progress.intercessions_received,
+              })}
+            </Text>
+          ) : null}
+        </View>
+
+        {actionError ? (
+          <Text
+            className="text-center text-sm text-red-500"
+            accessibilityRole="alert"
+          >
+            {actionError}
+          </Text>
+        ) : null}
+
+        <View className="gap-3">
+          <Button
+            title={t("plan.finishedCta")}
+            onPress={() => void startGeneration()}
+          />
+          <Button
+            title={t("plan.seeDays")}
+            variant="ghost"
+            onPress={() =>
+              router.push({
+                pathname: "/plan/[id]/dias",
+                params: { id: plan.id },
+              })
+            }
+          />
+        </View>
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView
       className="flex-1 bg-white"
       contentContainerClassName="gap-7 px-7 py-10"
       keyboardShouldPersistTaps="handled"
     >
+      <PlanSwitcher
+        plans={plans ?? []}
+        activeId={plan.id}
+        onSelect={selectPlan}
+      />
+
       <View className="gap-1">
         <Text className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           {t("plan.dayOf", {

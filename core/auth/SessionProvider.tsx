@@ -18,6 +18,8 @@ type SessionState = {
   isLoading: boolean;
   /** null while unknown — do not route on it. */
   hasOnboarded: boolean | null;
+  /** The onboarding read failed and is no longer retrying. */
+  onboardingFailed: boolean;
   refreshOnboarding: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -77,7 +79,11 @@ export const SessionProvider = ({
 
   // Keyed by user, so signing in as someone else can never inherit the
   // previous account's onboarding state.
-  const { data, refetch } = useQuery({
+  const {
+    data,
+    isError: onboardingFailed,
+    refetch,
+  } = useQuery({
     queryKey: ["onboarding", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
@@ -113,10 +119,18 @@ export const SessionProvider = ({
       session,
       isLoading,
       hasOnboarded,
+      onboardingFailed,
       refreshOnboarding,
       signOut,
     }),
-    [session, isLoading, hasOnboarded, refreshOnboarding, signOut],
+    [
+      session,
+      isLoading,
+      hasOnboarded,
+      onboardingFailed,
+      refreshOnboarding,
+      signOut,
+    ],
   );
 
   return (

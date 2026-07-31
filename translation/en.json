@@ -42,7 +42,8 @@
     "saved": "Saved.",
     "delete": "Delete my account",
     "deleteConfirm": "Yes, delete everything",
-    "deleteWarning": "Your plans, your circles and everything anyone prayed for you will go. This cannot be undone."
+    "deleteWarning": "Your plans, your circles and everything anyone prayed for you will go. This cannot be undone.",
+    "plus": "Ammen Plus"
   },
   "auth": {
     "signInTitle": "Welcome back",
@@ -137,7 +138,7 @@
     "createCta": "Create my prayer plan",
     "failedTitle": "We couldn't create your plan",
     "failedBody": "It happens sometimes. Please try again.",
-    "limitTitle": "You've used your free plan",
+    "limitTitle": "You've used your three free plans",
     "limitBody": "With Ammen Plus you can create as many plans as you like.",
     "visibility": {
       "private": "Just me",
@@ -158,7 +159,14 @@
     "daysHint_plural": "{{count}} days you have already walked.",
     "dayPrayed": "Prayed",
     "dayNotFound": "That day is not there yet.",
-    "seeDays": "See the earlier days"
+    "seeDays": "See the earlier days",
+    "finishedTitle": "You've finished your plan",
+    "finishedDays": "You prayed {{count}} day out of {{total}}.",
+    "finishedDays_plural": "You prayed {{count}} days out of {{total}}.",
+    "finishedIntercessions": "And {{count}} time someone prayed for you.",
+    "finishedIntercessions_plural": "And {{count}} times someone prayed for you.",
+    "finishedCta": "Start another plan",
+    "switcherLabel": "Your plans"
   },
   "share": {
     "title": "Share my plan",
@@ -234,7 +242,7 @@
     "owner": "Created the circle",
     "admin": "Moderates the circle",
     "streak": "Circle streak: {{count}}",
-    "prayedToday": "Already prayed today",
+    "prayedToday": "{{count}} has prayed today",
     "leave": "Leave circle",
     "leaveConfirm": "Are you sure you want to leave?",
     "report": "Report",
@@ -256,7 +264,12 @@
     "alreadyIn": "You're already in",
     "remove": "Remove",
     "removeConfirmCta": "Yes, remove them",
-    "removeFailed": "We couldn't remove this person."
+    "removeFailed": "We couldn't remove this person.",
+    "planLabel": "The circle's plan",
+    "planEmpty": "This circle has no plan",
+    "planEmptyBody": "One walk for everyone, day by day. You create it and the whole circle prays it.",
+    "planCreate": "Create the circle's plan",
+    "prayedToday_plural": "{{count}} have prayed today"
   },
   "feed": {
     "title": "Requests",
@@ -283,7 +296,15 @@
     "subtitle": "Unlimited plans, made for what you are going through.",
     "restore": "Restore purchase",
     "subscribe": "Subscribe",
-    "freeNote": "Praying for others and creating circles is free forever."
+    "freeNote": "Praying for others and creating circles is free forever.",
+    "free": "Free forever",
+    "freeCircles": "Circles, chat, and praying for other people.",
+    "freeBible": "The whole Bible, with search.",
+    "freeShare": "Sharing your plan with anyone.",
+    "paid": "With Ammen Plus",
+    "paidPlans": "As many plans as you like, not three.",
+    "notYet": "You can't subscribe yet. We're working on it, and we'll let you know.",
+    "back": "Go back"
   },
   "notifications": {
     "prayedForYou": "{{name}} prayed for you — {{planTitle}}",

@@ -42,7 +42,8 @@
     "saved": "Guardado.",
     "delete": "Borrar mi cuenta",
     "deleteConfirm": "Sí, borrar todo",
-    "deleteWarning": "Se borran tus planes, tus círculos y todo lo que hayan orado por ti. No se puede deshacer."
+    "deleteWarning": "Se borran tus planes, tus círculos y todo lo que hayan orado por ti. No se puede deshacer.",
+    "plus": "Ammen Plus"
   },
   "auth": {
     "signInTitle": "Bienvenido de vuelta",
@@ -137,7 +138,7 @@
     "createCta": "Crear mi plan de oración",
     "failedTitle": "No pudimos crear tu plan",
     "failedBody": "A veces pasa. Inténtalo otra vez.",
-    "limitTitle": "Has usado tu plan gratuito",
+    "limitTitle": "Has usado tus tres planes gratuitos",
     "limitBody": "Con Ammen Plus puedes crear todos los planes que quieras.",
     "visibility": {
       "private": "Solo para mí",
@@ -158,7 +159,14 @@
     "daysHint_plural": "{{count}} días que ya has recorrido.",
     "dayPrayed": "Orado",
     "dayNotFound": "Ese día todavía no está.",
-    "seeDays": "Ver los días anteriores"
+    "seeDays": "Ver los días anteriores",
+    "finishedTitle": "Has terminado tu plan",
+    "finishedDays": "Oraste {{count}} día de {{total}}.",
+    "finishedDays_plural": "Oraste {{count}} días de {{total}}.",
+    "finishedIntercessions": "Y {{count}} vez alguien oró por ti.",
+    "finishedIntercessions_plural": "Y {{count}} veces alguien oró por ti.",
+    "finishedCta": "Empezar otro plan",
+    "switcherLabel": "Tus planes"
   },
   "share": {
     "title": "Compartir mi plan",
@@ -234,7 +242,7 @@
     "owner": "Creó el círculo",
     "admin": "Modera el círculo",
     "streak": "Racha del círculo: {{count}}",
-    "prayedToday": "Ya oraron hoy",
+    "prayedToday": "{{count}} ya ha orado hoy",
     "leave": "Salir del círculo",
     "leaveConfirm": "¿Seguro que quieres salir?",
     "report": "Reportar",
@@ -256,7 +264,12 @@
     "alreadyIn": "Ya estás dentro",
     "remove": "Expulsar",
     "removeConfirmCta": "Sí, expulsar",
-    "removeFailed": "No hemos podido expulsar a esta persona."
+    "removeFailed": "No hemos podido expulsar a esta persona.",
+    "planLabel": "El plan del círculo",
+    "planEmpty": "Este círculo no tiene plan",
+    "planEmptyBody": "Un mismo recorrido para todos, día a día. Lo creas tú y lo reza el círculo entero.",
+    "planCreate": "Crear el plan del círculo",
+    "prayedToday_plural": "{{count}} ya han orado hoy"
   },
   "feed": {
     "title": "Peticiones",
@@ -283,7 +296,15 @@
     "subtitle": "Planes ilimitados, hechos para lo que estás viviendo.",
     "restore": "Restaurar compra",
     "subscribe": "Suscribirme",
-    "freeNote": "Orar por otros y crear círculos es gratis para siempre."
+    "freeNote": "Orar por otras personas y crear círculos es gratis para siempre.",
+    "free": "Gratis para siempre",
+    "freeCircles": "Círculos, chat y orar por otras personas.",
+    "freeBible": "La Biblia entera, con búsqueda.",
+    "freeShare": "Compartir tu plan con quien quieras.",
+    "paid": "Con Ammen Plus",
+    "paidPlans": "Todos los planes que quieras, no tres.",
+    "notYet": "Todavía no se puede pagar. Estamos en ello, y te avisaremos.",
+    "back": "Volver"
   },
   "notifications": {
     "prayedForYou": "{{name}} oró por ti — {{planTitle}}",

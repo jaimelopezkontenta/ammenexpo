@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
@@ -32,6 +32,9 @@ export default function NewPlan() {
   const { t } = useTranslation();
   const { session } = useSession();
   const userId = session?.user.id;
+  // Set when this form was opened from a circle: the plan belongs to the
+  // circle rather than to the person filling it in.
+  const { circulo } = useLocalSearchParams<{ circulo?: string }>();
 
   const { data: circles } = useMyCircles(userId);
   const generate = useGeneratePlan(userId);
@@ -42,6 +45,7 @@ export default function NewPlan() {
   const [visibility, setVisibility] = useState<PlanVisibility>("private");
   const [selectedCircles, setSelectedCircles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [atLimit, setAtLimit] = useState(false);
 
   const hasCircles = (circles ?? []).length > 0;
 
@@ -53,7 +57,7 @@ export default function NewPlan() {
   const handleCreate = async () => {
     setError(null);
 
-    if (visibility === "circles" && selectedCircles.length === 0) {
+    if (!circulo && visibility === "circles" && selectedCircles.length === 0) {
       setError(t("newPlan.chooseCircles"));
       return;
     }
@@ -65,7 +69,15 @@ export default function NewPlan() {
         custom_topic: customTopic.trim() || undefined,
         visibility,
         circle_ids: visibility === "circles" ? selectedCircles : undefined,
+        group_id: circulo,
       });
+
+      // Back to the circle, where the plan now lives, rather than to a Hoy
+      // screen that will not show it: a circle's plan is not your own.
+      if (circulo) {
+        router.replace({ pathname: "/circulo/[id]", params: { id: circulo } });
+        return;
+      }
 
       // Choosing a public link and then landing on Hoy left people with a link
       // they had no way to reach. Hand it to them straight away.
@@ -79,11 +91,17 @@ export default function NewPlan() {
 
       router.replace("/");
     } catch (caught) {
-      setError(
-        caught instanceof PlanLimitReached
-          ? t("plan.limitBody")
-          : t("common.errorGeneric"),
-      );
+      // The limit is not a failure, and treating it as one left people staring
+      // at a red line at the bottom of a form they had already filled in, with
+      // no button and nowhere to go.
+      if (caught instanceof PlanLimitReached) {
+        setAtLimit(true);
+        setError(null);
+        return;
+      }
+
+      setAtLimit(false);
+      setError(t("common.errorGeneric"));
     }
   };
 
@@ -150,55 +168,76 @@ export default function NewPlan() {
           />
         </View>
 
-        <View className="gap-3">
-          <Text className="text-lg font-semibold text-slate-900">
-            {t("newPlan.visibilityQuestion")}
-          </Text>
-          <ChoiceChips
-            options={[
-              { value: "private", label: t("newPlan.visPrivate") },
-              { value: "circles", label: t("newPlan.visCircles") },
-              { value: "link", label: t("newPlan.visLink") },
-            ]}
-            selected={[visibility]}
-            onToggle={(value) => setVisibility(value as PlanVisibility)}
-          />
-          <Text className="text-sm text-slate-500">{visibilityHint}</Text>
+        {/* A circle's plan has one audience — the circle — so offering "Solo
+            yo" here would be offering a contradiction. */}
+        {circulo ? null : (
+          <View className="gap-3">
+            <Text className="text-lg font-semibold text-slate-900">
+              {t("newPlan.visibilityQuestion")}
+            </Text>
+            <ChoiceChips
+              options={[
+                { value: "private", label: t("newPlan.visPrivate") },
+                { value: "circles", label: t("newPlan.visCircles") },
+                { value: "link", label: t("newPlan.visLink") },
+              ]}
+              selected={[visibility]}
+              onToggle={(value) => setVisibility(value as PlanVisibility)}
+            />
+            <Text className="text-sm text-slate-500">{visibilityHint}</Text>
 
-          {visibility === "circles" ? (
-            hasCircles ? (
-              <ChoiceChips
-                options={(circles ?? []).map((circle) => ({
-                  value: circle.id,
-                  label: circle.name,
-                }))}
-                selected={selectedCircles}
-                onToggle={(value) =>
-                  setSelectedCircles((list) => toggle(list, value))
-                }
-                multiple
-              />
-            ) : (
-              // Without a way out this option is a dead end: nothing to pick,
-              // and creating the plan is blocked on picking something.
-              <View className="gap-3">
-                <Text className="text-sm text-slate-500">
-                  {t("newPlan.noCircles")}
-                </Text>
-                <Button
-                  title={t("circles.create")}
-                  variant="secondary"
-                  onPress={() => router.push("/circulos")}
+            {visibility === "circles" ? (
+              hasCircles ? (
+                <ChoiceChips
+                  options={(circles ?? []).map((circle) => ({
+                    value: circle.id,
+                    label: circle.name,
+                  }))}
+                  selected={selectedCircles}
+                  onToggle={(value) =>
+                    setSelectedCircles((list) => toggle(list, value))
+                  }
+                  multiple
                 />
-              </View>
-            )
-          ) : null}
-        </View>
+              ) : (
+                // Without a way out this option is a dead end: nothing to pick,
+                // and creating the plan is blocked on picking something.
+                <View className="gap-3">
+                  <Text className="text-sm text-slate-500">
+                    {t("newPlan.noCircles")}
+                  </Text>
+                  <Button
+                    title={t("circles.create")}
+                    variant="secondary"
+                    onPress={() => router.push("/circulos")}
+                  />
+                </View>
+              )
+            ) : null}
+          </View>
+        )}
 
         {error ? (
           <Text className="text-sm text-red-500" accessibilityRole="alert">
             {error}
           </Text>
+        ) : null}
+
+        {atLimit ? (
+          <View
+            className="gap-2 rounded-2xl bg-slate-50 p-5"
+            accessibilityRole="alert"
+          >
+            <Text className="text-base font-semibold text-slate-900">
+              {t("plan.limitTitle")}
+            </Text>
+            <Text className="text-base leading-6 text-slate-600">
+              {t("plan.limitBody")}
+            </Text>
+            <Link href="/plus" asChild>
+              <Button title={t("paywall.title")} variant="secondary" />
+            </Link>
+          </View>
         ) : null}
 
         <View className="pb-4">

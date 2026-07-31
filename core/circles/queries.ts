@@ -11,6 +11,7 @@ export type Circle = {
   visibility: CircleVisibility;
   member_count: number;
   owner_id: string;
+  streak_count: number;
 };
 
 export type CircleMember = {
@@ -25,7 +26,7 @@ export type CircleMember = {
 // every public circle in the directory. It now comes from
 // `circle_invite_token()`, which requires membership.
 const CIRCLE_COLUMNS =
-  "id, name, description, visibility, member_count, owner_id";
+  "id, name, description, visibility, member_count, owner_id, streak_count";
 
 /** RLS returns only circles the caller belongs to (plus public ones). */
 export const useMyCircles = (userId: string | undefined) =>
@@ -314,6 +315,97 @@ export const useRemoveMember = (circleId: string | undefined) => {
         queryKey: ["circleMembers", circleId],
       });
       void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+    },
+  });
+};
+
+export type CirclePlan = {
+  plan_id: string;
+  title: string;
+  theme: string | null;
+  duration_days: number;
+  status: string;
+  day_id: string | null;
+  day_number: number | null;
+  day_title: string | null;
+  prayed_today: boolean;
+  prayed_count: number;
+};
+
+/**
+ * The circle's own plan: one walk everybody reads, rather than a personal plan
+ * shared outward.
+ *
+ * `prayer_plans.group_id` has carried the policies for this since the first
+ * migration with nothing ever writing it, and `groups.streak_count` has read
+ * zero for just as long.
+ */
+export const useCirclePlan = (circleId: string | undefined) =>
+  useQuery({
+    queryKey: ["circlePlan", circleId],
+    enabled: Boolean(circleId),
+    queryFn: async (): Promise<CirclePlan | null> => {
+      const { data, error } = await supabase.rpc("circle_plan", {
+        p_group_id: circleId!,
+      });
+
+      if (error) throw error;
+
+      return ((data ?? []) as CirclePlan[])[0] ?? null;
+    },
+    refetchInterval: (query) =>
+      query.state.data?.status === "generating" ? 3000 : false,
+  });
+
+/** Whether this person may start the circle's plan: admin, and none running. */
+export const useCanCreateCirclePlan = (circleId: string | undefined) =>
+  useQuery({
+    queryKey: ["canCreateCirclePlan", circleId],
+    enabled: Boolean(circleId),
+    queryFn: async (): Promise<boolean> => {
+      const { data, error } = await supabase.rpc("can_create_circle_plan", {
+        p_group_id: circleId!,
+      });
+
+      if (error) throw error;
+
+      return data === true;
+    },
+  });
+
+/**
+ * One tap, two records: the personal log that moves your own streak, and the
+ * circle's record that everybody else can read. `prayer_logs` is readable only
+ * by its owner, so a "who in the circle prayed today" count cannot hang off it.
+ */
+export const useMarkCircleDay = (
+  circleId: string | undefined,
+  userId: string | undefined,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (planDayId: string) => {
+      const { data, error } = await supabase.rpc("mark_circle_day", {
+        p_plan_day_id: planDayId,
+      });
+
+      if (error) throw error;
+
+      // The RPC answers false rather than raising when the day is locked or you
+      // are no longer in the circle, so ignoring the payload would show a
+      // success on a write that did nothing.
+      if (data !== true) {
+        throw new Error("mark_circle_day_refused");
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["circlePlan", circleId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+      // It counts as praying, so the personal streak moved too.
+      void queryClient.invalidateQueries({ queryKey: ["streak", userId] });
     },
   });
 };

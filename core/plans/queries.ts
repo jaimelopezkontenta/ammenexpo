@@ -43,34 +43,111 @@ export type PlanDay = {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+export type PlanProgress = {
+  days_total: number;
+  days_written: number;
+  days_unlocked: number;
+  days_prayed: number;
+  intercessions_received: number;
+  finished: boolean;
+};
+
+const PLAN_COLUMNS =
+  "id, title, theme, status, duration_days, start_date, generation_error, created_at";
+
 /**
- * The user's own most recent plan. Filtered by owner because RLS also lets a
- * user read plans other people shared with them, which must not show up as
- * "your plan of the day".
+ * All the plans you own, newest first.
+ *
+ * `useOwnPlan` returned only the most recent one, which was fine while the free
+ * allowance was a single plan. At three, the other two existed, counted against
+ * the allowance, and could not be opened from anywhere in the app.
  */
-export const useOwnPlan = (userId: string | undefined) =>
+export const useMyPlans = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["ownPlan", userId],
+    queryKey: ["myPlans", userId],
     enabled: Boolean(userId),
-    queryFn: async (): Promise<OwnPlan | null> => {
+    queryFn: async (): Promise<OwnPlan[]> => {
       const { data, error } = await supabase
         .from("prayer_plans")
-        .select(
-          "id, title, theme, status, duration_days, start_date, generation_error, created_at",
-        )
+        .select(PLAN_COLUMNS)
         .eq("owner_id", userId!)
         .in("status", ["generating", "active", "failed"])
-        .order("created_at", { ascending: false })
-        .limit(1)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      return (data ?? []) as OwnPlan[];
+    },
+    refetchInterval: (query) =>
+      (query.state.data ?? []).some((plan) => plan.status === "generating")
+        ? 3000
+        : false,
+  });
+
+/**
+ * Which plan the home screen is walking.
+ *
+ * Kept on the server rather than in the client because a choice that lives on
+ * the device is lost on reinstall — and because the reminder push will need to
+ * know which plan it is talking about.
+ */
+export const useActivePlanId = (userId: string | undefined) =>
+  useQuery({
+    queryKey: ["activePlan", userId],
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase
+        .from("profile_settings")
+        .select("active_plan_id")
+        .eq("id", userId!)
         .maybeSingle();
 
       if (error) throw error;
 
-      return data as OwnPlan | null;
+      return (
+        (data as { active_plan_id: string | null } | null)?.active_plan_id ??
+        null
+      );
     },
-    // Generation finishes in the background, so keep checking while it runs.
-    refetchInterval: (query) =>
-      query.state.data?.status === "generating" ? 3000 : false,
+  });
+
+export const useSetActivePlan = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (planId: string) => {
+      const { data, error } = await supabase
+        .from("profile_settings")
+        .update({ active_plan_id: planId })
+        .eq("id", userId!)
+        .select("active_plan_id");
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error("set_active_plan_no_rows");
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["activePlan", userId] });
+    },
+  });
+};
+
+/** How far along a plan is, and whether it is over. */
+export const usePlanProgress = (planId: string | undefined) =>
+  useQuery({
+    queryKey: ["planProgress", planId],
+    enabled: Boolean(planId),
+    queryFn: async (): Promise<PlanProgress | null> => {
+      const { data, error } = await supabase.rpc("plan_progress", {
+        p_plan_id: planId!,
+      });
+
+      if (error) throw error;
+
+      return ((data ?? []) as PlanProgress[])[0] ?? null;
+    },
   });
 
 /**
@@ -135,6 +212,8 @@ export type NewPlanInput = {
   custom_topic?: string;
   visibility?: PlanVisibility;
   circle_ids?: string[];
+  /** Set for a circle's own plan: it belongs to the circle, not to you. */
+  group_id?: string;
 };
 
 export const useGeneratePlan = (userId: string | undefined) => {
@@ -168,8 +247,21 @@ export const useGeneratePlan = (userId: string | undefined) => {
         share_token: string | null;
       };
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["ownPlan", userId] });
+    onSuccess: (_result, input) => {
+      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
+
+      // A circle's plan is not one of yours, so invalidating `myPlans` alone
+      // left the circle screen still offering to create the plan it had just
+      // created. Nothing in this app refetches on focus, so that state would
+      // have survived until the app was killed.
+      if (input.group_id) {
+        void queryClient.invalidateQueries({
+          queryKey: ["circlePlan", input.group_id],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["canCreateCirclePlan", input.group_id],
+        });
+      }
     },
   });
 };
@@ -192,7 +284,7 @@ export const useAbandonPlan = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["ownPlan", userId] });
+      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
     },
   });
 };
@@ -217,7 +309,7 @@ export const useRenamePlan = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["ownPlan", userId] });
+      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
     },
   });
 };
@@ -231,13 +323,20 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
         .from("prayer_logs")
         .insert({ plan_day_id: dayId!, user_id: userId! });
 
-      if (error) throw error;
+      // Marking the same day from two devices trips the unique index on
+      // (user_id, plan_day_id). It is not a failure — you did pray — and
+      // reporting "Algo salió mal" for it made the app look broken at the exact
+      // moment it had worked. `usePrayForSomeone` has treated this code as a
+      // success since the start; this one did not.
+      if (error && error.code !== "23505") throw error;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["prayedToday", dayId] });
       // The streak is bumped by a trigger, so the cached value is stale the
       // moment this succeeds.
       void queryClient.invalidateQueries({ queryKey: ["streak", userId] });
+      // And the closing summary counts the days you prayed.
+      void queryClient.invalidateQueries({ queryKey: ["planProgress"] });
     },
   });
 };

@@ -495,7 +495,13 @@ Deno.serve(async (req) => {
     (!subscription.expires_at ||
       new Date(subscription.expires_at) > new Date());
 
-  if (!isSubscribed && (planCount ?? 0) >= FREE_PLAN_LIMIT) {
+  // A circle's plan does not spend the personal allowance: it belongs to the
+  // circle, and charging it to whoever runs the circle would punish exactly the
+  // person holding it together. It stays bounded anyway — one active plan per
+  // circle, enforced by a unique partial index.
+  const isCirclePlan = typeof body?.group_id === "string";
+
+  if (!isCirclePlan && !isSubscribed && (planCount ?? 0) >= FREE_PLAN_LIMIT) {
     return json({ error: "plan_limit_reached", limit: FREE_PLAN_LIMIT }, 402);
   }
 
@@ -540,6 +546,11 @@ Deno.serve(async (req) => {
       ? body.visibility
       : "private";
 
+  // A circle's own plan: one shared walk everybody reads, rather than a
+  // personal plan shared outward. `prayer_plans.group_id` has carried the
+  // policies for it since the first migration with nothing ever writing it.
+  const groupId = isCirclePlan ? (body!.group_id as string) : null;
+
   const circleIds = Array.isArray(body?.circle_ids)
     ? (body.circle_ids as unknown[]).filter(
         (id): id is string => typeof id === "string",
@@ -548,6 +559,19 @@ Deno.serve(async (req) => {
 
   if (visibility === "circles" && circleIds.length === 0) {
     return json({ error: "no_circles_selected" }, 400);
+  }
+
+  if (groupId) {
+    // Admins only, and one active plan per circle. The unique partial index is
+    // what actually enforces the second half — this check exists to answer with
+    // something a screen can explain rather than a constraint violation.
+    const { data: allowed } = await supabase.rpc("can_create_circle_plan", {
+      p_group_id: groupId,
+    });
+
+    if (allowed !== true) {
+      return json({ error: "circle_plan_not_allowed" }, 403);
+    }
   }
 
   const startDate = new Date().toISOString().slice(0, 10);
@@ -560,8 +584,14 @@ Deno.serve(async (req) => {
       duration_days: durationDays,
       start_date: startDate,
       // 'circles' is an app-level concept; at the row level a plan shared with
-      // circles is simply not private, and plan_shares says with whom.
-      visibility: visibility === "link" ? "link" : "private",
+      // circles is simply not private, and plan_shares says with whom. A
+      // circle's *own* plan is the one case that does use 'group'.
+      visibility: groupId
+        ? "group"
+        : visibility === "link"
+          ? "link"
+          : "private",
+      group_id: groupId,
       status: "generating",
       generated_by: "ai",
       source_prompt: { answers },
@@ -578,9 +608,9 @@ Deno.serve(async (req) => {
     // RLS rejects a circle the caller does not belong to, so a bad id fails
     // here rather than silently sharing into someone else's circle.
     const { error: shareError } = await supabase.from("plan_shares").insert(
-      circleIds.map((groupId) => ({
+      circleIds.map((circleId) => ({
         plan_id: created.id,
-        group_id: groupId,
+        group_id: circleId,
         created_by: user.id,
       })),
     );

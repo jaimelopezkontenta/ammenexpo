@@ -7,12 +7,16 @@ import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
+  useCanCreateCirclePlan,
   useCircle,
   useCircleInviteToken,
   useCircleMembers,
+  useCirclePlan,
   useLeaveCircle,
+  useMarkCircleDay,
   useRemoveMember,
 } from "@/core/circles/queries";
+import { CirclePlanCard } from "@/components/CirclePlanCard";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
 
@@ -25,6 +29,9 @@ export default function CircleDetail() {
   const { data: circle, isLoading, isError, refetch } = useCircle(id);
   const { data: members } = useCircleMembers(id);
   const { data: inviteToken } = useCircleInviteToken(id);
+  const { data: circlePlan } = useCirclePlan(id);
+  const { data: canCreatePlan } = useCanCreateCirclePlan(id);
+  const markCircleDay = useMarkCircleDay(id, userId);
   const leave = useLeaveCircle(userId);
   const removeMember = useRemoveMember(id);
   const block = useBlockUser(userId);
@@ -88,6 +95,16 @@ export default function CircleDetail() {
     try {
       await block.mutateAsync(memberId);
       setNotice(t("moderation.blockDone"));
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
+
+  const handleMarkCircleDay = async (planDayId: string) => {
+    setError(null);
+
+    try {
+      await markCircleDay.mutateAsync(planDayId);
     } catch {
       setError(t("common.errorGeneric"));
     }
@@ -159,6 +176,17 @@ export default function CircleDetail() {
               : t("circles.visibilityPublic")}
           </Text>
         </View>
+
+        {/* Above the roster on purpose: what the circle is *doing* matters more
+            than who is in it, and this screen used to answer only the second. */}
+        <CirclePlanCard
+          circle={circle}
+          plan={circlePlan}
+          canCreate={canCreatePlan === true}
+          isPending={markCircleDay.isPending}
+          error={null}
+          onMarkPrayed={(dayId) => void handleMarkCircleDay(dayId)}
+        />
 
         <View className="gap-3">
           <Text className="text-sm font-medium text-slate-400">

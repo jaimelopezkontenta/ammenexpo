@@ -458,6 +458,271 @@ commit;
 
 
 -- ===========================================================================
+-- El plan común del círculo, y su racha
+--
+-- `prayer_plans.group_id` y `group_prayer_days` llevan desde la Fase 1 con
+-- policies y GRANT completos y sin un solo escritor. La regla decidida: cuenta
+-- el día si ora **la mitad** del círculo, redondeando hacia arriba, con día de
+-- gracia como la racha personal.
+-- ===========================================================================
+
+\set CIRCLE_D '''cccc0000-0000-0000-0000-000000000003'''
+\set PLAN_D   '''aaaa0000-0000-0000-0000-0000000000e1'''
+
+begin;
+
+insert into public.groups (id, owner_id, name, visibility)
+values (:CIRCLE_D, :ANA, 'Célula del jueves', 'private');
+
+insert into public.group_members (group_id, user_id)
+values (:CIRCLE_D, :BETO), (:CIRCLE_D, :CARLA), (:CIRCLE_D, :DANI);
+
+commit;
+
+-- Cuatro miembros ⇒ hacen falta dos.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  not public.can_create_circle_plan(:CIRCLE_D),
+  'an ordinary member cannot start the circle''s plan');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.can_create_circle_plan(:CIRCLE_D),
+  'the person who runs it can');
+
+commit;
+
+begin;
+
+insert into public.prayer_plans (id, owner_id, group_id, title, duration_days,
+                                 start_date, visibility, status)
+values (:PLAN_D, :ANA, :CIRCLE_D, 'Siete días juntos', 7,
+        current_date - 6, 'group', 'active');
+
+insert into public.prayer_plan_days (plan_id, day_number, title, prayer_body,
+                                     unlock_date)
+select :PLAN_D, n, 'Día ' || n, 'Privado', current_date - 7 + n
+from generate_series(1, 7) n;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  not public.can_create_circle_plan(:CIRCLE_D),
+  'and only one at a time');
+
+-- El índice único parcial es lo que de verdad lo impide: la comprobación de la
+-- Edge Function la pueden saltar dos peticiones a la vez.
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.prayer_plans (owner_id, group_id, title, duration_days,
+                                     start_date, visibility, status)
+    values ('11111111-1111-1111-1111-111111111111',
+            'cccc0000-0000-0000-0000-000000000003', 'Otro', 7,
+            current_date, 'group', 'active')
+  $q$),
+  'and the database refuses a second one even if the check is skipped');
+
+commit;
+
+
+-- ===========================================================================
+-- Marcar el día del círculo
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.mark_circle_day(
+    (select id from public.prayer_plan_days
+      where plan_id = :PLAN_D and day_number = 1)),
+  'Beto marks the first day');
+
+-- Una acción, dos registros: `prayer_logs` es lo que mueve su racha personal,
+-- `group_prayer_days` lo que el círculo puede leer.
+select pg_temp.assert(
+  (select count(*) from public.prayer_logs
+    where user_id = :BETO
+      and plan_day_id = (select id from public.prayer_plan_days
+                          where plan_id = :PLAN_D and day_number = 1)) = 1,
+  'and it counts for him personally too');
+
+commit;
+
+begin;
+
+select pg_temp.assert(
+  (select streak_count from public.profiles where id = :BETO) > 0,
+  'so his own streak moves');
+
+-- Con uno solo, en un círculo de cuatro, el día no cuenta.
+select pg_temp.assert(
+  (select streak_count from public.groups where id = :CIRCLE_D) = 0,
+  'one person out of four is not the circle praying');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.mark_circle_day(
+    (select id from public.prayer_plan_days
+      where plan_id = :PLAN_D and day_number = 1)),
+  'Carla marks it too');
+
+commit;
+
+begin;
+
+select pg_temp.assert(
+  (select streak_count from public.groups where id = :CIRCLE_D) = 1,
+  'half the circle is, and the streak opens at one');
+
+commit;
+
+-- Pulsar dos veces no suma dos.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.mark_circle_day(
+    (select id from public.prayer_plan_days
+      where plan_id = :PLAN_D and day_number = 1)),
+  'marking the same day again is not an error');
+
+commit;
+
+begin;
+
+select pg_temp.assert(
+  (select streak_count from public.groups where id = :CIRCLE_D) = 1,
+  'and does not count twice');
+
+commit;
+
+
+-- ===========================================================================
+-- El día de gracia, y lo que sí la rompe
+-- ===========================================================================
+
+create or replace function pg_temp.circle_prays(p_day integer)
+returns integer language plpgsql as $$
+declare v_day uuid;
+begin
+  select id into v_day from public.prayer_plan_days
+   where plan_id = 'aaaa0000-0000-0000-0000-0000000000e1' and day_number = p_day;
+
+  insert into public.group_prayer_days (group_id, plan_day_id, user_id)
+  values ('cccc0000-0000-0000-0000-000000000003', v_day,
+          '22222222-2222-2222-2222-222222222222'),
+         ('cccc0000-0000-0000-0000-000000000003', v_day,
+          '33333333-3333-3333-3333-333333333333')
+  on conflict do nothing;
+
+  return (select streak_count from public.groups
+           where id = 'cccc0000-0000-0000-0000-000000000003');
+end;
+$$;
+
+begin;
+
+select pg_temp.assert(
+  pg_temp.circle_prays(2) = 2,
+  'praying the next day carries the streak to two');
+
+-- Se salta el día 3. Con una regla ya exigente —la mitad del círculo, cada
+-- día— quitar la gracia significa que un círculo de ocho no sobrevive a un
+-- domingo, y una racha que se rompe siempre deja de mirarse.
+select pg_temp.assert(
+  pg_temp.circle_prays(4) = 3,
+  'and one missed day is forgiven, like the personal streak');
+
+-- Dos seguidos no.
+select pg_temp.assert(
+  pg_temp.circle_prays(7) = 1,
+  'but two in a row start it over');
+
+-- Rellenar un día antiguo no puede hacer retroceder la racha ni contarse otra
+-- vez: es la trampa de un trigger que solo mira la fila que acaba de entrar.
+select pg_temp.assert(
+  pg_temp.circle_prays(5) = 1,
+  'filling in an older day neither re-counts nor rewinds');
+
+commit;
+
+
+-- ===========================================================================
+-- Quién puede marcar, y qué día
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select pg_temp.assert(
+  not public.mark_circle_day('aaaa0000-0000-0000-0000-0000000000ff'),
+  'a day that does not exist cannot be marked');
+
+commit;
+
+-- Alguien que ya no está en el círculo no puede marcar su día aunque conozca
+-- el id: es la misma puerta que cierra la expulsión en el chat.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+delete from public.group_members
+ where group_id = :CIRCLE_D and user_id = :BETO;
+
+select pg_temp.assert(
+  not public.mark_circle_day(
+    (select id from public.prayer_plan_days
+      where plan_id = :PLAN_D and day_number = 6)),
+  'somebody who left the circle cannot mark its day');
+
+commit;
+
+
+-- ===========================================================================
+-- La regla 1, para la tabla que estrena escritor
+--
+-- Una policy de SELECT que vuelve a consultar su propia tabla rompe los
+-- inserts, y Postgres lo reporta igual que un fallo de WITH CHECK.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.group_prayer_days (group_id, plan_day_id, user_id)
+    select 'cccc0000-0000-0000-0000-000000000003', d.id,
+           '44444444-4444-4444-4444-444444444444'
+    from public.prayer_plan_days d
+    where d.plan_id = 'aaaa0000-0000-0000-0000-0000000000e1'
+      and d.day_number = 6
+    returning group_id
+  $q$),
+  'insert ... returning works on group_prayer_days');
+
+commit;
+
+
+-- ===========================================================================
 -- RLS sigue puesta en todas las tablas
 --
 -- `blocks` es nueva, y una tabla sin RLS en este esquema significa que
