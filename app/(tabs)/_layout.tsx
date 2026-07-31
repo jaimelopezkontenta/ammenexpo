@@ -20,6 +20,15 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
+      {/* Second, next to Hoy: it is the tab most closely tied to the day's
+          verse, and with five tabs the order starts to matter. */}
+      <Tabs.Screen
+        name="biblia"
+        options={{
+          title: t("tabs.bible"),
+          tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="orar"
         options={{

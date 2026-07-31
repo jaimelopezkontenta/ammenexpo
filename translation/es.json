@@ -20,7 +20,8 @@
     "today": "Hoy",
     "profile": "Perfil",
     "pray": "Orar",
-    "circles": "Círculos"
+    "circles": "Círculos",
+    "bible": "Biblia"
   },
   "pray": {
     "title": "Orar por otros",
@@ -275,5 +276,26 @@
     "noCircles": "Todavía no tienes círculos. Créalo privado y compártelo después.",
     "chooseCircles": "Elige al menos un círculo.",
     "create": "Crear el plan"
+  },
+  "bible": {
+    "title": "Biblia",
+    "subtitle": "Reina-Valera 1909",
+    "searchPlaceholder": "Buscar una palabra o una cita",
+    "searchHint": "Escribe al menos tres letras. También puedes poner una cita, como «Juan 3».",
+    "oldTestament": "Antiguo Testamento",
+    "newTestament": "Nuevo Testamento",
+    "continueReading": "Continuar leyendo",
+    "goTo": "Ir a {{reference}}",
+    "results": "{{count}} resultado",
+    "results_plural": "{{count}} resultados",
+    "noResults": "No se encontró nada.",
+    "noResultsHint": "Prueba con otra palabra, o con menos palabras.",
+    "chapters": "{{count}} capítulo",
+    "chapters_plural": "{{count}} capítulos",
+    "chapter": "Capítulo {{number}}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "readInContext": "Leer el capítulo",
+    "searchLabel": "Buscar"
   }
 }

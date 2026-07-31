@@ -14,6 +14,8 @@ import { DaySection } from "@/components/DaySection";
 import { TextField } from "@/components/TextField";
 import { WhoPrayed } from "@/components/WhoPrayed";
 import { useSession } from "@/core/auth/SessionProvider";
+import { useBibleBooks } from "@/core/bible/queries";
+import { parseCanonicalRef } from "@/core/bible/reference";
 import {
   useReportIntercession,
   useWhoPrayedForMe,
@@ -46,6 +48,7 @@ export default function Today() {
   const { data: prayed } = usePrayedToday(day?.id);
   const { data: streak } = useStreak(userId);
   const { data: prayedForMe } = useWhoPrayedForMe(userId);
+  const { data: books } = useBibleBooks();
 
   const report = useReportIntercession(userId);
   const generate = useGeneratePlan(userId);
@@ -57,6 +60,7 @@ export default function Today() {
 
   const stuck = isStuckGenerating(plan);
   const days = liveStreak(streak);
+  const scripture = parseCanonicalRef(day?.scripture_ref, books ?? []);
 
   const startGeneration = async () => {
     // A crashed generation would otherwise sit in 'generating' forever and
@@ -203,6 +207,29 @@ export default function Today() {
             <Text className="text-sm font-medium text-slate-500">
               {day.scripture_ref}
             </Text>
+          ) : null}
+
+          {/* The verse is shown out of context: this is the way into the
+              chapter around it. If the reference cannot be parsed there is no
+              link at all — guessing would open the wrong chapter. */}
+          {scripture ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                router.push({
+                  pathname: "/libro/[book]/[chapter]",
+                  params: {
+                    book: String(scripture.bookId),
+                    chapter: String(scripture.chapter),
+                    verse: String(scripture.verse),
+                  },
+                })
+              }
+            >
+              <Text className="text-sm font-medium text-slate-600">
+                {t("bible.readInContext")} →
+              </Text>
+            </Pressable>
           ) : null}
         </DaySection>
       ) : null}
