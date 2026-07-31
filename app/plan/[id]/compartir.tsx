@@ -56,6 +56,9 @@ export default function SharePlan() {
     );
   }
 
+  // Creating a plan with a public link lands straight here, before a single day
+  // exists. Sharing then would hand someone a link to an empty preview.
+  const stillWriting = plan.status === "generating";
   const shared = sharedCircles ?? [];
   const linkUrl = link ? buildShareUrl(`/p/${link.token}`) : null;
 
@@ -117,7 +120,7 @@ export default function SharePlan() {
             {plan.title}
           </Text>
           <Text className="text-base text-slate-500">
-            {t("share.subtitle")}
+            {stillWriting ? t("share.stillWriting") : t("share.subtitle")}
           </Text>
         </View>
 
@@ -177,6 +180,7 @@ export default function SharePlan() {
 
               <Button
                 title={t("common.share")}
+                disabled={stillWriting}
                 onPress={() => void handleShare()}
               />
 

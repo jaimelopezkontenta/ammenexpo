@@ -164,7 +164,7 @@ export const usePlanSummary = (planId: string | undefined) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("prayer_plans")
-        .select("id, title, theme, duration_days, visibility")
+        .select("id, title, theme, duration_days, visibility, status")
         .eq("id", planId!)
         .maybeSingle();
 
@@ -176,6 +176,13 @@ export const usePlanSummary = (planId: string | undefined) =>
         theme: string | null;
         duration_days: number;
         visibility: string;
+        status: string;
       } | null;
     },
+    // The plan row is created with a placeholder title and gets its real one
+    // when generation finishes. Nothing invalidated this, so the share screen
+    // sat on the placeholder — and put it in the invitation text sent to other
+    // people: "Estoy orando por … estos 7 días".
+    refetchInterval: (query) =>
+      query.state.data?.status === "generating" ? 3000 : false,
   });

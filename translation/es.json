@@ -184,7 +184,8 @@
     "shareFailed": "No se pudo compartir. Copia el enlace de arriba a mano.",
     "open": "Compartir este plan",
     "goHome": "Ir a mi plan",
-    "deadLinkInvite": "Puedes crear el tuyo y compartirlo con quien quieras."
+    "deadLinkInvite": "Puedes crear el tuyo y compartirlo con quien quieras.",
+    "stillWriting": "Estamos escribiendo tu plan. En cuanto esté podrás compartirlo."
   },
   "intercession": {
     "prayFor": "Oré por ti",
