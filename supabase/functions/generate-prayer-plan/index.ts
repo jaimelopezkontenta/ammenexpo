@@ -284,6 +284,7 @@ const writeChunk = async ({
       interpretation: sanitizeGeneratedText(day.interpretation),
       daily_action: sanitizeGeneratedText(day.daily_action),
       prayer_body: sanitizeGeneratedText(day.prayer_body),
+      intercessor_prayer: sanitizeGeneratedText(day.intercessor_prayer),
       unlock_date: unlock.toISOString().slice(0, 10),
     };
   });

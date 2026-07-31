@@ -171,6 +171,20 @@ export default function SharedPlanPreviewScreen() {
             </Text>
           </View>
         ) : null}
+
+        {/* Without this the page was a shop window: someone who cared enough to
+            open the link could read about the person but not actually pray for
+            them without signing up first. */}
+        {data.intercessor_prayer ? (
+          <View className="gap-2 rounded-2xl bg-slate-50 p-5">
+            <Text className="text-sm font-medium text-slate-400">
+              {t("intercession.prayerFor", { name: data.owner_name })}
+            </Text>
+            <Text className="text-lg leading-8 text-slate-800">
+              {data.intercessor_prayer}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View className="mt-auto gap-3 pt-12">

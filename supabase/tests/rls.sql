@@ -15,6 +15,17 @@ begin
 end;
 $$;
 
+create or replace function pg_temp.raises(stmt text)
+returns boolean language plpgsql as $$
+begin
+  execute stmt;
+  return false;
+exception
+  when others then
+    return true;
+end;
+$$;
+
 -- ===========================================================================
 -- Fixtures (as superuser, RLS bypassed)
 -- ===========================================================================
@@ -403,6 +414,62 @@ select pg_temp.assert(
      join pg_namespace n on n.oid = c.relnamespace and n.nspname = 'public'
     where t.schemaname = 'public' and not c.relrowsecurity) = 0,
   'RLS is enabled on every table in the public schema');
+
+
+-- ===========================================================================
+-- The owner's own prayer stays the owner's
+--
+-- 20260730100200 promised this in a comment from the very first migration —
+-- "never prayer_body, the personal prayer text stays private even when the link
+-- is public" — but until the column grant landed it was only true of the RPCs'
+-- column lists. The table grant was table-wide and RLS is row-level, so anyone
+-- a plan was shared with could simply ask for the column.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_plan_days) > 0,
+  'Beto can still read the days of the plan shared with him');
+
+select pg_temp.assert(
+  pg_temp.raises($q$ select prayer_body from public.prayer_plan_days $q$),
+  'but not Ana''s first-person prayer');
+
+select pg_temp.assert(
+  pg_temp.raises($q$ select daily_action from public.prayer_plan_days $q$),
+  'nor the action she was given to do');
+
+select pg_temp.assert(
+  not pg_temp.raises($q$ select intercessor_prayer from public.prayer_plan_days $q$),
+  'the prayer written for him to pray is his to read');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.get_my_day('aaaa0000-0000-0000-0000-000000000001')) = 1,
+  'Ana reads her own day through get_my_day');
+
+select pg_temp.assert(
+  (select prayer_body is not null from public.get_my_day('aaaa0000-0000-0000-0000-000000000001')),
+  'and it carries the prayer the column grant hides from everyone else');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.get_my_day('aaaa0000-0000-0000-0000-000000000001')) = 0,
+  'and Beto gets nothing from it, shared plan or not');
+
+commit;
 
 \echo ''
 \echo '================================'

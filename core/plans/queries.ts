@@ -91,19 +91,16 @@ export const useTodayDay = (planId: string | undefined, isGenerating = false) =>
     refetchInterval: (query) =>
       isGenerating && !query.state.data ? 3000 : false,
     queryFn: async (): Promise<PlanDay | null> => {
-      const { data, error } = await supabase
-        .from("prayer_plan_days")
-        .select(
-          "id, day_number, title, scripture_ref, scripture_text, interpretation, daily_action, prayer_body, unlock_date, intercession_count",
-        )
-        .eq("plan_id", planId!)
-        .order("day_number", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Through a function rather than the table: prayer_body and daily_action
+      // are no longer in the caller's column grant, because a plan you shared
+      // used to let the recipient read your own first-person prayer.
+      const { data, error } = await supabase.rpc("get_my_day", {
+        p_plan_id: planId!,
+      });
 
       if (error) throw error;
 
-      return data as PlanDay | null;
+      return ((data ?? []) as PlanDay[])[0] ?? null;
     },
   });
 

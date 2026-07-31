@@ -1,5 +1,4 @@
 import { router } from "expo-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
@@ -7,11 +6,7 @@ import { Button } from "@/components/Button";
 import { PrayForCard } from "@/components/PrayForCard";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
-import {
-  AlreadyPrayed,
-  usePlansSharedWithMe,
-  usePrayForSomeone,
-} from "@/core/intercessions/queries";
+import { usePlansSharedWithMe } from "@/core/intercessions/queries";
 
 export default function Pray() {
   const { t } = useTranslation();
@@ -24,27 +19,6 @@ export default function Pray() {
     isError,
     refetch,
   } = usePlansSharedWithMe(userId);
-  const pray = usePrayForSomeone(userId);
-
-  const [pendingDayId, setPendingDayId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handlePray = async (dayId: string, message?: string) => {
-    setError(null);
-    setPendingDayId(dayId);
-
-    try {
-      await pray.mutateAsync({ dayId, message });
-    } catch (caught) {
-      // Pressing twice is not an error worth alarming anyone about: the list
-      // refreshes and the card simply shows as already prayed.
-      if (!(caught instanceof AlreadyPrayed)) {
-        setError(t("common.errorGeneric"));
-      }
-    } finally {
-      setPendingDayId(null);
-    }
-  };
 
   if (isLoading) {
     return <LoadingState />;
@@ -92,18 +66,16 @@ export default function Pray() {
         <Text className="text-base text-slate-500">{t("pray.subtitle")}</Text>
       </View>
 
-      {error ? (
-        <Text className="text-sm text-red-500" accessibilityRole="alert">
-          {error}
-        </Text>
-      ) : null}
-
       {plans.map((plan) => (
         <PrayForCard
           key={plan.plan_id}
           plan={plan}
-          pending={pendingDayId === plan.day_id}
-          onPray={(message) => void handlePray(plan.day_id, message)}
+          onOpen={() =>
+            router.push({
+              pathname: "/orar/[planId]",
+              params: { planId: plan.plan_id },
+            })
+          }
         />
       ))}
     </ScrollView>

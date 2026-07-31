@@ -14,6 +14,7 @@ export type SharedPlanPreview = {
   scripture_ref: string | null;
   scripture_text: string | null;
   interpretation: string | null;
+  intercessor_prayer: string | null;
   intercession_count: number;
 };
 

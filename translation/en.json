@@ -30,7 +30,8 @@
     "subtitle": "Plans other people have shared with you.",
     "empty": "Nobody has shared a plan with you yet.",
     "emptyBody": "When someone does, it will show up here so you can pray for their day.",
-    "emptyCta": "Create a circle"
+    "emptyCta": "Create a circle",
+    "planGone": "You no longer have access to this plan."
   },
   "profile": {
     "title": "Your profile",
@@ -183,7 +184,9 @@
       "strength": "💪 Strength",
       "godHears": "🕊️ God hears you",
       "hugs": "❤️ A hug"
-    }
+    },
+    "prayerFor": "A prayer for {{name}}",
+    "openToPray": "Open to pray"
   },
   "circles": {
     "title": "Your circles",

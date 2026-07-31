@@ -50,6 +50,17 @@ export const PLAN_JSON_SCHEMA = {
             description:
               "Oración en primera persona, en español, entre 60 y 150 palabras.",
           },
+          intercessor_prayer: {
+            type: "string",
+            description:
+              "Oración para que OTRA PERSONA la rece por quien recorre el plan. " +
+              "En español, entre 40 y 90 palabras. Dirígete a Dios hablando de " +
+              "esa persona por su nombre y en tercera persona ('te pido por " +
+              "Marta', nunca 'te pido por mí'). Concuerda el género con quien " +
+              "recibe la oración, no con quien la reza. La leerán personas que " +
+              "solo conocen el tema del plan, así que no repitas literalmente " +
+              "lo que escribió ni añadas detalles que no haya compartido.",
+          },
         },
         required: [
           "day_number",
@@ -58,6 +69,7 @@ export const PLAN_JSON_SCHEMA = {
           "interpretation",
           "daily_action",
           "prayer_body",
+          "intercessor_prayer",
         ],
         additionalProperties: false,
       },
@@ -74,6 +86,7 @@ export type GeneratedDay = {
   interpretation: string;
   daily_action: string;
   prayer_body: string;
+  intercessor_prayer: string;
 };
 
 export type GeneratedPlan = {
@@ -99,7 +112,8 @@ export const isGeneratedPlan = (value: unknown): value is GeneratedPlan => {
         typeof d.scripture_ref === "string" &&
         typeof d.interpretation === "string" &&
         typeof d.daily_action === "string" &&
-        typeof d.prayer_body === "string"
+        typeof d.prayer_body === "string" &&
+        typeof d.intercessor_prayer === "string"
       );
     })
   );
