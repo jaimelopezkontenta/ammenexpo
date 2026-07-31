@@ -24,20 +24,26 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<"email" | "password" | null>(
+    null,
+  );
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setError(null);
+    setErrorField(null);
     setNotice(null);
 
     if (!isValidEmail(email)) {
       setError(t("auth.emailInvalid"));
+      setErrorField("email");
       return;
     }
 
     if (password.length < MIN_PASSWORD_LENGTH) {
       setError(t("auth.passwordTooShort"));
+      setErrorField("password");
       return;
     }
 
@@ -87,6 +93,7 @@ export default function SignUp() {
         <View className="mt-8 gap-4">
           <TextField
             label={t("auth.email")}
+            error={errorField === "email" ? error : null}
             value={email}
             onChangeText={setEmail}
             placeholder={t("auth.emailPlaceholder")}
@@ -97,6 +104,7 @@ export default function SignUp() {
           />
           <TextField
             label={t("auth.password")}
+            error={errorField === "password" ? error : null}
             value={password}
             onChangeText={setPassword}
             placeholder={t("auth.passwordPlaceholder")}
@@ -108,7 +116,10 @@ export default function SignUp() {
             returnKeyType="go"
           />
 
-          {error ? (
+          {/* Only errors that belong to no single field stay here; the rest
+              are rendered by the field itself, so a screen reader hears which
+              one is wrong. */}
+          {error && !errorField ? (
             <Text className="text-sm text-red-500" accessibilityRole="alert">
               {error}
             </Text>

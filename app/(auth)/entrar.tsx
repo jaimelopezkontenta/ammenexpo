@@ -19,13 +19,18 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<"email" | "password" | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setError(null);
+    setErrorField(null);
 
     if (!isValidEmail(email)) {
       setError(t("auth.emailInvalid"));
+      setErrorField("email");
       return;
     }
 
@@ -70,6 +75,7 @@ export default function SignIn() {
         <View className="mt-8 gap-4">
           <TextField
             label={t("auth.email")}
+            error={errorField === "email" ? error : null}
             value={email}
             onChangeText={setEmail}
             placeholder={t("auth.emailPlaceholder")}
@@ -80,6 +86,7 @@ export default function SignIn() {
           />
           <TextField
             label={t("auth.password")}
+            error={errorField === "password" ? error : null}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -90,7 +97,10 @@ export default function SignIn() {
             returnKeyType="go"
           />
 
-          {error ? (
+          {/* Only errors that belong to no single field stay here; the rest
+              are rendered by the field itself, so a screen reader hears which
+              one is wrong. */}
+          {error && !errorField ? (
             <Text className="text-sm text-red-500" accessibilityRole="alert">
               {error}
             </Text>
