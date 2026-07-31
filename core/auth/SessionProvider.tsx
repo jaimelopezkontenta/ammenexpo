@@ -125,8 +125,22 @@ export const SessionProvider = ({
       // must stay a failure so the query retries instead of deciding.
       if (error) throw error;
 
-      return Boolean(settings?.onboarding_answers);
+      // No row at all is a different thing from an unanswered questionnaire,
+      // and collapsing the two is what built the trap. `handle_new_user()`
+      // writes this row in the same trigger as the profile, so every real
+      // account has one; a missing one means the session points at a user who
+      // no longer exists — a token the client still believes in. That belongs
+      // on the error screen, which offers signing out, not in an onboarding
+      // whose submit button can never succeed.
+      if (!settings) {
+        throw new Error("profile_settings_missing");
+      }
+
+      return Boolean(settings.onboarding_answers);
     },
+    // A vanished account will not come back on the fourth attempt, and every
+    // retry is another few seconds of a blank spinner.
+    retry: 1,
   });
 
   const hasOnboarded = userId ? (data ?? null) : null;

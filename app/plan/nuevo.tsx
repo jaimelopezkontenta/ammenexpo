@@ -8,6 +8,11 @@ import { ChoiceChips } from "@/components/ChoiceChips";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useMyCircles } from "@/core/circles/queries";
+import {
+  CUSTOM_TOPIC_MAX,
+  TOPIC_KEYS,
+  toggleWithLimit,
+} from "@/core/onboarding/options";
 import { useOnboardingAnswers } from "@/core/profile/queries";
 import {
   PlanLimitReached,
@@ -15,19 +20,7 @@ import {
   type PlanVisibility,
 } from "@/core/plans/queries";
 
-const TOPIC_KEYS = [
-  "peace",
-  "wisdom",
-  "health",
-  "family",
-  "provision",
-  "forgiveness",
-  "purpose",
-  "gratitude",
-] as const;
-
 const DURATIONS = [7, 14, 21, 30];
-const CUSTOM_TOPIC_MAX = 200;
 
 export default function NewPlan() {
   const { t } = useTranslation();
@@ -46,7 +39,10 @@ export default function NewPlan() {
   const [draftTopics, setDraftTopics] = useState<string[] | null>(null);
   const topics = draftTopics ?? answers?.topics ?? [];
   const setTopics = (next: string[]) => setDraftTopics(next);
-  const [customTopic, setCustomTopic] = useState("");
+  // Same shape as the topics above: what was written during onboarding shows
+  // through as the starting point, and clearing it stays cleared.
+  const [draftCustom, setDraftCustom] = useState<string | null>(null);
+  const customTopic = draftCustom ?? answers?.custom_topic ?? "";
   const [duration, setDuration] = useState(7);
   const [visibility, setVisibility] = useState<PlanVisibility>("private");
   const [selectedCircles, setSelectedCircles] = useState<string[]>([]);
@@ -54,11 +50,6 @@ export default function NewPlan() {
   const [atLimit, setAtLimit] = useState(false);
 
   const hasCircles = (circles ?? []).length > 0;
-
-  const toggle = (list: string[], value: string) =>
-    list.includes(value)
-      ? list.filter((entry) => entry !== value)
-      : [...list, value];
 
   const handleCreate = async () => {
     setError(null);
@@ -141,7 +132,7 @@ export default function NewPlan() {
               label: t(`onboarding.topics.${key}`),
             }))}
             selected={topics}
-            onToggle={(value) => setTopics(toggle(topics, value))}
+            onToggle={(value) => setTopics(toggleWithLimit(topics, value))}
             multiple
           />
         </View>
@@ -150,7 +141,7 @@ export default function NewPlan() {
           <TextField
             label={t("newPlan.customLabel")}
             value={customTopic}
-            onChangeText={setCustomTopic}
+            onChangeText={setDraftCustom}
             placeholder={t("newPlan.customPlaceholder")}
             maxLength={CUSTOM_TOPIC_MAX}
             multiline
@@ -201,7 +192,7 @@ export default function NewPlan() {
                   }))}
                   selected={selectedCircles}
                   onToggle={(value) =>
-                    setSelectedCircles((list) => toggle(list, value))
+                    setSelectedCircles((list) => toggleWithLimit(list, value))
                   }
                   multiple
                 />

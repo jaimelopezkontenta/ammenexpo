@@ -10,19 +10,15 @@ import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
+  REMINDER_HOURS,
+  REMINDER_MAX,
+  toggleWithLimit,
+} from "@/core/onboarding/options";
+import {
   useDeleteAccount,
   useProfile,
   useUpdateProfile,
 } from "@/core/profile/queries";
-
-/** The same hours and keys the onboarding offers, so the two screens agree. */
-const REMINDER_HOURS = [
-  { key: "early", hour: 6 },
-  { key: "morning", hour: 8 },
-  { key: "noon", hour: 12 },
-  { key: "evening", hour: 18 },
-  { key: "night", hour: 21 },
-];
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -37,7 +33,7 @@ export default function Profile() {
   // holds. Seeding this from an effect instead would fight every refetch for
   // control of the text somebody is in the middle of typing.
   const [draftName, setDraftName] = useState<string | null>(null);
-  const [draftHour, setDraftHour] = useState<number | null>(null);
+  const [draftHours, setDraftHours] = useState<number[] | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -51,9 +47,13 @@ export default function Profile() {
   }
 
   const name = draftName ?? profile.display_name;
-  const hour = draftHour ?? profile.reminder_hour;
-  const dirty =
-    name.trim() !== profile.display_name || hour !== profile.reminder_hour;
+  const hours = draftHours ?? profile.reminder_hours;
+  // Content, not reference: `draftHours !== profile.reminder_hours` is true for
+  // two arrays holding the same numbers, so every render would look dirty.
+  const sameHours =
+    hours.length === profile.reminder_hours.length &&
+    hours.every((entry) => profile.reminder_hours.includes(entry));
+  const dirty = name.trim() !== profile.display_name || !sameHours;
 
   const handleSave = async () => {
     setNotice(null);
@@ -62,11 +62,11 @@ export default function Profile() {
     try {
       await update.mutateAsync({
         displayName: name.trim() !== profile.display_name ? name : undefined,
-        reminderHour: hour !== profile.reminder_hour ? hour : undefined,
+        reminderHours: sameHours ? undefined : hours,
       });
 
       setDraftName(null);
-      setDraftHour(null);
+      setDraftHours(null);
       setNotice(t("profile.saved"));
     } catch {
       setError(t("common.errorGeneric"));
@@ -125,8 +125,16 @@ export default function Profile() {
             value: String(slot.hour),
             label: t(`onboarding.hours.${slot.key}`),
           }))}
-          selected={[String(hour)]}
-          onToggle={(value) => setDraftHour(Number(value))}
+          selected={hours.map(String)}
+          onToggle={(value) =>
+            setDraftHours(
+              toggleWithLimit(hours.map(String), value, REMINDER_MAX).map(
+                Number,
+              ),
+            )
+          }
+          max={REMINDER_MAX}
+          multiple
         />
         {/* Honest about what it does today: the hour is stored and nothing
             reads it until push exists. */}

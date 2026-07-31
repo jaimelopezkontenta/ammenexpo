@@ -97,7 +97,15 @@
       "health": "Health",
       "decision": "An important decision",
       "gratitude": "Gratitude",
-      "faith": "Growing in faith"
+      "faith": "Growing in faith",
+      "loneliness": "Loneliness",
+      "relationship": "My relationship",
+      "breakup": "A breakup",
+      "money": "Money worries",
+      "children": "My children",
+      "studies": "Studying",
+      "farFromHome": "Far from home",
+      "lovedOneIll": "Someone I love is ill"
     },
     "topics": {
       "peace": "Peace",
@@ -107,7 +115,15 @@
       "provision": "Provision",
       "forgiveness": "Forgiveness",
       "purpose": "Purpose",
-      "gratitude": "Gratitude"
+      "gratitude": "Gratitude",
+      "strength": "Strength",
+      "patience": "Patience",
+      "hope": "Hope",
+      "protection": "Protection",
+      "guidance": "Guidance",
+      "comfort": "Comfort",
+      "rest": "Rest",
+      "courage": "Courage"
     },
     "hours": {
       "early": "Early, 6:00",
@@ -122,7 +138,13 @@
       "feminine": "Feminine",
       "masculine": "Masculine",
       "neutral": "Neutral"
-    }
+    },
+    "seasonHint": "You can pick up to {{count}}.",
+    "seasonMax": "You've picked {{count}}. Remove one to change it.",
+    "timeHint": "You can pick up to {{count}} times of day.",
+    "customLabel": "Anything specific?",
+    "customPlaceholder": "My sister is ill, a decision about moving…",
+    "customHint": "Optional. It's what makes your plan unlike anyone else's."
   },
   "plan": {
     "todayTitle": "Today's prayer",

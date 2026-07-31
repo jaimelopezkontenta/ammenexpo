@@ -11,6 +11,12 @@ interface ChoiceChipsProps {
   onToggle: (value: string) => void;
   /** Single choice renders as radios, multiple as checkboxes. */
   multiple?: boolean;
+  /**
+   * How many can be chosen at once. Past the limit the unchosen chips go
+   * disabled rather than silently ignoring the tap — a control that stops
+   * responding without saying so reads as broken, not as full.
+   */
+  max?: number;
 }
 
 export const ChoiceChips = ({
@@ -18,7 +24,10 @@ export const ChoiceChips = ({
   selected,
   onToggle,
   multiple = false,
+  max,
 }: ChoiceChipsProps) => {
+  const atLimit = max !== undefined && selected.length >= max;
+
   return (
     <View
       className="flex-row flex-wrap gap-2"
@@ -26,6 +35,9 @@ export const ChoiceChips = ({
     >
       {options.map((option) => {
         const isSelected = selected.includes(option.value);
+        // Deselecting has to keep working at the limit, or somebody who picked
+        // three would be stuck with those three.
+        const isDisabled = atLimit && !isSelected;
 
         return (
           <Pressable
@@ -37,15 +49,16 @@ export const ChoiceChips = ({
             // than a plain button, because the reader says "checkbox" and then
             // cannot say whether it is checked. `aria-checked` fixes web.
             accessibilityRole={multiple ? "checkbox" : "radio"}
-            accessibilityState={{ checked: isSelected }}
+            accessibilityState={{ checked: isSelected, disabled: isDisabled }}
             aria-checked={isSelected}
+            disabled={isDisabled}
             accessibilityLabel={option.label}
             onPress={() => onToggle(option.value)}
             className={`rounded-full border px-4 py-2.5 ${
               isSelected
                 ? "border-slate-900 bg-slate-900"
                 : "border-slate-200 bg-white"
-            }`}
+            } ${isDisabled ? "opacity-40" : ""}`}
           >
             <Text
               className={

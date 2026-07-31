@@ -8,7 +8,7 @@ export { liveStreak, type Streak } from "./streak";
 
 export type Profile = {
   display_name: string;
-  reminder_hour: number;
+  reminder_hours: number[];
   timezone: string;
   locale: string;
 };
@@ -47,7 +47,7 @@ export const useProfile = (userId: string | undefined) =>
           .maybeSingle(),
         supabase
           .from("profile_settings")
-          .select("reminder_hour, timezone, locale")
+          .select("reminder_hours, timezone, locale")
           .eq("id", userId!)
           .maybeSingle(),
       ]);
@@ -69,7 +69,7 @@ export const useUpdateProfile = (userId: string | undefined) => {
   return useMutation({
     mutationFn: async (changes: {
       displayName?: string;
-      reminderHour?: number;
+      reminderHours?: number[];
     }) => {
       if (changes.displayName !== undefined) {
         const { data, error } = await supabase
@@ -84,10 +84,10 @@ export const useUpdateProfile = (userId: string | undefined) => {
         if (!data?.length) throw new Error("profile_update_no_rows");
       }
 
-      if (changes.reminderHour !== undefined) {
+      if (changes.reminderHours !== undefined) {
         const { data, error } = await supabase
           .from("profile_settings")
-          .update({ reminder_hour: changes.reminderHour })
+          .update({ reminder_hours: changes.reminderHours })
           .eq("id", userId!)
           .select("id");
 
@@ -124,10 +124,14 @@ export const useDeleteAccount = () =>
   });
 
 export type OnboardingAnswers = {
+  /** Several since the onboarding went multi-select. */
+  seasons?: string[];
+  /** The single-season shape, kept so older rows still read. */
   season?: string;
   topics?: string[];
+  custom_topic?: string;
   gender?: string;
-  minutes?: number;
+  reminder_keys?: string[];
 };
 
 /**

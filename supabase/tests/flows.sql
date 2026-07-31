@@ -17,6 +17,16 @@ begin
 end;
 $$;
 
+create or replace function pg_temp.raises(stmt text)
+returns boolean language plpgsql as $$
+begin
+  execute stmt;
+  return false;
+exception when others then
+  return true;
+end;
+$$;
+
 -- ===========================================================================
 -- Fixtures
 -- ===========================================================================
@@ -69,9 +79,9 @@ set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","r
 select pg_temp.assert(
   (public.complete_onboarding(
      'Carla',
-     '{"season":"cambio de trabajo","topics":["paz"],"minutes":10}'::jsonb,
+     '{"seasons":["work"],"topics":["peace"]}'::jsonb,
      'America/Mexico_City',
-     7::smallint,
+     array[7]::smallint[],
      'es') ->> 'ok') = 'true',
   'complete_onboarding succeeds');
 
@@ -94,8 +104,8 @@ select pg_temp.assert(
   'display name was saved');
 
 select pg_temp.assert(
-  (select reminder_hour from public.profile_settings
-    where id = '33333333-3333-3333-3333-333333333333') = 7,
+  (select reminder_hours from public.profile_settings
+    where id = '33333333-3333-3333-3333-333333333333') = array[7]::smallint[],
   'reminder hour was saved');
 
 select pg_temp.assert(
@@ -263,6 +273,107 @@ set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","r
 select pg_temp.assert(
   not (public.redeem_share_token('no-existe') ->> 'ok')::boolean,
   'a dead token answers no without raising');
+
+commit;
+
+-- ===========================================================================
+-- El botón que decía que sí sin hacer nada
+--
+-- `complete_onboarding` actualizaba `profile_settings` sin mirar cuántas filas
+-- había tocado y terminaba devolviendo `ok:true` igualmente. Sin fila, escribía
+-- cero y contestaba que todo bien; `bienvenida.tsx` no navega por su cuenta, y
+-- lo único que saca a alguien de ahí es que `hasOnboarded` cambie. Resultado:
+-- el botón gira, para, y la persona se queda encerrada en el onboarding sin un
+-- error ni una línea en consola.
+--
+-- La assertion de arriba —`-> 'ok' = 'true'`— no lo habría cazado nunca: es una
+-- constante, y pasaría igual contra una función que no hiciera absolutamente
+-- nada. Esta sí.
+-- ===========================================================================
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values ('55555555-5555-5555-5555-555555555555', 'sinfila@test.local',
+        'authenticated', 'authenticated', '{"display_name":"Sin fila"}');
+
+-- `handle_new_user()` crea la fila de settings junto con la del perfil, así que
+-- toda cuenta real tiene la suya. Borrarla reproduce lo único que hace que
+-- falte de verdad: una sesión que apunta a un usuario que ya no existe.
+delete from public.profile_settings
+ where id = '55555555-5555-5555-5555-555555555555';
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.complete_onboarding(
+      'Sin fila',
+      '{"seasons":["anxiety"],"topics":["peace"]}'::jsonb,
+      'UTC',
+      array[8]::smallint[],
+      'es')
+  $q$),
+  'onboarding fails loudly when there is no settings row to write');
+
+commit;
+
+
+-- ===========================================================================
+-- Varias horas al día, hasta tres
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (public.complete_onboarding(
+     'Carla',
+     '{"seasons":["anxiety","work"],"topics":["peace","hope"]}'::jsonb,
+     'America/Mexico_City',
+     array[6, 12, 21]::smallint[],
+     'es') ->> 'ok') = 'true',
+  'three prayer times a day is allowed');
+
+select pg_temp.assert(
+  (select reminder_hours from public.profile_settings
+    where id = '33333333-3333-3333-3333-333333333333') = array[6, 12, 21]::smallint[],
+  'and all three are stored');
+
+commit;
+
+-- El tope vive en la base y no solo en la pantalla: sin él, cada hora extra
+-- será un aviso diario más cuando llegue el push.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.profile_settings
+       set reminder_hours = array[6, 9, 12, 21]::smallint[]
+     where id = '33333333-3333-3333-3333-333333333333'
+  $q$),
+  'a fourth prayer time is refused');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.profile_settings
+       set reminder_hours = array[24]::smallint[]
+     where id = '33333333-3333-3333-3333-333333333333'
+  $q$),
+  'and so is an hour that does not exist');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.profile_settings
+       set reminder_hours = array[]::smallint[]
+     where id = '33333333-3333-3333-3333-333333333333'
+  $q$),
+  'and so is none at all');
 
 commit;
 

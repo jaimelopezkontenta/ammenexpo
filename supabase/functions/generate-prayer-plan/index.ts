@@ -92,6 +92,9 @@ type PlanRow = {
   status: string;
   source_prompt: {
     answers?: {
+      /** Several since the onboarding went multi-select. */
+      seasons?: string[];
+      /** The single-season shape, kept so older rows still read. */
       season?: string;
       topics?: string[];
       gender?: string;
@@ -200,7 +203,9 @@ const writeChunk = async ({
   const userPrompt = buildUserPrompt({
     displayName,
     durationDays: plan.duration_days,
-    season: answers.season ?? null,
+    // Plans written before the onboarding went multi-select carry a single
+    // `season`; reading both keeps them generating as they always did.
+    seasons: answers.seasons ?? (answers.season ? [answers.season] : []),
     topics: answers.topics ?? [],
     gender: answers.gender ?? null,
     customTopic: answers.custom_topic ?? null,

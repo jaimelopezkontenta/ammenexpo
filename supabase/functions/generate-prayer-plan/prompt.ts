@@ -92,7 +92,7 @@ type PreviousDay = {
 type UserPromptInput = {
   displayName: string;
   durationDays: number;
-  season: string | null;
+  seasons: string[];
   topics: string[];
   /** Spanish inflects for gender in almost every prayer; never guess it. */
   gender?: string | null;
@@ -114,6 +114,14 @@ const SEASON_LABELS: Record<string, string> = {
   decision: "tiene que tomar una decisión importante",
   gratitude: "quiere vivir desde la gratitud",
   faith: "quiere crecer en su fe",
+  loneliness: "se siente sola o solo",
+  relationship: "está pasando por una etapa difícil con su pareja",
+  breakup: "está atravesando una ruptura",
+  money: "está pasando por dificultades económicas",
+  children: "está preocupada o preocupado por sus hijos",
+  studies: "está en una etapa exigente de estudios",
+  farFromHome: "vive lejos de casa y de los suyos",
+  lovedOneIll: "acompaña a alguien querido que está enfermo",
 };
 
 const TOPIC_LABELS: Record<string, string> = {
@@ -125,6 +133,14 @@ const TOPIC_LABELS: Record<string, string> = {
   forgiveness: "perdón",
   purpose: "propósito",
   gratitude: "gratitud",
+  strength: "fortaleza",
+  patience: "paciencia",
+  hope: "esperanza",
+  protection: "protección",
+  guidance: "dirección",
+  comfort: "consuelo",
+  rest: "descanso",
+  courage: "valentía",
 };
 
 const GENDER_LINES: Record<string, string> = {
@@ -139,7 +155,7 @@ const GENDER_LINES: Record<string, string> = {
 export const buildUserPrompt = ({
   displayName,
   durationDays,
-  season,
+  seasons,
   topics,
   gender,
   customTopic,
@@ -148,12 +164,26 @@ export const buildUserPrompt = ({
   toDay,
   previousDays,
 }: UserPromptInput) => {
-  const seasonLine = season
-    ? (SEASON_LABELS[season] ?? `describe su momento como "${season}"`)
+  // Unknown keys are **dropped, not echoed**. They used to be interpolated
+  // straight into the prompt — `describe su momento como "${season}"` and
+  // `TOPIC_LABELS[topic] ?? topic` — and nothing on the server validates them:
+  // the edge function filters `body.topics` for `typeof === "string"` and
+  // nothing more. That was an unfenced channel into the prompt of exactly the
+  // kind `custom_topic` is carefully protected against below.
+  const seasonPhrases = seasons
+    .map((key) => SEASON_LABELS[key])
+    .filter((phrase): phrase is string => Boolean(phrase));
+
+  const seasonLine = seasonPhrases.length
+    ? seasonPhrases.join("; ")
     : "no ha especificado qué está viviendo";
 
-  const topicLine = topics.length
-    ? topics.map((topic) => TOPIC_LABELS[topic] ?? topic).join(", ")
+  const topicWords = topics
+    .map((key) => TOPIC_LABELS[key])
+    .filter((word): word is string => Boolean(word));
+
+  const topicLine = topicWords.length
+    ? topicWords.join(", ")
     : "no ha elegido temas concretos";
 
   const genderLine = GENDER_LINES[gender ?? ""] ?? GENDER_LINES.neutral;

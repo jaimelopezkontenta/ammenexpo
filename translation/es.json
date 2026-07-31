@@ -97,7 +97,15 @@
       "health": "Salud",
       "decision": "Una decisión importante",
       "gratitude": "Gratitud",
-      "faith": "Crecer en la fe"
+      "faith": "Crecer en la fe",
+      "loneliness": "Soledad",
+      "relationship": "Mi pareja",
+      "breakup": "Una ruptura",
+      "money": "Dificultades económicas",
+      "children": "Mis hijos",
+      "studies": "Los estudios",
+      "farFromHome": "Lejos de casa",
+      "lovedOneIll": "Alguien querido está enfermo"
     },
     "topics": {
       "peace": "Paz",
@@ -107,7 +115,15 @@
       "provision": "Provisión",
       "forgiveness": "Perdón",
       "purpose": "Propósito",
-      "gratitude": "Gratitud"
+      "gratitude": "Gratitud",
+      "strength": "Fortaleza",
+      "patience": "Paciencia",
+      "hope": "Esperanza",
+      "protection": "Protección",
+      "guidance": "Dirección",
+      "comfort": "Consuelo",
+      "rest": "Descanso",
+      "courage": "Valentía"
     },
     "hours": {
       "early": "Temprano, 6:00",
@@ -122,7 +138,13 @@
       "feminine": "En femenino",
       "masculine": "En masculino",
       "neutral": "En neutro"
-    }
+    },
+    "seasonHint": "Puedes elegir hasta {{count}}.",
+    "seasonMax": "Has elegido {{count}}. Quita una para cambiarla.",
+    "timeHint": "Puedes elegir hasta {{count}} momentos del día.",
+    "customLabel": "¿Hay algo concreto?",
+    "customPlaceholder": "Mi hermana está enferma, una decisión sobre mudarme…",
+    "customHint": "Opcional. Es lo que hará que tu plan no se parezca a ningún otro."
   },
   "plan": {
     "todayTitle": "Tu oración de hoy",
