@@ -141,7 +141,14 @@ export default function ChapterReader() {
   }
 
   if (isLoading) {
-    return <LoadingState />;
+    return (
+      <>
+        <Stack.Screen
+          options={{ title: t("bible.title"), headerShown: true }}
+        />
+        <LoadingState />
+      </>
+    );
   }
 
   // An error and an empty chapter look the same from here, and both used to

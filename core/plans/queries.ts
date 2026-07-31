@@ -391,3 +391,38 @@ export const usePlanDay = (
       return ((data ?? []) as PlanDay[])[0] ?? null;
     },
   });
+
+/**
+ * Asks the server to write the stretches a stalled generation never got to.
+ *
+ * A plan whose first stretch landed and whose second crashed sat on the home
+ * screen saying "seguimos preparándolo" forever: `isStuckGenerating` was true,
+ * but both branches that handle it require *no* day, and this plan has one. So
+ * the only state that offered a way out was the one where nothing had been
+ * written at all — and this one, which keeps everything it already has, offered
+ * none.
+ *
+ * The server's continuation path skips the paywall by design: the plan was
+ * already paid for by being created.
+ */
+export const useContinuePlan = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (planId: string) => {
+      const { error } = await supabase.functions.invoke(
+        "generate-prayer-plan",
+        {
+          body: { continue_plan_id: planId },
+        },
+      );
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
+      void queryClient.invalidateQueries({ queryKey: ["todayDay"] });
+      void queryClient.invalidateQueries({ queryKey: ["planProgress"] });
+    },
+  });
+};

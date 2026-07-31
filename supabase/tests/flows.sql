@@ -193,6 +193,79 @@ select pg_temp.assert(
 
 commit;
 
+-- ===========================================================================
+-- Un enlace abierto por alguien que ya tiene cuenta
+--
+-- El canje vivía en un solo sitio: `complete_onboarding()`, que solo corre la
+-- primera vez. Quien ya tenía cuenta —o quien tenía que confirmar el correo y
+-- volvía por `entrar`— dejaba el token en el almacenamiento del dispositivo y
+-- nadie lo volvía a leer jamás. La invitación desaparecía sin decir nada, y la
+-- persona aterrizaba en "Aún no tienes un plan", a una pestaña de distancia de
+-- aquello por lo que había venido.
+--
+-- El cliente lo canjea ahora en cualquier inicio de sesión. Esto fija la parte
+-- del servidor de la que depende: que la RPC funcione fuera del onboarding y
+-- que repetirla no rompa nada.
+-- ===========================================================================
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values ('44444444-4444-4444-4444-444444444444', 'dani@test.local',
+        'authenticated', 'authenticated', '{"display_name":"Dani"}');
+
+-- Dani hizo el onboarding hace meses: ese camino ya no va a volver a pasar
+-- por su cuenta.
+update public.profile_settings
+   set onboarding_answers = '{"topics":["peace"]}'::jsonb
+ where id = '44444444-4444-4444-4444-444444444444';
+
+insert into public.share_links (token, scope, plan_id, created_by)
+values ('enlace-para-dani', 'plan',
+        'aaaa0000-0000-0000-0000-000000000009', :ANA);
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.plans_shared_with_me()) = 0,
+  'Dani starts with nothing shared with her');
+
+select pg_temp.assert(
+  (public.redeem_share_token('enlace-para-dani') ->> 'ok')::boolean,
+  'and can redeem a link without ever going through onboarding again');
+
+select pg_temp.assert(
+  (select count(*) from public.plans_shared_with_me()) = 1,
+  'so the plan she came for is on her Orar tab');
+
+-- El cliente lo intenta en cada inicio de sesión hasta que lo consigue, así
+-- que repetirlo tiene que ser inofensivo.
+select pg_temp.assert(
+  (public.redeem_share_token('enlace-para-dani') ->> 'ok')::boolean,
+  'redeeming the same link twice is not an error');
+
+select pg_temp.assert(
+  (select count(*) from public.plans_shared_with_me()) = 1,
+  'and does not duplicate the share');
+
+commit;
+
+-- Un enlace muerto responde `ok:false` sin lanzar excepción: es lo que permite
+-- al cliente distinguir "este enlace ya no vale, deja de intentarlo" de "se
+-- cayó la red, guárdalo para la próxima".
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select pg_temp.assert(
+  not (public.redeem_share_token('no-existe') ->> 'ok')::boolean,
+  'a dead token answers no without raising');
+
+commit;
+
 \echo ''
 \echo '===================================='
 \echo ' ACQUISITION LOOP ASSERTIONS PASSED'

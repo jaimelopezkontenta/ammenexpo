@@ -110,7 +110,7 @@ export default function SharedPlanPreviewScreen() {
                 {t("share.deadLinkInvite")}
               </Text>
               <Link href="/crear-cuenta" asChild>
-                <Button title={t("share.previewCta")} />
+                <Button title={t("share.deadLinkCta")} />
               </Link>
               <Link href="/entrar" asChild>
                 <Button title={t("share.alreadyMember")} variant="ghost" />
@@ -195,10 +195,12 @@ export default function SharedPlanPreviewScreen() {
         ) : (
           <>
             <Text className="text-center text-base text-slate-500">
-              {t("share.previewSignupHint")}
+              {t("share.previewSignupHint", { name: data.owner_name })}
             </Text>
             <Link href="/crear-cuenta" asChild>
-              <Button title={t("share.previewCta")} />
+              <Button
+                title={t("share.previewCta", { name: data.owner_name })}
+              />
             </Link>
             <Link href="/entrar" asChild>
               <Button title={t("share.alreadyMember")} variant="ghost" />

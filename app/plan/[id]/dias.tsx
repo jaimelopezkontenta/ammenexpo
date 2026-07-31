@@ -20,7 +20,12 @@ export default function PlanDays() {
   const { data: days, isLoading, isError, refetch } = usePlanDays(id);
 
   if (isLoading) {
-    return <LoadingState />;
+    return (
+      <>
+        <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
+        <LoadingState />
+      </>
+    );
   }
 
   if (isError) {

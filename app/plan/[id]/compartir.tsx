@@ -25,7 +25,7 @@ export default function SharePlan() {
   const userId = session?.user.id;
 
   const { data: plan, isLoading, isError, refetch } = usePlanSummary(id);
-  const { data: circles } = useMyCircles(userId);
+  const { data: circles, isError: circlesFailed } = useMyCircles(userId);
   const { data: sharedCircles } = usePlanCircles(id);
   const { data: link, isLoading: linkLoading } = usePlanShareLink(id);
 
@@ -36,8 +36,33 @@ export default function SharePlan() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // The toggle used to be a bare `.mutate()` with no error handling and no
+  // pending state, and the chip only reflects `sharedCircles` — so a failed
+  // share was completely silent. Someone believed they had shared a prayer
+  // request with their family and had not.
+  const handleToggleCircle = async (circleId: string) => {
+    setError(null);
+    setNotice(null);
+
+    try {
+      await toggleCircle.mutateAsync({
+        circleId,
+        shared: (sharedCircles ?? []).includes(circleId),
+      });
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
+
   if (isLoading) {
-    return <LoadingState />;
+    return (
+      <>
+        <Stack.Screen
+          options={{ title: t("share.title"), headerShown: true }}
+        />
+        <LoadingState />
+      </>
+    );
   }
 
   // Both used to render as one headerless line of grey text, so a network
@@ -137,12 +162,7 @@ export default function SharePlan() {
                   label: circle.name,
                 }))}
                 selected={shared}
-                onToggle={(circleId) =>
-                  toggleCircle.mutate({
-                    circleId,
-                    shared: shared.includes(circleId),
-                  })
-                }
+                onToggle={(circleId) => void handleToggleCircle(circleId)}
                 multiple
               />
               <Text className="text-sm text-slate-500">
@@ -150,8 +170,11 @@ export default function SharePlan() {
               </Text>
             </>
           ) : (
+            // A failed read used to render "Todavía no tienes círculos", which
+            // is a different and untrue thing to say — and it says it on the
+            // screen where someone is deciding who gets to see their request.
             <Text className="text-sm text-slate-500">
-              {t("newPlan.noCircles")}
+              {circlesFailed ? t("common.errorBody") : t("newPlan.noCircles")}
             </Text>
           )}
         </View>

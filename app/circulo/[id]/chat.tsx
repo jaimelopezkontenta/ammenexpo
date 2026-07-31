@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -33,7 +33,8 @@ export default function CircleChat() {
 
   const { data: circle } = useCircle(id);
   const { data: members } = useCircleMembers(id);
-  const { data: conversationId } = useCircleConversation(id);
+  const { data: conversationId, isError: conversationFailed } =
+    useCircleConversation(id);
   const { data: messages, isLoading, isError, refetch } = useCircleMessages(id);
 
   useCircleChatRealtime(id, conversationId);
@@ -45,7 +46,29 @@ export default function CircleChat() {
 
   const [draft, setDraft] = useState("");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNoticeState] = useState<string | null>(null);
+
+  // A notice with no expiry outlives the action it describes: "Listo. No
+  // volverás a ver a esta persona" was still sitting there several unrelated
+  // taps later, reading as a response to whatever had just been pressed.
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setNotice = useCallback((message: string | null) => {
+    if (noticeTimer.current) clearTimeout(noticeTimer.current);
+    setNoticeState(message);
+
+    if (message) {
+      noticeTimer.current = setTimeout(() => setNoticeState(null), 6000);
+    }
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (noticeTimer.current) clearTimeout(noticeTimer.current);
+    },
+    [],
+  );
+
   const [error, setError] = useState<string | null>(null);
 
   const isAdmin = (members ?? []).some(
@@ -94,7 +117,11 @@ export default function CircleChat() {
     );
   }
 
-  if (isError) {
+  // Without the conversation id there is nothing to send to: the insert would
+  // go out with `conversation_id: undefined`, fail, and report a generic
+  // "no hemos podido enviar tu mensaje" — while Realtime never subscribed, so
+  // nothing anyone else wrote would arrive either.
+  if (isError || conversationFailed) {
     return (
       <>
         <Stack.Screen options={{ title: t("chat.title"), headerShown: true }} />

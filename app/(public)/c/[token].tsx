@@ -73,7 +73,7 @@ export default function CircleInvite() {
           ) : (
             <>
               <Link href="/crear-cuenta" asChild>
-                <Button title={t("share.previewCta")} />
+                <Button title={t("share.deadLinkCta")} />
               </Link>
               <Link href="/entrar" asChild>
                 <Button title={t("share.alreadyMember")} variant="ghost" />

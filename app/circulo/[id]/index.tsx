@@ -1,5 +1,5 @@
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
@@ -27,7 +27,7 @@ export default function CircleDetail() {
   const userId = session?.user.id;
 
   const { data: circle, isLoading, isError, refetch } = useCircle(id);
-  const { data: members } = useCircleMembers(id);
+  const { data: members, isError: membersFailed } = useCircleMembers(id);
   const { data: inviteToken } = useCircleInviteToken(id);
   const { data: circlePlan } = useCirclePlan(id);
   const { data: canCreatePlan } = useCanCreateCirclePlan(id);
@@ -36,7 +36,29 @@ export default function CircleDetail() {
   const removeMember = useRemoveMember(id);
   const block = useBlockUser(userId);
 
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNoticeState] = useState<string | null>(null);
+
+  // A notice with no expiry outlives the action it describes: "Listo. No
+  // volverás a ver a esta persona" was still sitting there several unrelated
+  // taps later, reading as a response to whatever had just been pressed.
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setNotice = useCallback((message: string | null) => {
+    if (noticeTimer.current) clearTimeout(noticeTimer.current);
+    setNoticeState(message);
+
+    if (message) {
+      noticeTimer.current = setTimeout(() => setNoticeState(null), 6000);
+    }
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (noticeTimer.current) clearTimeout(noticeTimer.current);
+    },
+    [],
+  );
+
   const [error, setError] = useState<string | null>(null);
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
@@ -192,6 +214,19 @@ export default function CircleDetail() {
           <Text className="text-sm font-medium text-slate-400">
             {t("circles.membersTitle")}
           </Text>
+          {/* A failed roster read used to render an empty list —
+              indistinguishable from a circle of one — and silently set
+              `isAdmin` to false, hiding "Expulsar" from a real admin at the
+              moment they most likely need it. */}
+          {membersFailed ? (
+            <Text
+              className="text-base leading-6 text-slate-500"
+              accessibilityRole="alert"
+            >
+              {t("common.errorBody")}
+            </Text>
+          ) : null}
+
           {(members ?? []).map((member) => (
             <View key={member.user_id} className="gap-1">
               <View className="flex-row items-center justify-between">

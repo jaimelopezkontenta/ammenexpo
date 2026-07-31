@@ -43,7 +43,12 @@ export default function PrayForSomeone() {
   const plan = (plans ?? []).find((entry) => entry.plan_id === planId);
 
   if (isLoading) {
-    return <LoadingState />;
+    return (
+      <>
+        <Stack.Screen options={{ title: t("tabs.pray"), headerShown: true }} />
+        <LoadingState />
+      </>
+    );
   }
 
   if (isError || !plan) {

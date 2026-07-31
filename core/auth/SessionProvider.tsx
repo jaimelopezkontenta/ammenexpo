@@ -12,6 +12,8 @@ import {
 
 import { supabase } from "@/utils/supabase";
 
+import { redeemPendingTokens } from "./pendingToken";
+
 type SessionState = {
   session: Session | null;
   /** True until the stored session has been read. */
@@ -77,6 +79,30 @@ export const SessionProvider = ({
 
   const userId = session?.user.id ?? null;
 
+  // The single place every sign-in passes through, which is why the redemption
+  // lives here and not in one of the four screens that can produce one. It is a
+  // no-op once there is nothing stashed, so it costs one AsyncStorage read per
+  // launch.
+  useEffect(() => {
+    if (!userId) return;
+
+    let active = true;
+
+    void redeemPendingTokens().then((planId) => {
+      if (!active || !planId) return;
+
+      // Redeeming is what makes that plan visible. Without invalidating, the
+      // Orar tab would keep insisting nobody had shared anything — this app
+      // never refetches on focus, so it would say so until it was killed.
+      void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
+      void queryClient.invalidateQueries({ queryKey: ["circles"] });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [userId, queryClient]);
+
   // Keyed by user, so signing in as someone else can never inherit the
   // previous account's onboarding state.
   const {
@@ -110,7 +136,16 @@ export const SessionProvider = ({
   }, [refetch]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    // `scope: "local"` so a server that is down or a token already rejected
+    // cannot trap somebody in a session they asked to leave. Signing out is the
+    // one action that must always work — it is the escape hatch every other
+    // error state offers.
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+
+    if (error) {
+      console.error("sign out failed", error);
+    }
+
     queryClient.clear();
   }, [queryClient]);
 

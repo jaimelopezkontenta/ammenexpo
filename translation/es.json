@@ -166,7 +166,10 @@
     "finishedIntercessions": "Y {{count}} vez alguien oró por ti.",
     "finishedIntercessions_plural": "Y {{count}} veces alguien oró por ti.",
     "finishedCta": "Empezar otro plan",
-    "switcherLabel": "Tus planes"
+    "switcherLabel": "Tus planes",
+    "stalledBody": "Se escribieron {{written}} de {{total}} días y la generación se quedó a medias.",
+    "stalledCta": "Seguir escribiendo el plan",
+    "resumed": "Seguimos escribiéndolo. Vuelve en un minuto."
   },
   "share": {
     "title": "Compartir mi plan",
@@ -176,8 +179,8 @@
     "revoke": "Desactivar enlace",
     "message": "Estoy orando por {{theme}} estos {{days}} días. ¿Me acompañas hoy?",
     "previewTitle": "{{name}} te pide oración",
-    "previewCta": "Oré por ti",
-    "previewSignupHint": "Crea tu cuenta en 10 segundos para avisarle.",
+    "previewCta": "Crear cuenta y orar por {{name}}",
+    "previewSignupHint": "Diez segundos, y {{name}} sabrá que oraste.",
     "previewNotFound": "Este enlace ya no está disponible.",
     "previewNotFoundHint": "Puede que quien lo compartió lo haya desactivado.",
     "viewPlan": "Ver el plan",
@@ -193,7 +196,8 @@
     "open": "Compartir este plan",
     "goHome": "Ir a mi plan",
     "deadLinkInvite": "Puedes crear el tuyo y compartirlo con quien quieras.",
-    "stillWriting": "Estamos escribiendo tu plan. En cuanto esté podrás compartirlo."
+    "stillWriting": "Estamos escribiendo tu plan. En cuanto esté podrás compartirlo.",
+    "deadLinkCta": "Crear mi cuenta"
   },
   "intercession": {
     "prayFor": "Oré por ti",

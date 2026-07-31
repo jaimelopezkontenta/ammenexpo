@@ -53,6 +53,64 @@ export const clearPendingTokens = async () => {
 };
 
 /**
+ * Redeems whatever is stashed locally, for whoever is signed in right now.
+ *
+ * The chain used to have exactly one link, and it broke in two common cases.
+ * `complete_onboarding()` redeems `profile_settings.pending_share_token`, and
+ * that column is only ever written by `attachPendingTokensToProfile`, which
+ * `crear-cuenta.tsx` only calls when sign-up returns a session. With email
+ * confirmation turned on it does not: the person confirms, comes back, signs in
+ * through `entrar.tsx` — which never touched any of this — and onboarding finds
+ * nothing. And someone who already had an account never went through onboarding
+ * at all, so their token sat in storage and was never read again.
+ *
+ * Both meant the invitation vanished without a word and the new arrival landed
+ * on "Aún no tienes un plan", one tab away from the person they came for.
+ *
+ * Running on every sign-in costs nothing once there is nothing left to redeem,
+ * and the RPCs are idempotent (`on conflict do nothing`).
+ */
+export const redeemPendingTokens = async () => {
+  const { shareToken, inviteCode } = await readPendingTokens();
+
+  if (!shareToken && !inviteCode) {
+    return null;
+  }
+
+  let planId: string | null = null;
+
+  if (shareToken) {
+    const { data, error } = await supabase.rpc("redeem_share_token", {
+      p_token: shareToken,
+    });
+
+    // A revoked or expired token answers `{ok:false}` *without* raising, and
+    // retrying it every launch forever would be pointless. A network failure
+    // does raise, and that one is worth keeping for next time.
+    if (!error) {
+      await AsyncStorage.removeItem(SHARE_KEY).catch(() => {});
+
+      const outcome = data as { ok?: boolean; plan_id?: string } | null;
+      if (outcome?.ok && outcome.plan_id) {
+        planId = outcome.plan_id;
+      }
+    }
+  }
+
+  if (inviteCode) {
+    const { error } = await supabase.rpc("redeem_invite_code", {
+      p_code: inviteCode,
+    });
+
+    if (!error) {
+      await AsyncStorage.removeItem(INVITE_KEY).catch(() => {});
+    }
+  }
+
+  return planId;
+};
+
+/**
  * Moves any locally stashed token onto the freshly created profile. Call right
  * after sign-up succeeds.
  */

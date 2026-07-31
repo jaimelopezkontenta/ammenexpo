@@ -166,7 +166,10 @@
     "finishedIntercessions": "And {{count}} time someone prayed for you.",
     "finishedIntercessions_plural": "And {{count}} times someone prayed for you.",
     "finishedCta": "Start another plan",
-    "switcherLabel": "Your plans"
+    "switcherLabel": "Your plans",
+    "stalledBody": "{{written}} of {{total}} days were written and generation stopped partway.",
+    "stalledCta": "Finish writing the plan",
+    "resumed": "We're writing the rest. Check back in a minute."
   },
   "share": {
     "title": "Share my plan",
@@ -176,8 +179,8 @@
     "revoke": "Disable link",
     "message": "I'm praying about {{theme}} for {{days}} days. Will you join me today?",
     "previewTitle": "{{name}} is asking for prayer",
-    "previewCta": "I prayed for you",
-    "previewSignupHint": "Create your account in 10 seconds to let them know.",
+    "previewCta": "Sign up and pray for {{name}}",
+    "previewSignupHint": "Ten seconds, and {{name}} will know you prayed.",
     "previewNotFound": "This link is no longer available.",
     "previewNotFoundHint": "Whoever shared it may have turned it off.",
     "viewPlan": "View the plan",
@@ -193,7 +196,8 @@
     "open": "Share this plan",
     "goHome": "Go to my plan",
     "deadLinkInvite": "You can create your own and share it with whoever you like.",
-    "stillWriting": "We are still writing your plan. You can share it as soon as it is ready."
+    "stillWriting": "We are still writing your plan. You can share it as soon as it is ready.",
+    "deadLinkCta": "Create my account"
   },
   "intercession": {
     "prayFor": "I prayed for you",

@@ -19,14 +19,17 @@ import { WhoPrayed } from "@/components/WhoPrayed";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBibleBooks } from "@/core/bible/queries";
 import {
+  usePlansSharedWithMe,
   useReportIntercession,
   useWhoPrayedForMe,
 } from "@/core/intercessions/queries";
+import { useBlockUser } from "@/core/moderation/blocks";
 import { liveStreak, useStreak } from "@/core/profile/queries";
 import {
   isStuckGenerating,
   useAbandonPlan,
   useActivePlanId,
+  useContinuePlan,
   useMarkPrayed,
   useMyPlans,
   usePlanProgress,
@@ -66,16 +69,29 @@ export default function Today() {
   const { data: prayed } = usePrayedToday(day?.id);
   const { data: progress } = usePlanProgress(plan?.id);
   const { data: streak } = useStreak(userId);
-  const { data: prayedForMe } = useWhoPrayedForMe(userId);
+  const { data: prayedForMe, isError: prayedForMeFailed } =
+    useWhoPrayedForMe(userId);
+  const { data: sharedWithMe } = usePlansSharedWithMe(userId);
   const { data: books } = useBibleBooks();
 
   const report = useReportIntercession(userId);
+  const block = useBlockUser(userId);
   const abandon = useAbandonPlan(userId);
   const rename = useRenamePlan(userId);
+  const continuePlan = useContinuePlan(userId);
   const markPrayed = useMarkPrayed(day?.id, userId);
 
   const [draftTitle, setDraftTitle] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // The first person who prayed for you today and whose own plan you can open.
+  const prayBackPlanId =
+    (sharedWithMe ?? []).find((shared) =>
+      (prayedForMe ?? []).some(
+        (person) => person.intercessor_id === shared.owner_id,
+      ),
+    )?.plan_id ?? null;
 
   const stuck = isStuckGenerating(plan);
   const days = liveStreak(streak);
@@ -94,6 +110,39 @@ export default function Today() {
     } catch {
       // Uncaught, the navigation never ran — so "Reintentar" was inert exactly
       // when the backend was unhealthy, which is the only time it is offered.
+      setActionError(t("common.errorGeneric"));
+    }
+  };
+
+  // Reporting used to be `report.mutate(...)` with no onError and no success
+  // feedback: two round trips, and if the second failed the report was filed,
+  // the message stayed on screen, and nothing was said. `intercession.reported`
+  // has been translated in both languages all along without ever rendering.
+  const runOnIntercessor = async (
+    action: () => Promise<unknown>,
+    done: string,
+  ) => {
+    setActionError(null);
+    setNotice(null);
+
+    try {
+      await action();
+      setNotice(done);
+    } catch {
+      setActionError(t("common.errorGeneric"));
+    }
+  };
+
+  const resumeGeneration = async () => {
+    if (!plan) return;
+
+    setActionError(null);
+    setNotice(null);
+
+    try {
+      await continuePlan.mutateAsync(plan.id);
+      setNotice(t("plan.resumed"));
+    } catch {
       setActionError(t("common.errorGeneric"));
     }
   };
@@ -307,9 +356,33 @@ export default function Today() {
             current: day.day_number,
             total: plan.duration_days,
           })}
-          {plan.status === "generating" ? ` · ${t("plan.stillPreparing")}` : ""}
+          {plan.status === "generating" && !stuck
+            ? ` · ${t("plan.stillPreparing")}`
+            : ""}
           {days > 0 ? ` · ${t("plan.streak", { count: days })}` : ""}
         </Text>
+
+        {/* A generation whose first stretch landed and whose second crashed
+            used to say "seguimos preparándolo" every day, forever: both
+            branches that handle a stuck plan require *no* day, and this one
+            has one. The days already written are worth keeping, so the way out
+            is to continue rather than to start over. */}
+        {stuck ? (
+          <View className="mt-2 gap-2 rounded-2xl bg-slate-50 p-4">
+            <Text className="text-sm leading-5 text-slate-600">
+              {t("plan.stalledBody", {
+                written: progress?.days_written ?? day.day_number,
+                total: plan.duration_days,
+              })}
+            </Text>
+            <Button
+              title={t("plan.stalledCta")}
+              variant="secondary"
+              loading={continuePlan.isPending}
+              onPress={() => void resumeGeneration()}
+            />
+          </View>
+        ) : null}
 
         <Text className="text-3xl font-bold leading-9 text-slate-900">
           {day.title}
@@ -404,20 +477,62 @@ export default function Today() {
       {/* Seeing who showed up for you is the reason to come back tomorrow, so
           it lives on this screen rather than behind a notification. */}
       <DaySection label={t("intercession.whoPrayed")}>
-        <WhoPrayed
-          people={prayedForMe ?? []}
-          onReport={(intercessionId) => report.mutate({ intercessionId })}
-        />
+        {/* Hoy was the last screen still reading a failed query as an empty
+            one — and it is the most personal one there is. "Todavía nadie ha
+            orado hoy" when the read simply failed is the most expensive lie
+            the app can tell. */}
+        {prayedForMeFailed ? (
+          <Text
+            className="text-base leading-6 text-slate-500"
+            accessibilityRole="alert"
+          >
+            {t("common.errorBody")}
+          </Text>
+        ) : (
+          <WhoPrayed
+            people={prayedForMe ?? []}
+            onReport={(intercessionId) =>
+              void runOnIntercessor(
+                () => report.mutateAsync({ intercessionId }),
+                t("intercession.reported"),
+              )
+            }
+            onBlock={(blockedId) =>
+              void runOnIntercessor(
+                () => block.mutateAsync(blockedId),
+                t("moderation.blockDone"),
+              )
+            }
+          />
+        )}
+
+        {notice ? (
+          <Text
+            className="text-sm text-slate-600"
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {notice}
+          </Text>
+        ) : null}
       </DaySection>
 
-      {/* "Pray for their plan" needs a "their": with an empty list the button
-          refers to nobody. */}
-      {(prayedForMe ?? []).length > 0 ? (
+      {/* "Pray for their plan" needs a "their", and it needs that person to
+          actually have shared one. It used to push to /orar unconditionally,
+          so anyone whose intercessor had not shared a plan landed on "Todavía
+          nadie ha compartido su plan contigo" — flatly contradicting the list
+          they had just tapped away from. */}
+      {prayBackPlanId ? (
         <View className="pb-4">
           <Button
             title={t("intercession.prayBack")}
             variant="secondary"
-            onPress={() => router.push("/orar")}
+            onPress={() =>
+              router.push({
+                pathname: "/orar/[planId]",
+                params: { planId: prayBackPlanId },
+              })
+            }
           />
         </View>
       ) : null}

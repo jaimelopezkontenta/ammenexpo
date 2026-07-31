@@ -22,7 +22,12 @@ export default function PlanDayDetail() {
   const { data: prayed } = usePrayedToday(day?.id);
 
   if (isLoading) {
-    return <LoadingState />;
+    return (
+      <>
+        <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
+        <LoadingState />
+      </>
+    );
   }
 
   if (isError || !day) {

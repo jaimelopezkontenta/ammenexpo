@@ -7,6 +7,7 @@ import type { Intercession } from "@/core/intercessions/queries";
 type Props = {
   people: Intercession[];
   onReport: (intercessionId: string) => void;
+  onBlock: (userId: string) => void;
 };
 
 /**
@@ -16,7 +17,7 @@ type Props = {
  * way to report it. Reporting takes two taps rather than a modal — enough to
  * stop a mis-tap, not enough to discourage a real report.
  */
-export const WhoPrayed = ({ people, onReport }: Props) => {
+export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
   const { t } = useTranslation();
 
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -46,11 +47,19 @@ export const WhoPrayed = ({ people, onReport }: Props) => {
                 is no "reported" placeholder to keep: the text is simply gone
                 and the prayer stays. */}
             {person.message ? (
-              <>
-                <Text className="text-base leading-6 text-slate-600">
-                  «{person.message}»
-                </Text>
+              <Text className="text-base leading-6 text-slate-600">
+                «{person.message}»
+              </Text>
+            ) : null}
 
+            {/* Outside the message check, unlike before. Reporting was the only
+                control here and it only appeared when there was text, so
+                somebody who prayed for you without writing anything could not
+                be reported *or* blocked — and blocking was missing entirely,
+                which left anyone who reached you through a public link rather
+                than a circle unblockable anywhere in the app. */}
+            <View className="flex-row gap-4">
+              {person.message ? (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityState={{ expanded: isConfirming }}
@@ -80,8 +89,18 @@ export const WhoPrayed = ({ people, onReport }: Props) => {
                       : t("intercession.report")}
                   </Text>
                 </Pressable>
-              </>
-            ) : null}
+              ) : null}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${t("moderation.block")} ${person.intercessor_name}`}
+                onPress={() => onBlock(person.intercessor_id)}
+              >
+                <Text className="text-sm text-slate-400 underline">
+                  {t("moderation.block")}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         );
       })}

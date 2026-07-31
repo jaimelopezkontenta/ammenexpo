@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 
+import { Button } from "@/components/Button";
 import { useBibleBooks } from "@/core/bible/queries";
 
 export default function BookChapters() {
@@ -22,19 +23,40 @@ export default function BookChapters() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#0f172a" />
-      </View>
+      <>
+        <Stack.Screen
+          options={{ title: t("bible.title"), headerShown: true }}
+        />
+        <View className="flex-1 items-center justify-center bg-white">
+          <ActivityIndicator color="#0f172a" />
+        </View>
+      </>
     );
   }
 
+  // The worst of the headerless branches: a bad book id rendered one line of
+  // grey text with no header, no button and no link. The whole plan and bible
+  // trees hang off the root Stack, whose screenOptions are `headerShown: false`,
+  // so every screen has to opt in — and this one only did so on success.
   if (!entry) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-8">
-        <Text className="text-center text-base text-slate-500">
-          {t("common.notFoundTitle")}
-        </Text>
-      </View>
+      <>
+        <Stack.Screen
+          options={{ title: t("bible.title"), headerShown: true }}
+        />
+        <View className="flex-1 items-center justify-center gap-4 bg-white px-8">
+          <Text className="text-center text-base text-slate-500">
+            {t("common.notFoundTitle")}
+          </Text>
+          <View className="w-full">
+            <Button
+              title={t("bible.title")}
+              variant="secondary"
+              onPress={() => router.replace("/biblia")}
+            />
+          </View>
+        </View>
+      </>
     );
   }
 
