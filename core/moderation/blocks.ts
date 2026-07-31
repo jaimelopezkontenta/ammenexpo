@@ -61,6 +61,14 @@ const invalidateBlockedSurfaces = (
   void queryClient.invalidateQueries({ queryKey: ["circleMessages"] });
   void queryClient.invalidateQueries({ queryKey: ["whoPrayedForMe"] });
   void queryClient.invalidateQueries({ queryKey: ["sharedWithMe", userId] });
+  // Added when the wall and the testimonies arrived. Missing them meant the
+  // person you had just blocked stayed on screen — the block *had* worked
+  // server-side, so it was a lie that only a restart would clear.
+  void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+  void queryClient.invalidateQueries({ queryKey: ["postComments"] });
+  void queryClient.invalidateQueries({ queryKey: ["testimonies"] });
+  void queryClient.invalidateQueries({ queryKey: ["unreadCounts", userId] });
+  void queryClient.invalidateQueries({ queryKey: ["circleSharedPlans"] });
 };
 
 export const useBlockUser = (userId: string | undefined) => {

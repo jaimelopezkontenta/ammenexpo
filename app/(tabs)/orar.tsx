@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
@@ -46,7 +46,10 @@ export default function Pray() {
             yours — which is what the button says. It used to read "Crear un
             círculo" and land on the circles *list*, two steps away from the
             thing this screen is actually asking for. */}
-        <View className="mt-6 w-full">
+        <View className="mt-6 w-full gap-3">
+          <Link href="/peticiones" asChild>
+            <Button title={t("feed.openWall")} variant="secondary" />
+          </Link>
           <Button
             title={
               (myPlans ?? []).length > 0
@@ -94,6 +97,10 @@ export default function Pray() {
           </Text>
         </View>
       ) : null}
+
+      <Link href="/peticiones" asChild>
+        <Button title={t("feed.openWall")} variant="secondary" />
+      </Link>
 
       {plans.map((plan) => (
         <PrayForCard

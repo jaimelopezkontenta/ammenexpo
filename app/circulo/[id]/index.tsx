@@ -316,6 +316,13 @@ export default function CircleDetail() {
         </View>
 
         <Link
+          href={{ pathname: "/peticiones", params: { circulo: id! } }}
+          asChild
+        >
+          <Button title={t("feed.circleTitle")} variant="secondary" />
+        </Link>
+
+        <Link
           href={{ pathname: "/circulo/[id]/chat", params: { id: id! } }}
           asChild
         >

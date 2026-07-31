@@ -997,6 +997,239 @@ select pg_temp.assert(
 commit;
 
 -- ===========================================================================
+-- Peticiones de oración
+--
+-- Lo que la gente hace de verdad en un grupo: "oren por la operación de mi
+-- madre mañana". Las tablas existen desde la Fase 1 con contadores por trigger
+-- y sin una sola pantalla; lo que se prueba aquí es que las herramientas que ya
+-- existían —bloquear, ocultar, reportar— alcanzan a esta superficie, que es
+-- pública y por tanto la más expuesta que tiene la app.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body)
+values ('9051d000-0000-0000-0000-000000000001', :ANA,
+        'Mi madre entra al quirófano mañana.');
+
+insert into public.posts (id, author_id, body, is_anonymous)
+values ('9051d000-0000-0000-0000-000000000002', :ANA,
+        'Llevo meses sin poder dormir.', true);
+
+insert into public.posts (id, author_id, group_id, body)
+values ('9051d000-0000-0000-0000-000000000003', :ANA, :CIRCLE_D,
+        'Solo para la célula.');
+
+commit;
+
+-- Eva no comparte nada con Ana y no está en ningún círculo: es exactamente
+-- quien tiene que ver el muro abierto y nada más.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_feed()) = 2,
+  'the open wall shows the two public requests');
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_feed(:CIRCLE_D)) = 0,
+  'and a circle she is not in shows her nothing');
+
+-- El anonimato tiene que serlo también para la máquina: devolver el id
+-- permitiría correlacionar dos peticiones de la misma persona, que es
+-- justo lo que quien la marca anónima está evitando.
+select pg_temp.assert(
+  (select author_id is null and author_name is null
+     from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000002'),
+  'an anonymous request gives away neither the name nor the id');
+
+select pg_temp.assert(
+  (select author_name from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000001') = 'Ana',
+  'and a signed one does say who wrote it');
+
+commit;
+
+
+-- ===========================================================================
+-- Orar por una petición
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+insert into public.post_prayers (post_id, user_id)
+values ('9051d000-0000-0000-0000-000000000001',
+        '55555555-5555-5555-5555-555555555555');
+
+select pg_temp.assert(
+  (select prayer_count from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000001') = 1,
+  'praying for a request counts');
+
+select pg_temp.assert(
+  (select i_prayed from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000001'),
+  'and the screen can tell you already did');
+
+-- Sin esto, "he orado" sería un contador que sube y nunca baja.
+delete from public.post_prayers
+ where post_id = '9051d000-0000-0000-0000-000000000001'
+   and user_id = '55555555-5555-5555-5555-555555555555';
+
+select pg_temp.assert(
+  (select prayer_count from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000001') = 0,
+  'and undoing it takes the count back down');
+
+commit;
+
+-- No se puede orar por lo que no se puede leer, ni aunque se sepa el id.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.post_prayers (post_id, user_id)
+    values ('9051d000-0000-0000-0000-000000000003',
+            '55555555-5555-5555-5555-555555555555')
+  $q$),
+  'you cannot pray for a circle request you cannot read');
+
+commit;
+
+
+-- ===========================================================================
+-- Bloquear alcanza al muro
+--
+-- Antes de esto, bloquear a alguien lo callaba en el chat, en la pestaña Orar
+-- y en los testimonios, y lo dejaba intacto en la superficie más pública que
+-- tiene la app.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+insert into public.blocks (blocker_id, blocked_id)
+values ('55555555-5555-5555-5555-555555555555', :ANA);
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_feed()) = 0,
+  'blocking somebody removes their requests from the wall too');
+
+-- Incluida la anónima, aunque quien lee no pueda saber que era suya: lo
+-- resuelve la policy, que sí ve la columna.
+delete from public.blocks
+ where blocker_id = '55555555-5555-5555-5555-555555555555';
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_feed()) = 2,
+  'and unblocking brings them back');
+
+commit;
+
+
+-- ===========================================================================
+-- Comentar, y ocultar
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+insert into public.comments (post_id, author_id, body)
+values ('9051d000-0000-0000-0000-000000000001',
+        '55555555-5555-5555-5555-555555555555', 'Orando por ella.');
+
+select pg_temp.assert(
+  (select comment_count from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000001') = 1,
+  'a comment counts');
+
+select pg_temp.assert(
+  (select count(*) from
+     public.post_comments('9051d000-0000-0000-0000-000000000001')) = 1,
+  'and can be read');
+
+commit;
+
+-- Ocultar solo existe dentro de un círculo, que es donde hay alguien a cargo.
+-- En el muro abierto no hay quien administre: lo que queda es reportar y
+-- bloquear, y eso hay que decirlo en voz alta y no fingir lo contrario.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  not public.hide_post('9051d000-0000-0000-0000-000000000001'),
+  'nobody can hide a request on the open wall, not even its author');
+
+select pg_temp.assert(
+  public.hide_post('9051d000-0000-0000-0000-000000000003'),
+  'but whoever runs a circle can hide one inside it');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_feed(:CIRCLE_D)) = 0,
+  'and it is gone for the circle, on reload, not just in one head');
+
+-- Un contador que sigue subiendo sobre algo que ya nadie ve sería una forma
+-- rara de que el ocultado no fuera del todo un ocultado.
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.post_prayers (post_id, user_id)
+    values ('9051d000-0000-0000-0000-000000000003',
+            '33333333-3333-3333-3333-333333333333')
+  $q$),
+  'and nobody can pray for it any more');
+
+commit;
+
+
+-- ===========================================================================
+-- La regla 1, para tres tablas que estrenan escritor
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.posts (author_id, body)
+    values ('33333333-3333-3333-3333-333333333333', 'Una petición mía')
+    returning id
+  $q$),
+  'insert ... returning works on posts');
+
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.post_prayers (post_id, user_id)
+    values ('9051d000-0000-0000-0000-000000000001',
+            '33333333-3333-3333-3333-333333333333')
+    returning post_id
+  $q$),
+  'and on post_prayers');
+
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.comments (post_id, author_id, body)
+    values ('9051d000-0000-0000-0000-000000000001',
+            '33333333-3333-3333-3333-333333333333', 'Aquí estoy')
+    returning id
+  $q$),
+  'and on comments');
+
+commit;
+
+-- ===========================================================================
 -- RLS sigue puesta en todas las tablas
 --
 -- `blocks` es nueva, y una tabla sin RLS en este esquema significa que
