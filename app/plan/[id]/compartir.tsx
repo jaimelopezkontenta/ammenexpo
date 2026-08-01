@@ -14,6 +14,7 @@ import {
   usePlanShareLink,
   usePlanSummary,
   useRevokeShareLink,
+  useSetPlanPublic,
   useTogglePlanCircle,
 } from "@/core/plans/sharing";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
@@ -32,6 +33,7 @@ export default function SharePlan() {
   const createLink = useCreateShareLink(id);
   const revokeLink = useRevokeShareLink(id);
   const toggleCircle = useTogglePlanCircle(id, userId);
+  const setPublic = useSetPlanPublic(id);
 
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,22 @@ export default function SharePlan() {
   // pending state, and the chip only reflects `sharedCircles` — so a failed
   // share was completely silent. Someone believed they had shared a prayer
   // request with their family and had not.
+  const handlePublic = async () => {
+    // Se lee aquí y no de una variable de arriba: este manejador vive antes de
+    // la guarda que garantiza que el plan ha cargado.
+    const publicNow = plan?.visibility === "public";
+
+    setNotice(null);
+    setError(null);
+
+    try {
+      await setPublic.mutateAsync(!publicNow);
+      setNotice(publicNow ? t("share.unpublished") : t("share.published"));
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
+
   const handleToggleCircle = async (circleId: string) => {
     setError(null);
     setNotice(null);
@@ -84,6 +102,7 @@ export default function SharePlan() {
   // Creating a plan with a public link lands straight here, before a single day
   // exists. Sharing then would hand someone a link to an empty preview.
   const stillWriting = plan.status === "generating";
+  const isPublic = plan.visibility === "public";
   const shared = sharedCircles ?? [];
   const linkUrl = link ? buildShareUrl(`/p/${link.token}`) : null;
 
@@ -145,6 +164,25 @@ export default function SharePlan() {
           <Text className="text-base text-ink-muted">
             {stillWriting ? t("share.stillWriting") : t("share.subtitle")}
           </Text>
+        </View>
+
+        {/* Publicar, y **dejar de publicar**, que es la mitad que importa:
+            elegir "Todo el mundo" al crear el plan era un camino sin vuelta, y
+            la única salida habría sido borrarlo entero con los días ya orados
+            dentro. */}
+        <View className="gap-3">
+          <Text className="text-lg font-semibold text-ink">
+            {t("share.publicTitle")}
+          </Text>
+          <Text className="text-sm text-ink-muted">
+            {isPublic ? t("share.publicOn") : t("share.publicOff")}
+          </Text>
+          <Button
+            title={isPublic ? t("share.unpublish") : t("share.publish")}
+            variant="secondary"
+            loading={setPublic.isPending}
+            onPress={() => void handlePublic()}
+          />
         </View>
 
         <View className="gap-3">

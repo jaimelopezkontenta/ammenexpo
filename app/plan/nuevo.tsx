@@ -107,7 +107,9 @@ export default function NewPlan() {
       ? t("newPlan.visPrivateHint")
       : visibility === "circles"
         ? t("newPlan.visCirclesHint")
-        : t("newPlan.visLinkHint");
+        : visibility === "public"
+          ? t("newPlan.visPublicHint")
+          : t("newPlan.visLinkHint");
 
   return (
     <>
@@ -177,6 +179,10 @@ export default function NewPlan() {
                 { value: "private", label: t("newPlan.visPrivate") },
                 { value: "circles", label: t("newPlan.visCircles") },
                 { value: "link", label: t("newPlan.visLink") },
+                // El último a propósito: es el más expuesto de los cuatro, y
+                // el orden de una lista de opciones es una recomendación
+                // aunque nadie la escriba.
+                { value: "public", label: t("newPlan.visPublic") },
               ]}
               selected={[visibility]}
               onToggle={(value) => setVisibility(value as PlanVisibility)}

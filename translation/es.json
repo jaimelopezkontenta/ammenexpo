@@ -238,7 +238,14 @@
     "goHome": "Ir a mi plan",
     "deadLinkInvite": "Puedes crear el tuyo y compartirlo con quien quieras.",
     "stillWriting": "Estamos escribiendo tu plan. En cuanto esté podrás compartirlo.",
-    "deadLinkCta": "Crear mi cuenta"
+    "deadLinkCta": "Crear mi cuenta",
+    "publicTitle": "En tu perfil",
+    "publicOn": "Cualquiera puede abrir este plan desde tu perfil y orar por ti.",
+    "publicOff": "Este plan no aparece en tu perfil ni en la comunidad.",
+    "publish": "Publicarlo en mi perfil",
+    "unpublish": "Quitarlo de mi perfil",
+    "published": "Publicado. Ya está en tu perfil.",
+    "unpublished": "Listo. Ya no aparece en tu perfil."
   },
   "intercession": {
     "prayFor": "Oré por ti",
@@ -427,7 +434,9 @@
     "noCircles": "Todavía no tienes círculos. Créalo privado y compártelo después.",
     "chooseCircles": "Elige al menos un círculo.",
     "create": "Crear el plan",
-    "days_plural": "{{count}} días"
+    "days_plural": "{{count}} días",
+    "visPublic": "Todo el mundo",
+    "visPublicHint": "Aparecerá en tu perfil y en la comunidad. Cualquiera podrá abrirlo y orar por ti."
   },
   "bible": {
     "title": "Biblia",

@@ -104,7 +104,7 @@ type PlanRow = {
   } | null;
 };
 
-type Visibility = "private" | "circles" | "link";
+type Visibility = "private" | "circles" | "link" | "public";
 
 /**
  * How many fresh isolates the very first stretch gets before the plan is
@@ -547,7 +547,9 @@ Deno.serve(async (req) => {
   };
 
   const visibility: Visibility =
-    body?.visibility === "circles" || body?.visibility === "link"
+    body?.visibility === "circles" ||
+    body?.visibility === "link" ||
+    body?.visibility === "public"
       ? body.visibility
       : "private";
 
@@ -590,12 +592,16 @@ Deno.serve(async (req) => {
       start_date: startDate,
       // 'circles' is an app-level concept; at the row level a plan shared with
       // circles is simply not private, and plan_shares says with whom. A
-      // circle's *own* plan is the one case that does use 'group'.
+      // circle's *own* plan is the one case that does use 'group'. 'public' is
+      // the one the row level does carry: it is what lets a plan sit on your
+      // profile and be opened by somebody who has no link and shares no circle.
       visibility: groupId
         ? "group"
         : visibility === "link"
           ? "link"
-          : "private",
+          : visibility === "public"
+            ? "public"
+            : "private",
       group_id: groupId,
       status: "generating",
       generated_by: "ai",

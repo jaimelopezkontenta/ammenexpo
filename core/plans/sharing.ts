@@ -186,3 +186,37 @@ export const usePlanSummary = (planId: string | undefined) =>
     refetchInterval: (query) =>
       query.state.data?.status === "generating" ? 3000 : false,
   });
+
+/**
+ * Publicar un plan, y dejar de publicarlo.
+ *
+ * Lo segundo importa más que lo primero. Elegir "Todo el mundo" al crear el
+ * plan era, hasta esta línea, un camino sin vuelta: el plan quedaba en tu perfil
+ * y en la comunidad para siempre, y la única salida habría sido borrarlo entero
+ * con los días que ya has orado dentro.
+ */
+export const useSetPlanPublic = (planId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (isPublic: boolean) => {
+      const { data, error } = await supabase
+        .from("prayer_plans")
+        .update({ visibility: isPublic ? "public" : "private" })
+        .eq("id", planId!)
+        .select("id");
+
+      if (error) throw error;
+
+      // Cero filas es como RLS rechaza un update: sin error y sin filas. Es el
+      // mismo agujero por el que "Enlace desactivado" mentía en esta pantalla.
+      if (!data?.length) throw new Error("visibility_update_no_rows");
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["planSummary", planId] });
+      // Y las dos superficies donde el plan sale o deja de salir.
+      void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
+      void queryClient.invalidateQueries({ queryKey: ["personPlans"] });
+    },
+  });
+};

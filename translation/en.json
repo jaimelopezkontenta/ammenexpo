@@ -238,7 +238,14 @@
     "goHome": "Go to my plan",
     "deadLinkInvite": "You can create your own and share it with whoever you like.",
     "stillWriting": "We are still writing your plan. You can share it as soon as it is ready.",
-    "deadLinkCta": "Create my account"
+    "deadLinkCta": "Create my account",
+    "publicTitle": "On your profile",
+    "publicOn": "Anybody can open this plan from your profile and pray for you.",
+    "publicOff": "This plan is not on your profile or in the community.",
+    "publish": "Put it on my profile",
+    "unpublish": "Take it off my profile",
+    "published": "Published. It's on your profile now.",
+    "unpublished": "Done. It's no longer on your profile."
   },
   "intercession": {
     "prayFor": "I prayed for you",
@@ -427,7 +434,9 @@
     "noCircles": "You have no circles yet. Create it private and share it later.",
     "chooseCircles": "Pick at least one circle.",
     "create": "Create the plan",
-    "days_plural": "{{count}} days"
+    "days_plural": "{{count}} days",
+    "visPublic": "Everyone",
+    "visPublicHint": "It will sit on your profile and in the community. Anybody can open it and pray for you."
   },
   "bible": {
     "title": "Bible",

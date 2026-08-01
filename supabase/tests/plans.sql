@@ -292,6 +292,28 @@ select pg_temp.assert(
 
 commit;
 
+
+-- Y lo que hace que publicar no sea un camino sin vuelta: quitarlo. Hasta esta
+-- assertion, la única salida de un plan público habría sido borrarlo entero,
+-- con los días ya orados dentro.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+update public.prayer_plans set visibility = 'private' where id = :PLAN_PUBLIC;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  not public.can_read_plan(:PLAN_PUBLIC),
+  'and unpublishing closes it again');
+
+commit;
+
 \echo '===================================='
 \echo ' PLAN ASSERTIONS PASSED'
 \echo '===================================='

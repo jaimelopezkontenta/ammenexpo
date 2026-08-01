@@ -204,7 +204,7 @@ export class PlanLimitReached extends Error {
   }
 }
 
-export type PlanVisibility = "private" | "circles" | "link";
+export type PlanVisibility = "private" | "circles" | "link" | "public";
 
 export type NewPlanInput = {
   duration_days: number;
