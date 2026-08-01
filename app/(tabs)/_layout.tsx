@@ -1,5 +1,7 @@
-import { Tabs } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Link, Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { Pressable } from "react-native";
 
 import { TabBarIcon } from "../../components/TabBarIcon";
 
@@ -28,6 +30,22 @@ export default function TabLayout() {
         options={{
           title: t("tabs.today"),
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          // La comunidad vive detrás de un icono y no en una sexta pestaña: en
+          // móvil seis iconos van muy justos, y esto deja el bucle diario
+          // intacto. Va como ruta completa a propósito — si resulta que la
+          // comunidad es lo que trae de vuelta a la gente, ascenderla a pestaña
+          // es cambiar dos líneas de este archivo.
+          headerRight: () => (
+            <Link href="/comunidad" asChild>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel={t("community.title")}
+                className="px-5"
+              >
+                <FontAwesome name="users" size={20} color="#1C1917" />
+              </Pressable>
+            </Link>
+          ),
         }}
       />
       {/* Second, next to Hoy: it is the tab most closely tied to the day's

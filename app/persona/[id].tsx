@@ -1,7 +1,7 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Link, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
@@ -9,6 +9,7 @@ import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { usePublicProfile } from "@/core/profile/queries";
+import { usePersonPlans, usePersonPosts } from "@/core/social/feed";
 import { useFollowUser, useUnfollowUser } from "@/core/social/follows";
 import { useVisibleTestimonies } from "@/core/testimonies/queries";
 
@@ -40,6 +41,8 @@ export default function PersonProfile() {
 
   const { data: person, isLoading, isError, refetch } = usePublicProfile(id);
   const { data: testimonies } = useVisibleTestimonies(userId);
+  const { data: posts } = usePersonPosts(id);
+  const { data: plans } = usePersonPlans(id);
   const block = useBlockUser(userId);
   const follow = useFollowUser();
   const unfollow = useUnfollowUser();
@@ -196,6 +199,62 @@ export default function PersonProfile() {
             </View>
           ) : null}
         </View>
+
+        {(plans ?? []).length > 0 ? (
+          <View className="gap-4">
+            <Text className="text-sm font-medium text-ink-muted">
+              {t("community.publicPlans")}
+            </Text>
+
+            {(plans ?? []).map((plan) => (
+              <Link
+                key={plan.id}
+                href={{
+                  pathname: "/orar/[planId]",
+                  params: { planId: plan.id },
+                }}
+                asChild
+              >
+                <Pressable
+                  accessibilityRole="link"
+                  className="gap-1 rounded-2xl border border-ink-line p-5"
+                >
+                  <Text className="font-serif-bold text-base text-ink">
+                    {plan.title}
+                  </Text>
+                  <Text className="text-sm text-ink-soft">
+                    {t("newPlan.days", { count: plan.duration_days })}
+                  </Text>
+                </Pressable>
+              </Link>
+            ))}
+          </View>
+        ) : null}
+
+        {(posts ?? []).length > 0 ? (
+          <View className="gap-4">
+            <Text className="text-sm font-medium text-ink-muted">
+              {t("feed.title")}
+            </Text>
+
+            {/* Solo lo que pidió con su nombre. Lo anónimo no llega hasta aquí
+                —el servidor lo excluye— porque una lista por persona es justo
+                la forma de deshacer un anonimato. */}
+            {(posts ?? []).map((post) => (
+              <View
+                key={post.id}
+                className="gap-2 rounded-2xl border border-ink-line p-5"
+              >
+                <Text className="font-serif text-base leading-reading text-ink">
+                  {post.body}
+                </Text>
+                <Text className="text-sm text-ink-soft">
+                  {t("feed.prayCount", { count: post.prayer_count })}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         {theirs.length > 0 ? (
           <View className="gap-4">

@@ -478,5 +478,20 @@
   "social": {
     "follow": "Follow",
     "following": "Following"
+  },
+  "community": {
+    "title": "Community",
+    "searchPlaceholder": "Search for people",
+    "nobodyFound": "We couldn't find anybody by that name.",
+    "empty": "Nothing here yet. Be the first to ask for prayer.",
+    "followers": "{{count}} follower",
+    "followers_plural": "{{count}} followers",
+    "openPlan": "See the plan",
+    "kind": {
+      "request": "Request",
+      "testimony": "Testimony",
+      "plan": "Plan"
+    },
+    "publicPlans": "Open plans"
   }
 }

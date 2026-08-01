@@ -259,6 +259,204 @@ select pg_temp.assert(
 commit;
 
 
+
+-- ===========================================================================
+-- Encontrar a una persona
+--
+-- No existía ninguna forma. Y la lección de la eñe ya se pagó dos veces: la
+-- eñe no es una ene acentuada y la configuración `spanish` la conserva, así
+-- que sin `immutable_unaccent` buscar "nunez" no encuentra a nadie.
+-- ===========================================================================
+begin;
+
+update public.profiles set display_name = 'María Núñez' where id = :CARLA;
+
+-- Ana la bloqueó tres bloques más arriba, al probar que bloquear deshace el
+-- seguimiento. Se deshace aquí para que el buscador parta de limpio; el
+-- bloqueo se vuelve a poner más abajo, que es donde se prueba.
+delete from public.blocks where blocker_id = :ANA and blocked_id = :CARLA;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.search_people('María')) = 1,
+  'you can find somebody by name');
+
+select pg_temp.assert(
+  (select count(*) from public.search_people('maria')) = 1,
+  'without the accent, which is how a phone keyboard types');
+
+select pg_temp.assert(
+  (select count(*) from public.search_people('nunez')) = 1,
+  'and without the enye, which is not an accented n');
+
+select pg_temp.assert(
+  (select count(*) from public.search_people('mar')) = 1,
+  'and while you are still typing');
+
+-- La misma familia de entradas que hacía reventar a `to_tsquery` en el
+-- buscador de círculos.
+select pg_temp.assert(
+  (select count(*) from public.search_people('a & | b')) >= 0
+  and (select count(*) from public.search_people(':::')) >= 0
+  and (select count(*) from public.search_people('"sin cerrar')) >= 0,
+  'and nothing anybody types makes it raise');
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.search_people('Ana') where id = :ANA
+  ),
+  'you never appear in your own search results');
+
+commit;
+
+-- Bloquear quita a esa persona del buscador **en un solo sentido**: si también
+-- desapareciera para quien te bloqueó, el bloqueo dejaría de ser silencioso.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.blocks (blocker_id, blocked_id) values (:ANA, :CARLA);
+
+select pg_temp.assert(
+  (select count(*) from public.search_people('maria')) = 0,
+  'somebody you blocked is not in your results');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.search_people('Ana')) = 1,
+  'but you still appear in theirs, because blocking says nothing');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+delete from public.blocks where blocker_id = :ANA;
+
+commit;
+
+
+-- ===========================================================================
+-- El feed
+-- ===========================================================================
+begin;
+
+insert into public.posts (id, author_id, body, is_anonymous)
+values ('bbbb0000-0000-0000-0000-000000000001', :BETO,
+        'Oren por mi madre, está en el hospital', false),
+       ('bbbb0000-0000-0000-0000-000000000002', :CARLA,
+        'Algo que no quiero firmar', true);
+
+insert into public.testimonies (user_id, body, visibility)
+values (:BETO, 'Encontró trabajo en septiembre', 'public');
+
+-- Ana sigue a Beto desde el bloque del perfil. Se deshace para probar el caso
+-- que de verdad decide si alguien vuelve al día siguiente: el primer día, sin
+-- seguir a nadie.
+delete from public.follows where follower_id = :ANA;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+-- Ana no sigue a nadie: el feed le enseña lo público reciente. Un feed en
+-- blanco el primer día es la forma más rápida de no volver, y es exactamente
+-- el día en que no sigues a nadie.
+select pg_temp.assert(
+  (select count(*) from public.home_feed()) >= 3,
+  'with nobody followed yet, the feed shows what is public');
+
+select pg_temp.assert(
+  (select count(*) from public.home_feed() where kind = 'testimony') = 1,
+  'and it mixes testimonies in with the requests');
+
+select pg_temp.assert(
+  (select author_id from public.home_feed()
+    where id = 'bbbb0000-0000-0000-0000-000000000002') is null,
+  'an anonymous request carries no author, not even an id');
+
+commit;
+
+-- En cuanto sigues a alguien, el feed se estrecha a esa gente.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.follows (follower_id, followee_id) values (:ANA, :BETO);
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.home_feed()
+    where id = 'bbbb0000-0000-0000-0000-000000000002'
+  ),
+  'once you follow somebody, the feed is theirs and yours');
+
+select pg_temp.assert(
+  exists (
+    select 1 from public.home_feed()
+    where id = 'bbbb0000-0000-0000-0000-000000000001'
+  ),
+  'and what they wrote is in it');
+
+commit;
+
+-- Lo de un círculo se lee dentro de su círculo. Sacarlo al feed abierto
+-- rompería la promesa de que un círculo privado es privado.
+begin;
+
+insert into public.groups (id, owner_id, name, visibility)
+values ('cccc0000-0000-0000-0000-00000000000f', :BETO, 'Familia', 'private');
+
+insert into public.posts (id, author_id, group_id, body)
+values ('bbbb0000-0000-0000-0000-000000000003', :BETO,
+        'cccc0000-0000-0000-0000-00000000000f', 'Solo para los de casa');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.home_feed()
+    where id = 'bbbb0000-0000-0000-0000-000000000003'
+  ),
+  'a circle request never reaches the open feed');
+
+commit;
+
+
+-- ===========================================================================
+-- Lo de una persona, en su perfil
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.person_posts(:BETO)) = 1,
+  'a profile lists what that person asked prayer for');
+
+select pg_temp.assert(
+  (select count(*) from public.person_posts(:CARLA)) = 0,
+  'and never their anonymous ones — a per-person list is exactly how anonymity comes undone');
+
+commit;
+
 -- ===========================================================================
 -- RLS sigue puesta
 -- ===========================================================================

@@ -478,5 +478,20 @@
   "social": {
     "follow": "Seguir",
     "following": "Siguiendo"
+  },
+  "community": {
+    "title": "Comunidad",
+    "searchPlaceholder": "Buscar personas",
+    "nobodyFound": "No encontramos a nadie con ese nombre.",
+    "empty": "Todavía no hay nada aquí. Sé la primera en pedir oración.",
+    "followers": "{{count}} seguidor",
+    "followers_plural": "{{count}} seguidores",
+    "openPlan": "Ver el plan",
+    "kind": {
+      "request": "Petición",
+      "testimony": "Testimonio",
+      "plan": "Plan"
+    },
+    "publicPlans": "Planes abiertos"
   }
 }
