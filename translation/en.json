@@ -509,6 +509,7 @@
     },
     "publicPlans": "Open plans",
     "unread": "{{count}} unread",
-    "unread_plural": "{{count}} unread"
+    "unread_plural": "{{count}} unread",
+    "openTestimonies": "See testimonies"
   }
 }

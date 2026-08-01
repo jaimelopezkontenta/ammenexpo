@@ -5,17 +5,18 @@ import { Pressable, View } from "react-native";
 
 import { TabBarIcon } from "../../components/TabBarIcon";
 import { useSession } from "@/core/auth/SessionProvider";
+import { useUnreadCounts } from "@/core/circles/queries";
 import { useUnreadNotifications } from "@/core/notifications/queries";
 
 /**
  * Los dos accesos que no son pestaña: los avisos y la comunidad.
  *
- * Van aquí arriba y no abajo porque en móvil seis iconos en la barra van muy
- * justos, y porque las dos son cosas a las que se entra, no sitios donde se
- * está. Las dos son rutas completas: ascender cualquiera a pestaña, si resulta
- * que es lo que trae de vuelta a la gente, es cambiar dos líneas de aquí.
+ * Van arriba y no abajo porque en móvil seis iconos en la barra van muy justos,
+ * y porque las dos son cosas a las que se entra, no sitios donde se está. Las
+ * dos son rutas completas: ascender cualquiera a pestaña, si resulta que es lo
+ * que trae de vuelta a la gente, es cambiar dos líneas de aquí.
  */
-const TodayHeaderIcons = () => {
+const HeaderIcons = () => {
   const { t } = useTranslation();
   const { session } = useSession();
   const { data: unread } = useUnreadNotifications(session?.user.id);
@@ -57,6 +58,13 @@ const TodayHeaderIcons = () => {
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const { session } = useSession();
+  const { data: unreadByCircle } = useUnreadCounts(session?.user.id);
+
+  const unreadTotal = Object.values(unreadByCircle ?? {}).reduce(
+    (sum, n) => sum + n,
+    0,
+  );
 
   return (
     <Tabs
@@ -73,6 +81,11 @@ export default function TabLayout() {
         headerShadowVisible: false,
         headerTintColor: "#1C1917",
         sceneStyle: { backgroundColor: "#FBF8F4" },
+        // En **todas** las pestañas, no solo en Hoy. Vivían en la cabecera de
+        // Hoy, así que quien abría la app en Orar o en Círculos no se enteraba
+        // nunca de que alguien había orado por él: el mecanismo de retorno del
+        // producto, escondido en el único sitio donde ya estabas.
+        headerRight: () => <HeaderIcons />,
       }}
     >
       <Tabs.Screen
@@ -80,12 +93,6 @@ export default function TabLayout() {
         options={{
           title: t("tabs.today"),
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-          // La comunidad vive detrás de un icono y no en una sexta pestaña: en
-          // móvil seis iconos van muy justos, y esto deja el bucle diario
-          // intacto. Va como ruta completa a propósito — si resulta que la
-          // comunidad es lo que trae de vuelta a la gente, ascenderla a pestaña
-          // es cambiar dos líneas de este archivo.
-          headerRight: () => <TodayHeaderIcons />,
         }}
       />
       {/* Second, next to Hoy: it is the tab most closely tied to the day's
@@ -109,6 +116,10 @@ export default function TabLayout() {
         options={{
           title: t("tabs.circles"),
           tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} />,
+          // El punto de mensajes sin leer se pintaba **dentro** de la pantalla,
+          // así que había que entrar para saber que había algo que ver.
+          tabBarBadge: unreadTotal || undefined,
+          tabBarBadgeStyle: { backgroundColor: "#8C5A3C" },
         }}
       />
       <Tabs.Screen

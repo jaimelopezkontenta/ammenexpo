@@ -388,6 +388,20 @@ select pg_temp.assert(
     where id = 'bbbb0000-0000-0000-0000-000000000002') is null,
   'an anonymous request carries no author, not even an id');
 
+-- La tarjeta del muro y la del feed son la misma desde que el feed devuelve
+-- estas dos. `is_anonymous` se adivinaba por un `author_id` nulo —cierto pero
+-- indirecto— y `answered_at` no llegaba de ninguna forma, así que una petición
+-- ya respondida se leía en el feed como si siguiera abierta.
+select pg_temp.assert(
+  (select is_anonymous from public.home_feed()
+    where id = 'bbbb0000-0000-0000-0000-000000000002'),
+  'and says plainly that it is anonymous, instead of leaving it to be guessed');
+
+select pg_temp.assert(
+  (select answered_at from public.home_feed()
+    where id = 'bbbb0000-0000-0000-0000-000000000001') is null,
+  'an open request has no answered date');
+
 commit;
 
 -- En cuanto sigues a alguien, el feed se estrecha a esa gente.
@@ -410,6 +424,26 @@ select pg_temp.assert(
     where id = 'bbbb0000-0000-0000-0000-000000000001'
   ),
   'and what they wrote is in it');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+update public.posts set answered_at = now()
+ where id = 'bbbb0000-0000-0000-0000-000000000001';
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select answered_at from public.home_feed()
+    where id = 'bbbb0000-0000-0000-0000-000000000001') is not null,
+  'and a request marked answered reads as answered in the feed too');
 
 commit;
 
@@ -456,6 +490,7 @@ select pg_temp.assert(
   'and never their anonymous ones — a per-person list is exactly how anonymity comes undone');
 
 commit;
+
 
 
 -- ===========================================================================

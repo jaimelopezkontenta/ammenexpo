@@ -5,15 +5,23 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { PrayerRequestCard } from "@/components/PrayerRequestCard";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
-import { useTogglePostPrayer } from "@/core/posts/queries";
+import { useBlockUser } from "@/core/moderation/blocks";
+import {
+  useDeletePrayerRequest,
+  useMarkAnswered,
+  useReportPost,
+  useTogglePostPrayer,
+} from "@/core/posts/queries";
 import {
   useHomeFeed,
   useSearchPeople,
   type FeedEntry,
 } from "@/core/social/feed";
 import { useFollowUser, useUnfollowUser } from "@/core/social/follows";
+import { useReportTestimony } from "@/core/testimonies/queries";
 
 /**
  * La comunidad.
@@ -25,6 +33,11 @@ import { useFollowUser, useUnfollowUser } from "@/core/social/follows";
  *
  * **Buscar no es otra ruta**: escribir sustituye el feed por personas, igual
  * que en la pestaña de la Biblia. Un paso menos y ningún nombre que inventar.
+ *
+ * Y las peticiones se pintan con `PrayerRequestCard`, la misma del muro. La
+ * primera versión traía tarjeta propia con orar y comentar, y **sin reportar ni
+ * bloquear** — en la pantalla donde aparecen más desconocidos, que es justo
+ * donde mira primero la Guideline 1.2.
  */
 export default function Community() {
   const { t } = useTranslation();
@@ -32,6 +45,7 @@ export default function Community() {
   const userId = session?.user.id;
 
   const [query, setQuery] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Una sola mutación para todas las tarjetas: sin saber cuál está en vuelo,
   // pulsar dos seguidas dejaría las dos con el indicador puesto.
@@ -42,8 +56,25 @@ export default function Community() {
   const feed = useHomeFeed();
   const people = useSearchPeople(query.trim());
   const togglePrayer = useTogglePostPrayer(userId);
+  const reportPost = useReportPost(userId);
+  const reportTestimony = useReportTestimony(userId);
+  const block = useBlockUser(userId);
+  const markAnswered = useMarkAnswered();
+  const remove = useDeletePrayerRequest();
   const follow = useFollowUser();
   const unfollow = useUnfollowUser();
+
+  const run = async (action: () => Promise<unknown>, done?: string) => {
+    setError(null);
+    setNotice(null);
+
+    try {
+      await action();
+      if (done) setNotice(done);
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
 
   const handleFollow = async (targetId: string, following: boolean) => {
     if (!userId) return;
@@ -63,20 +94,6 @@ export default function Community() {
       setError(t("common.errorGeneric"));
     } finally {
       setPending(null);
-    }
-  };
-
-  const handlePray = async (entry: FeedEntry) => {
-    setError(null);
-
-    try {
-      await togglePrayer.mutateAsync({
-        postId: entry.id,
-        prayed: entry.i_prayed,
-      });
-      void feed.refetch();
-    } catch {
-      setError(t("common.errorGeneric"));
     }
   };
 
@@ -102,6 +119,12 @@ export default function Community() {
           autoCorrect={false}
           returnKeyType="search"
         />
+
+        {notice ? (
+          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
+            {notice}
+          </Text>
+        ) : null}
 
         {error ? (
           <Text className="text-sm text-red-500" accessibilityRole="alert">
@@ -183,13 +206,104 @@ export default function Community() {
                 {t("community.empty")}
               </Text>
             ) : (
-              (feed.data ?? []).map((entry) => (
-                <FeedCard
-                  key={`${entry.kind}-${entry.id}`}
-                  entry={entry}
-                  onPray={() => void handlePray(entry)}
-                />
-              ))
+              (feed.data ?? []).map((entry) =>
+                entry.kind === "request" ? (
+                  // La misma tarjeta que el muro, con todo lo que trae:
+                  // reportar, bloquear, marcar respondida y borrar. `canHide` en
+                  // falso porque en el muro abierto no manda nadie, y eso la
+                  // propia pantalla del muro ya lo dice en voz alta.
+                  <PrayerRequestCard
+                    key={`${entry.kind}-${entry.id}`}
+                    request={{
+                      id: entry.id,
+                      body: entry.body ?? "",
+                      is_anonymous: entry.is_anonymous,
+                      author_id: entry.author_id,
+                      author_name: entry.author_name,
+                      author_avatar_url: entry.author_avatar_url,
+                      prayer_count: entry.prayer_count,
+                      comment_count: entry.comment_count,
+                      answered_at: entry.answered_at,
+                      created_at: entry.created_at,
+                      i_prayed: entry.i_prayed,
+                      is_mine: entry.is_mine,
+                    }}
+                    canHide={false}
+                    onTogglePrayer={() =>
+                      void run(() =>
+                        togglePrayer
+                          .mutateAsync({
+                            postId: entry.id,
+                            prayed: entry.i_prayed,
+                          })
+                          .then(() => feed.refetch()),
+                      )
+                    }
+                    onOpen={() =>
+                      router.push({
+                        pathname: "/peticiones/[id]",
+                        params: { id: entry.id },
+                      })
+                    }
+                    onReport={() =>
+                      void run(
+                        () =>
+                          reportPost.mutateAsync({
+                            id: entry.id,
+                            kind: "post",
+                          }),
+                        t("moderation.reportDone"),
+                      )
+                    }
+                    onBlock={(who) =>
+                      void run(
+                        () => block.mutateAsync(who),
+                        t("moderation.blockDone"),
+                      )
+                    }
+                    // En el muro abierto no hay quien administre, así que esta
+                    // nunca se llama: `canHide` mantiene el control fuera.
+                    onHide={() => undefined}
+                    onMarkAnswered={() =>
+                      void run(() =>
+                        markAnswered
+                          .mutateAsync(entry.id)
+                          .then(() => feed.refetch()),
+                      )
+                    }
+                    onDelete={() =>
+                      void run(() =>
+                        remove.mutateAsync(entry.id).then(() => feed.refetch()),
+                      )
+                    }
+                  />
+                ) : (
+                  <StoryCard
+                    key={`${entry.kind}-${entry.id}`}
+                    entry={entry}
+                    onReport={() =>
+                      void run(
+                        () =>
+                          entry.kind === "testimony"
+                            ? reportTestimony.mutateAsync(entry.id)
+                            : reportPost.mutateAsync({
+                                id: entry.id,
+                                kind: "post",
+                              }),
+                        t("moderation.reportDone"),
+                      )
+                    }
+                    onBlock={() => {
+                      if (!entry.author_id) return;
+
+                      void run(
+                        () => block.mutateAsync(entry.author_id!),
+                        t("moderation.blockDone"),
+                      );
+                    }}
+                  />
+                ),
+              )
             )}
           </>
         )}
@@ -198,49 +312,47 @@ export default function Community() {
   );
 }
 
-const FeedCard = ({
+/**
+ * Un testimonio o un plan público.
+ *
+ * Los dos llevan reportar y bloquear. Sin eso, el testimonio de un desconocido
+ * era una tarjeta que no se podía tocar de ninguna forma — el mismo agujero que
+ * tenían las peticiones aquí, en esta misma pantalla.
+ */
+const StoryCard = ({
   entry,
-  onPray,
+  onReport,
+  onBlock,
 }: {
   entry: FeedEntry;
-  onPray: () => void;
+  onReport: () => void;
+  onBlock: () => void;
 }) => {
   const { t } = useTranslation();
-
-  // Una petición anónima no trae ni nombre ni id: es lo que hace que el
-  // anonimato lo sea. Sin id, el tono del avatar sale del de la propia
-  // petición, para que dos de la misma persona no compartan color.
-  const anonymous = !entry.author_id;
 
   return (
     <View className="gap-3 rounded-2xl border border-ink-line p-5">
       <View className="flex-row items-center gap-2">
         <Avatar
-          name={anonymous ? t("feed.anonymousName") : (entry.author_name ?? "")}
+          name={entry.author_name ?? ""}
           url={entry.author_avatar_url}
-          seed={anonymous ? entry.id : (entry.author_id ?? "")}
+          seed={entry.author_id ?? entry.id}
           size={28}
         />
 
-        {anonymous ? (
-          <Text className="flex-1 text-sm font-medium text-ink-soft">
-            {t("feed.anonymousName")}
-          </Text>
-        ) : (
-          <Link
-            href={{
-              pathname: "/persona/[id]",
-              params: { id: entry.author_id! },
-            }}
-            asChild
-          >
-            <Pressable accessibilityRole="link" className="flex-1">
-              <Text className="text-sm font-medium text-ink-soft">
-                {entry.author_name}
-              </Text>
-            </Pressable>
-          </Link>
-        )}
+        <Link
+          href={{
+            pathname: "/persona/[id]",
+            params: { id: entry.author_id ?? "" },
+          }}
+          asChild
+        >
+          <Pressable accessibilityRole="link" className="flex-1">
+            <Text className="text-sm font-medium text-ink-soft">
+              {entry.author_name}
+            </Text>
+          </Pressable>
+        </Link>
 
         {/* Qué es cada fila. Sin esto, un testimonio y una petición se leen
             igual, y son cosas muy distintas: una pide, la otra cuenta. */}
@@ -261,48 +373,48 @@ const FeedCard = ({
         </Text>
       ) : null}
 
-      {entry.kind === "request" ? (
-        <View className="flex-row items-center gap-4">
-          <Pressable accessibilityRole="button" onPress={onPray}>
-            <Text
-              className={
-                entry.i_prayed
-                  ? "text-sm font-semibold text-clay"
-                  : "text-sm text-ink-soft underline"
-              }
-            >
-              {entry.i_prayed ? t("feed.prayed") : t("feed.pray")}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={() =>
-              router.push({
-                pathname: "/peticiones/[id]",
-                params: { id: entry.id },
-              })
-            }
+      <View className="flex-row flex-wrap gap-4">
+        {entry.kind === "plan" ? (
+          <Link
+            href={{ pathname: "/orar/[planId]", params: { planId: entry.id } }}
+            asChild
           >
-            <Text className="text-sm text-ink-soft underline">
-              {t("feed.commentCount", { count: entry.comment_count })}
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
+            <Pressable accessibilityRole="link">
+              <Text className="text-sm text-clay underline">
+                {t("community.openPlan")}
+              </Text>
+            </Pressable>
+          </Link>
+        ) : (
+          <Link href="/testimonios" asChild>
+            <Pressable accessibilityRole="link">
+              <Text className="text-sm text-clay underline">
+                {t("community.openTestimonies")}
+              </Text>
+            </Pressable>
+          </Link>
+        )}
 
-      {entry.kind === "plan" ? (
-        <Link
-          href={{ pathname: "/orar/[planId]", params: { planId: entry.id } }}
-          asChild
-        >
-          <Pressable accessibilityRole="link">
-            <Text className="text-sm text-clay underline">
-              {t("community.openPlan")}
-            </Text>
-          </Pressable>
-        </Link>
-      ) : null}
+        {entry.is_mine ? null : (
+          <>
+            <Pressable accessibilityRole="button" onPress={onReport}>
+              <Text className="text-sm text-ink-soft underline">
+                {t("moderation.report")}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${t("moderation.block")} ${entry.author_name ?? ""}`}
+              onPress={onBlock}
+            >
+              <Text className="text-sm text-ink-soft underline">
+                {t("moderation.block")}
+              </Text>
+            </Pressable>
+          </>
+        )}
+      </View>
     </View>
   );
 };

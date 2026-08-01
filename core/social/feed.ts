@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 import { supabase } from "@/utils/supabase";
 
@@ -9,11 +10,18 @@ export type FeedEntry = {
   id: string;
   body: string | null;
   title: string | null;
+  /**
+   * Se adivinaba por un `author_id` nulo —cierto, pero indirecto— y la tarjeta
+   * del muro lo pide por su nombre. Igual que `answered_at`, que no llegaba
+   * aquí de ninguna forma.
+   */
+  is_anonymous: boolean;
   author_id: string | null;
   author_name: string | null;
   author_avatar_url: string | null;
   prayer_count: number;
   comment_count: number;
+  answered_at: string | null;
   created_at: string;
   i_prayed: boolean;
   is_mine: boolean;
@@ -56,14 +64,24 @@ export type PersonSearchResult = {
  * Misma forma que el buscador de círculos: filtra mientras se escribe, y sin
  * acentos — `maria` encuentra *María* y `nunez` encuentra *Núñez*.
  */
-export const useSearchPeople = (query: string) =>
-  useQuery({
-    queryKey: ["searchPeople", query],
+export const useSearchPeople = (query: string) => {
+  // Sin esto se lanzaba una petición por tecla. El buscador de círculos ya
+  // llevaba su espera de 250 ms desde el bloque D; al copiar la forma de la RPC
+  // no copié esta parte.
+  const [debounced, setDebounced] = useState(query);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(query), 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  return useQuery({
+    queryKey: ["searchPeople", debounced],
     // La consulta vacía sí se manda: devuelve el directorio, y "cero
     // resultados" antes de escribir nada se lee como "no hay nadie".
     queryFn: async (): Promise<PersonSearchResult[]> => {
       const { data, error } = await supabase.rpc("search_people", {
-        p_query: query,
+        p_query: debounced,
       });
 
       if (error) throw error;
@@ -71,6 +89,7 @@ export const useSearchPeople = (query: string) =>
       return (data ?? []) as PersonSearchResult[];
     },
   });
+};
 
 export type PersonPost = {
   id: string;
