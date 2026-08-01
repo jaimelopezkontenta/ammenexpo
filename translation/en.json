@@ -409,7 +409,9 @@
     "reminder": "It's your time to pray",
     "intercessorReminder": "Today is day {{day}} of {{name}}'s plan",
     "dailyDigest": "{{count}} person prayed for you yesterday",
-    "dailyDigest_plural": "{{count}} people prayed for you yesterday"
+    "dailyDigest_plural": "{{count}} people prayed for you yesterday",
+    "title": "Notifications",
+    "empty": "Nothing here yet. When somebody prays for you, you'll find it here."
   },
   "button": {
     "spanish": "Switch language to Spanish",
@@ -501,6 +503,8 @@
       "testimony": "Testimony",
       "plan": "Plan"
     },
-    "publicPlans": "Open plans"
+    "publicPlans": "Open plans",
+    "unread": "{{count}} unread",
+    "unread_plural": "{{count}} unread"
   }
 }

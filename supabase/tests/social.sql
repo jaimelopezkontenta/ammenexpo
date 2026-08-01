@@ -457,6 +457,95 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- Los avisos
+--
+-- La tabla lleva llenándose desde la Fase 1 —una fila por cada persona que ora
+-- por ti— y nunca la había leído nadie. Lo que se prueba aquí no es que se lean
+-- sino **de quién**: el aviso lleva el nombre dentro del payload, y la policy
+-- de la tabla decide por `user_id` y no sabe nada de bloqueos.
+-- ===========================================================================
+begin;
+
+insert into public.notifications (user_id, type, payload, dedupe_key)
+values
+  (:ANA, 'intercession',
+   jsonb_build_object('intercessor_id', :BETO, 'intercessor_name', 'Beto',
+                      'plan_title', 'Siete días'), 'test:beto'),
+  (:ANA, 'intercession',
+   jsonb_build_object('intercessor_id', :CARLA, 'intercessor_name', 'María',
+                      'plan_title', 'Siete días'), 'test:carla'),
+  (:BETO, 'intercession',
+   jsonb_build_object('intercessor_id', :ANA, 'intercessor_name', 'Ana'),
+   'test:ana');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.my_notifications()) = 2,
+  'you see your own notifications and nobody else''s');
+
+select pg_temp.assert(
+  public.my_unread_notifications() = 2,
+  'and the unread count matches what the screen will show');
+
+select pg_temp.assert(
+  public.mark_notifications_read() = 2,
+  'marking them read reports how many changed');
+
+select pg_temp.assert(
+  public.mark_notifications_read() = 0,
+  'and doing it again is not an error — the screen calls it on every open');
+
+select pg_temp.assert(
+  public.my_unread_notifications() = 0,
+  'and the dot goes away');
+
+commit;
+
+-- Bloquear silencia su mensaje en Hoy y su cara en el chat; sin este filtro su
+-- nombre seguiría apareciendo aquí, que es la pantalla que se abre justo cuando
+-- alguien quiere dejar de saber de esa persona.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.blocks (blocker_id, blocked_id) values (:ANA, :BETO);
+
+select pg_temp.assert(
+  (select count(*) from public.my_notifications()) = 1,
+  'a notification from somebody you blocked does not reach you');
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.my_notifications()
+    where payload ->> 'intercessor_name' = 'Beto'
+  ),
+  'and it is theirs that is gone, not somebody else''s');
+
+delete from public.blocks where blocker_id = :ANA and blocked_id = :BETO;
+
+commit;
+
+-- Y lo que un cliente no puede hacer: fabricarse un aviso. No hay policy de
+-- INSERT para `authenticated`, solo el trigger.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises(format(
+    'insert into public.notifications (user_id, type) values (%L, ''intercession'')',
+    :CARLA)),
+  'nobody can write themselves a notification');
+
+commit;
+
 -- ===========================================================================
 -- RLS sigue puesta
 -- ===========================================================================
