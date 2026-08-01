@@ -387,7 +387,11 @@
   "invite": {
     "title": "Invita a alguien a orar contigo",
     "body": "Orar acompañado pesa menos.",
-    "cta": "Invitar amigos"
+    "cta": "Invitar amigos",
+    "linkLabel": "Tu enlace",
+    "message": "Estoy usando Ammen para orar cada día. ¿Te unes?",
+    "landing": "{{name}} te invita a orar en Ammen",
+    "landingUnknown": "Te han invitado a orar en Ammen"
   },
   "paywall": {
     "title": "Ammen Plus",

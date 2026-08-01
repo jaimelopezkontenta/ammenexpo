@@ -387,7 +387,11 @@
   "invite": {
     "title": "Invite someone to pray with you",
     "body": "Prayer weighs less when someone carries it with you.",
-    "cta": "Invite friends"
+    "cta": "Invite friends",
+    "linkLabel": "Your link",
+    "message": "I'm using Ammen to pray every day. Want to join?",
+    "landing": "{{name}} is inviting you to pray on Ammen",
+    "landingUnknown": "You've been invited to pray on Ammen"
   },
   "paywall": {
     "title": "Ammen Plus",

@@ -309,6 +309,12 @@ export default function Profile() {
         <Button title={t("moderation.blockedTitle")} variant="ghost" />
       </Link>
 
+      {/* La única vía de entrada para quien todavía no tiene un plan que
+          compartir, que es justo quien acaba de instalar la app. */}
+      <Link href="/invitar" asChild>
+        <Button title={t("invite.title")} variant="ghost" />
+      </Link>
+
       <Link href="/acerca" asChild>
         <Button title={t("profile.about")} variant="ghost" />
       </Link>

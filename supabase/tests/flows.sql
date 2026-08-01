@@ -400,6 +400,85 @@ select pg_temp.assert(
 commit;
 
 \echo ''
+
+-- ===========================================================================
+-- Invitar a alguien a Ammen
+--
+-- `invites` se podía canjear desde la Fase 1 y **nada insertaba una fila**, así
+-- que no podía existir un código que canjear. Esto prueba la mitad que faltaba.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+-- La regla 1: una policy de SELECT que consultara su propia tabla rompería este
+-- `returning`, y es como se lee el código recién creado.
+with created as (
+  insert into public.invites (inviter_id)
+  values ('11111111-1111-1111-1111-111111111111')
+  returning code
+)
+select pg_temp.assert(
+  (select length(code) from created) > 8,
+  'creating an invite hands back its code (rule 1)');
+
+commit;
+
+select code as invite_code from public.invites
+ where inviter_id = '11111111-1111-1111-1111-111111111111' \gset
+
+-- La vista previa la abre alguien **sin cuenta**: es el punto entero de una
+-- invitación. Devuelve el nombre y nada más — ni el id de quien invita, ni
+-- cuántas veces se ha usado el código.
+begin;
+set local role anon;
+
+select pg_temp.assert(
+  (select inviter_name from public.get_invite_preview(:'invite_code')) = 'Ana',
+  'somebody with no account can see who invited them');
+
+select pg_temp.assert(
+  (select count(*) from public.get_invite_preview('no-existe')) = 0,
+  'and a code that does not exist says nothing at all');
+
+commit;
+
+-- Canjear conecta, y desde el bloque S conectar es seguir: en una dirección, y
+-- deshacible con un toque.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select pg_temp.assert(
+  (public.redeem_invite_code(:'invite_code') ->> 'ok')::boolean,
+  'redeeming an invite works');
+
+select pg_temp.assert(
+  exists (
+    select 1 from public.follows
+    where follower_id = '44444444-4444-4444-4444-444444444444'
+      and followee_id = '11111111-1111-1111-1111-111111111111'
+  ),
+  'and whoever came in follows whoever invited them');
+
+-- Un código que circula por un grupo de WhatsApp no puede apagarse con la
+-- primera persona que lo usa.
+select pg_temp.assert(
+  (public.redeem_invite_code(:'invite_code') ->> 'ok')::boolean,
+  'and the code keeps working after the first acceptance');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  not (public.redeem_invite_code(:'invite_code') ->> 'ok')::boolean,
+  'but you cannot redeem your own');
+
+commit;
+
 \echo '===================================='
 \echo ' ACQUISITION LOOP ASSERTIONS PASSED'
 \echo '===================================='
