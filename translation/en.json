@@ -49,7 +49,22 @@
     "addPhoto": "Add a photo",
     "removePhoto": "Remove it",
     "photoTooLarge": "That image is too large. Try a smaller one.",
-    "photoDenied": "We need permission to open your photos."
+    "photoDenied": "We need permission to open your photos.",
+    "memberSince": "Here since {{date}}",
+    "sharesCircle": "You share a circle",
+    "noSharedCircle": "You don't share a circle",
+    "timezone": "Your time zone",
+    "timezoneHint": "It decides when your day opens and when your streak counts.",
+    "timezoneMoved": "Your device is in {{zone}}. Did you move?",
+    "timezoneUpdate": "Use {{zone}}",
+    "about": "About Ammen",
+    "aboutBody": "Ammen is an app for praying every day, and for not doing it alone. The plan is written by an AI from what you tell it; the verses come from the Reina-Valera 1909, which is in the public domain.",
+    "aboutAi": "What the AI writes are suggestions for prayer, not medical, legal or doctrinal advice.",
+    "version": "Version {{version}}",
+    "support": "Write to us",
+    "supportHint": "If something breaks, tell us along with the version above — it's the first thing we need.",
+    "unavailable": "This profile isn't available",
+    "unavailableBody": "You may have blocked this person, or their account may no longer exist. Blocks can be undone in “Blocked people”, inside your profile."
   },
   "auth": {
     "signInTitle": "Welcome back",

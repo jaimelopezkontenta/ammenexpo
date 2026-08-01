@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
@@ -38,19 +39,34 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
 
         return (
           <View key={person.intercession_id} className="gap-1">
-            <View className="flex-row items-center gap-3">
-              <Avatar
-                name={person.intercessor_name}
-                url={person.intercessor_avatar_url}
-                seed={person.intercessor_id}
-                size={32}
-              />
-              <Text className="flex-1 text-base font-medium text-ink">
-                {t("intercession.personPrayed", {
-                  name: person.intercessor_name,
-                })}
-              </Text>
-            </View>
+            {/* Quien ora por ti dejaba de ser una cadena de texto en cuanto
+                tuvo cara; ahora también tiene a dónde ir. Es el sitio de la app
+                donde más falta hacía: alguien te acaba de nombrar delante de
+                Dios y no había forma de saber quién es. */}
+            <Link
+              href={{
+                pathname: "/persona/[id]",
+                params: { id: person.intercessor_id },
+              }}
+              asChild
+            >
+              <Pressable
+                accessibilityRole="link"
+                className="flex-row items-center gap-3"
+              >
+                <Avatar
+                  name={person.intercessor_name}
+                  url={person.intercessor_avatar_url}
+                  seed={person.intercessor_id}
+                  size={32}
+                />
+                <Text className="flex-1 text-base font-medium text-ink">
+                  {t("intercession.personPrayed", {
+                    name: person.intercessor_name,
+                  })}
+                </Text>
+              </Pressable>
+            </Link>
 
             {/* A reported message stops coming back from the server, so there
                 is no "reported" placeholder to keep: the text is simply gone

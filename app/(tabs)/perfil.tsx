@@ -1,3 +1,4 @@
+import * as Localization from "expo-localization";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,6 +25,7 @@ import {
   useDeleteAccount,
   useProfile,
   useUpdateProfile,
+  useUpdateTimezone,
 } from "@/core/profile/queries";
 
 export default function Profile() {
@@ -33,6 +35,7 @@ export default function Profile() {
 
   const { data: profile, isLoading, isError, refetch } = useProfile(userId);
   const update = useUpdateProfile(userId);
+  const updateTimezone = useUpdateTimezone(userId);
   const uploadAvatar = useUploadAvatar(userId);
   const removeAvatar = useRemoveAvatar(userId);
   const deleteAccount = useDeleteAccount();
@@ -62,6 +65,31 @@ export default function Profile() {
     hours.length === profile.reminder_hours.length &&
     hours.every((entry) => profile.reminder_hours.includes(entry));
   const dirty = name.trim() !== profile.display_name || !sameHours;
+
+  // La zona horaria se escribía **una sola vez**, en el onboarding, y decide
+  // cuándo se abre tu día y cuándo cuenta tu racha: quien se mudaba de país no
+  // tenía forma de arreglarlo desde ninguna pantalla.
+  //
+  // Sin selector de las cuatrocientas zonas IANA. El caso real es "me he
+  // mudado", y para eso basta con comparar la guardada con la que dice el
+  // dispositivo y ofrecer el cambio solo cuando difieren; una lista de
+  // cuatrocientas entradas es sobre todo una forma de elegir mal.
+  const deviceZone = Localization.getCalendars()[0]?.timeZone ?? null;
+  const zoneMoved = Boolean(deviceZone) && deviceZone !== profile.timezone;
+
+  const handleTimezone = async () => {
+    if (!deviceZone) return;
+
+    setNotice(null);
+    setError(null);
+
+    try {
+      await updateTimezone.mutateAsync(deviceZone);
+      setNotice(t("profile.saved"));
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
 
   const handlePickPhoto = async () => {
     setNotice(null);
@@ -220,6 +248,30 @@ export default function Profile() {
         </Text>
       </View>
 
+      <View className="gap-2">
+        <Text className="text-sm font-medium text-ink-muted">
+          {t("profile.timezone")}
+        </Text>
+        <Text className="text-base text-ink">{profile.timezone}</Text>
+        <Text className="text-sm text-ink-muted">
+          {t("profile.timezoneHint")}
+        </Text>
+
+        {zoneMoved ? (
+          <View className="gap-2 pt-1">
+            <Text className="text-sm text-ink-soft">
+              {t("profile.timezoneMoved", { zone: deviceZone })}
+            </Text>
+            <Button
+              title={t("profile.timezoneUpdate", { zone: deviceZone })}
+              variant="secondary"
+              loading={updateTimezone.isPending}
+              onPress={() => void handleTimezone()}
+            />
+          </View>
+        ) : null}
+      </View>
+
       {dirty ? (
         <Button
           title={t("common.save")}
@@ -255,6 +307,10 @@ export default function Profile() {
 
       <Link href="/bloqueados" asChild>
         <Button title={t("moderation.blockedTitle")} variant="ghost" />
+      </Link>
+
+      <Link href="/acerca" asChild>
+        <Button title={t("profile.about")} variant="ghost" />
       </Link>
 
       <View className="mt-auto gap-3 pt-6">

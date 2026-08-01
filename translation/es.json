@@ -49,7 +49,22 @@
     "addPhoto": "Poner una foto",
     "removePhoto": "Quitarla",
     "photoTooLarge": "Esa imagen pesa demasiado. Prueba con una más pequeña.",
-    "photoDenied": "Necesitamos permiso para abrir tus fotos."
+    "photoDenied": "Necesitamos permiso para abrir tus fotos.",
+    "memberSince": "Aquí desde {{date}}",
+    "sharesCircle": "Compartís un círculo",
+    "noSharedCircle": "No compartís ningún círculo",
+    "timezone": "Tu zona horaria",
+    "timezoneHint": "Decide a qué hora se abre tu día y cuándo cuenta tu racha.",
+    "timezoneMoved": "Tu dispositivo está en {{zone}}. ¿Te has mudado?",
+    "timezoneUpdate": "Usar {{zone}}",
+    "about": "Acerca de Ammen",
+    "aboutBody": "Ammen es una app para orar cada día y para no hacerlo sola. El plan lo escribe una inteligencia artificial a partir de lo que le cuentas; los versículos salen de la Reina-Valera 1909, que es de dominio público.",
+    "aboutAi": "Lo que genera la IA son sugerencias para orar, no consejo médico, legal ni doctrinal.",
+    "version": "Versión {{version}}",
+    "support": "Escríbenos",
+    "supportHint": "Si algo falla, cuéntanoslo con la versión de arriba: es lo primero que necesitamos.",
+    "unavailable": "Este perfil no está disponible",
+    "unavailableBody": "Puede que hayas bloqueado a esta persona, o que su cuenta ya no exista. Los bloqueos se deshacen en «Personas bloqueadas», dentro de tu perfil."
   },
   "auth": {
     "signInTitle": "Bienvenido de vuelta",

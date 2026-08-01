@@ -1230,6 +1230,102 @@ select pg_temp.assert(
 commit;
 
 -- ===========================================================================
+-- El perfil de otra persona
+--
+-- Hasta aquí, quien ora por ti era una cadena de texto. Esto le da un sitio.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select display_name from public.public_profile(:ANA)) = 'Ana',
+  'Carla can open the profile of somebody who prayed for her');
+
+select pg_temp.assert(
+  (select shares_circle from public.public_profile(:ANA)),
+  'and it says they are in a circle together');
+
+select pg_temp.assert(
+  (select member_since from public.public_profile(:ANA)) is not null,
+  'and since when she has been here');
+
+select pg_temp.assert(
+  not (select is_me from public.public_profile(:ANA)),
+  'and that it is not her own');
+
+commit;
+
+-- La racha no viaja. Está en `profiles` y devolverla sería trivial, pero la
+-- racha de este producto es indulgente a propósito para que no apriete;
+-- publicarla la convierte en un marcador. En tu perfil es motivación, en el de
+-- otra persona es comparación.
+begin;
+
+select pg_temp.assert(
+  not exists (
+    select 1
+    from information_schema.routines r
+    join information_schema.parameters p
+      on p.specific_name = r.specific_name
+    where r.routine_name = 'public_profile'
+      and p.parameter_name in ('streak_count', 'streak_last_day')
+  ),
+  'and it does not carry their streak');
+
+commit;
+
+-- Bloquear es de una sola dirección en toda la app y aquí también, para no
+-- inventar una regla distinta en una pantalla suelta.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+insert into public.blocks (blocker_id, blocked_id) values (:CARLA, :ANA);
+
+select pg_temp.assert(
+  (select count(*) from public.public_profile(:ANA)) = 0,
+  'somebody you blocked has no profile to open');
+
+commit;
+
+-- Y a quien bloquea no se le cierra nada: el bloqueo es silencioso.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.public_profile(:CARLA)) = 1,
+  'but she can still open theirs, because blocking says nothing to them');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+delete from public.blocks where blocker_id = :CARLA;
+
+commit;
+
+-- Alguien con quien no compartes nada sigue teniendo perfil —lo necesitas para
+-- decidir si le bloqueas tras leer algo suyo en el muro abierto— pero se dice
+-- que no compartís círculo.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.public_profile(:ANA)) = 1,
+  'a stranger from the open wall still has a profile to check');
+
+select pg_temp.assert(
+  not (select shares_circle from public.public_profile(:ANA)),
+  'and it says plainly that they share no circle');
+
+commit;
+
+-- ===========================================================================
 -- RLS sigue puesta en todas las tablas
 --
 -- `blocks` es nueva, y una tabla sin RLS en este esquema significa que

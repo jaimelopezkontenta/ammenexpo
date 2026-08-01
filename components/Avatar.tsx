@@ -67,9 +67,13 @@ export const Avatar = ({ name, url, seed, size = 40 }: AvatarProps) => {
         // blanco. Diferir un avatar de 40 px tampoco ahorra nada.
         loading="eager"
         // Decorativa: el nombre va escrito al lado en todas las pantallas donde
-        // se usa, y anunciarlo dos veces sobra.
+        // se usa, y anunciarlo dos veces sobra. **`aria-hidden` aparte**: las
+        // dos props nativas no se traducen a nada en react-native-web, y desde
+        // que la cara vive dentro de un enlace (el censo del círculo, quién oró
+        // por ti) eso hacía que el enlace se anunciara como "A Ana".
         accessibilityElementsHidden
         importantForAccessibility="no"
+        aria-hidden
       />
     );
   }
@@ -85,6 +89,7 @@ export const Avatar = ({ name, url, seed, size = 40 }: AvatarProps) => {
       className="items-center justify-center"
       accessibilityElementsHidden
       importantForAccessibility="no"
+      aria-hidden
     >
       <Text
         style={{ color: tone.ink, fontSize: size * 0.42 }}

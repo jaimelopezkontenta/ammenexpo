@@ -4,11 +4,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/utils/supabase";
 
 /**
- * 512 px es de sobra para una cara de 40 px en pantalla, incluso al triple de
- * densidad, y mantiene el fichero muy por debajo del tope de 2 MiB del bucket
- * sin necesidad de una segunda librería para recomprimir.
+ * `expo-image-picker` no reescala: solo recomprime. Con el recorte cuadrado y
+ * esta calidad, una foto de móvil se queda muy por debajo del tope de 2 MiB del
+ * bucket, y para una cara de 40 px en pantalla sobra de largo. Reescalar de
+ * verdad pediría una segunda librería para nada.
  */
-const MAX_SIDE = 512;
 const QUALITY = 0.7;
 
 export class AvatarTooLarge extends Error {

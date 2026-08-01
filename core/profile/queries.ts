@@ -165,3 +165,91 @@ export const useOnboardingAnswers = (userId: string | undefined) =>
       );
     },
   });
+
+export type PublicProfile = {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  member_since: string;
+  shares_circle: boolean;
+  is_me: boolean;
+};
+
+/**
+ * Quién es la persona que oró por ti.
+ *
+ * Devuelve nada para alguien a quien has bloqueado — la regla vive en la RPC
+ * para que ninguna pantalla tenga que acordarse. La racha no viaja: en tu
+ * perfil es motivación, en el de otra persona es comparación.
+ */
+export const usePublicProfile = (userId: string | undefined) =>
+  useQuery({
+    queryKey: ["publicProfile", userId],
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<PublicProfile | null> => {
+      const { data, error } = await supabase.rpc("public_profile", {
+        p_user_id: userId!,
+      });
+
+      if (error) throw error;
+
+      return ((data ?? []) as PublicProfile[])[0] ?? null;
+    },
+  });
+
+/**
+ * La zona horaria decide cuándo se abre tu día y cuándo cuenta tu racha, y se
+ * escribía **una sola vez** en el onboarding: quien se mudaba de país no tenía
+ * forma de arreglarlo desde ninguna pantalla.
+ *
+ * Sin selector de las cuatrocientas zonas IANA: el caso real es "me he mudado",
+ * y para eso basta con comparar la guardada con la que dice el dispositivo y
+ * ofrecer el cambio cuando difieren.
+ */
+export const useUpdateTimezone = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (timezone: string) => {
+      const { data, error } = await supabase
+        .from("profile_settings")
+        .update({ timezone })
+        .eq("id", userId!)
+        .select("id");
+
+      if (error) throw error;
+      if (!data?.length) throw new Error("timezone_update_no_rows");
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
+      // El día de hoy y la racha se calculan con la zona: con la vieja en caché
+      // seguirías viendo el día de tu país anterior.
+      void queryClient.invalidateQueries({ queryKey: ["todayDay"] });
+      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
+      void queryClient.invalidateQueries({ queryKey: ["streak", userId] });
+    },
+  });
+};
+
+/**
+ * El idioma se guardaba solo en el dispositivo: `LanguageSwitcher` llamaba a
+ * `i18n.changeLanguage` y a AsyncStorage, y **nunca escribía
+ * `profile_settings.locale`**. El servidor creía que hablabas otro idioma del
+ * que estabas viendo, y eso importa el día que el push mande texto.
+ */
+export const useUpdateLocale = (userId: string | undefined) =>
+  useMutation({
+    mutationFn: async (locale: string) => {
+      if (!userId) return;
+
+      const { error } = await supabase
+        .from("profile_settings")
+        .update({ locale })
+        .eq("id", userId);
+
+      // Sin lanzar: cambiar de idioma tiene que funcionar aunque no haya red, y
+      // la pantalla ya está en el idioma nuevo. Se reintenta al siguiente
+      // cambio; lo que no puede es romper el selector.
+      if (error) console.error("could not persist the locale", error);
+    },
+  });

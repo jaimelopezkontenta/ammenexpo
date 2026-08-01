@@ -233,17 +233,31 @@ export default function CircleDetail() {
           {(members ?? []).map((member) => (
             <View key={member.user_id} className="gap-1">
               <View className="flex-row items-center justify-between gap-3">
-                <View className="flex-1 flex-row items-center gap-3">
-                  <Avatar
-                    name={member.display_name}
-                    url={member.avatar_url}
-                    seed={member.user_id}
-                    size={32}
-                  />
-                  <Text className="flex-1 text-base text-ink">
-                    {member.display_name}
-                  </Text>
-                </View>
+                {/* El censo era una lista de nombres muertos. Ahora cada uno
+                    lleva a su perfil, que es donde se ve desde cuándo lleva
+                    aquí y lo que haya querido contar. */}
+                <Link
+                  href={{
+                    pathname: "/persona/[id]",
+                    params: { id: member.user_id },
+                  }}
+                  asChild
+                >
+                  <Pressable
+                    accessibilityRole="link"
+                    className="flex-1 flex-row items-center gap-3"
+                  >
+                    <Avatar
+                      name={member.display_name}
+                      url={member.avatar_url}
+                      seed={member.user_id}
+                      size={32}
+                    />
+                    <Text className="flex-1 text-base text-ink">
+                      {member.display_name}
+                    </Text>
+                  </Pressable>
+                </Link>
                 {member.role !== "member" ? (
                   <Text className="text-sm text-ink-soft">
                     {member.role === "owner"
