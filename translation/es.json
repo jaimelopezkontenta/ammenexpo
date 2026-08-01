@@ -64,7 +64,10 @@
     "support": "Escríbenos",
     "supportHint": "Si algo falla, cuéntanoslo con la versión de arriba: es lo primero que necesitamos.",
     "unavailable": "Este perfil no está disponible",
-    "unavailableBody": "Puede que hayas bloqueado a esta persona, o que su cuenta ya no exista. Los bloqueos se deshacen en «Personas bloqueadas», dentro de tu perfil."
+    "unavailableBody": "Puede que hayas bloqueado a esta persona, o que su cuenta ya no exista. Los bloqueos se deshacen en «Personas bloqueadas», dentro de tu perfil.",
+    "statStreak": "racha",
+    "statFollowers": "seguidores",
+    "statFollowing": "siguiendo"
   },
   "auth": {
     "signInTitle": "Bienvenido de vuelta",
@@ -477,5 +480,9 @@
     "blockedTitle": "Personas bloqueadas",
     "blockedEmpty": "No has bloqueado a nadie.",
     "blockedHint": "No verás sus mensajes, ni sus planes, ni cuando oren por ti. A ellas no se les avisa."
+  },
+  "social": {
+    "follow": "Seguir",
+    "following": "Siguiendo"
   }
 }

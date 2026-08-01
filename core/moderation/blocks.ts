@@ -69,6 +69,10 @@ const invalidateBlockedSurfaces = (
   void queryClient.invalidateQueries({ queryKey: ["testimonies"] });
   void queryClient.invalidateQueries({ queryKey: ["unreadCounts", userId] });
   void queryClient.invalidateQueries({ queryKey: ["circleSharedPlans"] });
+  // Y el perfil de la persona, que a partir del bloqueo deja de existir para
+  // ti — y cuyos contadores acaban de cambiar, porque bloquear deshace el
+  // seguimiento en los dos sentidos.
+  void queryClient.invalidateQueries({ queryKey: ["publicProfile"] });
 };
 
 export const useBlockUser = (userId: string | undefined) => {

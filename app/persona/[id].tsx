@@ -9,7 +9,16 @@ import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { usePublicProfile } from "@/core/profile/queries";
+import { useFollowUser, useUnfollowUser } from "@/core/social/follows";
 import { useVisibleTestimonies } from "@/core/testimonies/queries";
+
+/** Un número y lo que significa. Tres veces en la misma fila. */
+const Stat = ({ value, label }: { value: number; label: string }) => (
+  <View className="items-center gap-0.5">
+    <Text className="text-lg font-semibold text-ink">{value}</Text>
+    <Text className="text-xs text-ink-soft">{label}</Text>
+  </View>
+);
 
 /**
  * Quién es la persona que oró por ti.
@@ -32,11 +41,34 @@ export default function PersonProfile() {
   const { data: person, isLoading, isError, refetch } = usePublicProfile(id);
   const { data: testimonies } = useVisibleTestimonies(userId);
   const block = useBlockUser(userId);
+  const follow = useFollowUser();
+  const unfollow = useUnfollowUser();
 
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const theirs = (testimonies ?? []).filter((entry) => entry.author_id === id);
+
+  const handleFollow = async () => {
+    if (!userId || !person) return;
+
+    setError(null);
+
+    try {
+      const input = { userId, targetId: id };
+
+      if (person.i_follow) {
+        await unfollow.mutateAsync(input);
+      } else {
+        await follow.mutateAsync(input);
+      }
+    } catch {
+      // El caso concreto que la policy rechaza —seguir a quien te bloqueó— no
+      // se dice por su nombre: bloquear es silencioso en toda la app, y un
+      // "no puedes porque te bloquearon" lo dejaría de ser.
+      setError(t("common.errorGeneric"));
+    }
+  };
 
   const handleBlock = async () => {
     setError(null);
@@ -131,6 +163,37 @@ export default function PersonProfile() {
                 ? t("profile.sharesCircle")
                 : t("profile.noSharedCircle")}
             </Text>
+          ) : null}
+
+          {/* Los tres números. La racha va aquí por decisión de producto, y es
+              la única de las tres que antes era privada: en tu perfil es
+              motivación, en el de otra persona es comparación. Se pinta ya
+              decidida por el servidor, con el día de esa persona. */}
+          <View className="flex-row gap-6 pt-2">
+            <Stat value={person.streak} label={t("profile.statStreak")} />
+            <Stat
+              value={person.follower_count}
+              label={t("profile.statFollowers")}
+            />
+            <Stat
+              value={person.following_count}
+              label={t("profile.statFollowing")}
+            />
+          </View>
+
+          {!person.is_me ? (
+            <View className="w-full pt-2">
+              <Button
+                title={
+                  person.i_follow ? t("social.following") : t("social.follow")
+                }
+                // Dejar de seguir no es la acción principal de esta pantalla, y
+                // un botón lleno invitando a deshacerlo lo sería.
+                variant={person.i_follow ? "secondary" : "primary"}
+                loading={follow.isPending || unfollow.isPending}
+                onPress={() => void handleFollow()}
+              />
+            </View>
           ) : null}
         </View>
 

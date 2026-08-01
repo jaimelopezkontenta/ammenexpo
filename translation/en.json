@@ -64,7 +64,10 @@
     "support": "Write to us",
     "supportHint": "If something breaks, tell us along with the version above — it's the first thing we need.",
     "unavailable": "This profile isn't available",
-    "unavailableBody": "You may have blocked this person, or their account may no longer exist. Blocks can be undone in “Blocked people”, inside your profile."
+    "unavailableBody": "You may have blocked this person, or their account may no longer exist. Blocks can be undone in “Blocked people”, inside your profile.",
+    "statStreak": "streak",
+    "statFollowers": "followers",
+    "statFollowing": "following"
   },
   "auth": {
     "signInTitle": "Welcome back",
@@ -477,5 +480,9 @@
     "blockedTitle": "Blocked people",
     "blockedEmpty": "You haven't blocked anyone.",
     "blockedHint": "You won't see their messages, their plans, or when they pray for you. They are never told."
+  },
+  "social": {
+    "follow": "Follow",
+    "following": "Following"
   }
 }

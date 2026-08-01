@@ -173,6 +173,15 @@ export type PublicProfile = {
   member_since: string;
   shares_circle: boolean;
   is_me: boolean;
+  i_follow: boolean;
+  follower_count: number;
+  following_count: number;
+  /**
+   * Ya decidida en el servidor, y con **el día de esa persona**. `liveStreak`
+   * compara contra la fecha del dispositivo, que es la de quien mira: para tu
+   * propia racha da igual, para la de alguien al otro lado del mundo no.
+   */
+  streak: number;
 };
 
 /**
