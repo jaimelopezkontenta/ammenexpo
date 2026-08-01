@@ -1,14 +1,20 @@
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
+import {
+  AvatarTooLarge,
+  useRemoveAvatar,
+  useUploadAvatar,
+} from "@/core/profile/avatar";
 import {
   REMINDER_HOURS,
   REMINDER_MAX,
@@ -27,6 +33,8 @@ export default function Profile() {
 
   const { data: profile, isLoading, isError, refetch } = useProfile(userId);
   const update = useUpdateProfile(userId);
+  const uploadAvatar = useUploadAvatar(userId);
+  const removeAvatar = useRemoveAvatar(userId);
   const deleteAccount = useDeleteAccount();
 
   // Null means "not edited", so the field simply shows whatever the server
@@ -54,6 +62,39 @@ export default function Profile() {
     hours.length === profile.reminder_hours.length &&
     hours.every((entry) => profile.reminder_hours.includes(entry));
   const dirty = name.trim() !== profile.display_name || !sameHours;
+
+  const handlePickPhoto = async () => {
+    setNotice(null);
+    setError(null);
+
+    try {
+      const url = await uploadAvatar.mutateAsync();
+      // `null` significa que cerró el selector sin elegir nada, que no es un
+      // fallo y tampoco merece un "guardado".
+      if (url) setNotice(t("profile.saved"));
+    } catch (caught) {
+      // Los dos motivos que la persona puede arreglar se dicen por su nombre;
+      // el resto cae en el genérico.
+      setError(
+        caught instanceof AvatarTooLarge
+          ? t("profile.photoTooLarge")
+          : (caught as Error)?.message === "avatar_permission_denied"
+            ? t("profile.photoDenied")
+            : t("common.errorGeneric"),
+      );
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setNotice(null);
+    setError(null);
+
+    try {
+      await removeAvatar.mutateAsync();
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
 
   const handleSave = async () => {
     setNotice(null);
@@ -100,13 +141,49 @@ export default function Profile() {
       contentContainerClassName="flex-grow gap-8 px-7 py-10"
       keyboardShouldPersistTaps="handled"
     >
-      <View className="gap-1">
-        <Text className="text-2xl font-bold text-ink">
-          {t("profile.title")}
-        </Text>
-        {session?.user.email ? (
-          <Text className="text-sm text-ink-soft">{session.user.email}</Text>
-        ) : null}
+      {/* La cara primero: `avatar_url` viajaba en trece RPC desde la Fase 1 y
+          no se pintaba en ningún sitio. */}
+      <View className="flex-row items-center gap-4">
+        <Avatar
+          name={profile.display_name}
+          url={profile.avatar_url}
+          seed={userId}
+          size={72}
+        />
+
+        <View className="flex-1 gap-1">
+          <Text className="text-2xl font-bold text-ink">
+            {t("profile.title")}
+          </Text>
+          {session?.user.email ? (
+            <Text className="text-sm text-ink-soft">{session.user.email}</Text>
+          ) : null}
+
+          <View className="flex-row gap-4 pt-1">
+            <Pressable
+              accessibilityRole="button"
+              disabled={uploadAvatar.isPending}
+              onPress={() => void handlePickPhoto()}
+            >
+              <Text className="text-sm text-ink-muted underline">
+                {profile.avatar_url
+                  ? t("profile.changePhoto")
+                  : t("profile.addPhoto")}
+              </Text>
+            </Pressable>
+
+            {profile.avatar_url ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void handleRemovePhoto()}
+              >
+                <Text className="text-sm text-ink-muted underline">
+                  {t("profile.removePhoto")}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
       </View>
 
       <TextField

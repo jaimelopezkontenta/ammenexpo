@@ -117,12 +117,18 @@ enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
-# Uncomment to configure local storage buckets
-# [storage.buckets.images]
-# public = false
-# file_size_limit = "50MiB"
-# allowed_mime_types = ["image/png", "image/jpeg"]
-# objects_path = "./images"
+# Las fotos de perfil. Público a propósito: un avatar se pinta en la lista de
+# quién oró por ti, en el chat y en el muro, y firmar una URL para cada cara de
+# cada pantalla es mucho trabajo y mucha latencia para una foto que la persona
+# eligió enseñar. Lo que se protege es *quién puede escribir*, y eso va en las
+# policies de `storage.objects`.
+#
+# 2 MiB, no los 50 del límite global: un avatar que pesa más que eso es un
+# avatar que nadie redimensionó.
+[storage.buckets.avatars]
+public = true
+file_size_limit = "2MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
 
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]

@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 
+import { Avatar } from "@/components/Avatar";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -177,9 +178,17 @@ export default function CircleChat() {
             <View className={item.is_mine ? "items-end" : "items-start"}>
               <View className="max-w-[85%] gap-1">
                 {!item.is_mine ? (
-                  <Text className="text-xs font-medium text-ink-soft">
-                    {item.sender_name}
-                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <Avatar
+                      name={item.sender_name}
+                      url={item.sender_avatar_url}
+                      seed={item.sender_id}
+                      size={20}
+                    />
+                    <Text className="text-xs font-medium text-ink-soft">
+                      {item.sender_name}
+                    </Text>
+                  </View>
                 ) : null}
 
                 <Pressable

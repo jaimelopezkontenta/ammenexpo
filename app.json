@@ -3,7 +3,6 @@
     "name": "Ammen",
     "slug": "ammen",
     "version": "1.0.0",
-
     "scheme": "ammen",
     "platforms": ["ios", "android", "web"],
     "web": {
@@ -17,22 +16,26 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash.png",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#FBF8F4"
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ammen necesita acceso a tus fotos para poner tu foto de perfil.",
+          "cameraPermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
-
       "tsconfigPaths": true
     },
-
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-
     "userInterfaceStyle": "light",
-
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -121,9 +122,17 @@ export default function Testimonies() {
             key={entry.id}
             className="gap-2 rounded-2xl border border-ink-line p-5"
           >
-            <Text className="text-sm font-medium text-ink-soft">
-              {entry.author_name}
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <Avatar
+                name={entry.author_name}
+                url={entry.author_avatar_url}
+                seed={entry.author_id}
+                size={28}
+              />
+              <Text className="text-sm font-medium text-ink-soft">
+                {entry.author_name}
+              </Text>
+            </View>
 
             <Text className="font-serif text-base leading-reading text-ink">
               {entry.body}

@@ -43,7 +43,13 @@
     "delete": "Borrar mi cuenta",
     "deleteConfirm": "Sí, borrar todo",
     "deleteWarning": "Se borran tus planes, tus círculos y todo lo que hayan orado por ti. No se puede deshacer.",
-    "plus": "Ammen Plus"
+    "plus": "Ammen Plus",
+    "photo": "Tu foto",
+    "changePhoto": "Cambiar la foto",
+    "addPhoto": "Poner una foto",
+    "removePhoto": "Quitarla",
+    "photoTooLarge": "Esa imagen pesa demasiado. Prueba con una más pequeña.",
+    "photoDenied": "Necesitamos permiso para abrir tus fotos."
   },
   "auth": {
     "signInTitle": "Bienvenido de vuelta",
@@ -141,10 +147,11 @@
     },
     "seasonHint": "Puedes elegir hasta {{count}}.",
     "seasonMax": "Has elegido {{count}}. Quita una para cambiarla.",
-    "timeHint": "Puedes elegir hasta {{count}} momentos del día.",
+    "timeHint": "Puedes elegir hasta {{count}} momento del día.",
     "customLabel": "¿Hay algo concreto?",
     "customPlaceholder": "Mi hermana está enferma, una decisión sobre mudarme…",
-    "customHint": "Opcional. Es lo que hará que tu plan no se parezca a ningún otro."
+    "customHint": "Opcional. Es lo que hará que tu plan no se parezca a ningún otro.",
+    "timeHint_plural": "Puedes elegir hasta {{count}} momentos del día."
   },
   "plan": {
     "todayTitle": "Tu oración de hoy",

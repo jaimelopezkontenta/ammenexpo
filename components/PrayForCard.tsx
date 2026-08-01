@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
+import { Avatar } from "@/components/Avatar";
 import type { SharedPlan } from "@/core/intercessions/queries";
 
 type Props = {
@@ -26,11 +27,19 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
       className="gap-3 rounded-3xl bg-paper-sunken p-5"
       onPress={onOpen}
     >
-      <View className="gap-1">
-        <Text className="text-lg font-semibold text-ink">
-          {plan.owner_name}
-        </Text>
-        <Text className="text-sm text-ink-muted">{plan.plan_title}</Text>
+      <View className="flex-row items-center gap-3">
+        <Avatar
+          name={plan.owner_name}
+          url={plan.owner_avatar_url}
+          seed={plan.owner_id}
+          size={36}
+        />
+        <View className="flex-1 gap-1">
+          <Text className="text-lg font-semibold text-ink">
+            {plan.owner_name}
+          </Text>
+          <Text className="text-sm text-ink-muted">{plan.plan_title}</Text>
+        </View>
       </View>
 
       <View className="gap-1">

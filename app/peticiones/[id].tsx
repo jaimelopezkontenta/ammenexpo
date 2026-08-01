@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
+import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -113,9 +114,17 @@ export default function PrayerRequestComments() {
 
         {(comments ?? []).map((comment) => (
           <View key={comment.id} className="gap-1">
-            <Text className="text-sm font-medium text-ink-soft">
-              {comment.author_name}
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <Avatar
+                name={comment.author_name}
+                url={comment.author_avatar_url}
+                seed={comment.author_id}
+                size={24}
+              />
+              <Text className="text-sm font-medium text-ink-soft">
+                {comment.author_name}
+              </Text>
+            </View>
             <Text className="text-base leading-6 text-ink">{comment.body}</Text>
 
             {!comment.is_mine ? (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
+import { Avatar } from "@/components/Avatar";
 import type { PrayerRequest } from "@/core/posts/queries";
 
 interface Props {
@@ -33,14 +34,29 @@ export const PrayerRequestCard = ({
 
   return (
     <View className="gap-3 rounded-2xl border border-ink-line p-5">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-medium text-ink-soft">
-          {/* Somebody who asked anonymously has no name to show and no id to
+      <View className="flex-row items-center justify-between gap-3">
+        <View className="flex-1 flex-row items-center gap-2">
+          <Avatar
+            name={
+              request.is_anonymous
+                ? t("feed.anonymousName")
+                : (request.author_name ?? "")
+            }
+            url={request.is_anonymous ? null : request.author_avatar_url}
+            // Sin id para la anónima: el tono se derivaría de algo estable y
+            // dos peticiones de la misma persona compartirían color, que es
+            // exactamente lo que el anonimato evita.
+            seed={request.is_anonymous ? request.id : (request.author_id ?? "")}
+            size={28}
+          />
+          <Text className="flex-1 text-sm font-medium text-ink-soft">
+            {/* Somebody who asked anonymously has no name to show and no id to
               correlate — that is the whole point of the checkbox. */}
-          {request.is_anonymous
-            ? t("feed.anonymousName")
-            : (request.author_name ?? "")}
-        </Text>
+            {request.is_anonymous
+              ? t("feed.anonymousName")
+              : (request.author_name ?? "")}
+          </Text>
+        </View>
 
         {request.answered_at ? (
           <Text className="text-sm font-medium text-ink-muted">

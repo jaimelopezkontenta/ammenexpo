@@ -14,7 +14,7 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "db:test": "npm run db:test:rls && npm run db:test:flows && npm run db:test:streak && npm run db:test:timezone && npm run db:test:bible && npm run db:test:circles && npm run db:test:plans",
+    "db:test": "npm run db:test:rls && npm run db:test:flows && npm run db:test:streak && npm run db:test:timezone && npm run db:test:bible && npm run db:test:circles && npm run db:test:plans && npm run db:test:storage",
     "db:test:rls": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/rls.sql",
     "db:test:flows": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/flows.sql",
     "test:chunks": "supabase db reset && bash supabase/tests/chunks.sh",
@@ -25,7 +25,8 @@
     "verify": "npm run typecheck && npm run lint && npm run test && npm run db:test",
     "db:test:bible": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/bible.sql",
     "db:test:circles": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/circles.sql",
-    "db:test:plans": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/plans.sql"
+    "db:test:plans": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/plans.sql",
+    "db:test:storage": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/storage.sql"
   },
   "dependencies": {
     "@expo-google-fonts/lora": "^0.4.2",
@@ -39,6 +40,8 @@
     "expo": "~56.0.4",
     "expo-constants": "~56.0.15",
     "expo-font": "~56.0.5",
+    "expo-image": "~56.0.11",
+    "expo-image-picker": "~56.0.22",
     "expo-linking": "~56.0.11",
     "expo-localization": "~56.0.6",
     "expo-router": "~56.2.6",

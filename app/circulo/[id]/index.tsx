@@ -17,6 +17,7 @@ import {
   useMarkCircleDay,
   useRemoveMember,
 } from "@/core/circles/queries";
+import { Avatar } from "@/components/Avatar";
 import { CirclePlanCard } from "@/components/CirclePlanCard";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
@@ -231,10 +232,18 @@ export default function CircleDetail() {
 
           {(members ?? []).map((member) => (
             <View key={member.user_id} className="gap-1">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-base text-ink">
-                  {member.display_name}
-                </Text>
+              <View className="flex-row items-center justify-between gap-3">
+                <View className="flex-1 flex-row items-center gap-3">
+                  <Avatar
+                    name={member.display_name}
+                    url={member.avatar_url}
+                    seed={member.user_id}
+                    size={32}
+                  />
+                  <Text className="flex-1 text-base text-ink">
+                    {member.display_name}
+                  </Text>
+                </View>
                 {member.role !== "member" ? (
                   <Text className="text-sm text-ink-soft">
                     {member.role === "owner"

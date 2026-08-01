@@ -8,6 +8,7 @@ export { liveStreak, type Streak } from "./streak";
 
 export type Profile = {
   display_name: string;
+  avatar_url: string | null;
   reminder_hours: number[];
   timezone: string;
   locale: string;
@@ -42,7 +43,7 @@ export const useProfile = (userId: string | undefined) =>
       ] = await Promise.all([
         supabase
           .from("profiles")
-          .select("display_name")
+          .select("display_name, avatar_url")
           .eq("id", userId!)
           .maybeSingle(),
         supabase
@@ -57,8 +58,8 @@ export const useProfile = (userId: string | undefined) =>
       if (!profile || !settings) return null;
 
       return {
-        display_name: (profile as { display_name: string }).display_name,
-        ...(settings as Omit<Profile, "display_name">),
+        ...(profile as Pick<Profile, "display_name" | "avatar_url">),
+        ...(settings as Omit<Profile, "display_name" | "avatar_url">),
       };
     },
   });

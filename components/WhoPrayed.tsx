@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
+import { Avatar } from "@/components/Avatar";
 import type { Intercession } from "@/core/intercessions/queries";
 
 type Props = {
@@ -37,11 +38,19 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
 
         return (
           <View key={person.intercession_id} className="gap-1">
-            <Text className="text-base font-medium text-ink">
-              {t("intercession.personPrayed", {
-                name: person.intercessor_name,
-              })}
-            </Text>
+            <View className="flex-row items-center gap-3">
+              <Avatar
+                name={person.intercessor_name}
+                url={person.intercessor_avatar_url}
+                seed={person.intercessor_id}
+                size={32}
+              />
+              <Text className="flex-1 text-base font-medium text-ink">
+                {t("intercession.personPrayed", {
+                  name: person.intercessor_name,
+                })}
+              </Text>
+            </View>
 
             {/* A reported message stops coming back from the server, so there
                 is no "reported" placeholder to keep: the text is simply gone

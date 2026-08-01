@@ -43,7 +43,13 @@
     "delete": "Delete my account",
     "deleteConfirm": "Yes, delete everything",
     "deleteWarning": "Your plans, your circles and everything anyone prayed for you will go. This cannot be undone.",
-    "plus": "Ammen Plus"
+    "plus": "Ammen Plus",
+    "photo": "Your photo",
+    "changePhoto": "Change photo",
+    "addPhoto": "Add a photo",
+    "removePhoto": "Remove it",
+    "photoTooLarge": "That image is too large. Try a smaller one.",
+    "photoDenied": "We need permission to open your photos."
   },
   "auth": {
     "signInTitle": "Welcome back",
@@ -141,10 +147,11 @@
     },
     "seasonHint": "You can pick up to {{count}}.",
     "seasonMax": "You've picked {{count}}. Remove one to change it.",
-    "timeHint": "You can pick up to {{count}} times of day.",
+    "timeHint": "You can pick up to {{count}} time of day.",
     "customLabel": "Anything specific?",
     "customPlaceholder": "My sister is ill, a decision about moving…",
-    "customHint": "Optional. It's what makes your plan unlike anyone else's."
+    "customHint": "Optional. It's what makes your plan unlike anyone else's.",
+    "timeHint_plural": "You can pick up to {{count}} times of day."
   },
   "plan": {
     "todayTitle": "Today's prayer",
