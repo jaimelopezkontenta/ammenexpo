@@ -148,7 +148,10 @@ export default function PrayerRequests() {
             onOpen={() =>
               router.push({
                 pathname: "/peticiones/[id]",
-                params: { id: request.id },
+                // El círculo viaja con el enlace: la pantalla de comentarios no
+                // tiene la petición delante y sin esto no podría saber si hay
+                // alguien al mando ahí dentro.
+                params: { id: request.id, circulo },
               })
             }
             onReport={() =>

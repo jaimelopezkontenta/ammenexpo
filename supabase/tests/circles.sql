@@ -1173,6 +1173,74 @@ select pg_temp.assert(
 
 commit;
 
+-- Y el comentario, que era la mitad que faltaba: `hide_comment()` existía en la
+-- base desde que existen las peticiones y no la llamaba nadie. Ocultar acababa
+-- en el mensaje y en la petición, y un comentario —que es donde más fácil es
+-- dejar algo feo, porque cuelga de lo que otra persona escribió— no se podía
+-- tocar.
+-- Una petición nueva del círculo: la de arriba acaba de quedar oculta, y sobre
+-- lo oculto ya no se puede ni comentar.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.posts (id, author_id, group_id, body)
+values ('9051d000-0000-0000-0000-000000000009', :ANA, :CIRCLE_D,
+        'Otra del círculo');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+insert into public.comments (id, post_id, author_id, body)
+values ('c0de0000-0000-0000-0000-000000000001',
+        '9051d000-0000-0000-0000-000000000009',
+        :DANI, 'Algo que sobra aquí');
+
+select pg_temp.assert(
+  not public.hide_comment('c0de0000-0000-0000-0000-000000000001'),
+  'a member who does not run the circle cannot hide a comment, not even her own');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.hide_comment('c0de0000-0000-0000-0000-000000000001'),
+  'but whoever runs the circle can');
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.post_comments('9051d000-0000-0000-0000-000000000009')
+    where id = 'c0de0000-0000-0000-0000-000000000001'
+  ),
+  'and it stops coming back for everybody, not just for whoever hid it');
+
+-- Se recoge lo que se sacó: la assertion de más abajo cuenta las peticiones que
+-- quedan en el círculo, y una prestada para esta prueba la haría fallar.
+delete from public.posts where id = '9051d000-0000-0000-0000-000000000009';
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.comments (id, post_id, author_id, body)
+values ('c0de0000-0000-0000-0000-000000000002',
+        '9051d000-0000-0000-0000-000000000001',
+        '11111111-1111-1111-1111-111111111111', 'En el muro abierto');
+
+select pg_temp.assert(
+  not public.hide_comment('c0de0000-0000-0000-0000-000000000002'),
+  'and on the open wall nobody can hide a comment, same as the request');
+
+commit;
+
 begin;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';

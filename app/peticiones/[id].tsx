@@ -7,9 +7,11 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
+import { useCircleMembers } from "@/core/circles/queries";
 import { useBlockUser } from "@/core/moderation/blocks";
 import {
   COMMENT_MAX,
+  useHideComment,
   usePostComments,
   useReportPost,
   useWriteComment,
@@ -24,7 +26,10 @@ import {
  */
 export default function PrayerRequestComments() {
   const { t } = useTranslation();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, circulo } = useLocalSearchParams<{
+    id: string;
+    circulo?: string;
+  }>();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -32,6 +37,14 @@ export default function PrayerRequestComments() {
   const write = useWriteComment(id, userId);
   const report = useReportPost(userId);
   const block = useBlockUser(userId);
+  const hide = useHideComment(id);
+  const { data: members } = useCircleMembers(circulo);
+
+  // Ocultar es de quien administra el círculo, y en el muro abierto no manda
+  // nadie — la propia pantalla del muro ya lo dice en voz alta.
+  const isAdmin =
+    Boolean(circulo) &&
+    (members ?? []).some((m) => m.user_id === userId && m.role !== "member");
 
   const [draft, setDraft] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
@@ -158,6 +171,25 @@ export default function PrayerRequestComments() {
                     {t("moderation.block")}
                   </Text>
                 </Pressable>
+
+                {/* Bloquear solo te lo quita a ti de delante; ocultar lo quita
+                    para todo el círculo, y es lo que hacía falta para que la
+                    moderación no se acabara en el mensaje y la petición. */}
+                {isAdmin ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() =>
+                      void run(
+                        () => hide.mutateAsync(comment.id),
+                        t("moderation.hideDone"),
+                      )
+                    }
+                  >
+                    <Text className="text-sm text-ink-soft underline">
+                      {t("moderation.hide")}
+                    </Text>
+                  </Pressable>
+                ) : null}
               </View>
             ) : null}
           </View>

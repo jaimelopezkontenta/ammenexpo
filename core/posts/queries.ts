@@ -221,6 +221,40 @@ export const useHidePost = () => {
   });
 };
 
+/**
+ * Ocultar un comentario, que es lo que faltaba de la moderación.
+ *
+ * `hide_comment()` existía en la base desde que existen las peticiones y **no
+ * la llamaba nadie**: quien administra un círculo podía ocultar un mensaje y una
+ * petición, pero no un comentario — que es donde más fácil es dejar algo feo,
+ * porque cuelga de lo que otra persona escribió.
+ */
+export const useHideComment = (postId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (commentId: string) => {
+      const { data, error } = await supabase.rpc("hide_comment", {
+        p_comment_id: commentId,
+      });
+
+      if (error) throw error;
+
+      // Contesta `false` en vez de lanzar cuando no administras, así que
+      // ignorar el payload enseñaría un éxito sobre una escritura que no ocurrió.
+      if (data !== true) throw new Error("hide_comment_refused");
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["postComments", postId],
+      });
+      // El contador de comentarios vive en la tarjeta de la petición.
+      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+      void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
+    },
+  });
+};
+
 export const useReportPost = (userId: string | undefined) =>
   useMutation({
     mutationFn: async (input: { id: string; kind: "post" | "comment" }) => {
