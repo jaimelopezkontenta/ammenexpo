@@ -13,6 +13,7 @@
 \set PLAN_RUNNING '''aaaa0000-0000-0000-0000-0000000000d2'''
 \set PLAN_STALLED '''aaaa0000-0000-0000-0000-0000000000d3'''
 \set PLAN_BETO    '''aaaa0000-0000-0000-0000-0000000000d4'''
+\set PLAN_PUBLIC  '''aaaa0000-0000-0000-0000-0000000000d5'''
 
 create or replace function pg_temp.assert(cond boolean, label text)
 returns void language plpgsql as $$
@@ -223,6 +224,71 @@ delete from public.prayer_plans where id = 'aaaa0000-0000-0000-0000-0000000000d2
 select pg_temp.assert(
   (select active_plan_id from public.profile_settings where id = :ANA) is null,
   'deleting the active plan clears the pointer instead of dangling');
+
+commit;
+
+
+-- ===========================================================================
+-- El plan público
+--
+-- La visibilidad nueva de la red social: un plan que cualquiera puede abrir
+-- desde tu perfil y por el que puede orar, sin enlace y sin círculo. Lo que
+-- **no** cambia es nada de lo que ya protegía un plan.
+-- ===========================================================================
+-- Plan propio, y no el activo de arriba: ese lo borra la assertion anterior
+-- para comprobar que el puntero no queda colgando.
+begin;
+
+insert into public.prayer_plans (id, owner_id, title, duration_days, start_date,
+                                 visibility, status)
+values (:PLAN_PUBLIC, :ANA, 'Plan abierto', 3, current_date - 1,
+        'public', 'active');
+
+insert into public.prayer_plan_days (plan_id, day_number, title, prayer_body,
+                                     unlock_date)
+values (:PLAN_PUBLIC, 1, 'Día uno', 'Privado', current_date - 1),
+       (:PLAN_PUBLIC, 2, 'Día dos', 'Privado', current_date + 1);
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.can_read_plan(:PLAN_PUBLIC),
+  'a stranger can open a public plan');
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_plans where id = :PLAN_PUBLIC) = 1,
+  'and the row itself is readable, not just the helper');
+
+-- Lo que sigue cerrado, que es la mitad que importa: los días futuros y el
+-- texto de la oración en primera persona.
+select pg_temp.assert(
+  not public.can_read_plan_day((
+    select id from public.prayer_plan_days
+    where plan_id = :PLAN_PUBLIC and unlock_date > current_date
+    order by day_number limit 1
+  )),
+  'but a day that has not opened yet stays shut, public or not');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select prayer_body from public.prayer_plan_days
+     where plan_id = 'aaaa0000-0000-0000-0000-0000000000d5'
+  $q$),
+  'and the first-person prayer is not published with the plan');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  not public.can_read_plan(:PLAN_DONE),
+  'a private plan of hers is still nobody else''s business');
 
 commit;
 

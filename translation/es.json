@@ -187,12 +187,6 @@
     "failedBody": "A veces pasa. Inténtalo otra vez.",
     "limitTitle": "Has usado tus tres planes gratuitos",
     "limitBody": "Con Ammen Plus puedes crear todos los planes que quieras.",
-    "visibility": {
-      "private": "Solo para mí",
-      "friends": "Amigos elegidos",
-      "group": "Un grupo",
-      "link": "Cualquiera con el enlace"
-    },
     "meaning": "Qué significa",
     "action": "Hoy haz esto",
     "rename": "Cambiar el nombre",

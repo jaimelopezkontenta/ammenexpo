@@ -118,10 +118,24 @@ select pg_temp.assert(
     where id = '33333333-3333-3333-3333-333333333333'),
   'pending token was consumed, so it cannot be replayed');
 
+-- Antes esto comprobaba `are_friends`, y la amistad era invisible: se creaba
+-- sola y no se podía ni ver ni deshacer. Ahora Carla sigue a Ana — en una
+-- dirección, y con un botón para dejar de hacerlo.
 select pg_temp.assert(
-  public.are_friends('11111111-1111-1111-1111-111111111111',
-                     '33333333-3333-3333-3333-333333333333'),
-  'Ana and Carla are now connected');
+  exists (
+    select 1 from public.follows
+    where follower_id = '33333333-3333-3333-3333-333333333333'
+      and followee_id = '11111111-1111-1111-1111-111111111111'
+  ),
+  'Carla now follows the person whose link she opened');
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.follows
+    where follower_id = '11111111-1111-1111-1111-111111111111'
+      and followee_id = '33333333-3333-3333-3333-333333333333'
+  ),
+  'and only in that direction: Ana was not made to follow anybody');
 
 -- The whole point of the loop: Carla can pray for Ana's day right away.
 insert into public.intercessions (plan_day_id, plan_owner_id, intercessor_id)
@@ -260,6 +274,14 @@ select pg_temp.assert(
 select pg_temp.assert(
   (select count(*) from public.plans_shared_with_me()) = 1,
   'and does not duplicate the share');
+
+-- La assertion que protege el borrado de `friendships`. El acceso al plan lo
+-- daba `plan_shares` y no la amistad, pero eso era una creencia hasta que se
+-- escribió aquí: si quitar los amigos hubiera cerrado un acceso, esta línea es
+-- la que lo habría dicho.
+select pg_temp.assert(
+  public.can_read_plan('aaaa0000-0000-0000-0000-000000000009'),
+  'and the plan stays readable with no friendship anywhere in the schema');
 
 commit;
 

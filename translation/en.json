@@ -187,12 +187,6 @@
     "failedBody": "It happens sometimes. Please try again.",
     "limitTitle": "You've used your three free plans",
     "limitBody": "With Ammen Plus you can create as many plans as you like.",
-    "visibility": {
-      "private": "Just me",
-      "friends": "Chosen friends",
-      "group": "A group",
-      "link": "Anyone with the link"
-    },
     "meaning": "What it means",
     "action": "Today, do this",
     "rename": "Rename",
