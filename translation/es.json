@@ -540,6 +540,10 @@
     "privacy": "Política de privacidad",
     "accept": "Acepto",
     "gateTitle": "Antes de empezar",
-    "gateBody": "Ammen es un sitio donde la gente escribe lo que está viviendo. Para que sea un sitio seguro hay unas reglas, y queremos que sepas qué hacemos con lo que nos cuentas. Léelo y, si te parece bien, entramos."
+    "gateBody": "Ammen es un sitio donde la gente escribe lo que está viviendo. Para que sea un sitio seguro hay unas reglas, y queremos que sepas qué hacemos con lo que nos cuentas. Léelo y, si te parece bien, entramos.",
+    "export": "Descargar mis datos",
+    "exportHint": "Un fichero con todo lo que Ammen guarda de ti. Contiene lo que escribiste, incluidas las peticiones anónimas: guárdalo con cuidado.",
+    "exportDone": "Descargado.",
+    "exportShared": "Listo."
   }
 }

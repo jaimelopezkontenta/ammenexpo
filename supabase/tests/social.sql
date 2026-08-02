@@ -777,6 +777,68 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- Llevarte tus datos
+--
+-- La otra mitad del derecho que `delete_my_account` cubría a medias: se podía
+-- borrar todo y no se podía sacar nada.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (public.export_my_data() -> 'profile' ->> 'display_name') = 'Ana',
+  'the export contains who you are');
+
+select pg_temp.assert(
+  jsonb_typeof(public.export_my_data() -> 'prayer_requests') = 'array',
+  'and every section is there even when empty, so the shape never surprises');
+
+commit;
+
+-- Lo que de verdad hay que probar: que no lleva nada de nadie más. Es un
+-- fichero que la gente se manda por correo.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body, is_anonymous)
+values ('bbbb3333-0000-0000-0000-000000000001', :CARLA, 'Algo que no firmo', true),
+       ('bbbb3333-0000-0000-0000-000000000002', :CARLA, 'Algo con mi nombre', false);
+
+-- Por contenido y no por cuenta: bloques anteriores de esta suite ya le
+-- escribieron peticiones, y una assertion que cuenta filas se rompe cada vez que
+-- alguien añade un fixture más arriba.
+select pg_temp.assert(
+  public.export_my_data()::text like '%Algo que no firmo%'
+  and public.export_my_data()::text like '%Algo con mi nombre%',
+  'your own requests are in your export, anonymous ones included — they are yours');
+
+-- Y marcadas: es tuyo y tienes derecho a llevártelo, pero tienes que saber que
+-- va dentro antes de mandarle el fichero a alguien.
+select pg_temp.assert(
+  exists (
+    select 1
+    from jsonb_array_elements(public.export_my_data() -> 'prayer_requests') r
+    where (r ->> 'is_anonymous')::boolean
+  ),
+  'and flagged as anonymous, so you know what you are handing over');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  not (public.export_my_data()::text like '%Algo que no firmo%')
+  and not (public.export_my_data()::text like '%Algo con mi nombre%'),
+  'and somebody else''s export contains not one row of yours');
+
+commit;
+
 -- ===========================================================================
 -- RLS sigue puesta
 -- ===========================================================================

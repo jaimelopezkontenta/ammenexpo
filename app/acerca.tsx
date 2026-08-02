@@ -1,7 +1,12 @@
 import Constants from "expo-constants";
 import { Link, Stack } from "expo-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+
+import { Button } from "@/components/Button";
+import { LegalText } from "@/components/LegalText";
+import { useExportMyData } from "@/core/legal/export";
 
 const SUPPORT_EMAIL = "hola@ammen.app";
 
@@ -18,8 +23,28 @@ const SUPPORT_EMAIL = "hola@ammen.app";
  */
 export default function About() {
   const { t } = useTranslation();
+  const exportData = useExportMyData();
+
+  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const version = Constants.expoConfig?.version ?? "—";
+
+  const handleExport = async () => {
+    setNotice(null);
+    setError(null);
+
+    try {
+      const outcome = await exportData.mutateAsync();
+      setNotice(
+        outcome === "downloaded"
+          ? t("legal.exportDone")
+          : t("legal.exportShared"),
+      );
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
 
   return (
     <>
@@ -86,6 +111,33 @@ export default function About() {
           <Text className="text-sm leading-6 text-ink-muted">
             {t("profile.supportHint")}
           </Text>
+        </View>
+
+        {/* Llevarte tus datos. Iba junto a borrar la cuenta hasta que me di
+            cuenta de que ahí solo lo ve quien ya se está yendo — y esto sirve
+            sobre todo para quien se queda y quiere saber qué hay guardado. */}
+        <View className="gap-2">
+          <Button
+            title={t("legal.export")}
+            variant="secondary"
+            loading={exportData.isPending}
+            onPress={() => void handleExport()}
+          />
+          <Text className="text-sm leading-6 text-ink-muted">
+            {t("legal.exportHint")}
+          </Text>
+
+          {notice ? (
+            <Text className="text-sm text-ink-muted" accessibilityRole="alert">
+              {notice}
+            </Text>
+          ) : null}
+
+          {error ? (
+            <Text className="text-sm text-red-500" accessibilityRole="alert">
+              {error}
+            </Text>
+          ) : null}
         </View>
       </ScrollView>
     </>
