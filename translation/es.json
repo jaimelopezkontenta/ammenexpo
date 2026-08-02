@@ -470,7 +470,12 @@
     "highlight": "Subrayar",
     "unhighlight": "Quitar el subrayado",
     "notePlaceholder": "Tu nota",
-    "noteDelete": "Borrar la nota"
+    "noteDelete": "Borrar la nota",
+    "share": "Compartir el versículo",
+    "shareImage": "Compartir la imagen",
+    "imageDownloaded": "Descargada.",
+    "imageShared": "Listo.",
+    "shareVerse": "Compartir como imagen"
   },
   "chat": {
     "title": "Chat",

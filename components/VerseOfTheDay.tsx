@@ -31,23 +31,46 @@ export const VerseOfTheDay = () => {
         {data.text}
       </Text>
 
-      {/* Al capítulo entero, que es lo que más valor añadió al lector cuando se
-          construyó: leer una frase suelta y poder caer en lo que venía antes. */}
-      <Link
-        href={{
-          pathname: "/libro/[book]/[chapter]",
-          params: {
-            book: String(data.book_id),
-            chapter: String(data.chapter),
-            verse: String(data.verse),
-          },
-        }}
-        asChild
-      >
-        <Pressable accessibilityRole="link">
-          <Text className="text-sm text-clay underline">{data.reference}</Text>
-        </Pressable>
-      </Link>
+      <View className="flex-row flex-wrap items-center gap-4">
+        {/* Al capítulo entero, que es lo que más valor añadió al lector cuando
+            se construyó: leer una frase suelta y poder caer en lo que venía
+            antes. */}
+        <Link
+          href={{
+            pathname: "/libro/[book]/[chapter]",
+            params: {
+              book: String(data.book_id),
+              chapter: String(data.chapter),
+              verse: String(data.verse),
+            },
+          }}
+          asChild
+        >
+          <Pressable accessibilityRole="link">
+            <Text className="text-sm text-clay underline">
+              {data.reference}
+            </Text>
+          </Pressable>
+        </Link>
+
+        <Link
+          href={{
+            pathname: "/versiculo",
+            params: {
+              book: String(data.book_id),
+              chapter: String(data.chapter),
+              verse: String(data.verse),
+            },
+          }}
+          asChild
+        >
+          <Pressable accessibilityRole="link">
+            <Text className="text-sm text-ink-soft underline">
+              {t("bible.shareVerse")}
+            </Text>
+          </Pressable>
+        </Link>
+      </View>
     </View>
   );
 };

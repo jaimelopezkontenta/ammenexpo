@@ -470,7 +470,12 @@
     "highlight": "Highlight",
     "unhighlight": "Remove highlight",
     "notePlaceholder": "Your note",
-    "noteDelete": "Delete the note"
+    "noteDelete": "Delete the note",
+    "share": "Share the verse",
+    "shareImage": "Share the image",
+    "imageDownloaded": "Downloaded.",
+    "imageShared": "Done.",
+    "shareVerse": "Share as an image"
   },
   "chat": {
     "title": "Chat",

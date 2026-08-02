@@ -27,7 +27,8 @@
           "photosPermission": "Ammen necesita acceso a tus fotos para poner tu foto de perfil.",
           "cameraPermission": false
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

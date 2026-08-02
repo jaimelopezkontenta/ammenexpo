@@ -1,4 +1,4 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -331,6 +331,28 @@ export default function ChapterReader() {
                       </Text>
                     </Pressable>
                   </View>
+
+                  {/* Compartirlo como imagen vive aquí y no en un icono aparte:
+                      ya has tocado el versículo que te ha parado, que es
+                      exactamente el momento en que a alguien le apetece
+                      mandárselo a otra persona. */}
+                  <Link
+                    href={{
+                      pathname: "/versiculo",
+                      params: {
+                        book: String(bookId),
+                        chapter: String(chapterNumber),
+                        verse: String(row.verse),
+                      },
+                    }}
+                    asChild
+                  >
+                    <Pressable accessibilityRole="link">
+                      <Text className="text-sm text-clay underline">
+                        {t("bible.shareVerse")}
+                      </Text>
+                    </Pressable>
+                  </Link>
 
                   {markError ? (
                     <Text
