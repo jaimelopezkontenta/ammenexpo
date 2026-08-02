@@ -162,7 +162,7 @@ export default function SharePlan() {
         <View className="gap-1">
           <Text className="text-lg font-semibold text-ink">{plan.title}</Text>
           <Text className="text-base text-ink-muted">
-            {stillWriting ? t("share.stillWriting") : t("share.subtitle")}
+            {stillWriting ? t("share.stillWritingMinute") : t("share.subtitle")}
           </Text>
         </View>
 

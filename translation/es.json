@@ -238,7 +238,6 @@
     "open": "Compartir este plan",
     "goHome": "Ir a mi plan",
     "deadLinkInvite": "Puedes crear el tuyo y compartirlo con quien quieras.",
-    "stillWriting": "Estamos escribiendo tu plan. En cuanto esté podrás compartirlo.",
     "deadLinkCta": "Crear mi cuenta",
     "publicTitle": "En tu perfil",
     "publicOn": "Cualquiera puede abrir este plan desde tu perfil y orar por ti.",
@@ -246,7 +245,8 @@
     "publish": "Publicarlo en mi perfil",
     "unpublish": "Quitarlo de mi perfil",
     "published": "Publicado. Ya está en tu perfil.",
-    "unpublished": "Listo. Ya no aparece en tu perfil."
+    "unpublished": "Listo. Ya no aparece en tu perfil.",
+    "stillWritingMinute": "Estamos escribiendo tu plan. Suele tardar un minuto; puedes cerrar la app y te esperará aquí."
   },
   "intercession": {
     "prayFor": "Oré por ti",
@@ -359,8 +359,7 @@
     "markAnswered": "Marcar como respondida",
     "wallNoAdmin": "Aquí no hay quien modere. Si algo no debería estar, repórtalo o bloquea a quien lo escribió.",
     "delete": "Borrar",
-    "deleteConfirm": "Sí, borrarla",
-    "openWall": "Peticiones abiertas"
+    "deleteConfirm": "Sí, borrarla"
   },
   "testimony": {
     "title": "Oración respondida",
@@ -534,7 +533,10 @@
     "publicPlans": "Planes abiertos",
     "unread": "{{count}} sin leer",
     "unread_plural": "{{count}} sin leer",
-    "openTestimonies": "Ver testimonios"
+    "openTestimonies": "Ver testimonios",
+    "fromFollowing": "De la persona a la que sigues.",
+    "fromFollowing_plural": "De las {{count}} personas a las que sigues.",
+    "fromEveryone": "Todavía no sigues a nadie, así que esto es lo último de la comunidad. Sigue a alguien y verás lo suyo primero."
   },
   "legal": {
     "terms": "Términos de uso",

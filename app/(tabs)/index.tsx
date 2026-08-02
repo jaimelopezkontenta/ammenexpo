@@ -256,6 +256,18 @@ export default function Today() {
             pantalla era un botón y nada más: quien no genera el plan hoy no
             tenía absolutamente nada que hacer aquí. */}
         <VerseOfTheDay />
+
+        {/* Y dos salidas más, discretas: orar por alguien y traer a alguien no
+            dependen de tener plan, y son justo lo que puede hacer quien todavía
+            no está listo para contarle su vida a una IA. */}
+        <View className="gap-2 pt-2">
+          <Link href="/comunidad" asChild>
+            <Button title={t("community.title")} variant="ghost" />
+          </Link>
+          <Link href="/invitar" asChild>
+            <Button title={t("invite.title")} variant="ghost" />
+          </Link>
+        </View>
       </View>
     );
   }

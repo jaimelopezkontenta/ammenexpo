@@ -10,6 +10,7 @@ import { PrayerRequestCard } from "@/components/PrayerRequestCard";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
+import { usePublicProfile } from "@/core/profile/queries";
 import {
   useDeletePrayerRequest,
   useMarkAnswered,
@@ -53,6 +54,11 @@ export default function Community() {
   const [pending, setPending] = useState<string | null>(null);
 
   const searching = query.trim().length > 0;
+  // Tu propio perfil ya trae este número y está en caché desde cualquier
+  // pantalla que lo haya abierto; no hace falta una consulta nueva para una
+  // línea de texto.
+  const { data: me } = usePublicProfile(userId);
+  const following = me?.following_count ?? 0;
 
   const feed = useHomeFeed();
   const people = useSearchPeople(query.trim());
@@ -198,6 +204,16 @@ export default function Community() {
           <ErrorState onRetry={() => void feed.refetch()} />
         ) : (
           <>
+            {/* De quién es lo que se ve. Con cero seguidos el servidor sirve
+                lo público reciente —un feed vacío el primer día es la forma más
+                rápida de no volver— y sin decirlo parece que la app enseña
+                desconocidos porque sí. */}
+            <Text className="text-sm leading-6 text-ink-muted">
+              {following > 0
+                ? t("community.fromFollowing", { count: following })
+                : t("community.fromEveryone")}
+            </Text>
+
             <Link href="/peticiones/nueva" asChild>
               <Button title={t("feed.newPost")} variant="secondary" />
             </Link>

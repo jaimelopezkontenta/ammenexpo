@@ -47,8 +47,11 @@ export default function Pray() {
             círculo" and land on the circles *list*, two steps away from the
             thing this screen is actually asking for. */}
         <View className="mt-6 w-full gap-3">
-          <Link href="/peticiones" asChild>
-            <Button title={t("feed.openWall")} variant="secondary" />
+          {/* A la comunidad, no al muro suelto. Eran dos puertas al mismo
+              contenido con nombres distintos, y la comunidad además trae los
+              testimonios y los planes públicos. */}
+          <Link href="/comunidad" asChild>
+            <Button title={t("community.title")} variant="secondary" />
           </Link>
           <Button
             title={
@@ -96,8 +99,8 @@ export default function Pray() {
         </View>
       ) : null}
 
-      <Link href="/peticiones" asChild>
-        <Button title={t("feed.openWall")} variant="secondary" />
+      <Link href="/comunidad" asChild>
+        <Button title={t("community.title")} variant="secondary" />
       </Link>
 
       {plans.map((plan) => (
