@@ -25,6 +25,7 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
     session,
     isLoading,
     hasOnboarded,
+    termsAccepted,
     onboardingFailed,
     refreshOnboarding,
     signOut,
@@ -87,8 +88,24 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Onboarding state not resolved yet — routing now would flash the wrong screen.
-  if (hasOnboarded === null) {
+  if (hasOnboarded === null || termsAccepted === null) {
     return <Loading />;
+  }
+
+  // Los términos van **antes que el onboarding**: ese pregunta qué estás
+  // viviendo y por qué te gustaría orar, y pedir eso antes de decir qué hacemos
+  // con lo que nos cuentas es el orden equivocado.
+  //
+  // Va como puerta y no como una casilla en el alta porque tiene que alcanzar a
+  // quien ya tiene cuenta, y al día que el texto cambie: `termsAccepted` compara
+  // versiones, así que subir `TERMS_VERSION` vuelve a preguntar una vez a todo
+  // el mundo. `legal` se deja pasar para poder leer lo que se está aceptando.
+  if (!termsAccepted) {
+    return group === "aceptar" || group === "legal" ? (
+      <>{children}</>
+    ) : (
+      <Redirect href="/aceptar" />
+    );
   }
 
   if (!hasOnboarded) {
@@ -99,7 +116,12 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (group === "(auth)" || group === "(onboarding)") {
+  // `aceptar` entra aquí por el mismo motivo que los otros dos: es una puerta,
+  // y una puerta ya cruzada no puede seguir en pie. Sin esto, aceptar dejaba a
+  // la persona mirando la misma pantalla que acababa de despachar —el gate ya
+  // no la mandaba aquí, pero tampoco la sacaba—. `legal` no entra: los dos
+  // documentos se leen cuando a uno le apetezca, también desde «Acerca de».
+  if (group === "(auth)" || group === "(onboarding)" || group === "aceptar") {
     return <Redirect href="/" />;
   }
 

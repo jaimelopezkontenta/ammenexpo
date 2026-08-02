@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import { Stack } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 
@@ -40,6 +40,26 @@ export default function About() {
         <Text className="text-sm leading-6 text-ink-muted">
           {t("profile.aboutAi")}
         </Text>
+
+        {/* Los dos documentos, siempre a mano y no solo en la puerta de
+            entrada: quien quiera releer qué aceptó tiene que poder. */}
+        <View className="gap-3">
+          <Link
+            href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}
+          >
+            <Text className="text-base text-clay underline">
+              {t("legal.terms")}
+            </Text>
+          </Link>
+
+          <Link
+            href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
+          >
+            <Text className="text-base text-clay underline">
+              {t("legal.privacy")}
+            </Text>
+          </Link>
+        </View>
 
         <View className="gap-2">
           <Text className="text-sm text-ink-soft">

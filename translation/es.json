@@ -512,5 +512,12 @@
     "unread": "{{count}} sin leer",
     "unread_plural": "{{count}} sin leer",
     "openTestimonies": "Ver testimonios"
+  },
+  "legal": {
+    "terms": "Términos de uso",
+    "privacy": "Política de privacidad",
+    "accept": "Acepto",
+    "gateTitle": "Antes de empezar",
+    "gateBody": "Ammen es un sitio donde la gente escribe lo que está viviendo. Para que sea un sitio seguro hay unas reglas, y queremos que sepas qué hacemos con lo que nos cuentas. Léelo y, si te parece bien, entramos."
   }
 }

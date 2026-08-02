@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 
+import { TERMS_VERSION } from "@/core/legal/documents";
 import { supabase } from "@/utils/supabase";
 
 import { redeemPendingTokens } from "./pendingToken";
@@ -20,6 +21,8 @@ type SessionState = {
   isLoading: boolean;
   /** null while unknown — do not route on it. */
   hasOnboarded: boolean | null;
+  /** Null mientras la lectura no ha vuelto: enrutar antes enseñaría la pantalla equivocada. */
+  termsAccepted: boolean | null;
   /** The onboarding read failed and is no longer retrying. */
   onboardingFailed: boolean;
   refreshOnboarding: () => Promise<void>;
@@ -115,7 +118,7 @@ export const SessionProvider = ({
     queryFn: async () => {
       const { data: settings, error } = await supabase
         .from("profile_settings")
-        .select("onboarding_answers")
+        .select("onboarding_answers, terms_version")
         .eq("id", userId!)
         .maybeSingle();
 
@@ -136,14 +139,25 @@ export const SessionProvider = ({
         throw new Error("profile_settings_missing");
       }
 
-      return Boolean(settings.onboarding_answers);
+      return {
+        onboarded: Boolean(settings.onboarding_answers),
+        // La versión y no un booleano: el día que el texto cambie de forma
+        // importante hay que volver a preguntar, y un `true` no sabe de qué
+        // texto venía.
+        termsVersion: (settings.terms_version as string | null) ?? null,
+      };
     },
     // A vanished account will not come back on the fourth attempt, and every
     // retry is another few seconds of a blank spinner.
     retry: 1,
   });
 
-  const hasOnboarded = userId ? (data ?? null) : null;
+  const hasOnboarded = userId ? (data?.onboarded ?? null) : null;
+  const termsAccepted = userId
+    ? data
+      ? data.termsVersion === TERMS_VERSION
+      : null
+    : null;
 
   const refreshOnboarding = useCallback(async () => {
     await refetch();
@@ -168,6 +182,7 @@ export const SessionProvider = ({
       session,
       isLoading,
       hasOnboarded,
+      termsAccepted,
       onboardingFailed,
       refreshOnboarding,
       signOut,
@@ -176,6 +191,7 @@ export const SessionProvider = ({
       session,
       isLoading,
       hasOnboarded,
+      termsAccepted,
       onboardingFailed,
       refreshOnboarding,
       signOut,

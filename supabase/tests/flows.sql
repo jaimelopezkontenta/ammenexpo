@@ -479,6 +479,57 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- Los términos, aceptados dentro de la app
+--
+-- La Guideline 1.2 de Apple pide un acuerdo **aceptado**, no publicado en una
+-- web. Lo que se guarda es la versión, no un booleano: el día que el texto
+-- cambie hay que volver a preguntar, y un `true` no sabe de qué texto venía.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select terms_version from public.profile_settings
+    where id = '11111111-1111-1111-1111-111111111111') is null,
+  'a new account has accepted nothing yet');
+
+select public.accept_terms('2026-08-02');
+
+select pg_temp.assert(
+  (select terms_version from public.profile_settings
+    where id = '11111111-1111-1111-1111-111111111111') = '2026-08-02',
+  'accepting records which text was accepted');
+
+select pg_temp.assert(
+  (select terms_accepted_at from public.profile_settings
+    where id = '11111111-1111-1111-1111-111111111111') is not null,
+  'and when — a date the server puts, not the phone of the interested party');
+
+select pg_temp.assert(
+  pg_temp.raises($q$ select public.accept_terms('') $q$),
+  'and accepting nothing in particular is refused');
+
+commit;
+
+-- Nadie escribe la aceptación de otra persona.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select public.accept_terms('2026-08-02');
+
+-- Solo se ve la propia fila —la policy de `profile_settings` es de dueño
+-- único— así que esto comprueba las dos cosas a la vez: que Carla registró la
+-- suya, y que la de Ana no es asunto suyo.
+select pg_temp.assert(
+  (select count(*) from public.profile_settings where terms_version is not null) = 1,
+  'each account records its own acceptance and cannot even see anybody else''s');
+
+commit;
+
 \echo '===================================='
 \echo ' ACQUISITION LOOP ASSERTIONS PASSED'
 \echo '===================================='
