@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
-import { LegalText } from "@/components/LegalText";
 import { useExportMyData } from "@/core/legal/export";
 
 const SUPPORT_EMAIL = "hola@ammen.app";
