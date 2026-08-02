@@ -465,7 +465,8 @@
     "next": "Siguiente",
     "readInContext": "Leer el capítulo",
     "searchLabel": "Buscar",
-    "chapterNotFound": "No encontramos ese capítulo."
+    "chapterNotFound": "No encontramos ese capítulo.",
+    "verseOfTheDay": "Versículo del día"
   },
   "chat": {
     "title": "Chat",

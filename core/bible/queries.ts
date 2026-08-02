@@ -180,3 +180,37 @@ export const useSaveReadingPosition = (userId: string | undefined) => {
     },
   });
 };
+
+export type DailyVerse = {
+  book_id: number;
+  book_name: string;
+  chapter: number;
+  verse: number;
+  reference: string;
+  text: string;
+};
+
+/**
+ * El versículo del día.
+ *
+ * Sin plan activo, la app no tenía nada que darte: abrías y te decía que no
+ * tienes plan. Esto es lo más barato que hay en este proyecto —los 31.102
+ * versículos llevan en la base desde la Fase 3 sirviendo solo para verificar
+ * referencias— y no depende de nada más.
+ *
+ * Es **el mismo para todo el mundo el mismo día**, que es lo que permite hablar
+ * de él y lo que hace que no cambie si abres la app dos veces. Por eso
+ * `staleTime: Infinity`: dentro de una sesión no puede cambiar.
+ */
+export const useVerseOfTheDay = () =>
+  useQuery({
+    queryKey: ["verseOfTheDay"],
+    staleTime: Infinity,
+    queryFn: async (): Promise<DailyVerse | null> => {
+      const { data, error } = await supabase.rpc("verse_of_the_day");
+
+      if (error) throw error;
+
+      return ((data ?? []) as DailyVerse[])[0] ?? null;
+    },
+  });

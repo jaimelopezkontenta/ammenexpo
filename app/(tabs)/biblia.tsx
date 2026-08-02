@@ -11,6 +11,7 @@ import {
 
 import { TextField } from "@/components/TextField";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { VerseOfTheDay } from "@/components/VerseOfTheDay";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   MIN_SEARCH_LENGTH,
@@ -120,6 +121,11 @@ export default function Bible() {
           </Text>
         </Pressable>
       ) : null}
+
+      {/* Solo cuando no se está buscando: quien escribió algo en la caja quiere
+          resultados, no un versículo que no ha pedido empujando la lista hacia
+          abajo. */}
+      {searching ? null : <VerseOfTheDay />}
 
       {searching ? (
         tooShort ? (

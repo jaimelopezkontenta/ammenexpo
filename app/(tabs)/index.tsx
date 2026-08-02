@@ -13,6 +13,7 @@ import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
 import { DayView } from "@/components/DayView";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
+import { VerseOfTheDay } from "@/components/VerseOfTheDay";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { WhoPrayed } from "@/components/WhoPrayed";
@@ -250,6 +251,11 @@ export default function Today() {
             />
           </View>
         </View>
+
+        {/* Un motivo para volver mañana aunque todavía no haya plan. Esta
+            pantalla era un botón y nada más: quien no genera el plan hoy no
+            tenía absolutamente nada que hacer aquí. */}
+        <VerseOfTheDay />
       </View>
     );
   }

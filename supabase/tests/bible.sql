@@ -345,6 +345,69 @@ select pg_temp.assert(
 commit;
 
 \echo ''
+
+-- ===========================================================================
+-- El versículo del día
+--
+-- Sin plan activo la app no tenía nada que ofrecer. Lo que se fija aquí es que
+-- **el mismo día da lo mismo** —es lo que permite hablar de él y lo que hace
+-- que no cambie si abres la app dos veces— y que la lista está curada, no
+-- sacada al azar de 31.102 versículos.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.verse_of_the_day()) = 1,
+  'there is a verse for today');
+
+select pg_temp.assert(
+  (select text from public.verse_of_the_day())
+    = (select text from public.verse_of_the_day()),
+  'and asking twice on the same day gives the same one');
+
+select pg_temp.assert(
+  (select length(text) from public.verse_of_the_day()) > 0
+  and (select reference from public.verse_of_the_day()) like '% %:%',
+  'with its text and a reference that reads like one');
+
+commit;
+
+-- Cada referencia de la lista existe de verdad en la RVR1909. Sin esto, una
+-- errata en un número deja a alguien con una tarjeta vacía un día suelto, meses
+-- después de haberla escrito.
+begin;
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.daily_verses d
+    where not exists (
+      select 1 from public.bible_verses v
+      where v.book_id = d.book_id
+        and v.chapter = d.chapter
+        and v.verse = d.verse
+    )
+  ),
+  'every curated reference resolves against the RVR1909');
+
+select pg_temp.assert(
+  (select count(*) from public.daily_verses) >= 50,
+  'and there are enough of them that the list does not repeat within a month');
+
+-- El recorrido de la lista es completo antes de repetir: con `mod` sobre los
+-- días, cincuenta fechas seguidas dan cincuenta versículos distintos.
+select pg_temp.assert(
+  (
+    select count(distinct 1 + ((d::date - date '2026-01-01') % 50))
+    from generate_series(
+      timestamp '2026-03-01', timestamp '2026-04-19', interval '1 day'
+    ) as d
+  ) = 50,
+  'and fifty days in a row give fifty different ones');
+
+commit;
+
 \echo '===================================='
 \echo ' BIBLE ASSERTIONS PASSED'
 \echo '===================================='

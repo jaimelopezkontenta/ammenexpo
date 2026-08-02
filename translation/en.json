@@ -465,7 +465,8 @@
     "next": "Next",
     "readInContext": "Read the chapter",
     "searchLabel": "Search",
-    "chapterNotFound": "We could not find that chapter."
+    "chapterNotFound": "We could not find that chapter.",
+    "verseOfTheDay": "Verse of the day"
   },
   "chat": {
     "title": "Chat",
