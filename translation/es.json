@@ -491,7 +491,27 @@
     "blockedEmpty": "No has bloqueado a nadie.",
     "blockedHint": "No verás sus mensajes, ni sus planes, ni cuando oren por ti. A ellas no se les avisa.",
     "held": "En revisión",
-    "heldHint": "Alguien va a leerlo antes de que se publique. Puede tardar unas horas."
+    "heldHint": "Alguien va a leerlo antes de que se publique. Puede tardar unas horas.",
+    "queueTitle": "Reportes",
+    "queueEmpty": "No hay nada por revisar.",
+    "statusOpen": "Sin revisar",
+    "statusReviewed": "Revisados",
+    "statusDismissed": "Descartados",
+    "reportedBy": "Lo reportó {{name}}",
+    "writtenBy": "lo escribió {{name}}",
+    "alreadyHidden": "ya está oculto",
+    "contentGone": "Este contenido ya no existe.",
+    "openProfile": "Ver el perfil",
+    "markReviewed": "Marcar revisado",
+    "dismiss": "Descartar",
+    "resolved": "Reporte cerrado.",
+    "target": {
+      "post": "Petición",
+      "comment": "Comentario",
+      "message": "Mensaje",
+      "testimony": "Testimonio",
+      "intercession": "Mensaje de intercesión"
+    }
   },
   "social": {
     "follow": "Seguir",

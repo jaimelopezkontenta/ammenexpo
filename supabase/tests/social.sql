@@ -651,6 +651,132 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- La cola de moderación
+--
+-- `reports` llevaba desde la Fase 1 siendo de solo escritura: se podía reportar
+-- y **nadie** podía leer un reporte. La Guideline 1.2 exige actuar en 24 horas.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body)
+values ('bbbb2222-0000-0000-0000-000000000001', :CARLA, 'Algo que alguien reporta');
+
+insert into public.reports (reporter_id, target_type, target_id, reason)
+values (:CARLA, 'post', 'bbbb2222-0000-0000-0000-000000000001', 'prueba');
+
+commit;
+
+-- Quien no modera no ve nada. Y lo importante: **no falla con un error**, que
+-- sería una forma de confirmar que la cola existe. Devuelve cero filas.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.report_queue()) = 0,
+  'somebody who does not moderate sees no reports at all');
+
+select pg_temp.assert(
+  public.open_report_count() = 0,
+  'and no count either');
+
+-- El id lo saca de la cola, no de la tabla: la policy de `reports` solo deja
+-- ver los tuyos, ni siquiera a quien modera. La cola es la única puerta, y eso
+-- está bien — pero significa que un id ajeno no se puede ni nombrar desde aquí.
+select pg_temp.assert(
+  not public.resolve_report(
+    (select target_id from public.report_queue() limit 1), 'reviewed'),
+  'and cannot close one');
+
+commit;
+
+begin;
+
+update public.profiles set is_staff = true where id = :ANA;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.report_queue()) = 1,
+  'whoever moderates sees the report');
+
+-- Lo que hace que la cola se revise: el contenido viene dentro. Si hubiera que
+-- ir a buscarlo con el id en la mano, nadie la abriría.
+select pg_temp.assert(
+  (select content from public.report_queue()) = 'Algo que alguien reporta',
+  'with the reported text inside the row');
+
+select pg_temp.assert(
+  (select author_name from public.report_queue()) is not null
+  and (select reporter_name from public.report_queue()) is not null,
+  'and who wrote it and who reported it');
+
+select pg_temp.assert(
+  public.open_report_count() = 1,
+  'and the count says how many are waiting');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.resolve_report(
+    (select id from public.report_queue() limit 1), 'dismissed'),
+  'closing one works');
+
+select pg_temp.assert(
+  (select count(*) from public.report_queue('open')) = 0
+  and (select count(*) from public.report_queue('dismissed')) = 1,
+  'and it moves out of the open queue');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.resolve_report(
+      (select id from public.report_queue('dismissed') limit 1), 'open')
+  $q$),
+  'a report is closed, not reopened');
+
+select pg_temp.assert(
+  not public.resolve_report(
+    '00000000-0000-0000-0000-000000000000'::uuid, 'reviewed'),
+  'and closing something that does not exist says so');
+
+commit;
+
+-- La cola ve lo que las policies esconden: es exactamente para lo que sirve.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body)
+values ('bbbb2222-0000-0000-0000-000000000002', :CARLA, 'eres un imbecil');
+
+insert into public.reports (reporter_id, target_type, target_id, reason)
+values (:CARLA, 'post', 'bbbb2222-0000-0000-0000-000000000002', 'retenido');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.report_queue()
+    where target_id = 'bbbb2222-0000-0000-0000-000000000002') = 1,
+  'and content the filter held — which nobody else can see — is in the queue');
+
+commit;
+
 -- ===========================================================================
 -- RLS sigue puesta
 -- ===========================================================================

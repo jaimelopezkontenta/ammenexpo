@@ -491,7 +491,27 @@
     "blockedEmpty": "You haven't blocked anyone.",
     "blockedHint": "You won't see their messages, their plans, or when they pray for you. They are never told.",
     "held": "Under review",
-    "heldHint": "Somebody will read it before it goes up. It may take a few hours."
+    "heldHint": "Somebody will read it before it goes up. It may take a few hours.",
+    "queueTitle": "Reports",
+    "queueEmpty": "Nothing to review.",
+    "statusOpen": "Unreviewed",
+    "statusReviewed": "Reviewed",
+    "statusDismissed": "Dismissed",
+    "reportedBy": "Reported by {{name}}",
+    "writtenBy": "written by {{name}}",
+    "alreadyHidden": "already hidden",
+    "contentGone": "This content no longer exists.",
+    "openProfile": "See the profile",
+    "markReviewed": "Mark reviewed",
+    "dismiss": "Dismiss",
+    "resolved": "Report closed.",
+    "target": {
+      "post": "Request",
+      "comment": "Comment",
+      "message": "Message",
+      "testimony": "Testimony",
+      "intercession": "Intercession message"
+    }
   },
   "social": {
     "follow": "Follow",

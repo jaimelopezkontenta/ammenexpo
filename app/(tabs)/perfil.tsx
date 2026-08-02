@@ -21,6 +21,7 @@ import {
   REMINDER_MAX,
   toggleWithLimit,
 } from "@/core/onboarding/options";
+import { useOpenReportCount } from "@/core/moderation/queue";
 import {
   useDeleteAccount,
   useProfile,
@@ -39,6 +40,7 @@ export default function Profile() {
   const uploadAvatar = useUploadAvatar(userId);
   const removeAvatar = useRemoveAvatar(userId);
   const deleteAccount = useDeleteAccount();
+  const { data: openReports } = useOpenReportCount(userId);
 
   // Null means "not edited", so the field simply shows whatever the server
   // holds. Seeding this from an effect instead would fight every refetch for
@@ -311,6 +313,22 @@ export default function Profile() {
 
       {/* La única vía de entrada para quien todavía no tiene un plan que
           compartir, que es justo quien acaba de instalar la app. */}
+      {/* Solo para quien modera. La RPC ya devuelve cero filas a cualquier otra
+          persona —la seguridad está ahí, no aquí— y esto es para que no haya una
+          entrada que no lleva a ninguna parte. */}
+      {profile.is_staff ? (
+        <Link href="/moderacion" asChild>
+          <Button
+            title={
+              openReports
+                ? `${t("moderation.queueTitle")} · ${openReports}`
+                : t("moderation.queueTitle")
+            }
+            variant="ghost"
+          />
+        </Link>
+      ) : null}
+
       <Link href="/invitar" asChild>
         <Button title={t("invite.title")} variant="ghost" />
       </Link>

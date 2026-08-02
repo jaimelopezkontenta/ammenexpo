@@ -9,6 +9,8 @@ export { liveStreak, type Streak } from "./streak";
 export type Profile = {
   display_name: string;
   avatar_url: string | null;
+  /** Se pone a mano en la base. No hay pantalla para nombrar staff, a propósito. */
+  is_staff: boolean;
   reminder_hours: number[];
   timezone: string;
   locale: string;
@@ -43,7 +45,7 @@ export const useProfile = (userId: string | undefined) =>
       ] = await Promise.all([
         supabase
           .from("profiles")
-          .select("display_name, avatar_url")
+          .select("display_name, avatar_url, is_staff")
           .eq("id", userId!)
           .maybeSingle(),
         supabase
@@ -58,8 +60,14 @@ export const useProfile = (userId: string | undefined) =>
       if (!profile || !settings) return null;
 
       return {
-        ...(profile as Pick<Profile, "display_name" | "avatar_url">),
-        ...(settings as Omit<Profile, "display_name" | "avatar_url">),
+        ...(profile as Pick<
+          Profile,
+          "display_name" | "avatar_url" | "is_staff"
+        >),
+        ...(settings as Omit<
+          Profile,
+          "display_name" | "avatar_url" | "is_staff"
+        >),
       };
     },
   });
