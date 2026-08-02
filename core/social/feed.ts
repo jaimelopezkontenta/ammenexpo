@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
+import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
 export type FeedKind = "request" | "testimony" | "plan";
@@ -39,10 +40,16 @@ export type FeedEntry = {
  * justo el día en que no sigues a nadie.
  */
 export const useHomeFeed = () =>
-  useQuery({
+  usePagedQuery<FeedEntry>({
     queryKey: ["homeFeed"],
-    queryFn: async (): Promise<FeedEntry[]> => {
-      const { data, error } = await supabase.rpc("home_feed");
+    // Une tres fuentes en una lista, así que un `id` puede repetirse entre
+    // clases: la clave es la pareja.
+    keyOf: (row) => `${row.kind}-${row.id}`,
+    fetchPage: async (before) => {
+      const { data, error } = await supabase.rpc("home_feed", {
+        p_before: before,
+        p_limit: PAGE_SIZE,
+      });
 
       if (error) throw error;
 

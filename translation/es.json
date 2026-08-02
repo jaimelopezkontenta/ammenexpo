@@ -16,7 +16,8 @@
     "notFoundTitle": "Esta página no existe.",
     "notFoundLink": "Volver al inicio",
     "errorTitle": "Algo no ha ido bien",
-    "errorBody": "No hemos podido cargar esto. Vuelve a intentarlo."
+    "errorBody": "No hemos podido cargar esto. Vuelve a intentarlo.",
+    "loadMore": "Ver más"
   },
   "tabs": {
     "today": "Hoy",

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
 export type AppNotification = {
@@ -25,11 +26,15 @@ export type AppNotification = {
  * Quien has bloqueado no llega: lo filtra la RPC, no esta pantalla.
  */
 export const useNotifications = (userId: string | undefined) =>
-  useQuery({
+  usePagedQuery<AppNotification>({
     queryKey: ["notifications", userId],
     enabled: Boolean(userId),
-    queryFn: async (): Promise<AppNotification[]> => {
-      const { data, error } = await supabase.rpc("my_notifications");
+    keyOf: (row) => row.id,
+    fetchPage: async (before) => {
+      const { data, error } = await supabase.rpc("my_notifications", {
+        p_before: before,
+        p_limit: PAGE_SIZE,
+      });
 
       if (error) throw error;
 

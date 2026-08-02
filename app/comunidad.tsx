@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { LoadMore } from "@/components/LoadMore";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -305,6 +306,12 @@ export default function Community() {
                 ),
               )
             )}
+
+            <LoadMore
+              hasMore={feed.hasNextPage}
+              loading={feed.isFetchingNextPage}
+              onPress={() => void feed.fetchNextPage()}
+            />
           </>
         )}
       </ScrollView>

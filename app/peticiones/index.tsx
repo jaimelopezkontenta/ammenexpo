@@ -5,6 +5,7 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
+import { LoadMore } from "@/components/LoadMore";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleMembers } from "@/core/circles/queries";
@@ -36,6 +37,9 @@ export default function PrayerRequests() {
     isLoading,
     isError,
     refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = usePrayerFeed(circulo);
   const { data: members } = useCircleMembers(circulo);
 
@@ -190,6 +194,11 @@ export default function PrayerRequests() {
             }
           />
         </View>
+        <LoadMore
+          hasMore={hasNextPage}
+          loading={isFetchingNextPage}
+          onPress={() => void fetchNextPage()}
+        />
       </ScrollView>
     </>
   );

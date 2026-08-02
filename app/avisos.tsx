@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { LoadMore } from "@/components/LoadMore";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -26,7 +27,15 @@ export default function Notifications() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data, isLoading, isError, refetch } = useNotifications(userId);
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useNotifications(userId);
   const markRead = useMarkNotificationsRead(userId);
 
   // Al abrir, y una sola vez: entrar aquí es haberlos visto. `mutate` y no
@@ -131,6 +140,12 @@ export default function Notifications() {
             );
           })
         )}
+
+        <LoadMore
+          hasMore={hasNextPage}
+          loading={isFetchingNextPage}
+          onPress={() => void fetchNextPage()}
+        />
       </ScrollView>
     </>
   );

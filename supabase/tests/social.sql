@@ -581,6 +581,76 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- Que la lista continúe
+--
+-- Ninguna lista de esta app paginaba: `home_feed` aceptaba `p_before` desde que
+-- existe y el cliente nunca lo pasaba. Treinta filas y hasta ahí.
+-- ===========================================================================
+begin;
+
+-- Cinco peticiones de Beto con fechas separadas, para poder pedirlas de tres en
+-- tres y comprobar que la segunda página empieza donde acabó la primera.
+insert into public.posts (id, author_id, body, created_at)
+select ('bbbb1111-0000-0000-0000-00000000000' || n)::uuid,
+       '22222222-2222-2222-2222-222222222222',
+       'Petición ' || n,
+       now() - (n || ' hours')::interval
+from generate_series(1, 5) as n;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.home_feed(null, 3)) = 3,
+  'a page comes back the size you asked for');
+
+commit;
+
+select created_at as cursor_at from public.home_feed(null, 3)
+ order by created_at asc limit 1 \gset
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+-- Ni una fila de la primera página vuelve en la segunda. Con `offset` en vez de
+-- cursor, una fila escrita entre las dos peticiones desplazaría todo y esto
+-- fallaría — que es la razón de usar cursor.
+select pg_temp.assert(
+  not exists (
+    select 1 from public.home_feed(:'cursor_at', 3) later
+    join public.home_feed(null, 3) first
+      on first.kind = later.kind and first.id = later.id
+  ),
+  'and the next page does not repeat a single row of the first');
+
+select pg_temp.assert(
+  (select count(*) from public.home_feed(:'cursor_at', 3)) > 0,
+  'and there is more behind it');
+
+commit;
+
+-- Los avisos son la lista que más rápido crece —una fila por persona y día— y
+-- eran la única que ni siquiera ofrecía por dónde seguir.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.my_notifications(null, 1)) = 1,
+  'notifications page too');
+
+select pg_temp.assert(
+  (select count(*) from public.visible_testimonies(null, 1)) = 1,
+  'and so do testimonies');
+
+commit;
+
 -- ===========================================================================
 -- RLS sigue puesta
 -- ===========================================================================

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
 export const POST_MAX = 2000;
@@ -41,11 +42,14 @@ export type PostComment = {
  * and where there is no way to say "I prayed too".
  */
 export const usePrayerFeed = (circleId?: string) =>
-  useQuery({
+  usePagedQuery<PrayerRequest>({
     queryKey: ["prayerFeed", circleId ?? "wall"],
-    queryFn: async (): Promise<PrayerRequest[]> => {
+    keyOf: (row) => row.id,
+    fetchPage: async (before) => {
       const { data, error } = await supabase.rpc("prayer_feed", {
         p_group_id: circleId ?? null,
+        p_before: before,
+        p_limit: PAGE_SIZE,
       });
 
       if (error) throw error;

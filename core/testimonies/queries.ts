@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
 export const TESTIMONY_MAX = 2000;
@@ -30,11 +31,15 @@ export type Testimony = {
  * everyone else's only if they chose to share and you have not blocked them.
  */
 export const useVisibleTestimonies = (userId: string | undefined) =>
-  useQuery({
+  usePagedQuery<Testimony>({
     queryKey: ["testimonies", userId],
     enabled: Boolean(userId),
-    queryFn: async (): Promise<Testimony[]> => {
-      const { data, error } = await supabase.rpc("visible_testimonies");
+    keyOf: (row) => row.id,
+    fetchPage: async (before) => {
+      const { data, error } = await supabase.rpc("visible_testimonies", {
+        p_before: before,
+        p_limit: PAGE_SIZE,
+      });
 
       if (error) throw error;
 

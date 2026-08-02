@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { LoadMore } from "@/components/LoadMore";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
@@ -32,6 +33,9 @@ export default function Testimonies() {
     isLoading,
     isError,
     refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = useVisibleTestimonies(userId);
 
   const setVisibility = useSetTestimonyVisibility(userId);
@@ -243,6 +247,11 @@ export default function Testimonies() {
             <Button title={t("testimony.markAnswered")} />
           </Link>
         </View>
+        <LoadMore
+          hasMore={hasNextPage}
+          loading={isFetchingNextPage}
+          onPress={() => void fetchNextPage()}
+        />
       </ScrollView>
     </>
   );
