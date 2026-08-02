@@ -548,5 +548,28 @@
     "exportHint": "A file with everything Ammen keeps about you. It contains what you wrote, anonymous requests included — keep it somewhere safe.",
     "exportDone": "Downloaded.",
     "exportShared": "Done."
+  },
+  "list": {
+    "title": "My prayer list",
+    "placeholder": "My mother, Luis's job, a decision…",
+    "add": "Add",
+    "empty": "Your list is empty. Write down who or what you want to pray for these days.",
+    "markAnswered": "It was answered",
+    "undoAnswered": "Not yet",
+    "answeredTitle": "Answered",
+    "tellIt": "Tell it",
+    "remove": "Remove",
+    "removeConfirm": "Really remove",
+    "prayThrough": "Pray through the list",
+    "pray": "Pray through the list",
+    "howLong": "How long do you have?",
+    "howLongHint": "You'll pray for {{count}} request, one at a time.",
+    "howLongHint_plural": "You'll pray for {{count}} requests, one at a time.",
+    "minutes": "{{count}} minute",
+    "minutes_plural": "{{count}} minutes",
+    "position": "{{current}} of {{total}}",
+    "next": "Next",
+    "finish": "Finish",
+    "stop": "Leave it for today"
   }
 }

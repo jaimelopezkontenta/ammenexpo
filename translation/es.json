@@ -548,5 +548,28 @@
     "exportHint": "Un fichero con todo lo que Ammen guarda de ti. Contiene lo que escribiste, incluidas las peticiones anónimas: guárdalo con cuidado.",
     "exportDone": "Descargado.",
     "exportShared": "Listo."
+  },
+  "list": {
+    "title": "Mi lista de oración",
+    "placeholder": "Mi madre, el trabajo de Luis, una decisión…",
+    "add": "Añadir",
+    "empty": "Tu lista está vacía. Escribe por quién o por qué quieres orar estos días.",
+    "markAnswered": "Se respondió",
+    "undoAnswered": "Todavía no",
+    "answeredTitle": "Respondidas",
+    "tellIt": "Contarlo",
+    "remove": "Quitar",
+    "removeConfirm": "Quitar de verdad",
+    "prayThrough": "Orar por la lista",
+    "pray": "Orar por la lista",
+    "howLong": "¿Cuánto tiempo tienes?",
+    "howLongHint": "Vas a orar por {{count}} petición, de una en una.",
+    "howLongHint_plural": "Vas a orar por {{count}} peticiones, de una en una.",
+    "minutes": "{{count}} minuto",
+    "minutes_plural": "{{count}} minutos",
+    "position": "{{current}} de {{total}}",
+    "next": "Siguiente",
+    "finish": "Terminar",
+    "stop": "Dejarlo por hoy"
   }
 }

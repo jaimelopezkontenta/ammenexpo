@@ -55,12 +55,15 @@ export const useWriteTestimony = (userId: string | undefined) => {
       body: string;
       visibility: TestimonyVisibility;
       planId?: string;
+      /** Una petición de la lista responde igual que un plan de treinta días. */
+      listItemId?: string;
     }) => {
       const { error } = await supabase.from("testimonies").insert({
         user_id: userId!,
         body: input.body.trim().slice(0, TESTIMONY_MAX),
         visibility: input.visibility,
         plan_id: input.planId ?? null,
+        list_item_id: input.listItemId ?? null,
       });
 
       if (error) throw error;

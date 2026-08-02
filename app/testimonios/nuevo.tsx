@@ -28,7 +28,10 @@ export default function NewTestimony() {
   const { t } = useTranslation();
   const { session } = useSession();
   const userId = session?.user.id;
-  const { plan: planId } = useLocalSearchParams<{ plan?: string }>();
+  const { plan: planId, listItem: listItemId } = useLocalSearchParams<{
+    plan?: string;
+    listItem?: string;
+  }>();
 
   const { data: plan } = usePlanSummary(planId);
   const write = useWriteTestimony(userId);
@@ -50,7 +53,7 @@ export default function NewTestimony() {
     setError(null);
 
     try {
-      await write.mutateAsync({ body, visibility, planId });
+      await write.mutateAsync({ body, visibility, planId, listItemId });
       router.replace("/testimonios");
     } catch {
       setError(t("common.errorGeneric"));

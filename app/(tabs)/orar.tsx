@@ -47,6 +47,13 @@ export default function Pray() {
             círculo" and land on the circles *list*, two steps away from the
             thing this screen is actually asking for. */}
         <View className="mt-6 w-full gap-3">
+          {/* Tu lista no depende de que nadie comparta nada contigo: es lo que
+              se puede hacer aquí el primer día, cuando esta pantalla no tiene
+              todavía a nadie por quien orar. */}
+          <Link href="/lista" asChild>
+            <Button title={t("list.title")} />
+          </Link>
+
           {/* A la comunidad, no al muro suelto. Eran dos puertas al mismo
               contenido con nombres distintos, y la comunidad además trae los
               testimonios y los planes públicos. */}
@@ -98,6 +105,10 @@ export default function Pray() {
           </Text>
         </View>
       ) : null}
+
+      <Link href="/lista" asChild>
+        <Button title={t("list.title")} variant="secondary" />
+      </Link>
 
       <Link href="/comunidad" asChild>
         <Button title={t("community.title")} variant="secondary" />

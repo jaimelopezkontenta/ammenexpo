@@ -530,6 +530,86 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- La lista de oración
+--
+-- El hueco más grande que tenía la app: solo existía el plan que escribe la IA,
+-- y lo que la gente hace de verdad cada día es una lista de nombres. Es lo más
+-- privado del producto — no se comparte, no se ve, no se reporta.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+-- La regla 1: una policy de SELECT que consultara su propia tabla rompería este
+-- `returning`, y Postgres lo reportaría igual que un fallo de WITH CHECK.
+with inserted as (
+  insert into public.prayer_list_items (user_id, body)
+  values ('11111111-1111-1111-1111-111111111111', 'Mi madre')
+  returning id
+)
+select pg_temp.assert(
+  (select count(*) from inserted) = 1,
+  'insert ... returning works on prayer_list_items (rule 1)');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.prayer_list_items (user_id, body)
+    values ('11111111-1111-1111-1111-111111111111', '   ')
+  $q$),
+  'an empty request is refused, not stored as a blank line');
+
+commit;
+
+-- Lo que de verdad importa aquí: nadie más ve tu lista. Ni la ve, ni sabe que
+-- existe.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.prayer_list_items) = 0,
+  'nobody else sees a single item of your list');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.prayer_list_items (user_id, body)
+    values ('11111111-1111-1111-1111-111111111111', 'Colado')
+  $q$),
+  'nor can anybody write into it');
+
+commit;
+
+-- Marcar respondida y poder deshacerlo: alguien que toca la fila equivocada no
+-- puede quedarse sin vuelta atrás en la pantalla donde apunta a su madre.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+update public.prayer_list_items set answered_at = now();
+
+select pg_temp.assert(
+  (select answered_at from public.prayer_list_items limit 1) is not null,
+  'you can mark one answered');
+
+update public.prayer_list_items set answered_at = null;
+
+select pg_temp.assert(
+  (select answered_at from public.prayer_list_items limit 1) is null,
+  'and take it back');
+
+-- El cuarto bucle vale igual para una petición de la lista que para un plan.
+insert into public.testimonies (user_id, body, visibility, list_item_id)
+select '11111111-1111-1111-1111-111111111111', 'Se puso bien', 'private', id
+from public.prayer_list_items limit 1;
+
+select pg_temp.assert(
+  (select count(*) from public.testimonies where list_item_id is not null) = 1,
+  'and a testimony can hang off it, the same way it hangs off a plan');
+
+commit;
+
 \echo '===================================='
 \echo ' ACQUISITION LOOP ASSERTIONS PASSED'
 \echo '===================================='
