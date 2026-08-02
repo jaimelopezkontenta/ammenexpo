@@ -465,7 +465,12 @@
     "readInContext": "Read the chapter",
     "searchLabel": "Search",
     "chapterNotFound": "We could not find that chapter.",
-    "verseOfTheDay": "Verse of the day"
+    "verseOfTheDay": "Verse of the day",
+    "markVerse": "Verse {{verse}}: highlight or make a note",
+    "highlight": "Highlight",
+    "unhighlight": "Remove highlight",
+    "notePlaceholder": "Your note",
+    "noteDelete": "Delete the note"
   },
   "chat": {
     "title": "Chat",

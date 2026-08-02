@@ -1,7 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -12,6 +12,12 @@ import {
   previousChapter,
   type ChapterRef,
 } from "@/core/bible/navigation";
+import {
+  NOTE_MAX,
+  useChapterMarks,
+  useSaveNote,
+  useToggleHighlight,
+} from "@/core/bible/marks";
 import {
   useBibleBooks,
   useChapter,
@@ -58,6 +64,35 @@ export default function ChapterReader() {
     Number.isInteger(chapterNumber) &&
     chapterNumber > 0;
   const { mutate: savePosition } = useSaveReadingPosition(userId);
+
+  // Lo que has dejado marcado aquí. Una sola lectura por capítulo: Salmos 119
+  // tiene 176 versículos y una consulta por cada uno sería una forma cara de
+  // subrayar.
+  const { data: marks } = useChapterMarks(userId, bookId, chapterNumber);
+  const toggleHighlight = useToggleHighlight(userId, bookId, chapterNumber);
+  const saveNote = useSaveNote(userId, bookId, chapterNumber);
+
+  // Qué versículo tiene los controles abiertos. Uno cada vez: una fila de
+  // acciones bajo cada versículo convertiría el capítulo en un formulario.
+  const [openVerse, setOpenVerse] = useState<number | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [markError, setMarkError] = useState<string | null>(null);
+
+  const openMarks = (verseNumber: number) => {
+    setMarkError(null);
+    setOpenVerse((current) => (current === verseNumber ? null : verseNumber));
+    setNoteDraft(marks?.notes[verseNumber] ?? "");
+  };
+
+  const runMark = async (action: () => Promise<unknown>) => {
+    setMarkError(null);
+
+    try {
+      await action();
+    } catch {
+      setMarkError(t("common.errorGeneric"));
+    }
+  };
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -183,31 +218,130 @@ export default function ChapterReader() {
         onContentSizeChange={scrollToTarget}
       >
         {(verses ?? []).map((row) => {
-          const highlighted = row.verse === targetVerse;
+          const linked = row.verse === targetVerse;
+          const isHighlighted = marks?.highlighted.includes(row.verse) ?? false;
+          const note = marks?.notes[row.verse];
+          const isOpen = openVerse === row.verse;
 
           return (
-            <View
-              key={row.verse}
-              className={`flex-row gap-3 rounded-xl px-2 py-1 ${
-                highlighted ? "bg-clay-soft" : ""
-              }`}
-              // Measured only for the verse we were sent to. Collecting all 176
-              // layouts of Salmos 119 to use one would be waste.
-              onLayout={
-                highlighted
-                  ? (event) => {
-                      targetY.current = event.nativeEvent.layout.y;
-                      scrollToTarget();
+            <View key={row.verse} className="gap-2">
+              {/* El versículo entero es el control. Un icono al margen sería
+                  más pequeño que el dedo que lo busca, y aquí el gesto natural
+                  es tocar la frase que te ha parado. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("bible.markVerse", { verse: row.verse })}
+                accessibilityState={{ expanded: isOpen }}
+                onPress={() => openMarks(row.verse)}
+                className={`flex-row gap-3 rounded-xl px-2 py-1 ${
+                  linked
+                    ? "bg-clay-soft"
+                    : isHighlighted
+                      ? "bg-paper-sunken"
+                      : ""
+                }`}
+                // Measured only for the verse we were sent to. Collecting all
+                // 176 layouts of Salmos 119 to use one would be waste.
+                onLayout={
+                  linked
+                    ? (event) => {
+                        targetY.current = event.nativeEvent.layout.y;
+                        scrollToTarget();
+                      }
+                    : undefined
+                }
+              >
+                <Text className="pt-1 text-xs font-semibold text-ink-muted">
+                  {row.verse}
+                </Text>
+                <Text className="flex-1 font-serif text-lg leading-reading text-ink">
+                  {row.text}
+                </Text>
+              </Pressable>
+
+              {/* La nota se ve sin abrir nada: escribir algo al margen y que
+                  luego haya que ir a buscarlo es la forma de no volver a
+                  escribir ninguna. */}
+              {note && !isOpen ? (
+                <Text className="px-2 text-sm leading-6 text-ink-muted">
+                  {note}
+                </Text>
+              ) : null}
+
+              {isOpen ? (
+                <View className="gap-3 rounded-xl bg-paper-sunken p-4">
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() =>
+                      void runMark(() =>
+                        toggleHighlight.mutateAsync({
+                          verse: row.verse,
+                          on: !isHighlighted,
+                        }),
+                      )
                     }
-                  : undefined
-              }
-            >
-              <Text className="pt-1 text-xs font-semibold text-ink-muted">
-                {row.verse}
-              </Text>
-              <Text className="flex-1 font-serif text-lg leading-reading text-ink">
-                {row.text}
-              </Text>
+                  >
+                    <Text className="text-sm font-medium text-clay">
+                      {isHighlighted
+                        ? t("bible.unhighlight")
+                        : t("bible.highlight")}
+                    </Text>
+                  </Pressable>
+
+                  <TextInput
+                    className="w-full rounded-xl border border-ink-line bg-paper px-3 py-2.5 text-base text-ink"
+                    accessibilityLabel={t("bible.notePlaceholder")}
+                    value={noteDraft}
+                    onChangeText={setNoteDraft}
+                    placeholder={t("bible.notePlaceholder")}
+                    placeholderTextColor="#726A62"
+                    maxLength={NOTE_MAX}
+                    multiline
+                  />
+
+                  <View className="flex-row gap-4">
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() =>
+                        void runMark(() =>
+                          saveNote
+                            .mutateAsync({
+                              verse: row.verse,
+                              body: noteDraft,
+                            })
+                            .then(() => setOpenVerse(null)),
+                        )
+                      }
+                    >
+                      {/* Guardar vacío borra la nota, y lo dice: un botón de
+                          guardar que borra sin avisar es una trampa. */}
+                      <Text className="text-sm font-medium text-ink">
+                        {!noteDraft.trim() && note
+                          ? t("bible.noteDelete")
+                          : t("common.save")}
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => setOpenVerse(null)}
+                    >
+                      <Text className="text-sm text-ink-soft underline">
+                        {t("common.cancel")}
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  {markError ? (
+                    <Text
+                      className="text-sm text-red-500"
+                      accessibilityRole="alert"
+                    >
+                      {markError}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
             </View>
           );
         })}

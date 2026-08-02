@@ -465,7 +465,12 @@
     "readInContext": "Leer el capítulo",
     "searchLabel": "Buscar",
     "chapterNotFound": "No encontramos ese capítulo.",
-    "verseOfTheDay": "Versículo del día"
+    "verseOfTheDay": "Versículo del día",
+    "markVerse": "Versículo {{verse}}: subrayar o anotar",
+    "highlight": "Subrayar",
+    "unhighlight": "Quitar el subrayado",
+    "notePlaceholder": "Tu nota",
+    "noteDelete": "Borrar la nota"
   },
   "chat": {
     "title": "Chat",

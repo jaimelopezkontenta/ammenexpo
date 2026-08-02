@@ -408,6 +408,98 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- La Biblia con rastro
+--
+-- El lector llevaba desde la Fase 4.10 siendo de solo lectura: se podía buscar,
+-- navegar y continuar donde lo dejaste, y no se podía dejar marca de nada.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+-- La regla 1, para las dos tablas nuevas.
+with inserted as (
+  insert into public.bible_highlights (user_id, book_id, chapter, verse)
+  values ('11111111-1111-1111-1111-111111111111', 43, 3, 16)
+  returning verse
+)
+select pg_temp.assert(
+  (select count(*) from inserted) = 1,
+  'insert ... returning works on bible_highlights (rule 1)');
+
+with inserted as (
+  insert into public.bible_notes (user_id, book_id, chapter, verse, body)
+  values ('11111111-1111-1111-1111-111111111111', 43, 3, 16, 'Para acordarme')
+  returning id
+)
+select pg_temp.assert(
+  (select count(*) from inserted) = 1,
+  'and on bible_notes');
+
+commit;
+
+-- Subrayar dos veces el mismo versículo no duplica: la clave primaria compuesta
+-- es lo que hace que poner y quitar sea seguro sin consultar antes de escribir.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.bible_highlights (user_id, book_id, chapter, verse)
+    values ('11111111-1111-1111-1111-111111111111', 43, 3, 16)
+  $q$),
+  'the same verse cannot be highlighted twice');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.bible_notes (user_id, book_id, chapter, verse, body)
+    values ('11111111-1111-1111-1111-111111111111', 43, 3, 16, 'Otra')
+  $q$),
+  'and a verse holds one note, which is edited rather than stacked');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.bible_notes (user_id, book_id, chapter, verse, body)
+    values ('11111111-1111-1111-1111-111111111111', 43, 3, 17, '   ')
+  $q$),
+  'an empty note is refused instead of stored as a blank margin');
+
+commit;
+
+-- Lo que subrayas no lo ve nadie, y lo que escribes al margen menos todavía.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.bible_highlights) = 0
+  and (select count(*) from public.bible_notes) = 0,
+  'nobody else sees a highlight or a note of yours');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.bible_notes (user_id, book_id, chapter, verse, body)
+    values ('11111111-1111-1111-1111-111111111111', 43, 3, 18, 'Colada')
+  $q$),
+  'nor can anybody write in your margin');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+delete from public.bible_highlights where book_id = 43 and chapter = 3 and verse = 16;
+
+select pg_temp.assert(
+  (select count(*) from public.bible_highlights) = 0,
+  'and taking a highlight off works');
+
+commit;
+
 \echo '===================================='
 \echo ' BIBLE ASSERTIONS PASSED'
 \echo '===================================='
