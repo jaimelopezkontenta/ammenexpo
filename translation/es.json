@@ -489,7 +489,9 @@
     "hideDone": "Mensaje oculto para todo el círculo.",
     "blockedTitle": "Personas bloqueadas",
     "blockedEmpty": "No has bloqueado a nadie.",
-    "blockedHint": "No verás sus mensajes, ni sus planes, ni cuando oren por ti. A ellas no se les avisa."
+    "blockedHint": "No verás sus mensajes, ni sus planes, ni cuando oren por ti. A ellas no se les avisa.",
+    "held": "En revisión",
+    "heldHint": "Alguien va a leerlo antes de que se publique. Puede tardar unas horas."
   },
   "social": {
     "follow": "Seguir",

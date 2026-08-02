@@ -138,6 +138,12 @@ export default function PrayerRequestComments() {
                 {comment.author_name}
               </Text>
             </View>
+            {comment.held_at ? (
+              <Text className="text-sm font-medium text-ink-muted">
+                {t("moderation.held")} · {t("moderation.heldHint")}
+              </Text>
+            ) : null}
+
             <Text className="text-base leading-6 text-ink">{comment.body}</Text>
 
             {!comment.is_mine ? (

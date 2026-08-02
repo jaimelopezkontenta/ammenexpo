@@ -225,6 +225,7 @@ export default function Community() {
                       prayer_count: entry.prayer_count,
                       comment_count: entry.comment_count,
                       answered_at: entry.answered_at,
+                      held_at: entry.held_at,
                       created_at: entry.created_at,
                       i_prayed: entry.i_prayed,
                       is_mine: entry.is_mine,

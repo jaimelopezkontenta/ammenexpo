@@ -23,6 +23,7 @@ export type FeedEntry = {
   prayer_count: number;
   comment_count: number;
   answered_at: string | null;
+  held_at: string | null;
   created_at: string;
   i_prayed: boolean;
   is_mine: boolean;

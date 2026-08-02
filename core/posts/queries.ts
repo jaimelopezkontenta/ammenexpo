@@ -17,6 +17,11 @@ export type PrayerRequest = {
   prayer_count: number;
   comment_count: number;
   answered_at: string | null;
+  /**
+   * Retenida para revisión por el filtro de contenido. La ve su autor —con la
+   * nota— y nadie más: eso lo decide la policy, no esta pantalla.
+   */
+  held_at: string | null;
   created_at: string;
   i_prayed: boolean;
   is_mine: boolean;
@@ -28,6 +33,8 @@ export type PostComment = {
   author_id: string;
   author_name: string;
   author_avatar_url: string | null;
+  /** Retenido para revisión: lo ve su autor y nadie más. */
+  held_at: string | null;
   created_at: string;
   is_mine: boolean;
 };

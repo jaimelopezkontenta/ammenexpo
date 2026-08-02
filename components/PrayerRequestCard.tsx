@@ -65,6 +65,20 @@ export const PrayerRequestCard = ({
         ) : null}
       </View>
 
+      {/* Lo retenido se dice, no se traga. Un filtro que se queda un mensaje
+          sin avisar deja a quien lo escribió creyendo que publicó, sin saber
+          por qué nadie contesta — y volviéndolo a intentar. */}
+      {request.held_at ? (
+        <View className="gap-1 rounded-xl bg-paper-sunken p-4">
+          <Text className="text-sm font-medium text-ink">
+            {t("moderation.held")}
+          </Text>
+          <Text className="text-sm leading-5 text-ink-muted">
+            {t("moderation.heldHint")}
+          </Text>
+        </View>
+      ) : null}
+
       <Text className="font-serif text-base leading-reading text-ink">
         {request.body}
       </Text>

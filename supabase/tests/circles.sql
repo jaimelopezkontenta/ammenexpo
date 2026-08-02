@@ -1262,6 +1262,104 @@ select pg_temp.assert(
 commit;
 
 
+
+-- ===========================================================================
+-- El filtro que retiene para revisión
+--
+-- La cuarta pata de la Guideline 1.2, y la única de la que no había nada.
+-- Retiene, no borra: un filtro que traga un mensaje sin decir nada deja a quien
+-- lo escribió creyendo que publicó.
+-- ===========================================================================
+begin;
+
+select pg_temp.assert(
+  not public.is_objectionable('Oren por mi madre, está en el hospital'),
+  'an ordinary prayer request passes');
+
+select pg_temp.assert(
+  public.is_objectionable('eres un IMBÉCIL'),
+  'an insult is caught, in caps and with the accent on');
+
+-- El fallo clásico de estos filtros, y la forma más rápida de que la gente
+-- aprenda a desconfiar del aviso.
+select pg_temp.assert(
+  not public.is_objectionable('la reputación de la disputa'),
+  'and a word that merely contains another is not');
+
+select pg_temp.assert(
+  public.is_objectionable('kill yourself'),
+  'and it works in the other language too');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body)
+values ('9051d000-0000-0000-0000-00000000000f',
+        '55555555-5555-5555-5555-555555555555', 'eres un imbecil');
+
+select pg_temp.assert(
+  (select held_at from public.posts
+    where id = '9051d000-0000-0000-0000-00000000000f') is not null,
+  'writing one holds it for review');
+
+-- Quien lo escribió lo sigue viendo, y la RPC le devuelve la marca para que la
+-- pantalla pueda decírselo.
+select pg_temp.assert(
+  (select held_at from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-00000000000f') is not null,
+  'and its author still sees it, marked');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-00000000000f'
+  ),
+  'and nobody else does');
+
+select pg_temp.assert(
+  not public.can_read_post('9051d000-0000-0000-0000-00000000000f'),
+  'and nothing hangs off it: no comments, no prayers');
+
+commit;
+
+-- Editar tampoco cuela: sin el trigger sobre `update of body`, publicar algo
+-- inofensivo y cambiarlo después sería la vuelta obvia.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body)
+values ('9051d000-0000-0000-0000-00000000000e',
+        '55555555-5555-5555-5555-555555555555', 'Una petición normal');
+
+select pg_temp.assert(
+  (select held_at from public.posts
+    where id = '9051d000-0000-0000-0000-00000000000e') is null,
+  'an innocent request is published');
+
+update public.posts set body = 'kill yourself'
+ where id = '9051d000-0000-0000-0000-00000000000e';
+
+select pg_temp.assert(
+  (select held_at from public.posts
+    where id = '9051d000-0000-0000-0000-00000000000e') is not null,
+  'and editing it into something else holds it too');
+
+delete from public.posts
+ where id in ('9051d000-0000-0000-0000-00000000000e',
+              '9051d000-0000-0000-0000-00000000000f');
+
+commit;
+
 -- ===========================================================================
 -- La regla 1, para tres tablas que estrenan escritor
 -- ===========================================================================
