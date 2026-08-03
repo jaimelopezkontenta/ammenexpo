@@ -30,10 +30,12 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
           aria-describedby={error ? errorId : undefined}
           placeholderTextColor="#6F6879"
           {...inputProps}
-          // Blanco casi opaco y no vidrio: el campo es donde se escribe, y el
-          // texto que se escribe tiene que ganarle al degradado que hay detrás
-          // sin depender de qué pantalla sea.
-          className={`w-full rounded-input border bg-surface px-4 py-3.5 font-sans text-base text-plum shadow-soft ${
+          // Vidrio, como en el prototipo, pero sin desenfoque: un campo de
+          // texto está dentro de un formulario con teclado abierto, y meter un
+          // BlurView en cada uno cuesta más de lo que se ve. El blanco al 70 %
+          // se parece bastante al 58 % con desenfoque de encima, y plum sobre
+          // ese fondo sigue muy por encima de AA.
+          className={`w-full rounded-input border bg-white/70 px-4 py-4 font-sans text-base text-plum shadow-soft ${
             error ? "border-danger" : "border-white/70"
           } ${inputProps.className ?? ""}`}
         />

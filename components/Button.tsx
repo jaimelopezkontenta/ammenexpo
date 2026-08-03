@@ -62,7 +62,7 @@ export const Button = forwardRef<View, ButtonProps>(
     const content = loading ? (
       <ActivityIndicator color={SPINNER[variant]} />
     ) : (
-      <Text className={`font-sans-semibold text-base ${LABEL[variant]}`}>
+      <Text className={`font-sans-semibold text-lg ${LABEL[variant]}`}>
         {title}
       </Text>
     );

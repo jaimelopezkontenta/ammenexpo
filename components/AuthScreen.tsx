@@ -51,7 +51,10 @@ export const AuthScreen = ({
             {title}
           </Text>
           {intro ? (
-            <Text className="text-center font-sans text-base text-mist-ink">
+            // Plum y no el gris secundario, como en el prototipo: es una sola
+            // línea bajo el título, no texto de apoyo, y sobre el periwinkle
+            // de los bordes del radial el gris se queda en 3,64.
+            <Text className="text-center font-sans text-base text-plum">
               {intro}
             </Text>
           ) : null}
