@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useMyBlocks, useUnblockUser } from "@/core/moderation/blocks";
@@ -40,49 +41,55 @@ export default function BlockedPeople() {
         options={{ title: t("moderation.blockedTitle"), headerShown: true }}
       />
 
-      {isLoading ? <LoadingState /> : null}
+      {isLoading ? <LoadingState variant="radial" /> : null}
 
-      {isError ? <ErrorState onRetry={() => void refetch()} /> : null}
+      {isError ? (
+        <ErrorState variant="radial" onRetry={() => void refetch()} />
+      ) : null}
 
       {!isLoading && !isError ? (
-        <ScrollView
-          className="flex-1 bg-paper"
-          contentContainerClassName="gap-4 px-7 py-8"
-        >
-          <Text className="text-base leading-6 text-ink-muted">
-            {t("moderation.blockedHint")}
-          </Text>
-
-          {error ? (
-            <Text className="text-sm text-red-500" accessibilityRole="alert">
-              {error}
+        <DawnBackground variant="radial">
+          <ScrollView contentContainerClassName="gap-4 px-7 py-8">
+            <Text className="font-sans text-base leading-6 text-mist-ink">
+              {t("moderation.blockedHint")}
             </Text>
-          ) : null}
 
-          {(blocks ?? []).length === 0 ? (
-            <Text className="text-base text-ink-muted">
-              {t("moderation.blockedEmpty")}
-            </Text>
-          ) : null}
-
-          {(blocks ?? []).map((entry) => (
-            <View
-              key={entry.blocked_id}
-              className="flex-row items-center justify-between"
-            >
-              <Text className="text-base text-ink">{entry.display_name}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${t("moderation.unblock")} ${entry.display_name}`}
-                onPress={() => void handleUnblock(entry.blocked_id)}
+            {error ? (
+              <Text
+                className="font-sans text-sm text-danger"
+                accessibilityRole="alert"
               >
-                <Text className="text-sm text-ink-soft">
-                  {t("moderation.unblock")}
+                {error}
+              </Text>
+            ) : null}
+
+            {(blocks ?? []).length === 0 ? (
+              <Text className="font-sans text-base text-mist-ink">
+                {t("moderation.blockedEmpty")}
+              </Text>
+            ) : null}
+
+            {(blocks ?? []).map((entry) => (
+              <View
+                key={entry.blocked_id}
+                className="flex-row items-center justify-between"
+              >
+                <Text className="font-sans text-base text-plum">
+                  {entry.display_name}
                 </Text>
-              </Pressable>
-            </View>
-          ))}
-        </ScrollView>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t("moderation.unblock")} ${entry.display_name}`}
+                  onPress={() => void handleUnblock(entry.blocked_id)}
+                >
+                  <Text className="font-sans text-sm text-mist-ink">
+                    {t("moderation.unblock")}
+                  </Text>
+                </Pressable>
+              </View>
+            ))}
+          </ScrollView>
+        </DawnBackground>
       ) : null}
     </>
   );

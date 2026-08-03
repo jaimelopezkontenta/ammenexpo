@@ -18,7 +18,7 @@ export const LanguageSwitcher = () => {
 
   return (
     <View className="w-full gap-2">
-      <Text className="text-center text-sm font-medium text-ink-muted">
+      <Text className="text-center font-sans-medium text-sm text-mist-ink">
         {t("common.language")}
       </Text>
       <View
@@ -53,12 +53,12 @@ export const LanguageSwitcher = () => {
                 updateLocale.mutate(code);
               }}
               className={`rounded-full px-4 py-2 ${
-                isActive ? "bg-ink" : "bg-paper-sunken"
+                isActive ? "bg-plum-chip" : "bg-white/60"
               }`}
             >
               <Text
                 className={
-                  isActive ? "font-semibold text-paper" : "text-ink-muted"
+                  isActive ? "font-sans-semibold text-white" : "text-mist-ink"
                 }
               >
                 {LABELS[code]}

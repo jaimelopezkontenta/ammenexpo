@@ -122,7 +122,7 @@ export default function Community() {
             value={query}
             onChangeText={setQuery}
             placeholder={t("community.searchPlaceholder")}
-            placeholderTextColor="#726A62"
+            placeholderTextColor="#6F6879"
             autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="search"

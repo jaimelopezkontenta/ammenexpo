@@ -304,7 +304,7 @@ export default function CircleChat() {
               value={draft}
               onChangeText={setDraft}
               placeholder={t("chat.placeholder")}
-              placeholderTextColor="#726A62"
+              placeholderTextColor="#6F6879"
               multiline
               // react-native-web renders a multiline input as `rows={2}`, so an
               // empty composer stood two lines tall next to a one-line button.

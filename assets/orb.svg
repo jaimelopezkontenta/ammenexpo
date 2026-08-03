@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1024" height="1024">
+  <!--
+    El isotipo, en un fichero que se puede rasterizar.
+
+    Es la MISMA pila de degradados que `components/Orb.tsx`, y esa duplicación
+    es a propósito y está acotada: los iconos de tienda son PNG y hay que
+    generarlos con una herramienta que no entiende React. Si un color cambia,
+    cambia en los dos sitios — y el único sitio donde se decide sigue siendo
+    `prototipo/TOKENS.md`.
+  -->
+  <defs>
+    <radialGradient id="base" cx="50" cy="50" r="70.7" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EDE6F6"/>
+      <stop offset="1" stop-color="#BFC3EF"/>
+    </radialGradient>
+    <radialGradient id="blue" cx="50" cy="82" r="57.6" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#CFECF9" stop-opacity="1"/>
+      <stop offset="1" stop-color="#CFECF9" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lilac" cx="78" cy="45" r="52.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D3CEF0" stop-opacity="1"/>
+      <stop offset="1" stop-color="#D3CEF0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lavender" cx="22" cy="45" r="52.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D4D0EF" stop-opacity="1"/>
+      <stop offset="1" stop-color="#D4D0EF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="peach" cx="50" cy="22" r="38.9" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8E2D1" stop-opacity="1"/>
+      <stop offset="1" stop-color="#F8E2D1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="rim" cx="50%" cy="50%" r="50%">
+      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.38"/>
+    </radialGradient>
+    <clipPath id="clip"><circle cx="50" cy="50" r="50"/></clipPath>
+  </defs>
+
+  <rect width="100" height="100" fill="#FFF6EA"/>
+  <g clip-path="url(#clip)">
+    <circle cx="50" cy="50" r="50" fill="url(#base)"/>
+    <circle cx="50" cy="50" r="50" fill="url(#blue)"/>
+    <circle cx="50" cy="50" r="50" fill="url(#lilac)"/>
+    <circle cx="50" cy="50" r="50" fill="url(#lavender)"/>
+    <circle cx="50" cy="50" r="50" fill="url(#peach)"/>
+  </g>
+  <circle cx="50" cy="50" r="50" fill="url(#rim)"/>
+</svg>

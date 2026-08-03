@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { LoadMore } from "@/components/LoadMore";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
@@ -80,167 +81,174 @@ export default function Moderation() {
         options={{ title: t("moderation.queueTitle"), headerShown: true }}
       />
 
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-5 px-7 py-8"
-      >
-        <ChoiceChips
-          options={[
-            { value: "open", label: t("moderation.statusOpen") },
-            { value: "reviewed", label: t("moderation.statusReviewed") },
-            { value: "dismissed", label: t("moderation.statusDismissed") },
-          ]}
-          selected={[status]}
-          onToggle={(value) => setStatus(value as ReportStatus)}
-        />
+      <DawnBackground variant="radial">
+        <ScrollView contentContainerClassName="gap-5 px-7 py-8">
+          <ChoiceChips
+            options={[
+              { value: "open", label: t("moderation.statusOpen") },
+              { value: "reviewed", label: t("moderation.statusReviewed") },
+              { value: "dismissed", label: t("moderation.statusDismissed") },
+            ]}
+            selected={[status]}
+            onToggle={(value) => setStatus(value as ReportStatus)}
+          />
 
-        {notice ? (
-          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-            {notice}
-          </Text>
-        ) : null}
+          {notice ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {notice}
+            </Text>
+          ) : null}
 
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
 
-        {queue.isLoading ? (
-          <LoadingState />
-        ) : queue.isError ? (
-          <ErrorState onRetry={() => void queue.refetch()} />
-        ) : (queue.data ?? []).length === 0 ? (
-          <Text className="text-base leading-6 text-ink-muted">
-            {t("moderation.queueEmpty")}
-          </Text>
-        ) : (
-          (queue.data ?? []).map((report) => {
-            const hide = hideFor(report);
+          {queue.isLoading ? (
+            <LoadingState variant="radial" />
+          ) : queue.isError ? (
+            <ErrorState variant="radial" onRetry={() => void queue.refetch()} />
+          ) : (queue.data ?? []).length === 0 ? (
+            <Text className="font-sans text-base leading-6 text-mist-ink">
+              {t("moderation.queueEmpty")}
+            </Text>
+          ) : (
+            (queue.data ?? []).map((report) => {
+              const hide = hideFor(report);
 
-            return (
-              <View
-                key={report.id}
-                className="gap-3 rounded-2xl border border-ink-line p-5"
-              >
-                <View className="flex-row items-center justify-between gap-3">
-                  <Text className="text-xs uppercase tracking-wide text-ink-soft">
-                    {t(`moderation.target.${report.target_type}`)}
-                  </Text>
-                  <Text className="text-xs text-ink-soft">
-                    {new Date(report.created_at).toLocaleString()}
-                  </Text>
-                </View>
+              return (
+                <View
+                  key={report.id}
+                  className="gap-3 rounded-2xl border border-white/60 p-5"
+                >
+                  <View className="flex-row items-center justify-between gap-3">
+                    <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
+                      {t(`moderation.target.${report.target_type}`)}
+                    </Text>
+                    <Text className="font-sans text-xs text-mist-ink">
+                      {new Date(report.created_at).toLocaleString()}
+                    </Text>
+                  </View>
 
-                {/* Lo reportado, literal. Sin esto habría que creerse el
+                  {/* Lo reportado, literal. Sin esto habría que creerse el
                     reporte, que es exactamente lo que no se puede hacer. */}
-                <Text className="font-serif text-base leading-reading text-ink">
-                  {report.content ?? t("moderation.contentGone")}
-                </Text>
+                  <Text className="font-serif text-base leading-reading text-plum">
+                    {report.content ?? t("moderation.contentGone")}
+                  </Text>
 
-                <Text className="text-sm text-ink-soft">
-                  {t("moderation.reportedBy", { name: report.reporter_name })}
-                  {report.author_name
-                    ? ` · ${t("moderation.writtenBy", { name: report.author_name })}`
-                    : ""}
-                  {report.already_hidden
-                    ? ` · ${t("moderation.alreadyHidden")}`
-                    : ""}
-                </Text>
+                  <Text className="font-sans text-sm text-mist-ink">
+                    {t("moderation.reportedBy", { name: report.reporter_name })}
+                    {report.author_name
+                      ? ` · ${t("moderation.writtenBy", { name: report.author_name })}`
+                      : ""}
+                    {report.already_hidden
+                      ? ` · ${t("moderation.alreadyHidden")}`
+                      : ""}
+                  </Text>
 
-                {report.author_id ? (
-                  <Link
-                    href={{
-                      pathname: "/persona/[id]",
-                      params: { id: report.author_id },
-                    }}
-                    asChild
-                  >
-                    <Pressable accessibilityRole="link">
-                      <Text className="text-sm text-clay underline">
-                        {t("moderation.openProfile")}
-                      </Text>
-                    </Pressable>
-                  </Link>
-                ) : null}
-
-                {status === "open" ? (
-                  <View className="flex-row flex-wrap gap-4 pt-1">
-                    {hide && !report.already_hidden ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={() => void run(hide, t("moderation.hideDone"))}
-                      >
-                        <Text className="text-sm text-ink-soft underline">
-                          {t("moderation.hide")}
+                  {report.author_id ? (
+                    <Link
+                      href={{
+                        pathname: "/persona/[id]",
+                        params: { id: report.author_id },
+                      }}
+                      asChild
+                    >
+                      <Pressable accessibilityRole="link">
+                        <Text className="font-sans text-sm text-ember-ink underline">
+                          {t("moderation.openProfile")}
                         </Text>
                       </Pressable>
-                    ) : null}
+                    </Link>
+                  ) : null}
 
-                    {report.author_id ? (
+                  {status === "open" ? (
+                    <View className="flex-row flex-wrap gap-4 pt-1">
+                      {hide && !report.already_hidden ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() =>
+                            void run(hide, t("moderation.hideDone"))
+                          }
+                        >
+                          <Text className="font-sans text-sm text-mist-ink underline">
+                            {t("moderation.hide")}
+                          </Text>
+                        </Pressable>
+                      ) : null}
+
+                      {report.author_id ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() =>
+                            void run(
+                              () => block.mutateAsync(report.author_id!),
+                              t("moderation.blockDone"),
+                            )
+                          }
+                        >
+                          <Text className="font-sans text-sm text-mist-ink underline">
+                            {t("moderation.block")}
+                          </Text>
+                        </Pressable>
+                      ) : null}
+
                       <Pressable
                         accessibilityRole="button"
                         onPress={() =>
                           void run(
-                            () => block.mutateAsync(report.author_id!),
-                            t("moderation.blockDone"),
+                            () =>
+                              resolve.mutateAsync({
+                                reportId: report.id,
+                                status: "reviewed",
+                              }),
+                            t("moderation.resolved"),
                           )
                         }
                       >
-                        <Text className="text-sm text-ink-soft underline">
-                          {t("moderation.block")}
+                        <Text className="font-sans-medium text-sm text-plum underline">
+                          {t("moderation.markReviewed")}
                         </Text>
                       </Pressable>
-                    ) : null}
 
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() =>
-                        void run(
-                          () =>
-                            resolve.mutateAsync({
-                              reportId: report.id,
-                              status: "reviewed",
-                            }),
-                          t("moderation.resolved"),
-                        )
-                      }
-                    >
-                      <Text className="text-sm font-medium text-ink underline">
-                        {t("moderation.markReviewed")}
-                      </Text>
-                    </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() =>
+                          void run(
+                            () =>
+                              resolve.mutateAsync({
+                                reportId: report.id,
+                                status: "dismissed",
+                              }),
+                            t("moderation.resolved"),
+                          )
+                        }
+                      >
+                        <Text className="font-sans text-sm text-mist-ink underline">
+                          {t("moderation.dismiss")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })
+          )}
 
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() =>
-                        void run(
-                          () =>
-                            resolve.mutateAsync({
-                              reportId: report.id,
-                              status: "dismissed",
-                            }),
-                          t("moderation.resolved"),
-                        )
-                      }
-                    >
-                      <Text className="text-sm text-ink-soft underline">
-                        {t("moderation.dismiss")}
-                      </Text>
-                    </Pressable>
-                  </View>
-                ) : null}
-              </View>
-            );
-          })
-        )}
-
-        <LoadMore
-          hasMore={queue.hasNextPage}
-          loading={queue.isFetchingNextPage}
-          onPress={() => void queue.fetchNextPage()}
-        />
-      </ScrollView>
+          <LoadMore
+            hasMore={queue.hasNextPage}
+            loading={queue.isFetchingNextPage}
+            onPress={() => void queue.fetchNextPage()}
+          />
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

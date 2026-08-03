@@ -97,7 +97,7 @@ export default function PrayerList() {
               value={draft}
               onChangeText={setDraft}
               placeholder={t("list.placeholder")}
-              placeholderTextColor="#726A62"
+              placeholderTextColor="#6F6879"
               maxLength={ITEM_MAX}
               multiline
               numberOfLines={1}

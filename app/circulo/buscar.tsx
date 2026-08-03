@@ -69,7 +69,7 @@ export default function FindCircles() {
             value={query}
             onChangeText={setQuery}
             placeholder={t("circles.findPlaceholder")}
-            placeholderTextColor="#726A62"
+            placeholderTextColor="#6F6879"
             autoCorrect={false}
           />
 

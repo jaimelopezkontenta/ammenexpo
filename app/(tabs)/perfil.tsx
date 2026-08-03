@@ -8,6 +8,7 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -52,11 +53,11 @@ export default function Profile() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState variant="radial" />;
   }
 
   if (isError || !profile) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState variant="radial" onRetry={() => void refetch()} />;
   }
 
   const name = draftName ?? profile.display_name;
@@ -166,203 +167,216 @@ export default function Profile() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-paper"
-      contentContainerClassName="flex-grow gap-8 px-7 py-10"
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* La cara primero: `avatar_url` viajaba en trece RPC desde la Fase 1 y
+    <DawnBackground variant="radial">
+      <ScrollView
+        contentContainerClassName="flex-grow gap-8 px-7 py-10"
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* La cara primero: `avatar_url` viajaba en trece RPC desde la Fase 1 y
           no se pintaba en ningún sitio. */}
-      <View className="flex-row items-center gap-4">
-        <Avatar
-          name={profile.display_name}
-          url={profile.avatar_url}
-          seed={userId}
-          size={72}
-        />
+        <View className="flex-row items-center gap-4">
+          <Avatar
+            name={profile.display_name}
+            url={profile.avatar_url}
+            seed={userId}
+            size={72}
+          />
 
-        <View className="flex-1 gap-1">
-          <Text className="text-2xl font-bold text-ink">
-            {t("profile.title")}
-          </Text>
-          {session?.user.email ? (
-            <Text className="text-sm text-ink-soft">{session.user.email}</Text>
-          ) : null}
-
-          <View className="flex-row gap-4 pt-1">
-            <Pressable
-              accessibilityRole="button"
-              disabled={uploadAvatar.isPending}
-              onPress={() => void handlePickPhoto()}
-            >
-              <Text className="text-sm text-ink-muted underline">
-                {profile.avatar_url
-                  ? t("profile.changePhoto")
-                  : t("profile.addPhoto")}
+          <View className="flex-1 gap-1">
+            <Text className="font-sans-bold text-2xl text-plum">
+              {t("profile.title")}
+            </Text>
+            {session?.user.email ? (
+              <Text className="font-sans text-sm text-mist-ink">
+                {session.user.email}
               </Text>
-            </Pressable>
+            ) : null}
 
-            {profile.avatar_url ? (
+            <View className="flex-row gap-4 pt-1">
               <Pressable
                 accessibilityRole="button"
-                onPress={() => void handleRemovePhoto()}
+                disabled={uploadAvatar.isPending}
+                onPress={() => void handlePickPhoto()}
               >
-                <Text className="text-sm text-ink-muted underline">
-                  {t("profile.removePhoto")}
+                <Text className="font-sans text-sm text-mist-ink underline">
+                  {profile.avatar_url
+                    ? t("profile.changePhoto")
+                    : t("profile.addPhoto")}
                 </Text>
               </Pressable>
-            ) : null}
+
+              {profile.avatar_url ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => void handleRemovePhoto()}
+                >
+                  <Text className="font-sans text-sm text-mist-ink underline">
+                    {t("profile.removePhoto")}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
           </View>
         </View>
-      </View>
 
-      <TextField
-        label={t("profile.name")}
-        value={name}
-        onChangeText={setDraftName}
-        maxLength={80}
-      />
-
-      <View className="gap-3">
-        <Text className="text-sm font-medium text-ink-muted">
-          {t("profile.reminder")}
-        </Text>
-        <ChoiceChips
-          options={REMINDER_HOURS.map((slot) => ({
-            value: String(slot.hour),
-            label: t(`onboarding.hours.${slot.key}`),
-          }))}
-          selected={hours.map(String)}
-          onToggle={(value) =>
-            setDraftHours(
-              toggleWithLimit(hours.map(String), value, REMINDER_MAX).map(
-                Number,
-              ),
-            )
-          }
-          max={REMINDER_MAX}
-          multiple
+        <TextField
+          label={t("profile.name")}
+          value={name}
+          onChangeText={setDraftName}
+          maxLength={80}
         />
-        {/* Honest about what it does today: the hour is stored and nothing
-            reads it until push exists. */}
-        <Text className="text-sm text-ink-muted">
-          {t("profile.reminderHint")}
-        </Text>
-      </View>
 
-      <View className="gap-2">
-        <Text className="text-sm font-medium text-ink-muted">
-          {t("profile.timezone")}
-        </Text>
-        <Text className="text-base text-ink">{profile.timezone}</Text>
-        <Text className="text-sm text-ink-muted">
-          {t("profile.timezoneHint")}
-        </Text>
-
-        {zoneMoved ? (
-          <View className="gap-2 pt-1">
-            <Text className="text-sm text-ink-soft">
-              {t("profile.timezoneMoved", { zone: deviceZone })}
-            </Text>
-            <Button
-              title={t("profile.timezoneUpdate", { zone: deviceZone })}
-              variant="secondary"
-              loading={updateTimezone.isPending}
-              onPress={() => void handleTimezone()}
-            />
-          </View>
-        ) : null}
-      </View>
-
-      {dirty ? (
-        <Button
-          title={t("common.save")}
-          loading={update.isPending}
-          onPress={() => void handleSave()}
-        />
-      ) : null}
-
-      {notice ? (
-        <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-          {notice}
-        </Text>
-      ) : null}
-
-      {error ? (
-        <Text className="text-sm text-red-500" accessibilityRole="alert">
-          {error}
-        </Text>
-      ) : null}
-
-      <LanguageSwitcher />
-
-      {/* Blocking happens in the moment, from a message or from a roster. The
-          undo has to live somewhere calm, and this is the only screen that
-          belongs to you rather than to a circle. */}
-      <Link href="/testimonios" asChild>
-        <Button title={t("testimony.title")} variant="ghost" />
-      </Link>
-
-      <Link href="/plus" asChild>
-        <Button title={t("profile.plus")} variant="ghost" />
-      </Link>
-
-      <Link href="/bloqueados" asChild>
-        <Button title={t("moderation.blockedTitle")} variant="ghost" />
-      </Link>
-
-      {/* La única vía de entrada para quien todavía no tiene un plan que
-          compartir, que es justo quien acaba de instalar la app. */}
-      {/* Solo para quien modera. La RPC ya devuelve cero filas a cualquier otra
-          persona —la seguridad está ahí, no aquí— y esto es para que no haya una
-          entrada que no lleva a ninguna parte. */}
-      {profile.is_staff ? (
-        <Link href="/moderacion" asChild>
-          <Button
-            title={
-              openReports
-                ? `${t("moderation.queueTitle")} · ${openReports}`
-                : t("moderation.queueTitle")
+        <View className="gap-3">
+          <Text className="font-sans-medium text-sm text-mist-ink">
+            {t("profile.reminder")}
+          </Text>
+          <ChoiceChips
+            options={REMINDER_HOURS.map((slot) => ({
+              value: String(slot.hour),
+              label: t(`onboarding.hours.${slot.key}`),
+            }))}
+            selected={hours.map(String)}
+            onToggle={(value) =>
+              setDraftHours(
+                toggleWithLimit(hours.map(String), value, REMINDER_MAX).map(
+                  Number,
+                ),
+              )
             }
-            variant="ghost"
+            max={REMINDER_MAX}
+            multiple
           />
-        </Link>
-      ) : null}
+          {/* Honest about what it does today: the hour is stored and nothing
+            reads it until push exists. */}
+          <Text className="font-sans text-sm text-mist-ink">
+            {t("profile.reminderHint")}
+          </Text>
+        </View>
 
-      <Link href="/invitar" asChild>
-        <Button title={t("invite.title")} variant="ghost" />
-      </Link>
+        <View className="gap-2">
+          <Text className="font-sans-medium text-sm text-mist-ink">
+            {t("profile.timezone")}
+          </Text>
+          <Text className="font-sans text-base text-plum">
+            {profile.timezone}
+          </Text>
+          <Text className="font-sans text-sm text-mist-ink">
+            {t("profile.timezoneHint")}
+          </Text>
 
-      <Link href="/acerca" asChild>
-        <Button title={t("profile.about")} variant="ghost" />
-      </Link>
+          {zoneMoved ? (
+            <View className="gap-2 pt-1">
+              <Text className="font-sans text-sm text-mist-ink">
+                {t("profile.timezoneMoved", { zone: deviceZone })}
+              </Text>
+              <Button
+                title={t("profile.timezoneUpdate", { zone: deviceZone })}
+                variant="secondary"
+                loading={updateTimezone.isPending}
+                onPress={() => void handleTimezone()}
+              />
+            </View>
+          ) : null}
+        </View>
 
-      <View className="mt-auto gap-3 pt-6">
-        <Button
-          title={t("auth.signOut")}
-          variant="secondary"
-          onPress={() => void signOut()}
-        />
+        {dirty ? (
+          <Button
+            title={t("common.save")}
+            loading={update.isPending}
+            onPress={() => void handleSave()}
+          />
+        ) : null}
 
-        {confirmingDelete ? (
+        {notice ? (
           <Text
-            className="text-center text-sm text-red-500"
+            className="font-sans text-sm text-mist-ink"
             accessibilityRole="alert"
-            accessibilityLiveRegion="polite"
           >
-            {t("profile.deleteWarning")}
+            {notice}
           </Text>
         ) : null}
 
-        <Button
-          title={
-            confirmingDelete ? t("profile.deleteConfirm") : t("profile.delete")
-          }
-          variant="ghost"
-          loading={deleteAccount.isPending}
-          onPress={() => void handleDelete()}
-        />
-      </View>
-    </ScrollView>
+        {error ? (
+          <Text
+            className="font-sans text-sm text-danger"
+            accessibilityRole="alert"
+          >
+            {error}
+          </Text>
+        ) : null}
+
+        <LanguageSwitcher />
+
+        {/* Blocking happens in the moment, from a message or from a roster. The
+          undo has to live somewhere calm, and this is the only screen that
+          belongs to you rather than to a circle. */}
+        <Link href="/testimonios" asChild>
+          <Button title={t("testimony.title")} variant="ghost" />
+        </Link>
+
+        <Link href="/plus" asChild>
+          <Button title={t("profile.plus")} variant="ghost" />
+        </Link>
+
+        <Link href="/bloqueados" asChild>
+          <Button title={t("moderation.blockedTitle")} variant="ghost" />
+        </Link>
+
+        {/* La única vía de entrada para quien todavía no tiene un plan que
+          compartir, que es justo quien acaba de instalar la app. */}
+        {/* Solo para quien modera. La RPC ya devuelve cero filas a cualquier otra
+          persona —la seguridad está ahí, no aquí— y esto es para que no haya una
+          entrada que no lleva a ninguna parte. */}
+        {profile.is_staff ? (
+          <Link href="/moderacion" asChild>
+            <Button
+              title={
+                openReports
+                  ? `${t("moderation.queueTitle")} · ${openReports}`
+                  : t("moderation.queueTitle")
+              }
+              variant="ghost"
+            />
+          </Link>
+        ) : null}
+
+        <Link href="/invitar" asChild>
+          <Button title={t("invite.title")} variant="ghost" />
+        </Link>
+
+        <Link href="/acerca" asChild>
+          <Button title={t("profile.about")} variant="ghost" />
+        </Link>
+
+        <View className="mt-auto gap-3 pt-6">
+          <Button
+            title={t("auth.signOut")}
+            variant="secondary"
+            onPress={() => void signOut()}
+          />
+
+          {confirmingDelete ? (
+            <Text
+              className="text-center font-sans text-sm text-danger"
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              {t("profile.deleteWarning")}
+            </Text>
+          ) : null}
+
+          <Button
+            title={
+              confirmingDelete
+                ? t("profile.deleteConfirm")
+                : t("profile.delete")
+            }
+            variant="ghost"
+            loading={deleteAccount.isPending}
+            onPress={() => void handleDelete()}
+          />
+        </View>
+      </ScrollView>
+    </DawnBackground>
   );
 }

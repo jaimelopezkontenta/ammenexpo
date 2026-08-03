@@ -1,6 +1,8 @@
 import { Link, Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { Text } from "react-native";
+
+import { DawnBackground } from "@/components/DawnBackground";
 
 export default function NotFoundScreen() {
   const { t } = useTranslation();
@@ -8,14 +10,17 @@ export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t("common.appName") }} />
-      <View className="flex-1 items-center justify-center gap-4 bg-paper px-8">
-        <Text className="text-center text-xl font-bold text-ink">
+      <DawnBackground
+        variant="radial"
+        className="items-center justify-center gap-4 px-8"
+      >
+        <Text className="text-center font-sans-bold text-xl text-plum">
           {t("common.notFoundTitle")}
         </Text>
-        <Link href="/" className="text-base font-semibold text-ink-muted">
+        <Link href="/" className="font-sans-semibold text-base text-mist-ink">
           {t("common.notFoundLink")}
         </Link>
-      </View>
+      </DawnBackground>
     </>
   );
 }

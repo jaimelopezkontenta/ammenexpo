@@ -9,10 +9,10 @@ import { Text } from "react-native";
  * hace falta y no trae una librería para dos asteriscos.
  */
 export const LegalText = ({ text }: { text: string }) => (
-  <Text className="text-base leading-6 text-ink">
+  <Text className="font-sans text-base leading-6 text-plum">
     {text.split("**").map((chunk, index) =>
       index % 2 === 1 ? (
-        <Text key={index} className="font-semibold">
+        <Text key={index} className="font-sans-semibold">
           {chunk}
         </Text>
       ) : (

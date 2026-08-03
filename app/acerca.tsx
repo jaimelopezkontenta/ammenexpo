@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
 import { useExportMyData } from "@/core/legal/export";
 
@@ -51,94 +52,99 @@ export default function About() {
         options={{ title: t("profile.about"), headerShown: true }}
       />
 
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="flex-grow gap-6 px-7 py-8"
-      >
-        <Text className="font-serif text-base leading-reading text-ink">
-          {t("profile.aboutBody")}
-        </Text>
+      <DawnBackground variant="radial">
+        <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
+          <Text className="font-serif text-base leading-reading text-plum">
+            {t("profile.aboutBody")}
+          </Text>
 
-        {/* Dicho aquí y no escondido: el plan lo escribe un modelo, y en materia
+          {/* Dicho aquí y no escondido: el plan lo escribe un modelo, y en materia
             religiosa eso hay que decirlo en voz alta. */}
-        <Text className="text-sm leading-6 text-ink-muted">
-          {t("profile.aboutAi")}
-        </Text>
+          <Text className="font-sans text-sm leading-6 text-mist-ink">
+            {t("profile.aboutAi")}
+          </Text>
 
-        {/* Los dos documentos, siempre a mano y no solo en la puerta de
+          {/* Los dos documentos, siempre a mano y no solo en la puerta de
             entrada: quien quiera releer qué aceptó tiene que poder. */}
-        <View className="gap-3">
-          <Link
-            href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}
-          >
-            <Text className="text-base text-clay underline">
-              {t("legal.terms")}
+          <View className="gap-3">
+            <Link
+              href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}
+            >
+              <Text className="font-sans text-base text-ember-ink underline">
+                {t("legal.terms")}
+              </Text>
+            </Link>
+
+            <Link
+              href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
+            >
+              <Text className="font-sans text-base text-ember-ink underline">
+                {t("legal.privacy")}
+              </Text>
+            </Link>
+          </View>
+
+          <View className="gap-2">
+            <Text className="font-sans text-sm text-mist-ink">
+              {t("profile.version", { version })}
             </Text>
-          </Link>
 
-          <Link
-            href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
-          >
-            <Text className="text-base text-clay underline">
-              {t("legal.privacy")}
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => {
+                // Abre el compositor de correo con la versión ya puesta. No manda
+                // nada: lo escribe y lo envía la persona.
+                void Linking.openURL(
+                  `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+                    `Ammen ${version}`,
+                  )}`,
+                );
+              }}
+            >
+              <Text className="font-sans text-base text-ember-ink underline">
+                {t("profile.support")}
+              </Text>
+            </Pressable>
+
+            <Text className="font-sans text-sm leading-6 text-mist-ink">
+              {t("profile.supportHint")}
             </Text>
-          </Link>
-        </View>
+          </View>
 
-        <View className="gap-2">
-          <Text className="text-sm text-ink-soft">
-            {t("profile.version", { version })}
-          </Text>
-
-          <Pressable
-            accessibilityRole="link"
-            onPress={() => {
-              // Abre el compositor de correo con la versión ya puesta. No manda
-              // nada: lo escribe y lo envía la persona.
-              void Linking.openURL(
-                `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-                  `Ammen ${version}`,
-                )}`,
-              );
-            }}
-          >
-            <Text className="text-base text-clay underline">
-              {t("profile.support")}
-            </Text>
-          </Pressable>
-
-          <Text className="text-sm leading-6 text-ink-muted">
-            {t("profile.supportHint")}
-          </Text>
-        </View>
-
-        {/* Llevarte tus datos. Iba junto a borrar la cuenta hasta que me di
+          {/* Llevarte tus datos. Iba junto a borrar la cuenta hasta que me di
             cuenta de que ahí solo lo ve quien ya se está yendo — y esto sirve
             sobre todo para quien se queda y quiere saber qué hay guardado. */}
-        <View className="gap-2">
-          <Button
-            title={t("legal.export")}
-            variant="secondary"
-            loading={exportData.isPending}
-            onPress={() => void handleExport()}
-          />
-          <Text className="text-sm leading-6 text-ink-muted">
-            {t("legal.exportHint")}
-          </Text>
-
-          {notice ? (
-            <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-              {notice}
+          <View className="gap-2">
+            <Button
+              title={t("legal.export")}
+              variant="secondary"
+              loading={exportData.isPending}
+              onPress={() => void handleExport()}
+            />
+            <Text className="font-sans text-sm leading-6 text-mist-ink">
+              {t("legal.exportHint")}
             </Text>
-          ) : null}
 
-          {error ? (
-            <Text className="text-sm text-red-500" accessibilityRole="alert">
-              {error}
-            </Text>
-          ) : null}
-        </View>
-      </ScrollView>
+            {notice ? (
+              <Text
+                className="font-sans text-sm text-mist-ink"
+                accessibilityRole="alert"
+              >
+                {notice}
+              </Text>
+            ) : null}
+
+            {error ? (
+              <Text
+                className="font-sans text-sm text-danger"
+                accessibilityRole="alert"
+              >
+                {error}
+              </Text>
+            ) : null}
+          </View>
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

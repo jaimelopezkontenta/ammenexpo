@@ -226,7 +226,7 @@ export default function SharePlan() {
 
             {linkLoading ? (
               <ActivityIndicator
-                color="#1C1917"
+                color="#413653"
                 accessibilityLabel={t("common.loading")}
               />
             ) : linkUrl ? (

@@ -85,35 +85,6 @@ module.exports = {
         // Los errores estaban en `red-400`/`red-500` sueltos, que es como no
         // tenerlos. 5,44:1 sobre blanco y 4,89:1 sobre crema.
         danger: "#C0392B",
-
-        // ————————————————————————————————————————————————————————————
-        // TEMPORAL. El tema anterior, apuntando al nuevo.
-        //
-        // El rediseño va pantalla a pantalla, y NativeWind **descarta en
-        // silencio** una clase que no existe: sin estos alias, las cuarenta y
-        // siete rutas se quedarían con el texto en negro del navegador y sin
-        // fondo de tarjeta hasta que les tocara el turno, y ningún commit
-        // intermedio se podría enseñar ni depurar.
-        //
-        // Se borran en la última fase, cuando `grep -r "paper\|ink-\|clay"`
-        // sobre `app/`, `components/` y `core/` no devuelva nada.
-        // ————————————————————————————————————————————————————————————
-        paper: {
-          DEFAULT: "#FFF6EA",
-          raised: "#FFFFFF",
-          sunken: "#FCEBD8",
-        },
-        ink: {
-          DEFAULT: "#413653",
-          muted: "#6F6879",
-          soft: "#6F6879",
-          line: "#E3DCEA",
-        },
-        clay: {
-          DEFAULT: "#B24A22",
-          deep: "#933C1B",
-          soft: "#FBDFC2",
-        },
       },
       fontFamily: {
         // General Sans lleva toda la interfaz. Es la sustituta libre de Aeonik,

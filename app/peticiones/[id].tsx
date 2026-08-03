@@ -217,7 +217,7 @@ export default function PrayerRequestComments() {
               value={draft}
               onChangeText={setDraft}
               placeholder={t("feed.commentPlaceholder")}
-              placeholderTextColor="#726A62"
+              placeholderTextColor="#6F6879"
               multiline
               numberOfLines={1}
               maxLength={COMMENT_MAX}
