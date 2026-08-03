@@ -5,7 +5,10 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips, type ChoiceOption } from "@/components/ChoiceChips";
+import { DawnBackground } from "@/components/DawnBackground";
 import { TextField } from "@/components/TextField";
+import { WizardHeader } from "@/components/WizardHeader";
+import { Wordmark } from "@/components/Wordmark";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   CUSTOM_TOPIC_MAX,
@@ -116,179 +119,195 @@ export default function Onboarding() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-paper"
-      contentContainerClassName="flex-grow px-7 py-14"
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text className="text-sm font-medium text-ink-soft">
-        {t("onboarding.step", { current: step, total: TOTAL_STEPS })}
-      </Text>
+    // El degradado cálido del diseño para el asistente: entra por arriba en
+    // crema y sale en periwinkle, que es el mismo aire de las pantallas de
+    // acceso pero al reves — se nota que se ha cruzado una puerta.
+    <DawnBackground variant="warm">
+      <ScrollView
+        contentContainerClassName="flex-grow px-7 pb-10 pt-6"
+        keyboardShouldPersistTaps="handled"
+      >
+        <WizardHeader
+          step={step}
+          total={TOTAL_STEPS}
+          onBack={
+            step > 1 ? () => setStep((current) => current - 1) : undefined
+          }
+        />
 
-      {step === 1 ? (
-        <View className="mt-4 gap-6">
-          <View className="gap-2">
-            <Text className="text-3xl font-bold text-ink">
-              {t("onboarding.welcomeTitle")}
-            </Text>
-            <Text className="text-base text-ink-muted">
-              {t("onboarding.welcomeBody")}
-            </Text>
-          </View>
-          <TextField
-            label={t("onboarding.nameQuestion")}
-            value={displayName}
-            onChangeText={setDisplayName}
-            placeholder={t("onboarding.namePlaceholder")}
-            autoCapitalize="words"
-            autoComplete="name"
-          />
-
-          <View className="gap-2">
-            <Text className="text-sm font-medium text-ink-muted">
-              {t("onboarding.genderQuestion")}
-            </Text>
-            <Text className="text-sm text-ink-muted">
-              {t("onboarding.genderHint")}
-            </Text>
-            <ChoiceChips
-              options={GENDER_KEYS.map((key) => ({
-                value: key,
-                label: t(`onboarding.gender.${key}`),
-              }))}
-              selected={gender ? [gender] : []}
-              onToggle={setGender}
+        {step === 1 ? (
+          <View className="mt-4 gap-6">
+            <View className="gap-2">
+              <Text className="text-center font-sans-bold text-3xl leading-9 text-plum">
+                {t("onboarding.welcomeTitle")}
+              </Text>
+              <Text className="text-center font-sans text-base text-mist-ink">
+                {t("onboarding.welcomeBody")}
+              </Text>
+            </View>
+            <TextField
+              label={t("onboarding.nameQuestion")}
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholder={t("onboarding.namePlaceholder")}
+              autoCapitalize="words"
+              autoComplete="name"
             />
-          </View>
-        </View>
-      ) : null}
 
-      {step === 2 ? (
-        <View className="mt-4 gap-6">
-          <View className="gap-2">
-            <Text className="text-2xl font-bold text-ink">
-              {t("onboarding.seasonQuestion")}
-            </Text>
-            <Text className="text-base text-ink-muted">
-              {t("onboarding.seasonHint", { count: SEASON_MAX })}
-            </Text>
+            {/* El nombre y el género van juntos y no en dos pantallas como el
+              montaje. Son la misma pregunta —quién eres— y separarlos cuesta
+              un toque más a cambio de nada. */}
+            <View className="gap-2">
+              <Text className="font-sans-medium text-sm text-plum">
+                {t("onboarding.genderQuestion")}
+              </Text>
+              <Text className="font-sans text-sm text-mist-ink">
+                {t("onboarding.genderHint")}
+              </Text>
+              <ChoiceChips
+                options={GENDER_KEYS.map((key) => ({
+                  value: key,
+                  label: t(`onboarding.gender.${key}`),
+                }))}
+                selected={gender ? [gender] : []}
+                onToggle={setGender}
+              />
+            </View>
           </View>
-          <ChoiceChips
-            options={seasonOptions}
-            selected={seasons}
-            onToggle={(value) =>
-              setSeasons((current) =>
-                toggleWithLimit(current, value, SEASON_MAX),
-              )
-            }
-            max={SEASON_MAX}
-            multiple
-          />
-          {/* Said out loud, because a chip that stops responding with no
+        ) : null}
+
+        {step === 2 ? (
+          <View className="mt-4 gap-6">
+            <View className="gap-2">
+              <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                {t("onboarding.seasonQuestion")}
+              </Text>
+              <Text className="text-center font-sans text-base text-mist-ink">
+                {t("onboarding.seasonHint", { count: SEASON_MAX })}
+              </Text>
+            </View>
+            <ChoiceChips
+              options={seasonOptions}
+              selected={seasons}
+              onToggle={(value) =>
+                setSeasons((current) =>
+                  toggleWithLimit(current, value, SEASON_MAX),
+                )
+              }
+              max={SEASON_MAX}
+              multiple
+            />
+            {/* Said out loud, because a chip that stops responding with no
               explanation reads as a broken chip. */}
-          {seasons.length >= SEASON_MAX ? (
-            <Text
-              className="text-sm text-ink-muted"
-              accessibilityLiveRegion="polite"
-            >
-              {t("onboarding.seasonMax", { count: SEASON_MAX })}
-            </Text>
-          ) : null}
-        </View>
-      ) : null}
-
-      {step === 3 ? (
-        <View className="mt-4 gap-6">
-          <View className="gap-2">
-            <Text className="text-2xl font-bold text-ink">
-              {t("onboarding.topicsQuestion")}
-            </Text>
-            <Text className="text-base text-ink-muted">
-              {t("onboarding.topicsHint")}
-            </Text>
+            {seasons.length >= SEASON_MAX ? (
+              <Text
+                className="text-center font-sans text-sm text-mist-ink"
+                accessibilityLiveRegion="polite"
+              >
+                {t("onboarding.seasonMax", { count: SEASON_MAX })}
+              </Text>
+            ) : null}
           </View>
-          <ChoiceChips
-            options={topicOptions}
-            selected={topics}
-            onToggle={(value) =>
-              setTopics((current) => toggleWithLimit(current, value))
-            }
-            multiple
-          />
+        ) : null}
 
-          {/* Folded in here rather than given a fifth step: it is the same
+        {step === 3 ? (
+          <View className="mt-4 gap-6">
+            <View className="gap-2">
+              <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                {t("onboarding.topicsQuestion")}
+              </Text>
+              <Text className="text-center font-sans text-base text-mist-ink">
+                {t("onboarding.topicsHint")}
+              </Text>
+            </View>
+            <ChoiceChips
+              options={topicOptions}
+              selected={topics}
+              onToggle={(value) =>
+                setTopics((current) => toggleWithLimit(current, value))
+              }
+              multiple
+            />
+
+            {/* Folded in here rather than given a fifth step: it is the same
               question, with a way out for somebody who does not see themselves
               in any of the sixteen. It also becomes the starting point of the
               identical field on the plan form, so it is asked once. */}
-          <View className="gap-2">
-            <TextField
-              label={t("onboarding.customLabel")}
-              value={customTopic}
-              onChangeText={setCustomTopic}
-              placeholder={t("onboarding.customPlaceholder")}
-              maxLength={CUSTOM_TOPIC_MAX}
-              multiline
-            />
-            <Text className="text-sm text-ink-muted">
-              {t("onboarding.customHint")}
-            </Text>
+            <View className="gap-2">
+              <TextField
+                label={t("onboarding.customLabel")}
+                value={customTopic}
+                onChangeText={setCustomTopic}
+                placeholder={t("onboarding.customPlaceholder")}
+                maxLength={CUSTOM_TOPIC_MAX}
+                multiline
+              />
+              <Text className="font-sans text-sm text-mist-ink">
+                {t("onboarding.customHint")}
+              </Text>
+            </View>
           </View>
-        </View>
-      ) : null}
-
-      {step === 4 ? (
-        <View className="mt-4 gap-6">
-          <View className="gap-2">
-            <Text className="text-2xl font-bold text-ink">
-              {t("onboarding.timeQuestion")}
-            </Text>
-            <Text className="text-base text-ink-muted">
-              {t("onboarding.timeHint", { count: REMINDER_MAX })}
-            </Text>
-          </View>
-          <ChoiceChips
-            options={hourOptions}
-            selected={reminderKeys}
-            onToggle={(value) =>
-              setReminderKeys((current) =>
-                toggleWithLimit(current, value, REMINDER_MAX),
-              )
-            }
-            max={REMINDER_MAX}
-            multiple
-          />
-        </View>
-      ) : null}
-
-      {error ? (
-        <Text className="mt-6 text-sm text-red-500" accessibilityRole="alert">
-          {error}
-        </Text>
-      ) : null}
-
-      <View className="mt-auto gap-3 pt-10">
-        <Button
-          title={
-            step === TOTAL_STEPS ? t("onboarding.finish") : t("onboarding.next")
-          }
-          disabled={!canContinue}
-          loading={isSubmitting}
-          onPress={() => {
-            if (step === TOTAL_STEPS) {
-              void handleFinish();
-            } else {
-              setStep((current) => current + 1);
-            }
-          }}
-        />
-        {step > 1 ? (
-          <Button
-            title={t("common.back")}
-            variant="ghost"
-            onPress={() => setStep((current) => current - 1)}
-          />
         ) : null}
+
+        {step === 4 ? (
+          <View className="mt-4 gap-6">
+            <View className="gap-2">
+              <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                {t("onboarding.timeQuestion")}
+              </Text>
+              <Text className="text-center font-sans text-base text-mist-ink">
+                {t("onboarding.timeHint", { count: REMINDER_MAX })}
+              </Text>
+            </View>
+            <ChoiceChips
+              options={hourOptions}
+              selected={reminderKeys}
+              onToggle={(value) =>
+                setReminderKeys((current) =>
+                  toggleWithLimit(current, value, REMINDER_MAX),
+                )
+              }
+              max={REMINDER_MAX}
+              multiple
+            />
+          </View>
+        ) : null}
+
+        {error ? (
+          <Text
+            className="mt-6 text-center font-sans text-sm text-danger"
+            accessibilityRole="alert"
+          >
+            {error}
+          </Text>
+        ) : null}
+
+        {/* Volver vive arriba, en la cabecera, como en el diseño: abajo solo
+            queda la accion que avanza. Dos botones apilados hacian que el de
+            retroceder pesara lo mismo que el de seguir. */}
+        <View className="mt-auto pt-10">
+          <Button
+            title={
+              step === TOTAL_STEPS
+                ? t("onboarding.finish")
+                : t("onboarding.next")
+            }
+            disabled={!canContinue}
+            loading={isSubmitting}
+            onPress={() => {
+              if (step === TOTAL_STEPS) {
+                void handleFinish();
+              } else {
+                setStep((current) => current + 1);
+              }
+            }}
+          />
+        </View>
+      </ScrollView>
+
+      <View className="items-center pb-8">
+        <Wordmark />
       </View>
-    </ScrollView>
+    </DawnBackground>
   );
 }
