@@ -39,11 +39,11 @@ export const CirclePlanCard = ({
     }
 
     return (
-      <View className="gap-2 rounded-2xl border border-ink-line p-5">
-        <Text className="text-base font-semibold text-ink">
+      <View className="gap-2 rounded-2xl border border-white/60 p-5">
+        <Text className="font-sans-semibold text-base text-plum">
           {t("circles.planEmpty")}
         </Text>
-        <Text className="text-base leading-6 text-ink-muted">
+        <Text className="font-sans text-base leading-6 text-mist-ink">
           {t("circles.planEmptyBody")}
         </Text>
         <Link
@@ -57,45 +57,52 @@ export const CirclePlanCard = ({
   }
 
   return (
-    <View className="gap-3 rounded-2xl border border-ink-line p-5">
+    <View className="gap-3 rounded-2xl border border-white/60 p-5">
       <View className="gap-1">
-        <Text className="text-sm font-medium text-ink-soft">
+        <Text className="font-sans-medium text-sm text-mist-ink">
           {t("circles.planLabel")}
         </Text>
-        <Text className="text-lg font-semibold text-ink">{plan.title}</Text>
+        <Text className="font-sans-semibold text-lg text-plum">
+          {plan.title}
+        </Text>
       </View>
 
       {/* A streak nobody can see is a counter, not a streak. */}
       {circle.streak_count > 0 ? (
-        <Text className="text-sm text-ink-muted">
+        <Text className="font-sans text-sm text-mist-ink">
           {t("circles.streak", { count: circle.streak_count })}
         </Text>
       ) : null}
 
       {plan.status === "generating" && !plan.day_id ? (
-        <Text className="text-base text-ink-muted">{t("plan.generating")}</Text>
+        <Text className="font-sans text-base text-mist-ink">
+          {t("plan.generating")}
+        </Text>
       ) : null}
 
       {plan.day_id ? (
         <>
-          <Text className="text-base text-ink">
+          <Text className="font-sans text-base text-plum">
             {t("common.day", { number: plan.day_number })} · {plan.day_title}
           </Text>
 
           {plan.prayed_count > 0 ? (
-            <Text className="text-sm text-ink-muted">
+            <Text className="font-sans text-sm text-mist-ink">
               {t("circles.prayedToday", { count: plan.prayed_count })}
             </Text>
           ) : null}
 
           {error ? (
-            <Text className="text-sm text-red-500" accessibilityRole="alert">
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
               {error}
             </Text>
           ) : null}
 
           {plan.prayed_today ? (
-            <Text className="text-base font-medium text-ink-muted">
+            <Text className="font-sans-medium text-base text-mist-ink">
               {t("plan.markedDone")}
             </Text>
           ) : (

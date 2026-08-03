@@ -24,7 +24,7 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
     <Pressable
       accessibilityRole="link"
       accessibilityLabel={`${plan.owner_name}. ${plan.day_title}`}
-      className="gap-3 rounded-3xl bg-paper-sunken p-5"
+      className="gap-3 rounded-card border border-white/60 bg-white/60 p-5 shadow-card"
       onPress={onOpen}
     >
       <View className="flex-row items-center gap-3">
@@ -35,25 +35,29 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
           size={36}
         />
         <View className="flex-1 gap-1">
-          <Text className="text-lg font-semibold text-ink">
+          <Text className="font-sans-semibold text-lg text-plum">
             {plan.owner_name}
           </Text>
-          <Text className="text-sm text-ink-muted">{plan.plan_title}</Text>
+          <Text className="font-sans text-sm text-mist-ink">
+            {plan.plan_title}
+          </Text>
         </View>
       </View>
 
       <View className="gap-1">
-        <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+        <Text className="font-editorial text-base text-ember-ink">
           {t("common.day", { number: plan.day_number })}
         </Text>
-        <Text className="text-base leading-6 text-ink">{plan.day_title}</Text>
+        <Text className="font-sans text-base leading-6 text-plum">
+          {plan.day_title}
+        </Text>
       </View>
 
       <Text
         className={
           plan.already_prayed
-            ? "text-sm font-medium text-ink-muted"
-            : "text-sm font-semibold text-ink"
+            ? "font-sans-medium text-sm text-mist-ink"
+            : "font-sans-semibold text-sm text-plum"
         }
       >
         {plan.already_prayed

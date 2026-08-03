@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { DawnBackground } from "@/components/DawnBackground";
 import { PrayForCard } from "@/components/PrayForCard";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -23,23 +25,26 @@ export default function Pray() {
   const { data: myPlans } = useMyPlans(userId);
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState variant="cool" />;
   }
 
   // Before this, a failed read fell straight through to the empty state and told
   // people nobody had shared anything with them — a false statement, with no way
   // to find out otherwise.
   if (isError) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState variant="cool" onRetry={() => void refetch()} />;
   }
 
   if (!plans || plans.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
-        <Text className="text-center text-2xl font-bold text-ink">
+      <DawnBackground
+        variant="cool"
+        className="items-center justify-center gap-3 px-8"
+      >
+        <Text className="text-center font-sans-bold text-2xl text-plum">
           {t("pray.empty")}
         </Text>
-        <Text className="text-center text-base leading-6 text-ink-muted">
+        <Text className="text-center font-sans text-base leading-6 text-mist-ink">
           {t("pray.emptyBody")}
         </Text>
         {/* Nobody has shared with you yet, so the useful move is to share
@@ -77,55 +82,60 @@ export default function Pray() {
             }
           />
         </View>
-      </View>
+      </DawnBackground>
     );
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-paper"
-      contentContainerClassName="gap-5 px-7 py-8"
-      keyboardShouldPersistTaps="handled"
-    >
-      <View className="gap-1">
-        <Text className="text-2xl font-bold text-ink">{t("pray.title")}</Text>
-        <Text className="text-base text-ink-muted">{t("pray.subtitle")}</Text>
-      </View>
-
-      {/* The finish line. The server already sorts prayed-for last, but the
-          screen looked identical to one with work outstanding — just greyer —
-          so there was no moment where you were told you were done. */}
-      {plans.every((plan) => plan.already_prayed) ? (
-        <View className="gap-1 rounded-2xl bg-paper-sunken p-5">
-          <Text className="text-base font-semibold text-ink">
-            {t("intercession.allPrayed")}
+    <DawnBackground variant="cool">
+      <ScrollView
+        contentContainerClassName="gap-5 px-7 py-8"
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="gap-1">
+          <Text className="font-sans-bold text-2xl text-plum">
+            {t("pray.title")}
           </Text>
-          <Text className="text-base leading-6 text-ink-muted">
-            {t("intercession.allPrayedBody")}
+          <Text className="font-sans text-base text-mist-ink">
+            {t("pray.subtitle")}
           </Text>
         </View>
-      ) : null}
 
-      <Link href="/lista" asChild>
-        <Button title={t("list.title")} variant="secondary" />
-      </Link>
+        {/* The finish line. The server already sorts prayed-for last, but the
+          screen looked identical to one with work outstanding — just greyer —
+          so there was no moment where you were told you were done. */}
+        {plans.every((plan) => plan.already_prayed) ? (
+          <Card className="gap-1">
+            <Text className="font-sans-semibold text-base text-plum">
+              {t("intercession.allPrayed")}
+            </Text>
+            <Text className="font-sans text-base leading-6 text-mist-ink">
+              {t("intercession.allPrayedBody")}
+            </Text>
+          </Card>
+        ) : null}
 
-      <Link href="/comunidad" asChild>
-        <Button title={t("community.title")} variant="secondary" />
-      </Link>
+        <Link href="/lista" asChild>
+          <Button title={t("list.title")} variant="secondary" />
+        </Link>
 
-      {plans.map((plan) => (
-        <PrayForCard
-          key={plan.plan_id}
-          plan={plan}
-          onOpen={() =>
-            router.push({
-              pathname: "/orar/[planId]",
-              params: { planId: plan.plan_id },
-            })
-          }
-        />
-      ))}
-    </ScrollView>
+        <Link href="/comunidad" asChild>
+          <Button title={t("community.title")} variant="secondary" />
+        </Link>
+
+        {plans.map((plan) => (
+          <PrayForCard
+            key={plan.plan_id}
+            plan={plan}
+            onOpen={() =>
+              router.push({
+                pathname: "/orar/[planId]",
+                params: { planId: plan.plan_id },
+              })
+            }
+          />
+        ))}
+      </ScrollView>
+    </DawnBackground>
   );
 }

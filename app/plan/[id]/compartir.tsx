@@ -5,6 +5,7 @@ import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useMyCircles } from "@/core/circles/queries";
@@ -78,7 +79,7 @@ export default function SharePlan() {
         <Stack.Screen
           options={{ title: t("share.title"), headerShown: true }}
         />
-        <LoadingState />
+        <LoadingState variant="cool" />
       </>
     );
   }
@@ -92,6 +93,7 @@ export default function SharePlan() {
           options={{ title: t("share.title"), headerShown: true }}
         />
         <ErrorState
+          variant="cool"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("share.previewNotFound")}
         />
@@ -155,130 +157,139 @@ export default function SharePlan() {
   return (
     <>
       <Stack.Screen options={{ title: t("share.title"), headerShown: true }} />
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-8 px-7 py-8"
-      >
-        <View className="gap-1">
-          <Text className="text-lg font-semibold text-ink">{plan.title}</Text>
-          <Text className="text-base text-ink-muted">
-            {stillWriting ? t("share.stillWritingMinute") : t("share.subtitle")}
-          </Text>
-        </View>
+      <DawnBackground variant="cool">
+        <ScrollView contentContainerClassName="gap-8 px-7 py-8">
+          <View className="gap-1">
+            <Text className="font-sans-semibold text-lg text-plum">
+              {plan.title}
+            </Text>
+            <Text className="font-sans text-base text-mist-ink">
+              {stillWriting
+                ? t("share.stillWritingMinute")
+                : t("share.subtitle")}
+            </Text>
+          </View>
 
-        {/* Publicar, y **dejar de publicar**, que es la mitad que importa:
+          {/* Publicar, y **dejar de publicar**, que es la mitad que importa:
             elegir "Todo el mundo" al crear el plan era un camino sin vuelta, y
             la única salida habría sido borrarlo entero con los días ya orados
             dentro. */}
-        <View className="gap-3">
-          <Text className="text-lg font-semibold text-ink">
-            {t("share.publicTitle")}
-          </Text>
-          <Text className="text-sm text-ink-muted">
-            {isPublic ? t("share.publicOn") : t("share.publicOff")}
-          </Text>
-          <Button
-            title={isPublic ? t("share.unpublish") : t("share.publish")}
-            variant="secondary"
-            loading={setPublic.isPending}
-            onPress={() => void handlePublic()}
-          />
-        </View>
-
-        <View className="gap-3">
-          <Text className="text-lg font-semibold text-ink">
-            {t("share.circlesTitle")}
-          </Text>
-
-          {(circles ?? []).length > 0 ? (
-            <>
-              <ChoiceChips
-                options={(circles ?? []).map((circle) => ({
-                  value: circle.id,
-                  label: circle.name,
-                }))}
-                selected={shared}
-                onToggle={(circleId) => void handleToggleCircle(circleId)}
-                multiple
-              />
-              <Text className="text-sm text-ink-muted">
-                {t("share.circlesHint")}
-              </Text>
-            </>
-          ) : (
-            // A failed read used to render "Todavía no tienes círculos", which
-            // is a different and untrue thing to say — and it says it on the
-            // screen where someone is deciding who gets to see their request.
-            <Text className="text-sm text-ink-muted">
-              {circlesFailed ? t("common.errorBody") : t("newPlan.noCircles")}
+          <View className="gap-3">
+            <Text className="font-sans-semibold text-lg text-plum">
+              {t("share.publicTitle")}
             </Text>
-          )}
-        </View>
-
-        <View className="gap-3">
-          <Text className="text-lg font-semibold text-ink">
-            {t("share.linkTitle")}
-          </Text>
-
-          {linkLoading ? (
-            <ActivityIndicator
-              color="#1C1917"
-              accessibilityLabel={t("common.loading")}
+            <Text className="font-sans text-sm text-mist-ink">
+              {isPublic ? t("share.publicOn") : t("share.publicOff")}
+            </Text>
+            <Button
+              title={isPublic ? t("share.unpublish") : t("share.publish")}
+              variant="secondary"
+              loading={setPublic.isPending}
+              onPress={() => void handlePublic()}
             />
-          ) : linkUrl ? (
-            <>
-              <View className="gap-2 rounded-2xl bg-paper-sunken p-5">
-                <Text className="text-sm text-ink-muted" selectable>
-                  {linkUrl}
+          </View>
+
+          <View className="gap-3">
+            <Text className="font-sans-semibold text-lg text-plum">
+              {t("share.circlesTitle")}
+            </Text>
+
+            {(circles ?? []).length > 0 ? (
+              <>
+                <ChoiceChips
+                  options={(circles ?? []).map((circle) => ({
+                    value: circle.id,
+                    label: circle.name,
+                  }))}
+                  selected={shared}
+                  onToggle={(circleId) => void handleToggleCircle(circleId)}
+                  multiple
+                />
+                <Text className="font-sans text-sm text-mist-ink">
+                  {t("share.circlesHint")}
                 </Text>
-              </View>
-
-              <Text className="text-sm text-ink-muted">
-                {t("share.linkWarning")}
+              </>
+            ) : (
+              // A failed read used to render "Todavía no tienes círculos", which
+              // is a different and untrue thing to say — and it says it on the
+              // screen where someone is deciding who gets to see their request.
+              <Text className="font-sans text-sm text-mist-ink">
+                {circlesFailed ? t("common.errorBody") : t("newPlan.noCircles")}
               </Text>
+            )}
+          </View>
 
-              <Button
-                title={t("common.share")}
-                disabled={stillWriting}
-                onPress={() => void handleShare()}
+          <View className="gap-3">
+            <Text className="font-sans-semibold text-lg text-plum">
+              {t("share.linkTitle")}
+            </Text>
+
+            {linkLoading ? (
+              <ActivityIndicator
+                color="#1C1917"
+                accessibilityLabel={t("common.loading")}
               />
+            ) : linkUrl ? (
+              <>
+                <View className="gap-2 rounded-2xl bg-white/60 p-5">
+                  <Text className="font-sans text-sm text-mist-ink" selectable>
+                    {linkUrl}
+                  </Text>
+                </View>
 
-              {/* Revoking is as prominent as sharing on purpose. These are
+                <Text className="font-sans text-sm text-mist-ink">
+                  {t("share.linkWarning")}
+                </Text>
+
+                <Button
+                  title={t("common.share")}
+                  disabled={stillWriting}
+                  onPress={() => void handleShare()}
+                />
+
+                {/* Revoking is as prominent as sharing on purpose. These are
                   personal prayer requests: closing the tap must not require
                   hunting through a menu. */}
-              <Button
-                title={t("share.revoke")}
-                variant="secondary"
-                loading={revokeLink.isPending}
-                onPress={() => void handleRevoke()}
-              />
-            </>
-          ) : (
-            <>
-              <Text className="text-sm text-ink-muted">
-                {t("share.noLinkHint")}
-              </Text>
-              <Button
-                title={t("share.createLink")}
-                loading={createLink.isPending}
-                onPress={() => void handleCreate()}
-              />
-            </>
-          )}
-        </View>
+                <Button
+                  title={t("share.revoke")}
+                  variant="secondary"
+                  loading={revokeLink.isPending}
+                  onPress={() => void handleRevoke()}
+                />
+              </>
+            ) : (
+              <>
+                <Text className="font-sans text-sm text-mist-ink">
+                  {t("share.noLinkHint")}
+                </Text>
+                <Button
+                  title={t("share.createLink")}
+                  loading={createLink.isPending}
+                  onPress={() => void handleCreate()}
+                />
+              </>
+            )}
+          </View>
 
-        {notice ? (
-          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-            {notice}
-          </Text>
-        ) : null}
+          {notice ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {notice}
+            </Text>
+          ) : null}
 
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
-      </ScrollView>
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

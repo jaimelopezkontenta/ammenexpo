@@ -2,6 +2,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { usePlanDays } from "@/core/plans/queries";
 import { usePlanSummary } from "@/core/plans/sharing";
@@ -23,7 +24,7 @@ export default function PlanDays() {
     return (
       <>
         <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
-        <LoadingState />
+        <LoadingState variant="cool" />
       </>
     );
   }
@@ -32,7 +33,7 @@ export default function PlanDays() {
     return (
       <>
         <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState variant="cool" onRetry={() => void refetch()} />
       </>
     );
   }
@@ -42,81 +43,80 @@ export default function PlanDays() {
       <Stack.Screen
         options={{ title: plan?.title ?? t("plan.days"), headerShown: true }}
       />
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-3 px-7 py-8"
-      >
-        <Text className="text-sm text-ink-muted">
-          {t("plan.daysHint", {
-            count: (days ?? []).filter((day) => day.unlocked).length,
-          })}
-        </Text>
+      <DawnBackground variant="cool">
+        <ScrollView contentContainerClassName="gap-3 px-7 py-8">
+          <Text className="font-sans text-sm text-mist-ink">
+            {t("plan.daysHint", {
+              count: (days ?? []).filter((day) => day.unlocked).length,
+            })}
+          </Text>
 
-        {(days ?? []).map((day) => {
-          // The days still to come. `plan.locked` — "Este día se abre el
-          // {{date}}" — has been translated in both languages since the first
-          // week with nothing rendering it, and without them a thirty-day plan
-          // ended at today and gave no sign there was any road left.
-          if (!day.unlocked) {
+          {(days ?? []).map((day) => {
+            // The days still to come. `plan.locked` — "Este día se abre el
+            // {{date}}" — has been translated in both languages since the first
+            // week with nothing rendering it, and without them a thirty-day plan
+            // ended at today and gave no sign there was any road left.
+            if (!day.unlocked) {
+              return (
+                <View
+                  key={day.day_number}
+                  className="gap-1 rounded-2xl border border-dashed border-white/60 p-5"
+                >
+                  <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+                    {t("common.day", { number: day.day_number })}
+                  </Text>
+                  <Text className="font-sans text-base text-mist-ink">
+                    {t("plan.locked", {
+                      date: new Date(day.unlock_date).toLocaleDateString(
+                        i18n.language,
+                        { day: "numeric", month: "long" },
+                      ),
+                    })}
+                  </Text>
+                </View>
+              );
+            }
+
             return (
-              <View
+              <Pressable
                 key={day.day_number}
-                className="gap-1 rounded-2xl border border-dashed border-ink-line p-5"
+                accessibilityRole="link"
+                accessibilityLabel={`${t("common.day", { number: day.day_number })}. ${day.title}`}
+                className="gap-1 rounded-2xl border border-white/60 p-5"
+                onPress={() =>
+                  router.push({
+                    pathname: "/plan/[id]/dia/[numero]",
+                    params: { id: id!, numero: String(day.day_number) },
+                  })
+                }
               >
-                <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-                  {t("common.day", { number: day.day_number })}
-                </Text>
-                <Text className="text-base text-ink-soft">
-                  {t("plan.locked", {
-                    date: new Date(day.unlock_date).toLocaleDateString(
-                      i18n.language,
-                      { day: "numeric", month: "long" },
-                    ),
-                  })}
-                </Text>
-              </View>
-            );
-          }
-
-          return (
-            <Pressable
-              key={day.day_number}
-              accessibilityRole="link"
-              accessibilityLabel={`${t("common.day", { number: day.day_number })}. ${day.title}`}
-              className="gap-1 rounded-2xl border border-ink-line p-5"
-              onPress={() =>
-                router.push({
-                  pathname: "/plan/[id]/dia/[numero]",
-                  params: { id: id!, numero: String(day.day_number) },
-                })
-              }
-            >
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-                  {t("common.day", { number: day.day_number })}
-                </Text>
-                {/* A quiet mark, not a scoreboard: this is a record of what you
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+                    {t("common.day", { number: day.day_number })}
+                  </Text>
+                  {/* A quiet mark, not a scoreboard: this is a record of what you
                     prayed, not a list of what you owe. */}
-                {day.prayed ? (
-                  <Text className="text-sm text-ink-soft">
-                    {t("plan.dayPrayed")}
+                  {day.prayed ? (
+                    <Text className="font-sans text-sm text-mist-ink">
+                      {t("plan.dayPrayed")}
+                    </Text>
+                  ) : null}
+                </View>
+
+                <Text className="font-sans-semibold text-lg text-plum">
+                  {day.title}
+                </Text>
+
+                {day.scripture_ref ? (
+                  <Text className="font-sans text-sm text-mist-ink">
+                    {day.scripture_ref}
                   </Text>
                 ) : null}
-              </View>
-
-              <Text className="text-lg font-semibold text-ink">
-                {day.title}
-              </Text>
-
-              {day.scripture_ref ? (
-                <Text className="text-sm text-ink-muted">
-                  {day.scripture_ref}
-                </Text>
-              ) : null}
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

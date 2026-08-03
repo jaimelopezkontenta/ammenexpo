@@ -5,6 +5,8 @@ import { Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
+import { DawnBackground } from "@/components/DawnBackground";
+import { Orb } from "@/components/Orb";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { usePrayerList } from "@/core/list/queries";
@@ -60,7 +62,7 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <LoadingState />
+        <LoadingState variant="cool" />
       </>
     );
   }
@@ -69,7 +71,7 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState variant="cool" onRetry={() => void refetch()} />
       </>
     );
   }
@@ -78,11 +80,14 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
-          <Text className="text-center text-base leading-6 text-ink-muted">
+        <DawnBackground
+          variant="cool"
+          className="items-center justify-center gap-3 px-8"
+        >
+          <Text className="text-center font-sans text-base leading-6 text-mist-ink">
             {t("list.empty")}
           </Text>
-        </View>
+        </DawnBackground>
       </>
     );
   }
@@ -93,11 +98,11 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <View className="flex-1 justify-center gap-6 bg-paper px-8">
-          <Text className="font-serif-bold text-2xl text-ink">
+        <DawnBackground variant="cool" className="justify-center gap-6 px-8">
+          <Text className="font-serif-bold text-2xl text-plum">
             {t("list.howLong")}
           </Text>
-          <Text className="text-base leading-6 text-ink-muted">
+          <Text className="font-sans text-base leading-6 text-mist-ink">
             {t("list.howLongHint", { count: items.length })}
           </Text>
 
@@ -109,7 +114,7 @@ export default function PrayThrough() {
             selected={[]}
             onToggle={(value) => start(Number(value))}
           />
-        </View>
+        </DawnBackground>
       </>
     );
   }
@@ -123,19 +128,20 @@ export default function PrayThrough() {
     <>
       <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
 
-      <View className="flex-1 justify-center gap-8 bg-paper px-8">
-        <View className="items-center gap-1">
-          <Text className="text-sm text-ink-soft">
+      <DawnBackground variant="cool" className="justify-center gap-8 px-8">
+        <View className="items-center gap-3">
+          <Orb size={72} />
+          <Text className="font-sans text-sm text-mist-ink">
             {t("list.position", { current: index + 1, total: items.length })}
           </Text>
           {/* El reloj dice cuánto queda y no manda: no pasa de petición solo,
               no suena y no interrumpe. */}
-          <Text className="text-sm tabular-nums text-ink-soft">
+          <Text className="font-sans text-sm tabular-nums text-mist-ink">
             {minutesLeft}:{String(seconds).padStart(2, "0")}
           </Text>
         </View>
 
-        <Text className="text-center font-serif text-2xl leading-reading text-ink">
+        <Text className="text-center font-serif text-2xl leading-reading text-plum">
           {item.body}
         </Text>
 
@@ -153,11 +159,11 @@ export default function PrayThrough() {
           onPress={() => router.back()}
           className="items-center"
         >
-          <Text className="text-sm text-ink-soft underline">
+          <Text className="font-sans text-sm text-mist-ink underline">
             {t("list.stop")}
           </Text>
         </Pressable>
-      </View>
+      </DawnBackground>
     </>
   );
 }

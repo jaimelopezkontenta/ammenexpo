@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
 import { ScriptureSection } from "@/components/DayView";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -51,7 +52,7 @@ export default function PrayForSomeone() {
     return (
       <>
         <Stack.Screen options={{ title: t("tabs.pray"), headerShown: true }} />
-        <LoadingState />
+        <LoadingState variant="cool" />
       </>
     );
   }
@@ -61,6 +62,7 @@ export default function PrayForSomeone() {
       <>
         <Stack.Screen options={{ title: t("pray.title"), headerShown: true }} />
         <ErrorState
+          variant="cool"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("pray.planGone")}
         />
@@ -96,123 +98,133 @@ export default function PrayForSomeone() {
   return (
     <>
       <Stack.Screen options={{ title: plan.owner_name, headerShown: true }} />
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-7 px-7 py-8"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="gap-1">
-          <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-            {t("common.day", { number: plan.day_number })}
-          </Text>
-          <Text className="text-3xl font-bold leading-9 text-ink">
-            {plan.day_title}
-          </Text>
-          <Text className="text-base text-ink-muted">{plan.plan_title}</Text>
-        </View>
+      <DawnBackground variant="cool">
+        <ScrollView
+          contentContainerClassName="gap-7 px-7 py-8"
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="gap-1">
+            <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+              {t("common.day", { number: plan.day_number })}
+            </Text>
+            <Text className="font-sans-bold text-3xl leading-9 text-plum">
+              {plan.day_title}
+            </Text>
+            <Text className="font-sans text-base text-mist-ink">
+              {plan.plan_title}
+            </Text>
+          </View>
 
-        {/* The shared component rather than an inlined copy: this screen used
+          {/* The shared component rather than an inlined copy: this screen used
             to show the verse with no way into the chapter around it, so the
             reference was tappable on your own day and dead on somebody
             else's — for the same verse. */}
-        <ScriptureSection
-          scriptureText={plan.scripture_text}
-          scriptureRef={plan.scripture_ref}
-          books={books ?? []}
-        />
+          <ScriptureSection
+            scriptureText={plan.scripture_text}
+            scriptureRef={plan.scripture_ref}
+            books={books ?? []}
+          />
 
-        {/* Older plans were generated before this field existed, so the block
+          {/* Older plans were generated before this field existed, so the block
             simply does not appear for them. */}
-        {plan.intercessor_prayer ? (
-          <DaySection
-            label={t("intercession.prayerFor", { name: plan.owner_name })}
-          >
-            <Text className="font-serif text-lg leading-reading text-ink">
-              {plan.intercessor_prayer}
-            </Text>
-          </DaySection>
-        ) : null}
+          {plan.intercessor_prayer ? (
+            <DaySection
+              label={t("intercession.prayerFor", { name: plan.owner_name })}
+            >
+              <Text className="font-serif text-lg leading-reading text-plum">
+                {plan.intercessor_prayer}
+              </Text>
+            </DaySection>
+          ) : null}
 
-        {plan.already_prayed || sent ? (
-          <Text
-            className="text-center text-base font-medium text-ink-muted"
-            accessibilityRole="alert"
-            accessibilityLiveRegion="polite"
-          >
-            {sent
-              ? t("intercession.prayedThanks", { name: plan.owner_name })
-              : t("intercession.prayedFor", { name: plan.owner_name })}
-          </Text>
-        ) : (
-          <View className="gap-3 pb-6">
-            {/* Chips and free text are alternatives, so picking one still
+          {plan.already_prayed || sent ? (
+            <Text
+              className="text-center font-sans-medium text-base text-mist-ink"
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              {sent
+                ? t("intercession.prayedThanks", { name: plan.owner_name })
+                : t("intercession.prayedFor", { name: plan.owner_name })}
+            </Text>
+          ) : (
+            <View className="gap-3 pb-6">
+              {/* Chips and free text are alternatives, so picking one still
                 replaces the field — but it now shows which one is picked and
                 tapping it again clears it. Before, nothing on screen said a
                 chip was chosen and there was no way to undo one except
                 selecting the text and deleting it. */}
-            <View className="flex-row flex-wrap gap-2">
-              {QUICK_MESSAGE_KEYS.map((key) => {
-                const label = t(`intercession.quick.${key}`);
-                const chosen = message.trim() === label;
+              <View className="flex-row flex-wrap gap-2">
+                {QUICK_MESSAGE_KEYS.map((key) => {
+                  const label = t(`intercession.quick.${key}`);
+                  const chosen = message.trim() === label;
 
-                return (
-                  <Pressable
-                    key={key}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: chosen }}
-                    aria-checked={chosen}
-                    accessibilityLabel={label}
-                    onPress={() => setMessage(chosen ? "" : label)}
-                    className={`rounded-full border px-4 py-2.5 ${
-                      chosen ? "border-ink bg-ink" : "border-ink-line bg-paper"
-                    }`}
-                  >
-                    <Text
-                      className={
-                        chosen ? "font-semibold text-paper" : "text-ink-muted"
-                      }
+                  return (
+                    <Pressable
+                      key={key}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: chosen }}
+                      aria-checked={chosen}
+                      accessibilityLabel={label}
+                      onPress={() => setMessage(chosen ? "" : label)}
+                      className={`rounded-full border px-4 py-2.5 ${
+                        chosen
+                          ? "border-plum bg-plum-chip"
+                          : "border-white/60 bg-dawn-cream-bg"
+                      }`}
                     >
-                      {label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+                      <Text
+                        className={
+                          chosen
+                            ? "font-sans-semibold text-white"
+                            : "text-mist-ink"
+                        }
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
 
-            <TextField
-              label={t("intercession.messageLabel")}
-              value={message}
-              onChangeText={setMessage}
-              placeholder={t("intercession.messagePlaceholder")}
-              maxLength={MESSAGE_MAX}
-              multiline
-            />
+              <TextField
+                label={t("intercession.messageLabel")}
+                value={message}
+                onChangeText={setMessage}
+                placeholder={t("intercession.messagePlaceholder")}
+                maxLength={MESSAGE_MAX}
+                multiline
+              />
 
-            {/* At 280 the field simply stopped accepting keystrokes with no
+              {/* At 280 the field simply stopped accepting keystrokes with no
                 explanation. The counter only appears once it is close enough
                 to matter. */}
-            {message.length > MESSAGE_MAX - 60 ? (
-              <Text className="text-right text-sm text-ink-soft">
-                {t("intercession.remaining", {
-                  count: MESSAGE_MAX - message.length,
-                })}
-              </Text>
-            ) : null}
+              {message.length > MESSAGE_MAX - 60 ? (
+                <Text className="text-right font-sans text-sm text-mist-ink">
+                  {t("intercession.remaining", {
+                    count: MESSAGE_MAX - message.length,
+                  })}
+                </Text>
+              ) : null}
 
-            {error ? (
-              <Text className="text-sm text-red-500" accessibilityRole="alert">
-                {error}
-              </Text>
-            ) : null}
+              {error ? (
+                <Text
+                  className="font-sans text-sm text-danger"
+                  accessibilityRole="alert"
+                >
+                  {error}
+                </Text>
+              ) : null}
 
-            <Button
-              title={t("intercession.prayFor")}
-              loading={pray.isPending}
-              onPress={() => void handlePray()}
-            />
-          </View>
-        )}
-      </ScrollView>
+              <Button
+                title={t("intercession.prayFor")}
+                loading={pray.isPending}
+                onPress={() => void handlePray()}
+              />
+            </View>
+          )}
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { TextField } from "@/components/TextField";
@@ -116,141 +117,147 @@ export default function NewPlan() {
       <Stack.Screen
         options={{ title: t("newPlan.title"), headerShown: true }}
       />
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-8 px-7 py-8"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="gap-3">
-          <Text className="text-lg font-semibold text-ink">
-            {t("newPlan.topicQuestion")}
-          </Text>
-          <Text className="text-sm text-ink-muted">
-            {t("newPlan.topicHint")}
-          </Text>
-          <ChoiceChips
-            options={TOPIC_KEYS.map((key) => ({
-              value: key,
-              label: t(`onboarding.topics.${key}`),
-            }))}
-            selected={topics}
-            onToggle={(value) => setTopics(toggleWithLimit(topics, value))}
-            multiple
-          />
-        </View>
-
-        <View className="gap-2">
-          <TextField
-            label={t("newPlan.customLabel")}
-            value={customTopic}
-            onChangeText={setDraftCustom}
-            placeholder={t("newPlan.customPlaceholder")}
-            maxLength={CUSTOM_TOPIC_MAX}
-            multiline
-          />
-          <Text className="text-sm text-ink-muted">
-            {t("newPlan.customHint")}
-          </Text>
-        </View>
-
-        <View className="gap-3">
-          <Text className="text-lg font-semibold text-ink">
-            {t("newPlan.durationQuestion")}
-          </Text>
-          <ChoiceChips
-            options={DURATIONS.map((days) => ({
-              value: String(days),
-              label: t("newPlan.days", { count: days }),
-            }))}
-            selected={[String(duration)]}
-            onToggle={(value) => setDuration(Number(value))}
-          />
-        </View>
-
-        {/* A circle's plan has one audience — the circle — so offering "Solo
-            yo" here would be offering a contradiction. */}
-        {circulo ? null : (
+      <DawnBackground variant="cool">
+        <ScrollView
+          contentContainerClassName="gap-8 px-7 py-8"
+          keyboardShouldPersistTaps="handled"
+        >
           <View className="gap-3">
-            <Text className="text-lg font-semibold text-ink">
-              {t("newPlan.visibilityQuestion")}
+            <Text className="font-sans-semibold text-lg text-plum">
+              {t("newPlan.topicQuestion")}
+            </Text>
+            <Text className="font-sans text-sm text-mist-ink">
+              {t("newPlan.topicHint")}
             </Text>
             <ChoiceChips
-              options={[
-                { value: "private", label: t("newPlan.visPrivate") },
-                { value: "circles", label: t("newPlan.visCircles") },
-                { value: "link", label: t("newPlan.visLink") },
-                // El último a propósito: es el más expuesto de los cuatro, y
-                // el orden de una lista de opciones es una recomendación
-                // aunque nadie la escriba.
-                { value: "public", label: t("newPlan.visPublic") },
-              ]}
-              selected={[visibility]}
-              onToggle={(value) => setVisibility(value as PlanVisibility)}
+              options={TOPIC_KEYS.map((key) => ({
+                value: key,
+                label: t(`onboarding.topics.${key}`),
+              }))}
+              selected={topics}
+              onToggle={(value) => setTopics(toggleWithLimit(topics, value))}
+              multiple
             />
-            <Text className="text-sm text-ink-muted">{visibilityHint}</Text>
+          </View>
 
-            {visibility === "circles" ? (
-              hasCircles ? (
-                <ChoiceChips
-                  options={(circles ?? []).map((circle) => ({
-                    value: circle.id,
-                    label: circle.name,
-                  }))}
-                  selected={selectedCircles}
-                  onToggle={(value) =>
-                    setSelectedCircles((list) => toggleWithLimit(list, value))
-                  }
-                  multiple
-                />
-              ) : (
-                // Without a way out this option is a dead end: nothing to pick,
-                // and creating the plan is blocked on picking something.
-                <View className="gap-3">
-                  <Text className="text-sm text-ink-muted">
-                    {t("newPlan.noCircles")}
-                  </Text>
-                  <Button
-                    title={t("circles.create")}
-                    variant="secondary"
-                    onPress={() => router.push("/circulos")}
+          <View className="gap-2">
+            <TextField
+              label={t("newPlan.customLabel")}
+              value={customTopic}
+              onChangeText={setDraftCustom}
+              placeholder={t("newPlan.customPlaceholder")}
+              maxLength={CUSTOM_TOPIC_MAX}
+              multiline
+            />
+            <Text className="font-sans text-sm text-mist-ink">
+              {t("newPlan.customHint")}
+            </Text>
+          </View>
+
+          <View className="gap-3">
+            <Text className="font-sans-semibold text-lg text-plum">
+              {t("newPlan.durationQuestion")}
+            </Text>
+            <ChoiceChips
+              options={DURATIONS.map((days) => ({
+                value: String(days),
+                label: t("newPlan.days", { count: days }),
+              }))}
+              selected={[String(duration)]}
+              onToggle={(value) => setDuration(Number(value))}
+            />
+          </View>
+
+          {/* A circle's plan has one audience — the circle — so offering "Solo
+            yo" here would be offering a contradiction. */}
+          {circulo ? null : (
+            <View className="gap-3">
+              <Text className="font-sans-semibold text-lg text-plum">
+                {t("newPlan.visibilityQuestion")}
+              </Text>
+              <ChoiceChips
+                options={[
+                  { value: "private", label: t("newPlan.visPrivate") },
+                  { value: "circles", label: t("newPlan.visCircles") },
+                  { value: "link", label: t("newPlan.visLink") },
+                  // El último a propósito: es el más expuesto de los cuatro, y
+                  // el orden de una lista de opciones es una recomendación
+                  // aunque nadie la escriba.
+                  { value: "public", label: t("newPlan.visPublic") },
+                ]}
+                selected={[visibility]}
+                onToggle={(value) => setVisibility(value as PlanVisibility)}
+              />
+              <Text className="font-sans text-sm text-mist-ink">
+                {visibilityHint}
+              </Text>
+
+              {visibility === "circles" ? (
+                hasCircles ? (
+                  <ChoiceChips
+                    options={(circles ?? []).map((circle) => ({
+                      value: circle.id,
+                      label: circle.name,
+                    }))}
+                    selected={selectedCircles}
+                    onToggle={(value) =>
+                      setSelectedCircles((list) => toggleWithLimit(list, value))
+                    }
+                    multiple
                   />
-                </View>
-              )
-            ) : null}
-          </View>
-        )}
+                ) : (
+                  // Without a way out this option is a dead end: nothing to pick,
+                  // and creating the plan is blocked on picking something.
+                  <View className="gap-3">
+                    <Text className="font-sans text-sm text-mist-ink">
+                      {t("newPlan.noCircles")}
+                    </Text>
+                    <Button
+                      title={t("circles.create")}
+                      variant="secondary"
+                      onPress={() => router.push("/circulos")}
+                    />
+                  </View>
+                )
+              ) : null}
+            </View>
+          )}
 
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
-
-        {atLimit ? (
-          <View
-            className="gap-2 rounded-2xl bg-paper-sunken p-5"
-            accessibilityRole="alert"
-          >
-            <Text className="text-base font-semibold text-ink">
-              {t("plan.limitTitle")}
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
             </Text>
-            <Text className="text-base leading-6 text-ink-muted">
-              {t("plan.limitBody")}
-            </Text>
-            <Link href="/plus" asChild>
-              <Button title={t("paywall.title")} variant="secondary" />
-            </Link>
-          </View>
-        ) : null}
+          ) : null}
 
-        <View className="pb-4">
-          <Button
-            title={t("newPlan.create")}
-            loading={generate.isPending}
-            onPress={() => void handleCreate()}
-          />
-        </View>
-      </ScrollView>
+          {atLimit ? (
+            <View
+              className="gap-2 rounded-2xl bg-white/60 p-5"
+              accessibilityRole="alert"
+            >
+              <Text className="font-sans-semibold text-base text-plum">
+                {t("plan.limitTitle")}
+              </Text>
+              <Text className="font-sans text-base leading-6 text-mist-ink">
+                {t("plan.limitBody")}
+              </Text>
+              <Link href="/plus" asChild>
+                <Button title={t("paywall.title")} variant="secondary" />
+              </Link>
+            </View>
+          ) : null}
+
+          <View className="pb-4">
+            <Button
+              title={t("newPlan.create")}
+              loading={generate.isPending}
+              onPress={() => void handleCreate()}
+            />
+          </View>
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }
