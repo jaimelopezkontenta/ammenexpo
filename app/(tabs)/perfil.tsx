@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { TabHeader } from "@/components/TabHeader";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
@@ -168,6 +169,7 @@ export default function Profile() {
 
   return (
     <DawnBackground variant="radial">
+      <TabHeader title={t("tabs.profile")} />
       <ScrollView
         contentContainerClassName="flex-grow gap-8 px-7 py-10"
         keyboardShouldPersistTaps="handled"

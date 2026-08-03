@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import { TabHeader } from "@/components/TabHeader";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
 import { TextField } from "@/components/TextField";
@@ -92,6 +93,7 @@ export default function Bible() {
 
   return (
     <DawnBackground variant="cool">
+      <TabHeader title={t("tabs.bible")} />
       <ScrollView
         contentContainerClassName="gap-6 px-7 py-8"
         keyboardShouldPersistTaps="handled"

@@ -10,9 +10,9 @@ import {
   useState,
 } from "react";
 
-import { TERMS_VERSION } from "@/core/legal/documents";
 import { supabase } from "@/utils/supabase";
 
+import { gateStateFrom, type OnboardingRead } from "./onboardingState";
 import { redeemPendingTokens } from "./pendingToken";
 
 type SessionState = {
@@ -110,12 +110,12 @@ export const SessionProvider = ({
   // previous account's onboarding state.
   const {
     data,
-    isError: onboardingFailed,
+    isError: readFailed,
     refetch,
   } = useQuery({
     queryKey: ["onboarding", userId],
     enabled: Boolean(userId),
-    queryFn: async () => {
+    queryFn: async (): Promise<OnboardingRead> => {
       const { data: settings, error } = await supabase
         .from("profile_settings")
         .select("onboarding_answers, terms_version")
@@ -132,32 +132,34 @@ export const SessionProvider = ({
       // and collapsing the two is what built the trap. `handle_new_user()`
       // writes this row in the same trigger as the profile, so every real
       // account has one; a missing one means the session points at a user who
-      // no longer exists — a token the client still believes in. That belongs
-      // on the error screen, which offers signing out, not in an onboarding
-      // whose submit button can never succeed.
+      // no longer exists — a token the client still believes in.
+      //
+      // **Se devuelve como dato y no como excepción.** Lanzarlo ataba la
+      // salida a que el estado de error de la consulta llegara a la puerta, y
+      // cuando no llegaba —reintentos, la caché limpiándose por medio— la app
+      // se quedaba en la pantalla de arranque para siempre, sin la salida de
+      // cerrar sesión que todo lo demás sí ofrece. Además reintentar no
+      // arregla nada: una cuenta borrada no vuelve al cuarto intento.
       if (!settings) {
-        throw new Error("profile_settings_missing");
+        return { missing: true };
       }
 
       return {
+        missing: false,
         onboarded: Boolean(settings.onboarding_answers),
-        // La versión y no un booleano: el día que el texto cambie de forma
-        // importante hay que volver a preguntar, y un `true` no sabe de qué
-        // texto venía.
         termsVersion: (settings.terms_version as string | null) ?? null,
       };
     },
-    // A vanished account will not come back on the fourth attempt, and every
-    // retry is another few seconds of a blank spinner.
+    // Un fallo de red sí se reintenta, pero una vez: si la base no contesta,
+    // cada intento son unos segundos más de pantalla de arranque.
     retry: 1,
   });
 
-  const hasOnboarded = userId ? (data?.onboarded ?? null) : null;
-  const termsAccepted = userId
-    ? data
-      ? data.termsVersion === TERMS_VERSION
-      : null
-    : null;
+  const { hasOnboarded, termsAccepted, failed } = gateStateFrom({
+    userId,
+    read: data,
+    readFailed,
+  });
 
   const refreshOnboarding = useCallback(async () => {
     await refetch();
@@ -183,7 +185,7 @@ export const SessionProvider = ({
       isLoading,
       hasOnboarded,
       termsAccepted,
-      onboardingFailed,
+      onboardingFailed: failed,
       refreshOnboarding,
       signOut,
     }),
@@ -192,7 +194,7 @@ export const SessionProvider = ({
       isLoading,
       hasOnboarded,
       termsAccepted,
-      onboardingFailed,
+      failed,
       refreshOnboarding,
       signOut,
     ],

@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { StyleSheet, Text, View } from "react-native";
 
 import { Card } from "@/components/Card";
 
@@ -11,37 +12,53 @@ interface DaySectionProps {
 }
 
 /**
- * Una de las partes del día: el versículo, lo que significa, la acción, la
- * oración.
+ * Una de las partes del día: la palabra, qué significa, la acción, la oración.
+ *
+ * **Las cuatro son tarjeta.** Antes solo lo eran dos, y las otras dos iban
+ * sueltas sobre el fondo: el día se leía como dos bloques y dos párrafos
+ * huérfanos en vez de como cuatro pasos. En el montaje las cuatro tienen la
+ * misma caja.
  *
  * Los rótulos pasaron de mayúsculas pequeñas con tracking a la itálica
- * editorial del diseño. Es el mismo papel —decir qué es lo que viene— con la
- * voz del sistema nuevo, y de paso se leen mejor: las versalitas con letra
- * espaciada son de lo que peor envejece cuando alguien sube el tamaño del
- * texto del sistema.
+ * editorial. Es el mismo papel —decir qué es lo que viene— con la voz del
+ * sistema nuevo, y de paso se leen mejor: las versalitas con letra espaciada
+ * son de lo que peor envejece cuando alguien sube el tamaño del texto del
+ * sistema.
  */
 export const DaySection = ({
   label,
   tone = "plain",
   children,
 }: DaySectionProps) => {
-  if (tone === "plain") {
+  // La acción es la única parte del día que sale del teléfono, así que es la
+  // única que se calienta. Un degradado en diagonal, como en el montaje, y no
+  // un color plano: con lo pálido que es el sistema, un relleno liso más no se
+  // distinguiría de una tarjeta normal.
+  if (tone === "action") {
     return (
-      <View className="gap-2">
-        <Text className="font-editorial text-lg text-ember-ink">{label}</Text>
-        {children}
+      <View className="overflow-hidden rounded-card shadow-card">
+        <LinearGradient
+          colors={["rgba(255,246,233,0.92)", "rgba(252,235,216,0.92)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.warm}
+        >
+          <Text className="mb-2 font-editorial text-lg text-ember-ink">
+            {label}
+          </Text>
+          {children}
+        </LinearGradient>
       </View>
     );
   }
 
-  // La acción es la única parte del día que sale del teléfono, así que es el
-  // único bloque que pide algo — y el único sitio donde se gasta el cálido.
   return (
-    <Card
-      label={label}
-      className={`gap-3 ${tone === "action" ? "bg-ember-pale/60" : ""}`}
-    >
+    <Card label={label} className="gap-2">
       {children}
     </Card>
   );
 };
+
+const styles = StyleSheet.create({
+  warm: { padding: 20 },
+});

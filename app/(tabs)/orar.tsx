@@ -2,6 +2,7 @@ import { Link, router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
+import { TabHeader } from "@/components/TabHeader";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -88,6 +89,7 @@ export default function Pray() {
 
   return (
     <DawnBackground variant="cool">
+      <TabHeader title={t("tabs.pray")} />
       <ScrollView
         contentContainerClassName="gap-5 px-7 py-8"
         keyboardShouldPersistTaps="handled"

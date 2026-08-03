@@ -17,7 +17,10 @@
     "notFoundLink": "Volver al inicio",
     "errorTitle": "Algo no ha ido bien",
     "errorBody": "No hemos podido cargar esto. Vuelve a intentarlo.",
-    "loadMore": "Ver más"
+    "loadMore": "Ver más",
+    "greetingMorning": "Buenos días",
+    "greetingAfternoon": "Buenas tardes",
+    "greetingEvening": "Buenas noches"
   },
   "tabs": {
     "today": "Hoy",

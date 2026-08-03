@@ -118,8 +118,11 @@ export const DayView = ({ day, books }: Props) => {
         </DaySection>
       ) : null}
 
+      {/* La oración en cursiva, como en el montaje: es lo único del día que
+          está escrito para decirse en voz alta, y la cursiva lo separa de lo
+          que solo se lee. */}
       <DaySection label={t("plan.prayer")}>
-        <Text className="font-serif text-lg leading-reading text-plum">
+        <Text className="font-serif text-lg italic leading-reading text-plum">
           {day.prayer_body}
         </Text>
       </DaySection>

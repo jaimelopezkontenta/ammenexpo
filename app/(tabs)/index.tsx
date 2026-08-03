@@ -1,8 +1,10 @@
 import { Link, router } from "expo-router";
+import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { TabHeader } from "@/components/TabHeader";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -22,7 +24,7 @@ import {
   useWhoPrayedForMe,
 } from "@/core/intercessions/queries";
 import { useBlockUser } from "@/core/moderation/blocks";
-import { liveStreak, useStreak } from "@/core/profile/queries";
+import { liveStreak, useProfile, useStreak } from "@/core/profile/queries";
 import {
   isStuckGenerating,
   useAbandonPlan,
@@ -67,6 +69,7 @@ export default function Today() {
   const { data: prayed } = usePrayedToday(day?.id);
   const { data: progress } = usePlanProgress(plan?.id);
   const { data: streak } = useStreak(userId);
+  const { data: profile } = useProfile(userId);
   const { data: prayedForMe, isError: prayedForMeFailed } =
     useWhoPrayedForMe(userId);
   const { data: sharedWithMe } = usePlansSharedWithMe(userId);
@@ -293,6 +296,7 @@ export default function Today() {
   if (progress?.finished) {
     return (
       <DawnBackground variant="home">
+        <TabHeader title={t("tabs.today")} name={profile?.display_name} />
         <ScrollView contentContainerClassName="flex-grow gap-3 px-8 py-14">
           <PlanSwitcher
             plans={plans ?? []}
@@ -380,6 +384,7 @@ export default function Today() {
 
   return (
     <DawnBackground variant="home">
+      <TabHeader title={t("tabs.today")} name={profile?.display_name} />
       <ScrollView
         contentContainerClassName="gap-6 px-7 py-8"
         keyboardShouldPersistTaps="handled"
@@ -391,7 +396,7 @@ export default function Today() {
         />
 
         <View className="gap-1">
-          <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+          <Text className="text-center font-sans-semibold text-base text-plum">
             {t("plan.dayOf", {
               current: day.day_number,
               total: plan.duration_days,
@@ -462,9 +467,17 @@ export default function Today() {
 
         <View className="pb-2 pt-2">
           {prayed ? (
-            <Text className="text-center font-sans-medium text-base text-plum">
-              {t("plan.markedDone")}
-            </Text>
+            // El orbe con la marca, como en el montaje. Es el único momento
+            // del día en que la app dice "hecho", y decirlo con una línea de
+            // texto centrada era desaprovecharlo.
+            <View className="items-center gap-3">
+              <Orb size={92} halo>
+                <Check size={30} color="#413653" strokeWidth={2} />
+              </Orb>
+              <Text className="text-center font-sans-medium text-base text-plum">
+                {t("plan.markedDone")}
+              </Text>
+            </View>
           ) : (
             <Button
               title={t("plan.markDone")}

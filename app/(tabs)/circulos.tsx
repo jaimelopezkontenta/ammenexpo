@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { TabHeader } from "@/components/TabHeader";
 import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
@@ -68,6 +69,7 @@ export default function Circles() {
   if (isCreating) {
     return (
       <DawnBackground variant="comm">
+        <TabHeader title={t("tabs.circles")} />
         <ScrollView
           contentContainerClassName="gap-6 px-7 py-10"
           keyboardShouldPersistTaps="handled"
@@ -142,6 +144,7 @@ export default function Circles() {
 
   return (
     <DawnBackground variant="comm">
+      <TabHeader title={t("tabs.circles")} />
       <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-10">
         <View className="gap-1">
           <Text className="font-sans-bold text-2xl text-plum">

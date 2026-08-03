@@ -102,11 +102,20 @@ export const Glass = ({
       className={className}
       intensity={intensity ?? (dark ? 14 : 22)}
       tint={dark ? "dark" : "light"}
-      // En Android el blur nativo no viene de serie; este método lo habilita.
-      // Si el dispositivo no puede, `expo-blur` cae a un tinte plano, que es
-      // justo lo que hace `flat` — así que el peor caso sigue siendo correcto.
+      // `dimezisBlurViewSdk31Plus` y no `dimezisBlurView`, que es el que se
+      // suele copiar. La diferencia está medida por Expo: el desenfoque solo
+      // es barato con la API RenderNode, que llegó en Android 12 (SDK 31). Por
+      // debajo, `dimezisBlurView` cae a RenderScript, que su propia
+      // documentación llama "mucho menos eficiente"; esta variante cae a nada
+      // y deja un tinte translúcido.
+      //
+      // O sea: en Android 12 o superior se ve el vidrio, y en un teléfono
+      // viejo —que es justo donde un desenfoque por fotograma se notaría— se
+      // ve exactamente lo mismo que ya hace `flat`. No hay que elegir entre el
+      // efecto y el rendimiento, y no hay que adivinar el parque de
+      // dispositivos.
       experimentalBlurMethod={
-        Platform.OS === "android" ? "dimezisBlurView" : undefined
+        Platform.OS === "android" ? "dimezisBlurViewSdk31Plus" : undefined
       }
       style={[base, { backgroundColor: tint }, style]}
     >
