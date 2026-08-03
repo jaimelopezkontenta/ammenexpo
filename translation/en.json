@@ -382,7 +382,9 @@
     "askAfterPlan": "Was anything you asked for answered?",
     "delete": "Delete",
     "deleteConfirm": "Yes, delete it",
-    "makePrivate": "Keep it to myself"
+    "makePrivate": "Keep it to myself",
+    "share": "Share it",
+    "shareMessage": "I prayed about this and I want to tell it: {{body}}"
   },
   "invite": {
     "title": "Invite someone to pray with you",

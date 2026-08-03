@@ -382,7 +382,9 @@
     "askAfterPlan": "¿Se respondió algo de lo que pediste?",
     "delete": "Borrar",
     "deleteConfirm": "Sí, borrarlo",
-    "makePrivate": "Guardarlo solo para mí"
+    "makePrivate": "Guardarlo solo para mí",
+    "share": "Compartirlo",
+    "shareMessage": "Oré por esto y quiero contarlo: {{body}}"
   },
   "invite": {
     "title": "Invita a alguien a orar contigo",

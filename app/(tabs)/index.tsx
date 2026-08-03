@@ -355,6 +355,13 @@ export default function Today() {
             title={t("plan.finishedCta")}
             onPress={() => void startGeneration()}
           />
+
+          {/* Y traer a alguien. Terminar treinta días de oración es el momento
+              del producto en que más sentido tiene decírselo a otra persona, y
+              hasta aquí esta pantalla miraba solo hacia atrás. */}
+          <Link href="/invitar" asChild>
+            <Button title={t("invite.title")} variant="ghost" />
+          </Link>
           <Button
             title={t("plan.seeDays")}
             variant="ghost"

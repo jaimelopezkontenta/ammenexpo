@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { LoadMore } from "@/components/LoadMore";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
+import { buildShareUrl, shareOrCopy } from "@/core/share";
 import { useBlockUser } from "@/core/moderation/blocks";
 import {
   useDeleteTestimony,
@@ -46,6 +47,20 @@ export default function Testimonies() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+
+  const handleShare = async (body: string) => {
+    setError(null);
+
+    // El enlace va a la app, no al testimonio: no hay pantalla pública de un
+    // testimonio, y mandar a alguien a una que no existe es peor que no mandarlo.
+    const outcome = await shareOrCopy(
+      t("testimony.shareMessage", { body }),
+      buildShareUrl("/", "invitacion"),
+    );
+
+    if (outcome === "copied") setNotice(t("share.linkCopied"));
+    if (outcome === "failed") setError(t("share.shareFailed"));
+  };
 
   const run = async (action: () => Promise<unknown>, done: string) => {
     setError(null);
@@ -155,6 +170,19 @@ export default function Testimonies() {
             <View className="flex-row flex-wrap gap-4 pt-1">
               {entry.is_mine ? (
                 <>
+                  {/* Lo más contable que tiene el producto —«oramos un mes y
+                      pasó esto»— y solo se podía leer aquí dentro. Un testimonio
+                      que no sale de la app es una historia que no le llega a
+                      nadie que aún no esté. */}
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => void handleShare(entry.body)}
+                  >
+                    <Text className="text-sm text-clay underline">
+                      {t("testimony.share")}
+                    </Text>
+                  </Pressable>
+
                   {entry.visibility !== "private" ? (
                     <Pressable
                       accessibilityRole="button"
