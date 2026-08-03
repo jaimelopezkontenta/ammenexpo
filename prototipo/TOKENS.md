@@ -30,21 +30,34 @@ no al revés.
 ### Contraste — medido, no estimado
 
 La app ya traía sus grises medidos y su público tira a mayor: lo que hace es *leer*.
-Bajar de AA sería una regresión, así que los dos tokens que no llegaban tienen pareja.
+Bajar de AA sería una regresión, así que los dos tokens del diseño que no llegaban
+tienen pareja legible.
 
-| Par | Ratio | Veredicto |
-|---|---|---|
-| plum sobre cream | 10,1:1 | ✅ cualquier tamaño |
-| plum sobre surface | 11,2:1 | ✅ cualquier tamaño |
-| ember.accent sobre cream | **2,85:1** | ❌ ni siquiera llega al 3:1 de elemento no textual — nunca lleva texto |
-| ember.ink sobre cream | 4,85:1 | ✅ AA para texto pequeño |
-| mist sobre surface | **3,61:1** | ❌ no vale para texto |
-| mist.ink sobre surface | 5,34:1 | ✅ AA |
-| mist.ink sobre cream | 4,80:1 | ✅ AA |
-| danger sobre surface / cream | 5,44:1 / 4,89:1 | ✅ AA en los dos |
+Cada texto contra cada fondo del sistema (✅ AA a cualquier tamaño · ⚠️ solo ≥18px ·
+❌ solo decoración):
 
-Texto sobre vidrio: se mide contra la parada **más oscura** del degradado que hay debajo,
-y vive sobre el vidrio del 58 % o más, nunca sobre el del 42 %.
+| | surface | cream | cream-bg | peach | comm | sky |
+|---|---|---|---|---|---|---|
+| **plum** | ✅ 11,19 | ✅ 10,06 | ✅ 10,45 | ✅ 8,48 | ✅ 10,21 | ✅ 7,63 |
+| **mist.ink** | ✅ 5,34 | ✅ 4,80 | ✅ 4,99 | ⚠️ 4,05 | ✅ 4,88 | ⚠️ 3,64 |
+| **mist** | ⚠️ 3,62 | ⚠️ 3,25 | ⚠️ 3,38 | ❌ 2,74 | ⚠️ 3,30 | ❌ 2,47 |
+| **ember.ink** | ✅ 5,39 | ✅ 4,85 | ✅ 5,04 | ⚠️ 4,08 | ✅ 4,92 | ⚠️ 3,68 |
+| **ember.accent** | ⚠️ 3,17 | ❌ 2,85 | ❌ 2,96 | ❌ 2,40 | ❌ 2,89 | ❌ 2,16 |
+| **danger** | ✅ 5,44 | ✅ 4,89 | ✅ 5,08 | ⚠️ 4,12 | ✅ 4,97 | ⚠️ 3,71 |
+
+Blanco sobre plum.chip: ✅ 9,53 — las pills activas y la burbuja propia del chat.
+
+**El CTA.** Label plum: 5,56 en el extremo oscuro del degradado y 8,75 en el claro.
+El blanco que pedía el montaje daba 2,01 y 1,28.
+
+**Dos reglas que salen de la tabla:**
+
+1. Sobre **peach** (la parte baja del home) y sobre **sky** (los bordes del radial), el
+   texto secundario pequeño va en **plum**, no en mist.ink. En una tarjeta no hace falta:
+   el vidrio del 58 % sobre peach da un fondo efectivo casi blanco y mist.ink vuelve a
+   pasar AA.
+2. Texto sobre vidrio se mide contra la parada **más oscura** del degradado que hay
+   debajo, y vive sobre el vidrio del 58 % o más, nunca sobre el del 42 %.
 
 ## Orbe (isotipo)
 
