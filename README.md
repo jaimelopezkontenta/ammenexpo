@@ -45,12 +45,30 @@ npx supabase status
 
 ### Empezar de cero
 
-Rehace la base desde las migraciones. **Borra todos los datos locales**, incluidas
-las cuentas de prueba.
+Rehace la base desde las migraciones y vuelve a sembrar la cuenta de prueba.
+**Borra todo lo demás.**
 
 ```bash
 npx supabase db reset
 ```
+
+### La cuenta de prueba
+
+`supabase/seed.sql` se ejecuta después de cada `db reset` —y `npm run verify` hace
+nueve—, así que la cuenta siempre está ahí:
+
+```
+prueba@ammen.local  ·  ammen1234
+```
+
+Viene con el onboarding hecho, los términos aceptados, un plan de catorce días
+empezado hace tres, alguien que ya ha orado por el día de hoy y un círculo con
+dos personas: sin datos, las cinco pestañas salen vacías y una pantalla vacía no
+sirve para revisar un diseño.
+
+Es **solo local**. `db reset` no se ejecuta jamás contra producción —allí se hace
+`db push`, que no toca los seeds—, pero esa contraseña está escrita en el
+repositorio: no debe existir una cuenta con ella en ningún otro sitio.
 
 ---
 
