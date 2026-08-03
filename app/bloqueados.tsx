@@ -41,14 +41,12 @@ export default function BlockedPeople() {
         options={{ title: t("moderation.blockedTitle"), headerShown: true }}
       />
 
-      {isLoading ? <LoadingState variant="radial" /> : null}
+      {isLoading ? <LoadingState /> : null}
 
-      {isError ? (
-        <ErrorState variant="radial" onRetry={() => void refetch()} />
-      ) : null}
+      {isError ? <ErrorState onRetry={() => void refetch()} /> : null}
 
       {!isLoading && !isError ? (
-        <DawnBackground variant="radial">
+        <DawnBackground>
           <ScrollView contentContainerClassName="gap-4 px-7 py-8">
             <Text className="font-sans text-base leading-6 text-mist-ink">
               {t("moderation.blockedHint")}

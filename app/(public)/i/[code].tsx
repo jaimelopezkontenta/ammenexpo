@@ -52,10 +52,7 @@ export default function InviteLanding() {
   }
 
   return (
-    <DawnBackground
-      variant="radial"
-      className="items-center justify-center gap-3 px-8"
-    >
+    <DawnBackground className="items-center justify-center gap-3 px-8">
       <Text className="text-center font-serif-bold text-2xl text-plum">
         {/* Un código que ya no existe no es un error: se dice lo que hay, que
             es una invitación a la app, sin nombre. */}

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
-import { DawnBackground, DawnVariant } from "@/components/DawnBackground";
+import { DawnBackground } from "@/components/DawnBackground";
 
 /**
  * The two states every screen has and almost none of them rendered.
@@ -12,25 +12,16 @@ import { DawnBackground, DawnVariant } from "@/components/DawnBackground";
  * simply failed, and the chapter reader showed nothing at all. Saying "it broke,
  * try again" is both true and actionable; the empty state is neither.
  *
- * Van sobre el degradado, y no sobre un fondo liso, porque son lo primero que
- * se ve al entrar en una pestaña: si cargar fuese gris y luego apareciera el
+ * Van sobre el fondo de la app y no sobre uno liso porque son lo primero que se
+ * ve al entrar en una pestaña: si cargar fuese gris y luego apareciera el
  * amanecer, cada apertura tendría un parpadeo de tema.
  */
 
-const DEFAULT_VARIANT: DawnVariant = "radial";
-
-export const LoadingState = ({
-  label,
-  variant = DEFAULT_VARIANT,
-}: {
-  label?: string;
-  variant?: DawnVariant;
-}) => {
+export const LoadingState = ({ label }: { label?: string }) => {
   const { t } = useTranslation();
 
   return (
     <DawnBackground
-      variant={variant}
       className="items-center justify-center"
       accessibilityRole="progressbar"
       accessibilityLabel={label ?? t("common.loading")}
@@ -47,21 +38,13 @@ type ErrorStateProps = {
   onRetry?: () => void;
   /** Shown instead of the generic line when we can say something specific. */
   message?: string;
-  variant?: DawnVariant;
 };
 
-export const ErrorState = ({
-  onRetry,
-  message,
-  variant = DEFAULT_VARIANT,
-}: ErrorStateProps) => {
+export const ErrorState = ({ onRetry, message }: ErrorStateProps) => {
   const { t } = useTranslation();
 
   return (
-    <DawnBackground
-      variant={variant}
-      className="items-center justify-center gap-3 px-8"
-    >
+    <DawnBackground className="items-center justify-center gap-3 px-8">
       <Text
         className="text-center font-sans-bold text-xl text-plum"
         accessibilityRole="alert"

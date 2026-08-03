@@ -112,10 +112,7 @@ export default function PersonProfile() {
     return (
       <>
         <Stack.Screen options={{ title: "", headerShown: true }} />
-        <DawnBackground
-          variant="comm"
-          className="items-center justify-center gap-3 px-8"
-        >
+        <DawnBackground className="items-center justify-center gap-3 px-8">
           <Text className="text-center font-sans-medium text-lg text-plum">
             {t("profile.unavailable")}
           </Text>
@@ -133,7 +130,7 @@ export default function PersonProfile() {
         options={{ title: person.display_name, headerShown: true }}
       />
 
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView contentContainerClassName="flex-grow gap-8 px-7 py-8">
           <View className="items-center gap-3">
             <Avatar

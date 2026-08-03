@@ -81,7 +81,7 @@ export default function Testimonies() {
         <Stack.Screen
           options={{ title: t("testimony.title"), headerShown: true }}
         />
-        <LoadingState variant="comm" />
+        <LoadingState />
       </>
     );
   }
@@ -92,7 +92,7 @@ export default function Testimonies() {
         <Stack.Screen
           options={{ title: t("testimony.title"), headerShown: true }}
         />
-        <ErrorState variant="comm" onRetry={() => void refetch()} />
+        <ErrorState onRetry={() => void refetch()} />
       </>
     );
   }
@@ -102,7 +102,7 @@ export default function Testimonies() {
       <Stack.Screen
         options={{ title: t("testimony.title"), headerShown: true }}
       />
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView contentContainerClassName="flex-grow gap-5 px-7 py-8">
           <Text className="font-sans text-base text-mist-ink">
             {t("testimony.subtitle")}

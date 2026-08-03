@@ -28,7 +28,7 @@ export default function BookChapters() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <DawnBackground variant="cool" className="items-center justify-center">
+        <DawnBackground className="items-center justify-center">
           <ActivityIndicator color="#413653" />
         </DawnBackground>
       </>
@@ -45,10 +45,7 @@ export default function BookChapters() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <DawnBackground
-          variant="cool"
-          className="items-center justify-center gap-4 px-8"
-        >
+        <DawnBackground className="items-center justify-center gap-4 px-8">
           <Text className="text-center font-sans text-base text-mist-ink">
             {t("common.notFoundTitle")}
           </Text>
@@ -72,7 +69,7 @@ export default function BookChapters() {
   return (
     <>
       <Stack.Screen options={{ title: entry.modern_name, headerShown: true }} />
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView contentContainerClassName="gap-4 px-7 py-8">
           <Text className="font-editorial text-lg text-ember-ink">
             {t("bible.chapters", { count: entry.chapter_count })}

@@ -38,7 +38,7 @@ export default function AcceptTerms() {
   };
 
   return (
-    <DawnBackground variant="radial">
+    <DawnBackground>
       <ScrollView contentContainerClassName="flex-grow justify-center gap-6 px-7 py-12">
         <Text className="font-serif-bold text-2xl text-plum">
           {t("legal.gateTitle")}

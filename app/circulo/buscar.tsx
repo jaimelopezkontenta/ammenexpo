@@ -58,7 +58,7 @@ export default function FindCircles() {
   return (
     <>
       <Stack.Screen options={{ title: t("circles.find"), headerShown: true }} />
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-5 px-7 py-8"
           keyboardShouldPersistTaps="handled"
@@ -82,11 +82,9 @@ export default function FindCircles() {
             </Text>
           ) : null}
 
-          {isLoading ? <LoadingState variant="comm" /> : null}
+          {isLoading ? <LoadingState /> : null}
 
-          {isError ? (
-            <ErrorState variant="comm" onRetry={() => void refetch()} />
-          ) : null}
+          {isError ? <ErrorState onRetry={() => void refetch()} /> : null}
 
           {/* An empty query browses instead of filtering, so "no results" here
             always means something real: either nobody has opened a public

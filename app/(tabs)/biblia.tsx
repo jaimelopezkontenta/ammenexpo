@@ -71,11 +71,11 @@ export default function Bible() {
   const { data: jump } = useReferenceJump(query);
 
   if (isLoading) {
-    return <LoadingState variant="cool" />;
+    return <LoadingState />;
   }
 
   if (isError) {
-    return <ErrorState variant="cool" onRetry={() => void refetch()} />;
+    return <ErrorState onRetry={() => void refetch()} />;
   }
 
   const all = books ?? [];
@@ -92,7 +92,7 @@ export default function Bible() {
       : null;
 
   return (
-    <DawnBackground variant="cool">
+    <DawnBackground>
       <TabHeader title={t("tabs.bible")} />
       <ScrollView
         contentContainerClassName="gap-6 px-7 py-8"

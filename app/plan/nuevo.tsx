@@ -117,7 +117,7 @@ export default function NewPlan() {
       <Stack.Screen
         options={{ title: t("newPlan.title"), headerShown: true }}
       />
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-8 px-7 py-8"
           keyboardShouldPersistTaps="handled"

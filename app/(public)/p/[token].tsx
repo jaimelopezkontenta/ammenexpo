@@ -76,10 +76,7 @@ export default function SharedPlanPreviewScreen() {
   // is gone when the network hiccuped is both wrong and unrecoverable.
   if (isError) {
     return (
-      <DawnBackground
-        variant="radial"
-        className="items-center justify-center gap-3 px-8"
-      >
+      <DawnBackground className="items-center justify-center gap-3 px-8">
         <Text
           className="text-center font-sans-bold text-xl text-plum"
           accessibilityRole="alert"
@@ -98,10 +95,7 @@ export default function SharedPlanPreviewScreen() {
 
   if (!data) {
     return (
-      <DawnBackground
-        variant="radial"
-        className="items-center justify-center gap-3 px-8"
-      >
+      <DawnBackground className="items-center justify-center gap-3 px-8">
         <Text className="text-center font-sans-bold text-xl text-plum">
           {t("share.previewNotFound")}
         </Text>

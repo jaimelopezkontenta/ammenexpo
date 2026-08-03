@@ -86,7 +86,7 @@ export default function PrayerRequestComments() {
         <Stack.Screen
           options={{ title: t("feed.comment"), headerShown: true }}
         />
-        <LoadingState variant="comm" />
+        <LoadingState />
       </>
     );
   }
@@ -97,7 +97,7 @@ export default function PrayerRequestComments() {
         <Stack.Screen
           options={{ title: t("feed.comment"), headerShown: true }}
         />
-        <ErrorState variant="comm" onRetry={() => void refetch()} />
+        <ErrorState onRetry={() => void refetch()} />
       </>
     );
   }
@@ -105,7 +105,7 @@ export default function PrayerRequestComments() {
   return (
     <>
       <Stack.Screen options={{ title: t("feed.comment"), headerShown: true }} />
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView
           contentContainerClassName="flex-grow gap-5 px-7 py-8"
           keyboardShouldPersistTaps="handled"

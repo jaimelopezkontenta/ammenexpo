@@ -9,13 +9,11 @@ no al revés.
 
 | Token | Hex | Uso |
 |---|---|---|
-| dawn.sky | #C7D6F2 | Fondos fríos (periwinkle claro) |
-| dawn.sky-soft | #D8E1F1 | Periwinkle pálido, fin del degradado cálido |
-| dawn.cream | #FFF1DD | Fondos cálidos |
-| dawn.cream-bg | #FFF6EA | Crema de fondo del home |
-| dawn.peach | #F9DBBF | Rubor durazno, fondo inferior de home/story |
-| dawn.peach-mid | #FCEBD8 | Paso intermedio de home/story |
-| dawn.comm | #FDF3E9 | Fondo plano de círculos y comunidad |
+| dawn.sky | #C7D6F2 | La base del fondo (periwinkle claro) |
+| dawn.cream | #FFF1DD | El halo del centro del fondo, y el relleno de los editores |
+| dawn.cream-bg | #FFF6EA | Crema pálida: rellenos, `app.json` y el `body` de la web |
+| dawn.peach | #F9DBBF | Rubor durazno: la imagen que se comparte |
+| dawn.peach-mid | #FCEBD8 | Paso intermedio de esa imagen, y el versículo subrayado |
 | ember | #F2A578 | CTA, inicio del degradado |
 | ember.pale | #FBDFC2 | CTA, fin del degradado |
 | ember.accent | #E2703F | **Solo decoración**: labels editoriales ≥18px, indicador de tab activa, iconos, relleno del progress |
@@ -36,14 +34,18 @@ tienen pareja legible.
 Cada texto contra cada fondo del sistema (✅ AA a cualquier tamaño · ⚠️ solo ≥18px ·
 ❌ solo decoración):
 
-| | surface | cream | cream-bg | peach | comm | sky |
-|---|---|---|---|---|---|---|
-| **plum** | ✅ 11,19 | ✅ 10,06 | ✅ 10,45 | ✅ 8,48 | ✅ 10,21 | ✅ 7,63 |
-| **mist.ink** | ✅ 5,34 | ✅ 4,80 | ✅ 4,99 | ⚠️ 4,05 | ✅ 4,88 | ⚠️ 3,64 |
-| **mist** | ⚠️ 3,62 | ⚠️ 3,25 | ⚠️ 3,38 | ❌ 2,74 | ⚠️ 3,30 | ❌ 2,47 |
-| **ember.ink** | ✅ 5,39 | ✅ 4,85 | ✅ 5,04 | ⚠️ 4,08 | ✅ 4,92 | ⚠️ 3,68 |
-| **ember.accent** | ⚠️ 3,17 | ❌ 2,85 | ❌ 2,96 | ❌ 2,40 | ❌ 2,89 | ❌ 2,16 |
-| **danger** | ✅ 5,44 | ✅ 4,89 | ✅ 5,08 | ⚠️ 4,12 | ✅ 4,97 | ⚠️ 3,71 |
+Las tres columnas que importan son las del fondo —**sky** en las franjas de arriba y
+abajo, **cream** en el centro— y **surface**, que es lo que hay bajo el texto de una
+tarjeta. `peach` se queda por la imagen que se comparte.
+
+| | surface | cream | cream-bg | peach | sky |
+|---|---|---|---|---|---|
+| **plum** | ✅ 11,19 | ✅ 10,06 | ✅ 10,45 | ✅ 8,48 | ✅ 7,63 |
+| **mist.ink** | ✅ 5,34 | ✅ 4,80 | ✅ 4,99 | ⚠️ 4,05 | ⚠️ 3,64 |
+| **mist** | ⚠️ 3,62 | ⚠️ 3,25 | ⚠️ 3,38 | ❌ 2,74 | ❌ 2,47 |
+| **ember.ink** | ✅ 5,39 | ✅ 4,85 | ✅ 5,04 | ⚠️ 4,08 | ⚠️ 3,68 |
+| **ember.accent** | ⚠️ 3,17 | ❌ 2,85 | ❌ 2,96 | ❌ 2,40 | ❌ 2,16 |
+| **danger** | ✅ 5,44 | ✅ 4,89 | ✅ 5,08 | ⚠️ 4,12 | ⚠️ 3,71 |
 
 Blanco sobre plum.chip: ✅ 9,53 — las pills activas y la burbuja propia del chat.
 
@@ -52,10 +54,12 @@ El blanco que pedía el montaje daba 2,01 y 1,28.
 
 **Dos reglas que salen de la tabla:**
 
-1. Sobre **peach** (la parte baja del home) y sobre **sky** (los bordes del radial), el
-   texto secundario pequeño va en **plum**, no en mist.ink. En una tarjeta no hace falta:
-   el vidrio del 58 % sobre peach da un fondo efectivo casi blanco y mist.ink vuelve a
-   pasar AA.
+1. **En las dos franjas de periwinkle** —el crema del halo llega del 7 % al 87 % de la
+   altura, así que arriba y abajo queda sky puro— el texto secundario pequeño va en
+   **plum**, no en mist.ink. En medio y dentro de una tarjeta no hace falta: el vidrio del
+   58 % deja un fondo efectivo casi blanco y mist.ink vuelve a pasar AA. En las pestañas
+   esas dos franjas ya están ocupadas por `TabHeader`, que es plum, y por la barra, que es
+   vidrio.
 2. Texto sobre vidrio se mide contra la parada **más oscura** del degradado que hay
    debajo, y vive sobre el vidrio del 58 % o más, nunca sobre el del 42 %.
 
@@ -76,19 +80,36 @@ El blanco que pedía el montaje daba 2,01 y 1,28.
 - La pestaña Orar es el orbe a 26 px con anillo de vidrio; lo que marca que está activa es
   la barra de acento de arriba, no el color del orbe.
 
-## Degradados
+## El fondo
 
-Revisión "light" del 2026-08-03: el home saturado del JPG era demasiado naranja; la
-referencia de tono aprobada es la pantalla de Círculos (#FDF3E9). Valores saturados
-originales, por si alguna vez se quiere volver: sky #ABC5EE, cream #FFE7C3, peach #FEB780.
+**Uno solo, y el mismo en toda la app.** Hubo seis —uno por flujo, que es lo que asigna el
+montaje— y recorriendo la app no se leían como un sistema sino como seis: cambiar de
+pestaña cambiaba el fondo, y entrar en un capítulo o en un chat lo volvía a cambiar. Un
+montaje se mira pantalla a pantalla; una app se recorre.
 
-- **radial** (splash, auth, perfil): crema pálida al centro → sky claro en los bordes
-- **warm** (onboarding): cream → #F8EDDE 55 % → sky-soft · **cool** = el inverso
-- **home**: cream-bg → peach-mid 55 % → peach (rubor, no naranja pleno)
-- **story**: cream → peach-mid 60 % → peach
-- **comm** (círculos, comunidad): plano #FDF3E9
-- El naranja pleno vive SOLO en: CTA, acento, relleno del progress e indicador de tab
-  activa. **Nunca en el isotipo.**
+```
+radial-gradient(ellipse 90% 55% at 50% 47%, cream 0%, cream 55% al 45%, transparente al 72%)
+sobre linear-gradient(180deg, sky 0%, #D2DEF4 50%, sky 100%)
+```
+
+Halo crema al centro sobre periwinkle. En la app vive en `components/DawnBackground.tsx`,
+que **no tiene prop**: un componente sin opciones no se puede usar mal, y si algún día
+hace falta otro fondo, la conversación es esa y no un parámetro más.
+
+Revisión "light" del 2026-08-03: los valores del JPG estaban más saturados y en pantalla,
+sostenidos durante una lectura larga, cansaban. Originales por si alguna vez se quiere
+volver: sky #ABC5EE, cream #FFE7C3, peach #FEB780.
+
+**El durazno no desapareció**: vive en la imagen 9:16 que se comparte
+(`components/VerseStory.tsx`), que no es el fondo de una pantalla sino una fotografía que
+se manda por WhatsApp.
+
+```
+story: cream → peach-mid 60 % → peach
+```
+
+El naranja pleno vive SOLO en: CTA, acento, relleno del progress e indicador de tab
+activa. **Nunca en el isotipo.**
 
 ## Tipografía
 

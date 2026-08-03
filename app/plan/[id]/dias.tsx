@@ -24,7 +24,7 @@ export default function PlanDays() {
     return (
       <>
         <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
-        <LoadingState variant="cool" />
+        <LoadingState />
       </>
     );
   }
@@ -33,7 +33,7 @@ export default function PlanDays() {
     return (
       <>
         <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
-        <ErrorState variant="cool" onRetry={() => void refetch()} />
+        <ErrorState onRetry={() => void refetch()} />
       </>
     );
   }
@@ -43,7 +43,7 @@ export default function PlanDays() {
       <Stack.Screen
         options={{ title: plan?.title ?? t("plan.days"), headerShown: true }}
       />
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView contentContainerClassName="gap-3 px-7 py-8">
           <Text className="font-sans text-sm text-mist-ink">
             {t("plan.daysHint", {

@@ -111,7 +111,7 @@ export default function Community() {
         options={{ title: t("community.title"), headerShown: true }}
       />
 
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-5 px-7 py-8"
           keyboardShouldPersistTaps="handled"
@@ -148,12 +148,9 @@ export default function Community() {
 
           {searching ? (
             people.isLoading ? (
-              <LoadingState variant="comm" />
+              <LoadingState />
             ) : people.isError ? (
-              <ErrorState
-                variant="comm"
-                onRetry={() => void people.refetch()}
-              />
+              <ErrorState onRetry={() => void people.refetch()} />
             ) : (people.data ?? []).length === 0 ? (
               <Text className="font-sans text-base leading-6 text-mist-ink">
                 {t("community.nobodyFound")}
@@ -211,9 +208,9 @@ export default function Community() {
               ))
             )
           ) : feed.isLoading ? (
-            <LoadingState variant="comm" />
+            <LoadingState />
           ) : feed.isError ? (
-            <ErrorState variant="comm" onRetry={() => void feed.refetch()} />
+            <ErrorState onRetry={() => void feed.refetch()} />
           ) : (
             <>
               {/* De quién es lo que se ve. Con cero seguidos el servidor sirve

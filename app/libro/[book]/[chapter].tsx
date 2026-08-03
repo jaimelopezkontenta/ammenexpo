@@ -172,7 +172,7 @@ export default function ChapterReader() {
         <Stack.Screen
           options={{ title: t("common.notFoundTitle"), headerShown: true }}
         />
-        <ErrorState variant="cool" message={t("bible.chapterNotFound")} />
+        <ErrorState message={t("bible.chapterNotFound")} />
       </>
     );
   }
@@ -183,7 +183,7 @@ export default function ChapterReader() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <LoadingState variant="cool" />
+        <LoadingState />
       </>
     );
   }
@@ -201,7 +201,6 @@ export default function ChapterReader() {
           }}
         />
         <ErrorState
-          variant="cool"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("bible.chapterNotFound")}
         />
@@ -214,7 +213,7 @@ export default function ChapterReader() {
       <Stack.Screen
         options={{ title: chapterLabel(all, current), headerShown: true }}
       />
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView
           ref={scrollRef}
           contentContainerClassName="px-5 py-6"

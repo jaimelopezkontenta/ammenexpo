@@ -52,7 +52,7 @@ export default function PrayForSomeone() {
     return (
       <>
         <Stack.Screen options={{ title: t("tabs.pray"), headerShown: true }} />
-        <LoadingState variant="cool" />
+        <LoadingState />
       </>
     );
   }
@@ -62,7 +62,6 @@ export default function PrayForSomeone() {
       <>
         <Stack.Screen options={{ title: t("pray.title"), headerShown: true }} />
         <ErrorState
-          variant="cool"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("pray.planGone")}
         />
@@ -98,7 +97,7 @@ export default function PrayForSomeone() {
   return (
     <>
       <Stack.Screen options={{ title: plan.owner_name, headerShown: true }} />
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-7 px-7 py-8"
           keyboardShouldPersistTaps="handled"

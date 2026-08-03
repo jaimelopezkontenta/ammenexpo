@@ -80,7 +80,7 @@ export default function VerseImage() {
         <Stack.Screen
           options={{ title: t("bible.share"), headerShown: true }}
         />
-        <LoadingState variant="story" />
+        <LoadingState />
       </>
     );
   }
@@ -91,7 +91,7 @@ export default function VerseImage() {
         <Stack.Screen
           options={{ title: t("bible.share"), headerShown: true }}
         />
-        <ErrorState variant="story" onRetry={() => void refetch()} />
+        <ErrorState onRetry={() => void refetch()} />
       </>
     );
   }
@@ -100,7 +100,7 @@ export default function VerseImage() {
     <>
       <Stack.Screen options={{ title: t("bible.share"), headerShown: true }} />
 
-      <DawnBackground variant="story">
+      <DawnBackground>
         <ScrollView contentContainerClassName="gap-5 px-7 py-8">
           <View className="items-center gap-1">
             <Text className="font-editorial text-lg text-ember-ink">

@@ -65,10 +65,7 @@ export default function CircleInvite() {
 
   if (!circle) {
     return (
-      <DawnBackground
-        variant="radial"
-        className="items-center justify-center gap-3 px-8"
-      >
+      <DawnBackground className="items-center justify-center gap-3 px-8">
         <Text className="text-center font-sans-bold text-xl text-plum">
           {t("circles.inviteNotFound")}
         </Text>
@@ -97,10 +94,7 @@ export default function CircleInvite() {
   }
 
   return (
-    <DawnBackground
-      variant="radial"
-      className="items-center justify-center gap-3 px-8"
-    >
+    <DawnBackground className="items-center justify-center gap-3 px-8">
       <Text className="text-center font-sans-bold text-2xl text-plum">
         {t("circles.joinTitle", { name: circle.name })}
       </Text>

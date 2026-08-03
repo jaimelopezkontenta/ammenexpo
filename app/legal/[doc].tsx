@@ -29,7 +29,7 @@ export default function LegalDocument() {
     <>
       <Stack.Screen options={{ title: document.title, headerShown: true }} />
 
-      <DawnBackground variant="radial">
+      <DawnBackground>
         <ScrollView contentContainerClassName="gap-5 px-7 py-8">
           <View className="gap-1">
             <Text className="font-serif-bold text-2xl text-plum">

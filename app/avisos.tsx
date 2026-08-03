@@ -53,7 +53,7 @@ export default function Notifications() {
         <Stack.Screen
           options={{ title: t("notifications.title"), headerShown: true }}
         />
-        <LoadingState variant="comm" />
+        <LoadingState />
       </>
     );
   }
@@ -64,7 +64,7 @@ export default function Notifications() {
         <Stack.Screen
           options={{ title: t("notifications.title"), headerShown: true }}
         />
-        <ErrorState variant="comm" onRetry={() => void refetch()} />
+        <ErrorState onRetry={() => void refetch()} />
       </>
     );
   }
@@ -75,7 +75,7 @@ export default function Notifications() {
         options={{ title: t("notifications.title"), headerShown: true }}
       />
 
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-8">
           {(data ?? []).length === 0 ? (
             <Text className="font-sans text-base leading-6 text-mist-ink">

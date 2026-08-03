@@ -57,18 +57,18 @@ export default function Circles() {
   };
 
   if (isLoading) {
-    return <LoadingState variant="comm" />;
+    return <LoadingState />;
   }
 
   // A failed read used to fall through to "you have no circles yet", which is
   // a different and untrue thing to say.
   if (isError) {
-    return <ErrorState variant="comm" onRetry={() => void refetch()} />;
+    return <ErrorState onRetry={() => void refetch()} />;
   }
 
   if (isCreating) {
     return (
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <TabHeader title={t("tabs.circles")} />
         <ScrollView
           contentContainerClassName="gap-6 px-7 py-10"
@@ -143,7 +143,7 @@ export default function Circles() {
   }
 
   return (
-    <DawnBackground variant="comm">
+    <DawnBackground>
       <TabHeader title={t("tabs.circles")} />
       <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-10">
         <View className="gap-1">

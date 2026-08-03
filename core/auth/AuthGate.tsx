@@ -25,7 +25,6 @@ const Loading = () => {
 
   return (
     <DawnBackground
-      variant="radial"
       className="items-center justify-center"
       accessibilityRole="progressbar"
       // El orbe se esconde de la accesibilidad —es una marca—, así que sin esto
@@ -88,10 +87,7 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   // the client still believes in, a backend that is down at launch).
   if (onboardingFailed) {
     return (
-      <DawnBackground
-        variant="radial"
-        className="items-center justify-center gap-3 px-8"
-      >
+      <DawnBackground className="items-center justify-center gap-3 px-8">
         <Text
           className="text-center font-sans-bold text-xl text-plum"
           accessibilityRole="alert"

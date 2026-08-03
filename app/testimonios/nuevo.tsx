@@ -66,7 +66,7 @@ export default function NewTestimony() {
       <Stack.Screen
         options={{ title: t("testimony.title"), headerShown: true }}
       />
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView
           contentContainerClassName="flex-grow gap-6 px-7 py-8"
           keyboardShouldPersistTaps="handled"

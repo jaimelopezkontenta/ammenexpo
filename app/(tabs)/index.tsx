@@ -181,11 +181,11 @@ export default function Today() {
   };
 
   if (isLoading) {
-    return <LoadingState variant="home" />;
+    return <LoadingState />;
   }
 
   if (isError) {
-    return <ErrorState variant="home" onRetry={() => void refetchPlan()} />;
+    return <ErrorState onRetry={() => void refetchPlan()} />;
   }
 
   // Only block while there is nothing to pray yet. Generation runs in the
@@ -193,7 +193,6 @@ export default function Today() {
   if (plan?.status === "generating" && !day && !stuck) {
     return (
       <DawnBackground
-        variant="home"
         className="items-center justify-center gap-5 px-8"
         accessibilityRole="progressbar"
         accessibilityLabel={t("plan.generating")}
@@ -220,58 +219,61 @@ export default function Today() {
     const failed = plan?.status === "failed" || stuck;
 
     return (
-      <DawnBackground variant="home" className="gap-3 px-8 py-10">
-        {/* A failed plan can be the newest one, and without a way off this
+      <DawnBackground>
+        <TabHeader title={t("tabs.today")} name={profile?.display_name} />
+        <View className="flex-1 gap-3 px-8 pb-10 pt-2">
+          {/* A failed plan can be the newest one, and without a way off this
             screen the plans that do work become unreachable. */}
-        {plan ? (
-          <PlanSwitcher
-            plans={plans ?? []}
-            activeId={plan.id}
-            onSelect={selectPlan}
-          />
-        ) : null}
-
-        <View className="flex-1 items-center justify-center gap-3">
-          <Text className="text-center font-sans-bold text-2xl text-plum">
-            {failed ? t("plan.failedTitle") : t("plan.noPlanTitle")}
-          </Text>
-          <Text className="text-center font-sans text-base leading-6 text-mist-ink">
-            {failed ? t("plan.failedBody") : t("plan.noPlanBody")}
-          </Text>
-
-          {actionError ? (
-            <Text
-              className="text-center font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {actionError}
-            </Text>
+          {plan ? (
+            <PlanSwitcher
+              plans={plans ?? []}
+              activeId={plan.id}
+              onSelect={selectPlan}
+            />
           ) : null}
 
-          <View className="mt-6 w-full">
-            <Button
-              title={failed ? t("common.retry") : t("plan.createCta")}
-              loading={abandon.isPending}
-              onPress={() => void startGeneration()}
-            />
-          </View>
-        </View>
+          <View className="flex-1 items-center justify-center gap-3">
+            <Text className="text-center font-sans-bold text-2xl text-plum">
+              {failed ? t("plan.failedTitle") : t("plan.noPlanTitle")}
+            </Text>
+            <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+              {failed ? t("plan.failedBody") : t("plan.noPlanBody")}
+            </Text>
 
-        {/* Un motivo para volver mañana aunque todavía no haya plan. Esta
+            {actionError ? (
+              <Text
+                className="text-center font-sans text-sm text-danger"
+                accessibilityRole="alert"
+              >
+                {actionError}
+              </Text>
+            ) : null}
+
+            <View className="mt-6 w-full">
+              <Button
+                title={failed ? t("common.retry") : t("plan.createCta")}
+                loading={abandon.isPending}
+                onPress={() => void startGeneration()}
+              />
+            </View>
+          </View>
+
+          {/* Un motivo para volver mañana aunque todavía no haya plan. Esta
             pantalla era un botón y nada más: quien no genera el plan hoy no
             tenía absolutamente nada que hacer aquí. */}
-        <VerseOfTheDay />
+          <VerseOfTheDay />
 
-        {/* Y dos salidas más, discretas: orar por alguien y traer a alguien no
+          {/* Y dos salidas más, discretas: orar por alguien y traer a alguien no
             dependen de tener plan, y son justo lo que puede hacer quien todavía
             no está listo para contarle su vida a una IA. */}
-        <View className="gap-2 pt-2">
-          <Link href="/comunidad" asChild>
-            <Button title={t("community.title")} variant="ghost" />
-          </Link>
-          <Link href="/invitar" asChild>
-            <Button title={t("invite.title")} variant="ghost" />
-          </Link>
+          <View className="gap-2 pt-2">
+            <Link href="/comunidad" asChild>
+              <Button title={t("community.title")} variant="ghost" />
+            </Link>
+            <Link href="/invitar" asChild>
+              <Button title={t("invite.title")} variant="ghost" />
+            </Link>
+          </View>
         </View>
       </DawnBackground>
     );
@@ -282,7 +284,7 @@ export default function Today() {
   // working. useTodayDay now polls while generating, so reaching here means
   // something is genuinely wrong.
   if (!day) {
-    return <ErrorState variant="home" onRetry={() => void refetchDay()} />;
+    return <ErrorState onRetry={() => void refetchDay()} />;
   }
 
   // The day a plan ends.
@@ -295,7 +297,7 @@ export default function Today() {
   // intention in the whole product, and it was being spent on a frozen screen.
   if (progress?.finished) {
     return (
-      <DawnBackground variant="home">
+      <DawnBackground>
         <TabHeader title={t("tabs.today")} name={profile?.display_name} />
         <ScrollView contentContainerClassName="flex-grow gap-3 px-8 py-14">
           <PlanSwitcher
@@ -383,7 +385,7 @@ export default function Today() {
   }
 
   return (
-    <DawnBackground variant="home">
+    <DawnBackground>
       <TabHeader title={t("tabs.today")} name={profile?.display_name} />
       <ScrollView
         contentContainerClassName="gap-6 px-7 py-8"

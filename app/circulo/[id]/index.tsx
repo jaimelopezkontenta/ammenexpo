@@ -68,7 +68,7 @@ export default function CircleDetail() {
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
 
   if (isLoading) {
-    return <LoadingState variant="comm" />;
+    return <LoadingState />;
   }
 
   // These two used to be one branch with no header and no controls, so a flaky
@@ -81,7 +81,6 @@ export default function CircleDetail() {
           options={{ title: t("circles.title"), headerShown: true }}
         />
         <ErrorState
-          variant="comm"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("circles.inviteNotFound")}
         />
@@ -186,7 +185,7 @@ export default function CircleDetail() {
   return (
     <>
       <Stack.Screen options={{ title: circle.name, headerShown: true }} />
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
           {/* The name is already in the navigation header; repeating it here as a
             heading just pushed the useful content down. */}

@@ -54,11 +54,11 @@ export default function Profile() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (isLoading) {
-    return <LoadingState variant="radial" />;
+    return <LoadingState />;
   }
 
   if (isError || !profile) {
-    return <ErrorState variant="radial" onRetry={() => void refetch()} />;
+    return <ErrorState onRetry={() => void refetch()} />;
   }
 
   const name = draftName ?? profile.display_name;
@@ -168,7 +168,7 @@ export default function Profile() {
   };
 
   return (
-    <DawnBackground variant="radial">
+    <DawnBackground>
       <TabHeader title={t("tabs.profile")} />
       <ScrollView
         contentContainerClassName="flex-grow gap-8 px-7 py-10"

@@ -28,6 +28,10 @@ export default function TabLayout() {
         // detrás. La barra **no** es absoluta: en el diseño ocupa su sitio y no
         // flota sobre el contenido, así que ninguna pantalla necesita reservar
         // hueco abajo — y ninguna lista acaba con la última fila tapada.
+        // Las etiquetas de la barra no pasan por NativeWind, así que salían en
+        // la tipografía del sistema: cinco palabras en otra letra, en la parte
+        // de la app que siempre está a la vista.
+        tabBarLabelStyle: { fontFamily: "GeneralSans-Medium", fontSize: 11.5 },
         tabBarStyle: {
           backgroundColor: "transparent",
           borderTopWidth: 0,

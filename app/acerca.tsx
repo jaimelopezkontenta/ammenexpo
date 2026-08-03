@@ -52,7 +52,7 @@ export default function About() {
         options={{ title: t("profile.about"), headerShown: true }}
       />
 
-      <DawnBackground variant="radial">
+      <DawnBackground>
         <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
           <Text className="font-serif text-base leading-reading text-plum">
             {t("profile.aboutBody")}

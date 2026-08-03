@@ -67,7 +67,7 @@ export default function PrayerList() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.title"), headerShown: true }} />
-        <LoadingState variant="cool" />
+        <LoadingState />
       </>
     );
   }
@@ -76,7 +76,7 @@ export default function PrayerList() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.title"), headerShown: true }} />
-        <ErrorState variant="cool" onRetry={() => void refetch()} />
+        <ErrorState onRetry={() => void refetch()} />
       </>
     );
   }
@@ -85,7 +85,7 @@ export default function PrayerList() {
     <>
       <Stack.Screen options={{ title: t("list.title"), headerShown: true }} />
 
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-5 px-7 py-8"
           keyboardShouldPersistTaps="handled"

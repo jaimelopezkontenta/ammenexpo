@@ -81,7 +81,7 @@ export default function Moderation() {
         options={{ title: t("moderation.queueTitle"), headerShown: true }}
       />
 
-      <DawnBackground variant="radial">
+      <DawnBackground>
         <ScrollView contentContainerClassName="gap-5 px-7 py-8">
           <ChoiceChips
             options={[
@@ -112,9 +112,9 @@ export default function Moderation() {
           ) : null}
 
           {queue.isLoading ? (
-            <LoadingState variant="radial" />
+            <LoadingState />
           ) : queue.isError ? (
-            <ErrorState variant="radial" onRetry={() => void queue.refetch()} />
+            <ErrorState onRetry={() => void queue.refetch()} />
           ) : (queue.data ?? []).length === 0 ? (
             <Text className="font-sans text-base leading-6 text-mist-ink">
               {t("moderation.queueEmpty")}

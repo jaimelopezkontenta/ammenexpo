@@ -68,13 +68,21 @@ export default function RootLayout() {
             <Stack
               screenOptions={{
                 headerShown: false,
-                // Los mismos valores que el tema, a mano: las opciones de
-                // navegación no pasan por NativeWind. La crema es el fondo que
-                // asoma **debajo** de los degradados mientras una pantalla
-                // monta, así que tiene que ser el tono más claro del sistema y
-                // no un blanco, que daría un destello.
-                contentStyle: { backgroundColor: "#FFF6EA" },
-                headerStyle: { backgroundColor: "#FFF6EA" },
+                // Periwinkle, que es **exactamente** el color del fondo en la
+                // franja de arriba: el halo crema del degradado empieza al 7 %
+                // de la altura, así que por encima solo hay `dawn.sky` puro.
+                //
+                // Las pestañas se quitaron la barra de navegación porque
+                // pintaba una franja sólida sobre el degradado; las sesenta y
+                // cuatro pantallas interiores no pueden hacer lo mismo sin
+                // renunciar al botón de volver, así que la barra se queda y lo
+                // que se hace es que no se vea: mismo color arriba, y sin
+                // sombra, la costura desaparece.
+                //
+                // A mano y no con clases porque las opciones de navegación no
+                // pasan por NativeWind.
+                contentStyle: { backgroundColor: "#C7D6F2" },
+                headerStyle: { backgroundColor: "#C7D6F2" },
                 headerShadowVisible: false,
                 headerTintColor: "#413653",
               }}

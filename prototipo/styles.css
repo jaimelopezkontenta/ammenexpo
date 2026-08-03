@@ -8,10 +8,9 @@
   /* Revisión "light" (2026-08-03): fondos despastelados ~40% hacia el tono
      de Círculos (#FDF3E9), que es la referencia aprobada por el usuario.
      Los valores saturados originales del JPG quedan documentados en TOKENS.md. */
-  --sky: #C7D6F2;          /* periwinkle claro, mitad fría de fondos */
-  --sky-soft: #D8E1F1;     /* periwinkle pálido (fin de degradado cálido) */
-  --cream: #FFF1DD;        /* crema pálida, mitad cálida */
-  --cream-bg: #FFF6EA;     /* crema de fondo home */
+  --sky: #C7D6F2;          /* periwinkle: la base del fondo */
+  --cream: #FFF1DD;        /* crema: el halo del centro */
+  --cream-bg: #FFF6EA;     /* crema pálida: rellenos y arranque nativo */
   --peach: #F9DBBF;        /* rubor durazno, fondo inferior home/story */
   --peach-mid: #FCEBD8;    /* paso intermedio de los degradados home/story */
   /* Naranja "Melocotón suave", congelado el 2026-08-03. */
@@ -26,7 +25,6 @@
   --mist-ink: #6F6879;     /* texto secundario y placeholders (5,34:1 sobre blanco) */
   --danger: #C0392B;       /* errores (5,44:1 sobre blanco) */
   --surface: #FFFFFF;
-  --comm-bg: #FDF3E9;      /* fondo crema pálido de comunidad */
 
   /* — Orbe — */
   --orb-peach: #F8E2D1;
@@ -69,17 +67,20 @@ body {
   min-height: 100vh;
 }
 
-/* ============ Fondos degradados canónicos ============ */
+/* ============ El fondo ============
+   Uno solo, y el mismo en toda la app. Hubo seis —uno por flujo, que es lo que
+   dice el montaje— y recorriendo la app no se leían como un sistema sino como
+   seis: cambiar de pestaña cambiaba el fondo y entrar en un capítulo lo volvía
+   a cambiar.
+
+   `.bg-story` no es el fondo de una pantalla: es el de la imagen 9:16 que se
+   comparte, que es una fotografía y por eso conserva el durazno. */
 .bg-radial {
   background:
     radial-gradient(ellipse 90% 55% at 50% 47%, var(--cream) 0%, rgba(255,241,221,0.55) 45%, rgba(255,241,221,0) 72%),
     linear-gradient(180deg, var(--sky) 0%, #D2DEF4 50%, var(--sky) 100%);
 }
-.bg-warm   { background: linear-gradient(180deg, var(--cream) 0%, #F8EDDE 55%, var(--sky-soft) 100%); }
-.bg-cool   { background: linear-gradient(180deg, var(--sky-soft) 0%, #F8EDDE 45%, var(--cream) 100%); }
-.bg-home   { background: linear-gradient(180deg, var(--cream-bg) 0%, var(--peach-mid) 55%, var(--peach) 100%); }
 .bg-story  { background: linear-gradient(180deg, var(--cream) 0%, var(--peach-mid) 60%, var(--peach) 100%); }
-.bg-comm   { background: var(--comm-bg); }
 
 /* ============ El Orbe (isotipo) ============
    UNA SOLA FUENTE DE VERDAD. Todo lo que simule el isotipo —splash, marca de

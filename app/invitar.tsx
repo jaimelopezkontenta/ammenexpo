@@ -60,7 +60,7 @@ export default function Invite() {
         <Stack.Screen
           options={{ title: t("invite.title"), headerShown: true }}
         />
-        <LoadingState variant="comm" />
+        <LoadingState />
       </>
     );
   }
@@ -71,7 +71,7 @@ export default function Invite() {
         <Stack.Screen
           options={{ title: t("invite.title"), headerShown: true }}
         />
-        <ErrorState variant="comm" onRetry={() => void refetch()} />
+        <ErrorState onRetry={() => void refetch()} />
       </>
     );
   }
@@ -80,7 +80,7 @@ export default function Invite() {
     <>
       <Stack.Screen options={{ title: t("invite.title"), headerShown: true }} />
 
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
           <Text className="font-serif text-lg leading-reading text-plum">
             {t("invite.body")}

@@ -34,7 +34,7 @@ export const AuthScreen = ({
   /** La letra pequeña de los términos, solo en la pantalla de entrar. */
   footer?: string;
 }) => (
-  <DawnBackground variant="radial">
+  <DawnBackground>
     <KeyboardAvoidingView
       className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}

@@ -79,7 +79,7 @@ export default function SharePlan() {
         <Stack.Screen
           options={{ title: t("share.title"), headerShown: true }}
         />
-        <LoadingState variant="cool" />
+        <LoadingState />
       </>
     );
   }
@@ -93,7 +93,6 @@ export default function SharePlan() {
           options={{ title: t("share.title"), headerShown: true }}
         />
         <ErrorState
-          variant="cool"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("share.previewNotFound")}
         />
@@ -157,7 +156,7 @@ export default function SharePlan() {
   return (
     <>
       <Stack.Screen options={{ title: t("share.title"), headerShown: true }} />
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView contentContainerClassName="gap-8 px-7 py-8">
           <View className="gap-1">
             <Text className="font-sans-semibold text-lg text-plum">

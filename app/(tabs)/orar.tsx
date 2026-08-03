@@ -26,69 +26,69 @@ export default function Pray() {
   const { data: myPlans } = useMyPlans(userId);
 
   if (isLoading) {
-    return <LoadingState variant="cool" />;
+    return <LoadingState />;
   }
 
   // Before this, a failed read fell straight through to the empty state and told
   // people nobody had shared anything with them — a false statement, with no way
   // to find out otherwise.
   if (isError) {
-    return <ErrorState variant="cool" onRetry={() => void refetch()} />;
+    return <ErrorState onRetry={() => void refetch()} />;
   }
 
   if (!plans || plans.length === 0) {
     return (
-      <DawnBackground
-        variant="cool"
-        className="items-center justify-center gap-3 px-8"
-      >
-        <Text className="text-center font-sans-bold text-2xl text-plum">
-          {t("pray.empty")}
-        </Text>
-        <Text className="text-center font-sans text-base leading-6 text-mist-ink">
-          {t("pray.emptyBody")}
-        </Text>
-        {/* Nobody has shared with you yet, so the useful move is to share
+      <DawnBackground>
+        <TabHeader title={t("tabs.pray")} />
+        <View className="flex-1 items-center justify-center gap-3 px-8">
+          <Text className="text-center font-sans-bold text-2xl text-plum">
+            {t("pray.empty")}
+          </Text>
+          <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+            {t("pray.emptyBody")}
+          </Text>
+          {/* Nobody has shared with you yet, so the useful move is to share
             yours — which is what the button says. It used to read "Crear un
             círculo" and land on the circles *list*, two steps away from the
             thing this screen is actually asking for. */}
-        <View className="mt-6 w-full gap-3">
-          {/* Tu lista no depende de que nadie comparta nada contigo: es lo que
+          <View className="mt-6 w-full gap-3">
+            {/* Tu lista no depende de que nadie comparta nada contigo: es lo que
               se puede hacer aquí el primer día, cuando esta pantalla no tiene
               todavía a nadie por quien orar. */}
-          <Link href="/lista" asChild>
-            <Button title={t("list.title")} />
-          </Link>
+            <Link href="/lista" asChild>
+              <Button title={t("list.title")} />
+            </Link>
 
-          {/* A la comunidad, no al muro suelto. Eran dos puertas al mismo
+            {/* A la comunidad, no al muro suelto. Eran dos puertas al mismo
               contenido con nombres distintos, y la comunidad además trae los
               testimonios y los planes públicos. */}
-          <Link href="/comunidad" asChild>
-            <Button title={t("community.title")} variant="secondary" />
-          </Link>
-          <Button
-            title={
-              (myPlans ?? []).length > 0
-                ? t("pray.emptyCta")
-                : t("plan.createCta")
-            }
-            variant="secondary"
-            onPress={() =>
-              (myPlans ?? []).length > 0
-                ? router.push({
-                    pathname: "/plan/[id]/compartir",
-                    params: { id: myPlans![0].id },
-                  })
-                : router.push("/plan/nuevo")
-            }
-          />
+            <Link href="/comunidad" asChild>
+              <Button title={t("community.title")} variant="secondary" />
+            </Link>
+            <Button
+              title={
+                (myPlans ?? []).length > 0
+                  ? t("pray.emptyCta")
+                  : t("plan.createCta")
+              }
+              variant="secondary"
+              onPress={() =>
+                (myPlans ?? []).length > 0
+                  ? router.push({
+                      pathname: "/plan/[id]/compartir",
+                      params: { id: myPlans![0].id },
+                    })
+                  : router.push("/plan/nuevo")
+              }
+            />
+          </View>
         </View>
       </DawnBackground>
     );
   }
 
   return (
-    <DawnBackground variant="cool">
+    <DawnBackground>
       <TabHeader title={t("tabs.pray")} />
       <ScrollView
         contentContainerClassName="gap-5 px-7 py-8"

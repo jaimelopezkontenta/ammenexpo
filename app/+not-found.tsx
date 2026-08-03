@@ -10,10 +10,7 @@ export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t("common.appName") }} />
-      <DawnBackground
-        variant="radial"
-        className="items-center justify-center gap-4 px-8"
-      >
+      <DawnBackground className="items-center justify-center gap-4 px-8">
         <Text className="text-center font-sans-bold text-xl text-plum">
           {t("common.notFoundTitle")}
         </Text>

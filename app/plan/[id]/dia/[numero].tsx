@@ -26,7 +26,7 @@ export default function PlanDayDetail() {
     return (
       <>
         <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
-        <LoadingState variant="cool" />
+        <LoadingState />
       </>
     );
   }
@@ -36,7 +36,6 @@ export default function PlanDayDetail() {
       <>
         <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
         <ErrorState
-          variant="cool"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("plan.dayNotFound")}
         />
@@ -52,7 +51,7 @@ export default function PlanDayDetail() {
           headerShown: true,
         }}
       />
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView contentContainerClassName="gap-7 px-7 py-8">
           <View className="gap-1">
             <Text className="font-serif-bold text-3xl leading-10 text-plum">

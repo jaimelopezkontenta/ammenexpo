@@ -83,7 +83,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="twitter:description" content={SOCIAL_DESCRIPTION} />
         <meta name="twitter:image" content={`${SOCIAL_URL}/og.png`} />
         <meta name="description" content={SOCIAL_DESCRIPTION} />
-        <meta name="theme-color" content="#FFF6EA" />
+        <meta name="theme-color" content="#C7D6F2" />
         <title>{SOCIAL_TITLE}</title>
 
         <ScrollViewStyleReset />
@@ -97,14 +97,15 @@ export default function Root({ children }: { children: React.ReactNode }) {
   );
 }
 
-// La crema del amanecer, y no el blanco del scaffold: en web el `body` asoma
-// por los bordes y en el arranque, así que dejarlo en #fff dejaba una costura
-// blanca alrededor de una app que ya no es blanca.
+// El periwinkle del fondo, que es lo que hay en los bordes del degradado: en
+// web el `body` asoma alrededor y en el arranque, así que dejarlo en blanco
+// —o en crema, que es el centro y no el borde— dejaba una costura alrededor de
+// una app que ya no es ni lo uno ni lo otro.
 //
 // Sin rama de modo oscuro: la app todavía no lo tiene, y pintar el fondo de
 // negro debajo de pantallas claras da un destello negro al cargar, que es peor
 // que no tenerlo.
 const responsiveBackground = `
 body {
-  background-color: #FFF6EA;
+  background-color: #C7D6F2;
 }`;

@@ -52,16 +52,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Los fondos. No se usan sueltos casi nunca: van dentro de
-        // `DawnBackground`, que es quien conoce las paradas de cada degradado.
+        // El fondo es uno solo y vive dentro de `DawnBackground`, que es quien
+        // conoce sus paradas. Lo que queda aquí son los tonos que sí se usan
+        // sueltos: el crema de los editores de nota y de petición, y el durazno
+        // del versículo subrayado y de la imagen que se comparte.
+        //
+        // Hubo tres más —`sky-soft`, `comm` y los degradados por flujo que los
+        // usaban—, y se fueron con ellos: un token de color sin un solo uso es
+        // una invitación a volver a tener seis fondos.
         dawn: {
           sky: "#C7D6F2",
-          "sky-soft": "#D8E1F1",
           cream: "#FFF1DD",
           "cream-bg": "#FFF6EA",
           peach: "#F9DBBF",
           "peach-mid": "#FCEBD8",
-          comm: "#FDF3E9",
         },
         ember: {
           DEFAULT: "#F2A578",

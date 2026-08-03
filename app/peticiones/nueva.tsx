@@ -40,7 +40,7 @@ export default function NewPrayerRequest() {
   return (
     <>
       <Stack.Screen options={{ title: t("feed.newPost"), headerShown: true }} />
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <ScrollView
           contentContainerClassName="flex-grow gap-6 px-7 py-8"
           keyboardShouldPersistTaps="handled"

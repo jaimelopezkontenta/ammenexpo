@@ -154,7 +154,7 @@ export default function CircleChat() {
       <Stack.Screen
         options={{ title: circle?.name ?? t("chat.title"), headerShown: true }}
       />
-      <DawnBackground variant="comm">
+      <DawnBackground>
         <KeyboardAvoidingView
           className="flex-1"
           behavior={Platform.OS === "ios" ? "padding" : undefined}

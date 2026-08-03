@@ -28,7 +28,7 @@ export default function Plus() {
       <Stack.Screen
         options={{ title: t("paywall.title"), headerShown: true }}
       />
-      <DawnBackground variant="cool">
+      <DawnBackground>
         <ScrollView contentContainerClassName="flex-grow gap-8 px-7 py-10">
           <Text className="font-sans text-base leading-6 text-mist-ink">
             {t("paywall.subtitle")}

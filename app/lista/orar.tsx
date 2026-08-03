@@ -62,7 +62,7 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <LoadingState variant="cool" />
+        <LoadingState />
       </>
     );
   }
@@ -71,7 +71,7 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <ErrorState variant="cool" onRetry={() => void refetch()} />
+        <ErrorState onRetry={() => void refetch()} />
       </>
     );
   }
@@ -80,10 +80,7 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <DawnBackground
-          variant="cool"
-          className="items-center justify-center gap-3 px-8"
-        >
+        <DawnBackground className="items-center justify-center gap-3 px-8">
           <Text className="text-center font-sans text-base leading-6 text-mist-ink">
             {t("list.empty")}
           </Text>
@@ -98,7 +95,7 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <DawnBackground variant="cool" className="justify-center gap-6 px-8">
+        <DawnBackground className="justify-center gap-6 px-8">
           <Text className="font-serif-bold text-2xl text-plum">
             {t("list.howLong")}
           </Text>
@@ -128,7 +125,7 @@ export default function PrayThrough() {
     <>
       <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
 
-      <DawnBackground variant="cool" className="justify-center gap-8 px-8">
+      <DawnBackground className="justify-center gap-8 px-8">
         <View className="items-center gap-3">
           <Orb size={72} />
           <Text className="font-sans text-sm text-mist-ink">

@@ -122,7 +122,7 @@ export default function Onboarding() {
     // El degradado cálido del diseño para el asistente: entra por arriba en
     // crema y sale en periwinkle, que es el mismo aire de las pantallas de
     // acceso pero al reves — se nota que se ha cruzado una puerta.
-    <DawnBackground variant="warm">
+    <DawnBackground>
       <ScrollView
         contentContainerClassName="flex-grow px-7 pb-10 pt-6"
         keyboardShouldPersistTaps="handled"
