@@ -14,7 +14,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
       <View className="w-full gap-1.5">
         {/* aria-hidden on web: the visible label would otherwise be read once as
             loose text and again as the input's accessible name. */}
-        <Text className="text-sm font-medium text-ink-muted" aria-hidden>
+        <Text className="font-sans-medium text-sm text-mist-ink" aria-hidden>
           {label}
         </Text>
         <TextInput
@@ -28,17 +28,20 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
           accessibilityHint={error ?? undefined}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          placeholderTextColor="#726A62"
+          placeholderTextColor="#6F6879"
           {...inputProps}
-          className={`w-full rounded-2xl border bg-paper-raised px-4 py-3.5 text-base text-ink ${
-            error ? "border-red-400" : "border-ink-line"
+          // Blanco casi opaco y no vidrio: el campo es donde se escribe, y el
+          // texto que se escribe tiene que ganarle al degradado que hay detrás
+          // sin depender de qué pantalla sea.
+          className={`w-full rounded-input border bg-surface px-4 py-3.5 font-sans text-base text-plum shadow-soft ${
+            error ? "border-danger" : "border-white/70"
           } ${inputProps.className ?? ""}`}
         />
         {error ? (
           <Text
             nativeID={errorId}
             id={errorId}
-            className="text-sm text-red-500"
+            className="font-sans text-sm text-danger"
             accessibilityRole="alert"
           >
             {error}

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen · Orar y Planes</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="stage-nav">
+  <a class="home-link" href="index.html">← Sistema</a>
+  <span class="title">5 · Orar y Planes</span>
+  <button data-go="orar" class="on">Orar por otros</button>
+  <button data-go="orarplan">Orar un plan</button>
+  <button data-go="lista">Mi lista</button>
+  <button data-go="nuevo">Nuevo plan</button>
+  <button data-go="compartir">Compartir plan</button>
+  <a href="comunidad.html">Siguiente flujo →</a>
+</div>
+
+<div class="stage">
+<div class="phone">
+
+  <!-- ORAR POR OTROS -->
+  <div class="screen active bg-cool" data-id="orar">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="tab-header">
+      <div>
+        <p class="title-md">Orar por otros</p>
+        <p class="muted" style="font-size:14px">Planes que otras personas han compartido contigo.</p>
+      </div>
+    </div>
+    <div class="screen-scroll px">
+      <div class="card" data-go="orarplan" style="cursor:pointer;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <div class="avatar tone2">A</div>
+          <div>
+            <p style="font-weight:600;font-size:16px">Ana López</p>
+            <p class="muted" style="font-size:13.5px">Día 6 de 14 · Sanidad y perdón</p>
+          </div>
+        </div>
+        <p style="font-size:18.5px;font-weight:600;line-height:1.4">"Padre, trae sanidad a nuestras conversaciones, a nuestros recuerdos y a nuestros malentendidos."</p>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px">
+          <button class="chip-dark">Orar por ella</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <div class="avatar tone3">D</div>
+          <div>
+            <p style="font-weight:600;font-size:16px">David</p>
+            <p class="muted" style="font-size:13.5px">Día 2 de 7 · Trabajo</p>
+          </div>
+        </div>
+        <p style="font-size:18.5px;font-weight:600;line-height:1.4">"Señor, dame sabiduría para la entrevista de esta semana."</p>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px">
+          <button class="chip-dark">Orar por él</button>
+        </div>
+      </div>
+      <button class="btn-white" data-go="lista">Mi lista de oración privada</button>
+      <div style="height:20px"></div>
+    </div>
+    <div class="tabbar">
+      <a href="hoy.html"><i data-ico="home"></i>Hoy</a>
+      <a href="biblia.html"><i data-ico="book"></i>Biblia</a>
+      <a class="on"><span class="orb-tab"></span>Orar</a>
+      <a href="comunidad.html"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- ORAR UN PLAN (por alguien) -->
+  <div class="screen bg-warm" data-id="orarplan">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="orar">‹</button>
+      <div></div>
+      <i data-ico="bell" data-size="22"></i>
+    </div>
+    <div class="center px" style="padding-top:24px;padding-bottom:20px">
+      <p class="title-lg">Sanidad y perdón</p>
+      <p class="sub" style="margin-top:6px">El camino de oración de Ana · Día 6</p>
+    </div>
+    <div class="glass-panel" style="flex:1;border-radius:26px 26px 0 0;padding:34px 30px;display:flex;flex-direction:column;gap:18px;overflow-y:auto">
+      <p class="center" style="font-size:17.5px;line-height:1.6">Ora especialmente por las áreas donde ha crecido la división.</p>
+      <p class="center" style="font-size:20px;font-weight:600;line-height:1.5">"Padre, trae sanidad a nuestras conversaciones, a nuestros recuerdos y a nuestros malentendidos. Restaura lo que se ha roto."</p>
+      <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
+        <button class="btn-cta" data-go="orar">Oré por Ana 🙏</button>
+        <button class="btn-white" style="box-shadow:0 0 0 1.5px rgba(65,54,83,.12) inset">Enviarle unas palabras</button>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- MI LISTA -->
+  <div class="screen bg-cool" data-id="lista">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="orar">‹</button>
+      <div style="flex:1;text-align:center"><p style="font-weight:700;font-size:17px">Mi lista de oración</p></div>
+      <span style="width:46px"></span>
+    </div>
+    <div class="screen-scroll px" style="padding-top:16px">
+      <p class="muted center" style="font-size:14px;margin-bottom:16px">Solo tuya. Nadie más la ve.</p>
+      <div class="card" style="margin-bottom:12px"><p style="font-size:16.5px;font-weight:500">La salud de mamá</p></div>
+      <div class="card" style="margin-bottom:12px"><p style="font-size:16.5px;font-weight:500">La mudanza — ¿es el momento?</p></div>
+      <div class="card" style="margin-bottom:12px"><p style="font-size:16.5px;font-weight:500">Mi amigo Andrés, que no cree</p></div>
+      <p style="font-weight:600;font-size:14px;margin:18px 0 10px;color:var(--mist)">RESPONDIDAS ✨</p>
+      <div class="card" style="opacity:.65;margin-bottom:12px"><p style="font-size:16.5px;text-decoration:line-through">El contrato de la casa</p></div>
+      <div style="height:14px"></div>
+      <button class="btn-cta">Orar mi lista ahora</button>
+      <div style="height:20px"></div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- NUEVO PLAN -->
+  <div class="screen bg-warm" data-id="nuevo">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="orar">‹</button>
+      <div class="progress-track"><div class="progress-fill" style="width:40%"></div></div>
+      <span style="width:46px"></span>
+    </div>
+    <div class="screen-scroll px center" style="display:flex;flex-direction:column;justify-content:center;gap:24px">
+      <div>
+        <p class="title-lg">¿Sobre qué quieres<br>orar?</p>
+        <p class="sub" style="margin-top:8px">Cuéntanoslo en unas palabras.<br>Lo convertiremos en tu plan.</p>
+      </div>
+      <label class="input" style="text-align:center"><input placeholder="Mi hermana está enferma…" value="Unión familiar" style="text-align:center"></label>
+      <div class="chips">
+        <button class="chip">7 días</button>
+        <button class="chip on">14 días</button>
+        <button class="chip">21 días</button>
+        <button class="chip">30 días</button>
+      </div>
+      <button class="btn-cta" data-go="compartir">Crear el plan</button>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- COMPARTIR PLAN -->
+  <div class="screen bg-cool" data-id="compartir">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="nuevo">‹</button>
+      <div style="flex:1;text-align:center"><p style="font-weight:700;font-size:17px">Compartir mi plan</p></div>
+      <span style="width:46px"></span>
+    </div>
+    <div class="screen-scroll px" style="padding-top:14px">
+      <p class="muted center" style="font-size:14.5px;margin-bottom:20px">Quien lo reciba podrá orar por ti cada día.</p>
+      <p style="font-weight:600;font-size:15px;margin-bottom:10px">¿Quién puede verlo?</p>
+      <div class="wheel" style="text-align:left">
+        <button class="opt" style="text-align:left;font-size:16.5px">Solo yo</button>
+        <button class="opt on" style="text-align:left;font-size:16.5px">Mis círculos</button>
+        <button class="opt" style="text-align:left;font-size:16.5px">Cualquiera con el enlace</button>
+      </div>
+      <div style="height:20px"></div>
+      <div class="card">
+        <p style="font-weight:600;font-size:15px">Enlace público</p>
+        <p class="muted" style="font-size:13.5px;margin-top:4px">ammen.app/p/k3v9…</p>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="chip-dark">Copiar el enlace</button>
+          <button class="chip-dark" style="background:#25D366">WhatsApp</button>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <button class="btn-cta" data-go="orar">Listo</button>
+      <div style="height:20px"></div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

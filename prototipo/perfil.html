@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen · Perfil</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="stage-nav">
+  <a class="home-link" href="index.html">← Sistema</a>
+  <span class="title">7 · Perfil</span>
+  <button data-go="perfil" class="on">Perfil</button>
+  <button data-go="plus">Ammen Plus</button>
+  <a href="share.html">Siguiente flujo →</a>
+</div>
+
+<div class="stage">
+<div class="phone">
+
+  <!-- PERFIL -->
+  <div class="screen active bg-radial" data-id="perfil">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="screen-scroll px" style="padding-top:110px">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:36px">
+        <div class="avatar tone2" style="width:64px;height:64px;font-size:24px">J</div>
+        <div>
+          <p class="title-md">Jaime López</p>
+          <p class="muted" style="font-size:14.5px">jaime.lopez@gmail.com</p>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <button class="row-link"><span>Idioma</span><span class="chev">›</span></button>
+        <button class="row-link"><span>Mi momento de oración</span><span class="chev">›</span></button>
+        <button class="row-link"><span>Mis testimonios</span><span class="chev">›</span></button>
+        <button class="row-link" data-go="plus"><span>Ammen Plus ✨</span><span class="chev">›</span></button>
+        <button class="row-link"><span>Invitar a alguien</span><span class="chev">›</span></button>
+        <button class="row-link" style="color:var(--accent)"><span>Cerrar sesión</span><span class="chev">›</span></button>
+      </div>
+    </div>
+    <div class="tabbar">
+      <a href="hoy.html"><i data-ico="home"></i>Hoy</a>
+      <a href="biblia.html"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a href="comunidad.html"><i data-ico="users"></i>Círculos</a>
+      <a class="on"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- AMMEN PLUS -->
+  <div class="screen bg-radial" data-id="plus">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="perfil">‹</button>
+    </div>
+    <div class="screen-scroll px center" style="display:flex;flex-direction:column;justify-content:center;gap:22px">
+      <div style="display:flex;justify-content:center">
+        <div class="orb" style="width:110px;height:110px"><span class="wordmark" style="font-size:19px">plus</span></div>
+      </div>
+      <p class="title-lg">Ammen Plus</p>
+      <p class="sub">Todos los planes que quieras.<br>Tu oración, sin límites.</p>
+      <div class="card" style="text-align:left">
+        <p style="font-size:15.5px;line-height:1.9">✓ Planes ilimitados<br>✓ Historias para compartir<br>✓ Apoyo al proyecto</p>
+      </div>
+      <button class="btn-cta">Probar Ammen Plus</button>
+      <button class="skip" data-go="perfil" style="font-size:15px">Ahora no</button>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

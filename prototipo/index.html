@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen — Prototipo "Amanecer"</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="hub">
+  <h1><span class="wordmark" style="font-size:46px">ammen</span> · Sistema "Amanecer"</h1>
+  <p class="lead">Prototipo interactivo del rediseño. Revisa primero los tokens y componentes aquí, luego recorre cada flujo en los marcos de teléfono. Nada de esto toca la app todavía.</p>
+
+  <h2>Flujos navegables</h2>
+  <div class="flow-links">
+    <a href="auth.html">1 · Splash y Acceso</a>
+    <a href="onboarding.html">2 · Onboarding</a>
+    <a href="hoy.html">3 · Hoy</a>
+    <a href="biblia.html">4 · Biblia</a>
+    <a href="orar.html">5 · Orar y Planes</a>
+    <a href="comunidad.html">6 · Círculos y Comunidad</a>
+    <a href="perfil.html">7 · Perfil</a>
+    <a href="share.html">8 · Compartir (Story)</a>
+  </div>
+
+  <h2>El orbe (isotipo animado)</h2>
+  <div class="grid">
+    <div class="demo-tile bg-radial" style="display:flex;align-items:center;justify-content:center;min-height:300px">
+      <div class="orb" style="width:150px;height:150px">
+        <span class="wordmark" style="font-size:25px">ammen</span>
+      </div>
+    </div>
+    <div class="demo-tile">
+      <h3>ESPECIFICACIÓN DE LA ANIMACIÓN</h3>
+      <p style="line-height:1.7;font-size:15px">
+        <b>Respiración:</b> escala 1 → 1.055, ciclo 4.2 s, ease-in-out, bucle infinito.<br>
+        <b>Halo:</b> capa radial crema al 45 %, opacidad 0.7 → 1 en fase con la escala.<br>
+        <b>Colores:</b> durazno #F8E2D1 (arriba), lavanda #D4D0EF (izq.), lila #D3CEF0 (der.), celeste #CFECF9 (abajo), base #EDE6F6→#BFC3EF.<br>
+        <b>En la app:</b> PNG exportado + Reanimated (scale/opacity), cero dependencias nuevas.
+      </p>
+    </div>
+  </div>
+
+  <h2>El naranja, a elección <span style="font-size:14px;font-weight:400;color:var(--mist)">(toca una opción — se aplica a TODO el prototipo y se recuerda al navegar)</span></h2>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="chip-dark" data-palette="original" style="padding:12px 18px;font-size:14px">Original (JPG)</button>
+    <button class="chip-dark" data-palette="melocoton" style="padding:12px 18px;font-size:14px">Melocotón suave ★ recomendada</button>
+    <button class="chip-dark" data-palette="terracota" style="padding:12px 18px;font-size:14px">Terracotta editorial</button>
+    <button class="chip-dark" data-palette="ambar" style="padding:12px 18px;font-size:14px">Ámbar dorado</button>
+  </div>
+  <div class="grid" style="margin-bottom:8px">
+    <div class="demo-tile bg-home" style="min-height:200px;display:flex;flex-direction:column;justify-content:center;gap:12px">
+      <button class="btn-cta">Crear mi plan de oración</button>
+      <p class="center"><span class="skip">¿Olvidaste tu contraseña?</span></p>
+      <p class="label-serif center">Versículo del día</p>
+      <div class="progress-row" style="padding:0">
+        <div class="progress-track"><div class="progress-fill" style="width:60%"></div></div>
+      </div>
+    </div>
+    <div class="demo-tile">
+      <h3>CRITERIO</h3>
+      <p style="line-height:1.7;font-size:14.5px">
+        <b>Original:</b> fiel al JPG; el acento #F45517 es casi rojo neón y compite con todo.<br>
+        <b>Melocotón ★:</b> −25 % de saturación; cálido, premium, estilo apps de bienestar 2026. El acento #E2703F sigue leyéndose como naranja.<br>
+        <b>Terracotta:</b> hereda el "clay" de la app actual; el más editorial y sobrio.<br>
+        <b>Ámbar:</b> hora dorada; el más luminoso, riesgo de parecer amarillo en pantallas cálidas.
+      </p>
+    </div>
+  </div>
+
+  <h2>Paleta (muestreada de los JPG del diseño)</h2>
+  <div class="swatches">
+    <div class="swatch"><div class="c" style="background:#C7D6F2"></div><div class="t"><b>dawn.sky</b>#C7D6F2 · fondos fríos (light)</div></div>
+    <div class="swatch"><div class="c" style="background:#FFF1DD"></div><div class="t"><b>dawn.cream</b>#FFF1DD · fondos cálidos (light)</div></div>
+    <div class="swatch"><div class="c" style="background:#F9DBBF"></div><div class="t"><b>dawn.peach</b>#F9DBBF · home inferior (light)</div></div>
+    <div class="swatch"><div class="c" style="background:linear-gradient(90deg,var(--ember),var(--ember-pale))"></div><div class="t"><b>ember → pale</b>CTA (según paleta elegida)</div></div>
+    <div class="swatch"><div class="c" style="background:#F45517"></div><div class="t"><b>ember.accent</b>#F45517 · links, labels</div></div>
+    <div class="swatch"><div class="c" style="background:#413653"></div><div class="t"><b>plum</b>#413653 · texto</div></div>
+    <div class="swatch"><div class="c" style="background:#4D405C"></div><div class="t"><b>plum.chip</b>#4D405C · pills activas</div></div>
+    <div class="swatch"><div class="c" style="background:#8A8494"></div><div class="t"><b>mist</b>#8A8494 · secundario</div></div>
+    <div class="swatch"><div class="c" style="background:#FDF3E9"></div><div class="t"><b>comm.bg</b>#FDF3E9 · comunidad</div></div>
+    <div class="swatch"><div class="c" style="background:#FFFFFF;border-bottom:1px solid #eee"></div><div class="t"><b>surface</b>#FFFFFF · cards</div></div>
+  </div>
+
+  <h2>Tipografía <span style="font-size:14px;font-weight:400;color:var(--mist)">(elige la sans y lo anotamos en TOKENS.md)</span></h2>
+  <div style="display:flex;gap:10px;margin-bottom:18px">
+    <button class="chip-dark on" data-font="general" style="padding:10px 18px;font-size:14px">General Sans</button>
+    <button class="chip-dark" data-font="satoshi" style="padding:10px 18px;font-size:14px;opacity:.75">Satoshi</button>
+  </div>
+  <div class="grid">
+    <div class="demo-tile">
+      <h3>SANS (UI) — sustituye a Aeonik</h3>
+      <p class="title-lg">Confía en el Señor</p>
+      <p class="title-md" style="margin-top:8px">Bienvenido de vuelta</p>
+      <p style="font-size:17px;margin-top:8px">Unas preguntas rápidas para que tu plan de oración sea tuyo de verdad.</p>
+      <p class="muted" style="font-size:14px;margin-top:8px">Texto secundario en mist — Paso 2 de 4</p>
+    </div>
+    <div class="demo-tile">
+      <h3>SERIF ITÁLICA — sustituye a ITC Garamond</h3>
+      <p class="wordmark" style="font-size:44px">ammen</p>
+      <p class="label-serif" style="margin-top:10px">Versículo del día</p>
+      <p class="label-serif muted" style="margin-top:6px">Proverbios 3: 5–6</p>
+    </div>
+  </div>
+
+  <h2>Material Liquid Glass <span style="font-size:14px;font-weight:400;color:var(--mist)">(iOS 26 — todo el UI es vidrio sobre los degradados)</span></h2>
+  <div class="grid">
+    <div class="demo-tile bg-radial" style="min-height:260px;display:flex;flex-direction:column;justify-content:center;gap:14px">
+      <div class="card">
+        <p style="font-weight:600;font-size:17px">Vidrio esmerilado</p>
+        <p style="font-size:14px;margin-top:4px;opacity:.8">El degradado amanecer se trasluce y se difumina detrás de cada superficie.</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="chip-dark">Vidrio oscuro</button>
+        <button class="btn-pill" style="padding:8px 16px">Vidrio claro</button>
+      </div>
+    </div>
+    <div class="demo-tile">
+      <h3>RECETA DEL MATERIAL</h3>
+      <p style="line-height:1.8;font-size:14.5px">
+        <b>Fondo:</b> blanco al 42–58 % de opacidad (oscuro: plum al 60 %).<br>
+        <b>Blur:</b> backdrop-filter 22 px + saturación 1.7.<br>
+        <b>Borde:</b> 1 px blanco al 65 % (luminoso).<br>
+        <b>Especular:</b> inset superior 1 px blanco al 78 %.<br>
+        <b>Sombra:</b> 0 8 24 plum al 14 %.<br>
+        <b>En la app:</b> expo-blur (BlurView) + borde; Android cae a translucidez simple si el FPS sufre. El CTA naranja queda sólido.
+      </p>
+    </div>
+  </div>
+
+  <h2>Componentes</h2>
+  <div class="grid">
+    <div class="demo-tile bg-warm">
+      <h3>BOTONES</h3>
+      <button class="btn-cta">Crear mi plan de oración</button>
+      <div style="height:12px"></div>
+      <button class="btn-white">Ahora no</button>
+      <div style="height:12px"></div>
+      <button class="btn-pill">Compartir <i data-ico="share" data-size="17"></i></button>
+      <button class="chip-dark" style="margin-left:10px">Pedir oración</button>
+    </div>
+    <div class="demo-tile bg-warm">
+      <h3>INPUTS</h3>
+      <label class="input"><i data-ico="mail" data-size="19" class="ico"></i><input placeholder="tu@correo.com"></label>
+      <div style="height:12px"></div>
+      <label class="input"><i data-ico="lock" data-size="19" class="ico"></i><input type="password" value="············"><i data-ico="eye" data-size="19" class="ico"></i></label>
+    </div>
+    <div class="demo-tile bg-comm">
+      <h3>TABS SEGMENTADAS</h3>
+      <div class="seg">
+        <button class="on">Círculos</button><button>Avisos</button><button>Chat</button><button>Seguir</button>
+      </div>
+      <div style="height:20px"></div>
+      <h3>PROGRESS + BACK + SKIP</h3>
+      <div class="progress-row" style="padding:0">
+        <button class="btn-back">‹</button>
+        <div class="progress-track"><div class="progress-fill" style="width:55%"></div></div>
+        <button class="skip">Saltar</button>
+      </div>
+    </div>
+    <div class="demo-tile bg-warm">
+      <h3>SELECTOR DE RUEDA</h3>
+      <div class="wheel">
+        <button class="opt">Corta y sencilla</button>
+        <button class="opt on">Profunda y reflexiva</button>
+        <button class="opt">Basada en la Escritura</button>
+      </div>
+    </div>
+    <div class="demo-tile bg-comm">
+      <h3>CARD DE COMUNIDAD</h3>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div class="avatar tone2">A</div>
+          <span class="muted" style="font-size:16px">Ana López</span>
+        </div>
+        <p style="font-size:19px;font-weight:600;line-height:1.35">“Padre, trae sanidad a nuestras conversaciones y a nuestros recuerdos.”</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+          <div class="avatar-stack"><div class="avatar">M</div><div class="avatar tone2">J</div><div class="avatar tone3">+3</div></div>
+          <button class="chip-dark">Orar con ella</button>
+        </div>
+      </div>
+    </div>
+    <div class="demo-tile bg-home">
+      <h3>VERSÍCULO PROTAGONISTA</h3>
+      <p class="label-serif center">Versículo del día</p>
+      <p class="verse center" style="margin-top:10px">"Confía en el Señor con todo tu corazón, y no te apoyes en tu propia prudencia."</p>
+      <p class="label-serif muted center" style="margin-top:10px">Proverbios 3: 5–6</p>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

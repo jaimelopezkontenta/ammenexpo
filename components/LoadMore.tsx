@@ -30,18 +30,18 @@ export const LoadMore = ({ hasMore, loading, onPress }: Props) => {
         accessibilityState={{ busy: loading }}
         disabled={loading}
         onPress={onPress}
-        className="rounded-2xl bg-paper-sunken px-5 py-3"
+        className="rounded-cta border border-white/60 bg-white/60 px-5 py-3"
       >
         {loading ? (
           // El nombre accesible se mantiene aparte: sustituir el texto por el
           // indicador dejaba al lector de pantalla anunciando "botón, ocupado"
           // sin decir cuál — el mismo fallo que ya se corrigió en `Button`.
           <ActivityIndicator
-            color="#635C55"
+            color="#6F6879"
             accessibilityLabel={t("common.loadMore")}
           />
         ) : (
-          <Text className="text-base font-medium text-ink-muted">
+          <Text className="font-sans-medium text-base text-plum">
             {t("common.loadMore")}
           </Text>
         )}

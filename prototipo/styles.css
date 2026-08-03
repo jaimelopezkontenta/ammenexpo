@@ -1,0 +1,573 @@
+/* ============================================================
+   AMMEN — Sistema de diseño "Amanecer"
+   Tokens extraídos por muestreo de diseno/MONTAJE FINAL/JPG
+   ============================================================ */
+
+:root {
+  /* — Color — */
+  /* Revisión "light" (2026-08-03): fondos despastelados ~40% hacia el tono
+     de Círculos (#FDF3E9), que es la referencia aprobada por el usuario.
+     Los valores saturados originales del JPG quedan documentados en TOKENS.md. */
+  --sky: #C7D6F2;          /* periwinkle claro, mitad fría de fondos */
+  --sky-soft: #D8E1F1;     /* periwinkle pálido (fin de degradado cálido) */
+  --cream: #FFF1DD;        /* crema pálida, mitad cálida */
+  --cream-bg: #FFF6EA;     /* crema de fondo home */
+  --peach: #F9DBBF;        /* rubor durazno, fondo inferior home/story */
+  --peach-mid: #FCEBD8;    /* paso intermedio de los degradados home/story */
+  /* Naranja "Melocotón suave", congelado el 2026-08-03. */
+  --ember: #F2A578;        /* naranja CTA (inicio gradiente) */
+  --ember-pale: #FBDFC2;   /* naranja CTA (fin gradiente) */
+  --accent: #E2703F;       /* SOLO decoración: labels ≥18px, indicador de tab, iconos.
+                              Da 2,85:1 sobre crema — nunca lleva texto que haya que leer. */
+  --accent-ink: #B24A22;   /* el naranja que sí se lee: enlaces, "Saltar" (4,85:1) */
+  --plum: #413653;         /* texto principal */
+  --plum-chip: #4D405C;    /* chips/tabs activos, badges */
+  --mist: #8A8494;         /* SOLO decoración: iconos, separadores (3,61:1) */
+  --mist-ink: #6F6879;     /* texto secundario y placeholders (5,34:1 sobre blanco) */
+  --danger: #C0392B;       /* errores (5,44:1 sobre blanco) */
+  --surface: #FFFFFF;
+  --comm-bg: #FDF3E9;      /* fondo crema pálido de comunidad */
+
+  /* — Orbe — */
+  --orb-peach: #F8E2D1;
+  --orb-lavender: #D4D0EF;
+  --orb-blue: #CFECF9;
+  --orb-lilac: #D3CEF0;
+
+  /* — Tipografía — */
+  --font-ui: 'General Sans', system-ui, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+
+  /* — Forma y sombra — */
+  --r-card: 20px;
+  --r-input: 16px;
+  --r-cta: 15px;
+  --shadow-soft: 0 8px 24px rgba(65, 54, 83, 0.10);
+  --shadow-card: 0 10px 30px rgba(65, 54, 83, 0.12);
+
+  /* — Liquid Glass (iOS 26) — */
+  --glass-bg: rgba(255, 255, 255, 0.42);
+  --glass-bg-strong: rgba(255, 255, 255, 0.58);
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-blur: 22px;
+  --glass-dark-bg: rgba(77, 64, 92, 0.60);
+  --glass-dark-border: rgba(255, 255, 255, 0.28);
+  /* sombra exterior + reflejo especular superior + brillo inferior sutil */
+  --glass-shadow: 0 8px 24px rgba(65, 54, 83, 0.14),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.78),
+                  inset 0 -1px 0 rgba(255, 255, 255, 0.20);
+}
+
+.font-satoshi { --font-ui: 'Satoshi', system-ui, sans-serif; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-ui);
+  color: var(--plum);
+  background: #F5F2F8;
+  min-height: 100vh;
+}
+
+/* ============ Fondos degradados canónicos ============ */
+.bg-radial {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 47%, var(--cream) 0%, rgba(255,241,221,0.55) 45%, rgba(255,241,221,0) 72%),
+    linear-gradient(180deg, var(--sky) 0%, #D2DEF4 50%, var(--sky) 100%);
+}
+.bg-warm   { background: linear-gradient(180deg, var(--cream) 0%, #F8EDDE 55%, var(--sky-soft) 100%); }
+.bg-cool   { background: linear-gradient(180deg, var(--sky-soft) 0%, #F8EDDE 45%, var(--cream) 100%); }
+.bg-home   { background: linear-gradient(180deg, var(--cream-bg) 0%, var(--peach-mid) 55%, var(--peach) 100%); }
+.bg-story  { background: linear-gradient(180deg, var(--cream) 0%, var(--peach-mid) 60%, var(--peach) 100%); }
+.bg-comm   { background: var(--comm-bg); }
+
+/* ============ El Orbe (isotipo) ============
+   UNA SOLA FUENTE DE VERDAD. Todo lo que simule el isotipo —splash, marca de
+   agua del story, tab Orar, estados vacíos— comparte esta pila de degradados
+   y esta respiración. El isotipo nunca es naranja: el naranja vive solo en el
+   CTA, el acento, el progress y el indicador de pestaña activa. */
+.orb, .orb-tab {
+  position: relative;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 22%, var(--orb-peach) 0%, rgba(248,226,209,0) 42%),
+    radial-gradient(circle at 22% 45%, var(--orb-lavender) 0%, rgba(212,208,239,0) 55%),
+    radial-gradient(circle at 78% 45%, var(--orb-lilac) 0%, rgba(211,206,240,0) 55%),
+    radial-gradient(circle at 50% 82%, var(--orb-blue) 0%, rgba(207,236,249,0) 60%),
+    radial-gradient(circle at 50% 50%, #EDE6F6 0%, #BFC3EF 100%);
+  animation: orb-breathe 4.2s ease-in-out infinite;
+}
+.orb {
+  width: 120px; height: 120px;
+  box-shadow:
+    0 0 40px 10px rgba(255, 231, 195, 0.55),
+    inset 0 0 22px 6px rgba(255, 255, 255, 0.35);
+  display: flex; align-items: center; justify-content: center;
+}
+.orb::after {
+  content: '';
+  position: absolute; inset: -18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,231,195,0.45) 30%, rgba(255,231,195,0) 70%);
+  animation: orb-glow 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.055); }
+}
+@keyframes orb-glow {
+  0%, 100% { opacity: .7; }
+  50%       { opacity: 1; }
+}
+.orb .wordmark { position: relative; z-index: 1; }
+
+/* Wordmark ammen */
+.wordmark {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--plum);
+}
+.wordmark.on-dark { color: rgba(255,255,255,0.92); }
+
+/* ============ Marco de teléfono ============ */
+.phone {
+  width: 390px; height: 844px;
+  border-radius: 54px;
+  border: 11px solid #241f2e;
+  overflow: hidden;
+  position: relative;
+  background: var(--cream);
+  box-shadow: 0 24px 60px rgba(36, 31, 46, 0.35);
+  flex-shrink: 0;
+}
+.screen {
+  position: absolute; inset: 0;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.screen.active { display: flex; }
+.screen-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.screen-scroll::-webkit-scrollbar { display: none; }
+
+.statusbar {
+  height: 54px; flex-shrink: 0;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 28px 6px;
+  font-size: 15px; font-weight: 600; color: var(--plum);
+  position: relative; z-index: 5;
+}
+.statusbar .right { letter-spacing: 2px; font-size: 13px; }
+.home-indicator {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  width: 135px; height: 5px; border-radius: 3px; background: rgba(36,31,46,0.85);
+  z-index: 9;
+}
+
+/* ============ Componentes ============ */
+
+/* CTA gradiente */
+.btn-cta {
+  display: block; width: 100%;
+  padding: 17px 24px;
+  border: none; border-radius: var(--r-cta);
+  background: linear-gradient(90deg, var(--ember) 0%, var(--ember-pale) 100%);
+  /* El label es plum, no blanco: sobre este degradado el blanco daba 2,0:1 al
+     inicio y 1,3:1 al final. Plum da 5,6:1 y 8,8:1. */
+  color: var(--plum); font-family: var(--font-ui); font-size: 18px; font-weight: 600;
+  text-align: center; cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: transform .12s ease;
+}
+.btn-cta:active { transform: scale(.98); }
+
+/* Botón secundario blanco */
+.btn-white {
+  display: block; width: 100%;
+  padding: 17px 24px;
+  border: none; border-radius: var(--r-cta);
+  background: var(--surface); color: var(--plum);
+  font-family: var(--font-ui); font-size: 18px; font-weight: 500;
+  text-align: center; cursor: pointer;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Pill button pequeña (Explanation +, Share) */
+.btn-pill {
+  display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+  padding: 13px 22px;
+  border: none; border-radius: 13px;
+  background: var(--surface); color: var(--plum);
+  font-family: var(--font-ui); font-size: 15px; font-weight: 500;
+  cursor: pointer; box-shadow: var(--shadow-soft);
+}
+
+/* Chip oscuro (Request prayer, tabs activos) */
+.chip-dark {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 9px;
+  background: var(--plum-chip); color: #fff;
+  font-size: 12.5px; font-weight: 500;
+  border: none; cursor: pointer;
+}
+
+/* Input */
+.input {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  border: none; border-radius: var(--r-input);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-ui); font-size: 17px; color: var(--plum);
+}
+.input input {
+  border: none; outline: none; background: none; flex: 1;
+  font-family: inherit; font-size: inherit; color: inherit;
+}
+.input input::placeholder { color: var(--mist-ink); }
+.input .ico { color: var(--plum); opacity: .75; flex-shrink: 0; }
+
+/* Card */
+.card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+}
+
+/* Tabs segmentadas pill */
+.seg {
+  display: flex; gap: 8px;
+}
+.seg button {
+  flex: 1;
+  padding: 11px 10px;
+  border: none; border-radius: 11px;
+  background: var(--surface); color: var(--plum);
+  font-family: var(--font-ui); font-size: 14px; font-weight: 500;
+  cursor: pointer; box-shadow: var(--shadow-soft);
+  white-space: nowrap;
+}
+.seg button.on { background: var(--plum-chip); color: #fff; }
+
+/* Wheel selector (onboarding) */
+.wheel { display: flex; flex-direction: column; gap: 10px; align-items: stretch; text-align: center; }
+.wheel .opt {
+  padding: 15px 20px; border: none; background: none;
+  font-family: var(--font-ui); font-size: 19px; color: var(--mist-ink);
+  cursor: pointer; border-radius: 15px;
+}
+.wheel .opt.on {
+  background: var(--surface); color: var(--plum);
+  font-weight: 600; font-size: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+/* Chips de selección múltiple */
+.chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.chips .chip {
+  padding: 11px 18px;
+  border: 1.5px solid rgba(65,54,83,0.18); border-radius: 999px;
+  background: rgba(255,255,255,0.55); color: var(--plum);
+  font-family: var(--font-ui); font-size: 15px; cursor: pointer;
+}
+.chips .chip.on {
+  background: var(--surface); border-color: var(--surface);
+  font-weight: 600; box-shadow: var(--shadow-soft);
+}
+
+/* Barra de progreso onboarding */
+.progress-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 20px 0;
+}
+.btn-back {
+  width: 46px; height: 46px; flex-shrink: 0;
+  border: none; border-radius: 13px;
+  background: var(--surface); color: var(--plum);
+  font-size: 19px; cursor: pointer; box-shadow: var(--shadow-soft);
+  display: flex; align-items: center; justify-content: center;
+}
+.progress-track {
+  flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.85);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--ember) 0%, var(--ember-pale) 100%);
+}
+.skip { color: var(--accent-ink); font-weight: 600; font-size: 15px; cursor: pointer; background: none; border: none; font-family: var(--font-ui); }
+
+/* Labels editoriales serif itálica */
+.label-serif {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 19px; color: var(--accent);
+}
+.label-serif.muted { color: var(--plum); opacity: .85; }
+
+/* Tab bar */
+.tabbar {
+  flex-shrink: 0;
+  background: var(--surface);
+  display: flex; align-items: stretch;
+  padding: 10px 8px 26px;
+  border-top: 1px solid rgba(65,54,83,0.06);
+  position: relative; z-index: 6;
+}
+.tabbar a {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  text-decoration: none; color: var(--plum); font-size: 10.5px; font-weight: 500;
+  padding-top: 6px; position: relative;
+}
+.tabbar a svg { width: 24px; height: 24px; stroke-width: 1.7; }
+.tabbar a.on { color: var(--accent); }
+.tabbar a.on::before {
+  content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  width: 34px; height: 3px; border-radius: 2px; background: var(--accent);
+}
+/* el tab Orar ES el isotipo, a escala: mismos degradados, misma respiración */
+.tabbar .orb-tab {
+  width: 26px; height: 26px;
+  box-shadow:
+    0 0 9px 2px rgba(255, 231, 195, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 0 5px 1px rgba(255, 255, 255, 0.35);
+}
+
+/* Bottom sheet */
+.sheet-veil {
+  position: absolute; inset: 0; background: rgba(65,54,83,0.35); z-index: 7;
+}
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 8;
+  background: var(--cream);
+  border-radius: 26px 26px 0 0;
+  padding: 26px 26px 46px;
+  box-shadow: 0 -12px 40px rgba(65,54,83,0.25);
+}
+.sheet .handle {
+  width: 44px; height: 4px; border-radius: 2px; background: rgba(65,54,83,0.25);
+  margin: 0 auto 18px;
+}
+
+/* Header de tab (saludo + wordmark) */
+.tab-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 24px 14px;
+  flex-shrink: 0; position: relative; z-index: 5;
+}
+.tab-header .greet { font-style: italic; font-size: 16.5px; font-weight: 500; }
+.tab-header .wordmark { font-size: 26px; }
+
+/* Avatares */
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--orb-lavender);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; color: var(--plum-chip); font-size: 17px;
+  flex-shrink: 0;
+}
+.avatar.tone2 { background: var(--orb-peach); }
+.avatar.tone3 { background: var(--orb-blue); }
+.avatar.tone4 { background: #EDE3CF; }
+.avatar-stack { display: flex; }
+.avatar-stack .avatar {
+  width: 26px; height: 26px; font-size: 11px;
+  border: 2px solid var(--surface); margin-left: -8px;
+}
+.avatar-stack .avatar:first-child { margin-left: 0; }
+
+/* Utilidades */
+.center { text-align: center; }
+.px { padding-left: 26px; padding-right: 26px; }
+.title-lg { font-size: 30px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
+.title-md { font-size: 23px; font-weight: 700; line-height: 1.25; }
+.sub { font-size: 16.5px; color: var(--plum); opacity: .8; line-height: 1.45; }
+.muted { color: var(--mist-ink); }
+.verse {
+  font-size: 25px; line-height: 1.42; font-weight: 500; letter-spacing: -0.01em;
+}
+.footer-wordmark {
+  text-align: center; padding: 18px 0 30px; flex-shrink: 0;
+  position: relative; z-index: 2;
+}
+.footer-wordmark .wordmark { font-size: 30px; }
+
+/* Fila de ajuste (perfil) */
+.row-link {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface); border-radius: var(--r-input);
+  padding: 19px 20px; box-shadow: var(--shadow-soft);
+  font-size: 17.5px; font-weight: 500; color: var(--plum);
+  cursor: pointer; border: none; width: 100%; font-family: var(--font-ui);
+  text-align: left;
+}
+.row-link .chev { font-size: 18px; font-weight: 700; }
+
+/* Burbuja de chat */
+.bubble {
+  max-width: 75%; padding: 12px 16px; border-radius: 18px;
+  font-size: 15px; line-height: 1.4;
+}
+.bubble.me   { background: var(--plum-chip); color: #fff; border-bottom-right-radius: 6px; align-self: flex-end; }
+.bubble.them { background: var(--surface); color: var(--plum); border-bottom-left-radius: 6px; align-self: flex-start; box-shadow: var(--shadow-soft); }
+
+/* ============ Página índice (hub) ============ */
+.hub { max-width: 1180px; margin: 0 auto; padding: 48px 32px 80px; }
+.hub h1 { font-size: 42px; letter-spacing: -0.02em; margin-bottom: 6px; }
+.hub h2 { font-size: 24px; margin: 48px 0 18px; }
+.hub p.lead { font-size: 17px; color: var(--plum); opacity: .75; max-width: 640px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 14px; }
+.swatch {
+  width: 150px; border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow-soft); background: var(--surface);
+}
+.swatch .c { height: 84px; }
+.swatch .t { padding: 10px 12px; font-size: 12.5px; }
+.swatch .t b { display: block; font-size: 13px; }
+.grid { display: flex; flex-wrap: wrap; gap: 28px; }
+.demo-tile {
+  background: var(--surface); border-radius: 20px; padding: 26px;
+  box-shadow: var(--shadow-soft); min-width: 300px; flex: 1;
+}
+.demo-tile h3 { font-size: 15px; margin-bottom: 16px; color: var(--mist); font-weight: 600; }
+.flow-links { display: flex; flex-wrap: wrap; gap: 12px; }
+.flow-links a {
+  padding: 14px 22px; border-radius: 13px; background: var(--plum-chip); color: #fff;
+  text-decoration: none; font-weight: 600; font-size: 15px;
+}
+.flow-links a.alt { background: var(--surface); color: var(--plum); box-shadow: var(--shadow-soft); }
+
+/* Galería de teléfonos */
+.stage {
+  display: flex; gap: 40px; align-items: flex-start; justify-content: center;
+  padding: 40px 20px 80px; flex-wrap: wrap;
+}
+.stage-nav {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  padding: 14px 20px; background: rgba(239,234,244,0.92); backdrop-filter: blur(8px);
+}
+.stage-nav .title { font-weight: 700; margin-right: 12px; }
+.stage-nav button, .stage-nav a {
+  padding: 8px 14px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--surface); color: var(--plum); font-family: var(--font-ui);
+  font-size: 13.5px; font-weight: 500; text-decoration: none;
+  box-shadow: var(--shadow-soft);
+}
+.stage-nav button.on { background: var(--plum-chip); color: #fff; }
+.stage-nav .home-link { background: none; box-shadow: none; font-weight: 700; }
+
+/* ============================================================
+   LIQUID GLASS (iOS 26) — capa de material aplicada por cascada
+   Todo el UI se vuelve vidrio esmerilado sobre los degradados;
+   el CTA naranja queda sólido para conservar jerarquía.
+   ============================================================ */
+
+.card, .input, .btn-white, .btn-pill, .row-link, .btn-back,
+.seg button, .chips .chip, .bubble.them, .progress-track {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* superficies que necesitan más cuerpo (lectura encima) */
+.card, .input, .row-link, .wheel .opt.on {
+  background: var(--glass-bg-strong);
+}
+.wheel .opt.on {
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* vidrio oscuro tintado: chips y pills activas */
+.chip-dark, .seg button.on {
+  background: var(--glass-dark-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  border: 1px solid var(--glass-dark-border);
+  box-shadow: 0 6px 18px rgba(65, 54, 83, 0.22),
+              inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+/* tab bar flotante translúcida */
+.tabbar {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  backdrop-filter: blur(28px) saturate(1.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 -6px 24px rgba(65, 54, 83, 0.10),
+              inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* bottom sheet de vidrio crema */
+.sheet {
+  background: rgba(255, 244, 228, 0.78);
+  -webkit-backdrop-filter: blur(30px) saturate(1.7);
+  backdrop-filter: blur(30px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-bottom: none;
+}
+
+/* el CTA sólido gana solo el reflejo especular */
+.btn-cta {
+  box-shadow: 0 8px 24px rgba(226, 112, 63, 0.26),
+              inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  border: none;
+}
+
+/* chips inactivas: vidrio más ligero */
+.chips .chip {
+  background: rgba(255, 255, 255, 0.30);
+}
+.chips .chip.on {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* track de progreso translúcido */
+.progress-track {
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 2px rgba(65, 54, 83, 0.10);
+  border: none;
+}
+
+/* el orbe gana un anillo de vidrio — también su versión de 26px del tab Orar */
+.orb, .orb-tab {
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+.orb {
+  box-shadow:
+    0 0 40px 10px rgba(255, 231, 195, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 0 22px 6px rgba(255, 255, 255, 0.35);
+}
+
+/* burbujas de chat propias: vidrio oscuro */
+.bubble.me {
+  background: var(--glass-dark-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  border: 1px solid var(--glass-dark-border);
+}
+
+/* paneles grandes de lectura (lector Biblia, oración) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.62);
+  -webkit-backdrop-filter: blur(26px) saturate(1.6);
+  backdrop-filter: blur(26px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 -10px 34px rgba(65, 54, 83, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}

@@ -1,16 +1,18 @@
 import { Redirect, useSegments } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { DawnBackground } from "@/components/DawnBackground";
+import { LoadingState } from "@/components/ScreenState";
 
 import { useSession } from "./SessionProvider";
 
-const Loading = () => (
-  <View className="flex-1 items-center justify-center bg-white">
-    <ActivityIndicator color="#0f172a" />
-  </View>
-);
+// Esta pantalla se quedó con los grises del scaffold hasta el rediseño, y no por
+// descuido: vive en `core/`, que Tailwind no escaneaba, así que cualquier clase
+// del tema que se escribiera aquí no llegaba a generarse nunca. Ahora `core/**`
+// entra en `content` y la pantalla puede usar lo mismo que las demás.
+const Loading = () => <LoadingState />;
 
 /**
  * Routes on session + onboarding state.
@@ -60,14 +62,17 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   // the client still believes in, a backend that is down at launch).
   if (onboardingFailed) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-white px-8">
+      <DawnBackground
+        variant="radial"
+        className="items-center justify-center gap-3 px-8"
+      >
         <Text
-          className="text-center text-xl font-bold text-slate-900"
+          className="text-center font-sans-bold text-xl text-plum"
           accessibilityRole="alert"
         >
           {t("common.errorTitle")}
         </Text>
-        <Text className="text-center text-base leading-6 text-slate-500">
+        <Text className="text-center font-sans text-base leading-6 text-mist-ink">
           {t("common.errorBody")}
         </Text>
         <View className="mt-4 w-full gap-3">
@@ -83,7 +88,7 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
             onPress={() => void signOut()}
           />
         </View>
-      </View>
+      </DawnBackground>
     );
   }
 

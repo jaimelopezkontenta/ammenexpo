@@ -1,67 +1,146 @@
 /** @type {import('tailwindcss').Config} */
 
 /**
- * Ammen — el sistema visual.
+ * Ammen — el sistema visual "Amanecer".
  *
- * `theme.extend` estuvo vacío hasta aquí, así que toda la app era el gris
- * pizarra por defecto de Tailwind sobre blanco puro, con la tipografía del
- * sistema. Para una app de oración eso no es sobrio: es clínico. Se lee como un
- * formulario.
+ * Sustituye al tema papel/tinta/arcilla, que era plano a propósito: un blanco
+ * roto y una sola tinta cálida. Funcionaba, pero no se parecía a nada. Este
+ * sale del montaje de diseño en `diseno/MONTAJE FINAL/JPG/` y del prototipo
+ * navegable de `prototipo/`, que es donde se aprobaron los valores.
  *
- * **Papel cálido, y una sola tinta.** El fondo no es blanco sino un blanco roto
- * templado; el texto no es negro sino una tinta cálida. La diferencia es
- * pequeña en el código y grande en pantalla: le quita el zumbido de pantalla
- * retroiluminada a una superficie donde la gente va a leer despacio.
+ * **El amanecer está despastelado ~40 %.** Los fondos del montaje eran naranjas
+ * plenos y en pantalla, sostenidos durante una lectura larga, cansaban. La
+ * referencia de tono aprobada es la pantalla de Círculos (`dawn.comm`). El
+ * naranja pleno queda reservado para lo que pide acción: el CTA, el acento, el
+ * relleno del progreso y el indicador de la pestaña activa.
  *
- * **Solo dos grises de texto, no tres.** El tercero que se suele añadir para
- * "menos importante" acaba siempre por debajo de 4.5:1 y se usa igual para
- * texto normal. Aquí la jerarquía la hacen el tamaño y el peso, y los dos
- * grises que hay están medidos: `ink-muted` da 6.21:1 sobre el papel y
- * `ink-soft` 5.02:1 — el segundo salió de subirlo hasta que pasara AA también
- * sobre el fondo hundido, que es el caso apretado: ahí da 4.60, y el candidato
- * anterior se quedaba en 4.47, que el navegador cazó por tres centésimas.
+ * **Dos tokens tienen pareja, y no es un descuido.** El acento y el gris de
+ * niebla vienen del diseño y ninguno de los dos llega a AA:
  *
- * `ink-soft` **no** vale sobre `clay-soft` (4.37): ese fondo es más claro que
- * los tres neutros. Sobre el acento va `ink-muted`, que da 5.41. Un cuarto gris
- * solo para ese caso sería justo el gris de más que este sistema evita.
+ *   ember.accent #E2703F sobre crema → 2,85:1 (ni el 3:1 de elemento no textual)
+ *   mist         #8A8494 sobre blanco → 3,61:1
+ *
+ * Así que los dos son **solo decoración** —labels grandes, iconos, bordes,
+ * indicadores— y el texto que hay que leer usa `ember.ink` (4,85:1 sobre crema)
+ * y `mist.ink` (5,34:1 sobre blanco, 4,80:1 sobre crema). El tema anterior ya
+ * tenía sus grises medidos a 5-6:1; esta app la lee gente mayor y lo que hace
+ * es leer, así que heredar un token bonito que no se ve habría sido una
+ * regresión disfrazada de rediseño.
+ *
+ * Por el mismo motivo **el label del CTA es plum y no blanco**: sobre el
+ * degradado melocotón el blanco daba 2,0:1 al principio y 1,3:1 al final. Plum
+ * da 5,6:1 y 8,8:1, y de paso se lee más editorial.
+ *
+ * `plum` sobre crema da 10,1:1 y sobre blanco 11,2:1 — el texto principal va
+ * sobrado en cualquier tamaño.
  *
  * Los colores viven aquí y no en las pantallas para que el modo oscuro, si
- * llega, sea una capa y no una reescritura.
+ * llega, sea una capa y no una reescritura. La referencia completa, con la
+ * tabla de contraste y las recetas de vidrio, está en `prototipo/TOKENS.md`.
  */
 module.exports = {
-  content: ["./app/**/*.{js,ts,tsx}", "./components/**/*.{js,ts,tsx}"],
+  // `core/` entra en el escaneo: `core/auth/AuthGate.tsx` pinta pantalla
+  // completa y se quedó con los estilos del scaffold justamente porque sus
+  // clases nunca se generaban.
+  content: [
+    "./app/**/*.{js,ts,tsx}",
+    "./components/**/*.{js,ts,tsx}",
+    "./core/**/*.{js,ts,tsx}",
+  ],
 
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
+        // Los fondos. No se usan sueltos casi nunca: van dentro de
+        // `DawnBackground`, que es quien conoce las paradas de cada degradado.
+        dawn: {
+          sky: "#C7D6F2",
+          "sky-soft": "#D8E1F1",
+          cream: "#FFF1DD",
+          "cream-bg": "#FFF6EA",
+          peach: "#F9DBBF",
+          "peach-mid": "#FCEBD8",
+          comm: "#FDF3E9",
+        },
+        ember: {
+          DEFAULT: "#F2A578",
+          pale: "#FBDFC2",
+          // Decoración. Nunca texto: 2,85:1 sobre crema.
+          accent: "#E2703F",
+          // El naranja que sí se lee: 4,85:1 sobre crema.
+          ink: "#B24A22",
+        },
+        plum: {
+          DEFAULT: "#413653",
+          chip: "#4D405C",
+        },
+        mist: {
+          // Decoración. Nunca texto: 3,61:1 sobre blanco.
+          DEFAULT: "#8A8494",
+          // Texto secundario y placeholders: 5,34:1 sobre blanco.
+          ink: "#6F6879",
+        },
+        surface: "#FFFFFF",
+        // Los errores estaban en `red-400`/`red-500` sueltos, que es como no
+        // tenerlos. 5,44:1 sobre blanco y 4,89:1 sobre crema.
+        danger: "#C0392B",
+
+        // ————————————————————————————————————————————————————————————
+        // TEMPORAL. El tema anterior, apuntando al nuevo.
+        //
+        // El rediseño va pantalla a pantalla, y NativeWind **descarta en
+        // silencio** una clase que no existe: sin estos alias, las cuarenta y
+        // siete rutas se quedarían con el texto en negro del navegador y sin
+        // fondo de tarjeta hasta que les tocara el turno, y ningún commit
+        // intermedio se podría enseñar ni depurar.
+        //
+        // Se borran en la última fase, cuando `grep -r "paper\|ink-\|clay"`
+        // sobre `app/`, `components/` y `core/` no devuelva nada.
+        // ————————————————————————————————————————————————————————————
         paper: {
-          DEFAULT: "#FBF8F4",
+          DEFAULT: "#FFF6EA",
           raised: "#FFFFFF",
-          sunken: "#F3EEE7",
+          sunken: "#FCEBD8",
         },
         ink: {
-          DEFAULT: "#1C1917",
-          muted: "#635C55",
-          soft: "#726A62",
-          line: "#E6DFD5",
+          DEFAULT: "#413653",
+          muted: "#6F6879",
+          soft: "#6F6879",
+          line: "#E3DCEA",
         },
-        // Barro, no azul corporativo. Se reserva para lo que de verdad pide
-        // atención —la acción del día, la racha— y no para cada botón: un
-        // acento en todas partes deja de ser un acento.
         clay: {
-          DEFAULT: "#8C5A3C",
-          deep: "#7A4C31",
-          soft: "#F3E7DC",
+          DEFAULT: "#B24A22",
+          deep: "#933C1B",
+          soft: "#FBDFC2",
         },
       },
       fontFamily: {
-        // Para el versículo, la oración y el testimonio: lo que se lee
-        // despacio. La navegación y los botones se quedan con la tipografía del
-        // sistema, que es la que mejor se comporta en cada plataforma y no
-        // cuesta un solo byte.
+        // General Sans lleva toda la interfaz. Es la sustituta libre de Aeonik,
+        // que es comercial.
+        sans: ["GeneralSans-Regular"],
+        "sans-medium": ["GeneralSans-Medium"],
+        "sans-semibold": ["GeneralSans-Semibold"],
+        "sans-bold": ["GeneralSans-Bold"],
+        // Cormorant itálica es para lo editorial y nada más: el wordmark, los
+        // labels ("Versículo del día") y las referencias. Nunca un párrafo.
+        editorial: ["CormorantGaramond_400Regular_Italic"],
+        // **Lora se queda.** Es la serif de lo que se lee despacio —el
+        // versículo, la oración, el testimonio, el capítulo entero— y Cormorant
+        // Light, que es preciosa en un label, es demasiado fina para eso.
         serif: ["Lora_400Regular"],
         "serif-bold": ["Lora_600SemiBold"],
+      },
+      boxShadow: {
+        soft: "0 8px 24px rgba(65, 54, 83, 0.10)",
+        card: "0 10px 30px rgba(65, 54, 83, 0.12)",
+      },
+      borderRadius: {
+        // Los radios del sistema, para no repetir el número en cada pantalla.
+        card: "20px",
+        input: "16px",
+        cta: "15px",
+        chip: "9px",
       },
       lineHeight: {
         // Medida generosa para las dos pantallas donde se lee de verdad: el día

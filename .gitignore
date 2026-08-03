@@ -23,3 +23,9 @@ android
 # Temporary files created by Metro to check the health of the file watcher
 .metro-health-check*
 dist-test/
+
+# El montaje de diseño: 1,8 GB de JPG, PDF y ficheros de Illustrator, y dentro
+# van Aeonik e ITC Garamond, que son comerciales y no se pueden redistribuir.
+# Es la referencia visual del rediseño y vive en local; lo que sí está versionado
+# es `prototipo/`, que es donde los valores quedaron decididos y medidos.
+diseno/

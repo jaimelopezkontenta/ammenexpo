@@ -83,7 +83,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="twitter:description" content={SOCIAL_DESCRIPTION} />
         <meta name="twitter:image" content={`${SOCIAL_URL}/og.png`} />
         <meta name="description" content={SOCIAL_DESCRIPTION} />
-        <meta name="theme-color" content="#FBF8F4" />
+        <meta name="theme-color" content="#FFF6EA" />
         <title>{SOCIAL_TITLE}</title>
 
         <ScrollViewStyleReset />
@@ -97,14 +97,14 @@ export default function Root({ children }: { children: React.ReactNode }) {
   );
 }
 
-// El papel cálido del tema, y no el blanco del scaffold: en web el `body`
-// asoma por los bordes y en el arranque, así que dejarlo en #fff dejaba una
-// costura blanca alrededor de una app que ya no es blanca.
+// La crema del amanecer, y no el blanco del scaffold: en web el `body` asoma
+// por los bordes y en el arranque, así que dejarlo en #fff dejaba una costura
+// blanca alrededor de una app que ya no es blanca.
 //
 // Sin rama de modo oscuro: la app todavía no lo tiene, y pintar el fondo de
 // negro debajo de pantallas claras da un destello negro al cargar, que es peor
 // que no tenerlo.
 const responsiveBackground = `
 body {
-  background-color: #FBF8F4;
+  background-color: #FFF6EA;
 }`;

@@ -43,14 +43,14 @@ export const VerseCard = forwardRef<
         // píxeles de margen es un choque esperando a una métrica ligeramente
         // distinta.
         gap: size * 0.05,
-        backgroundColor: "#FBF8F4",
+        backgroundColor: "#FFF1DD",
       }}
       className="justify-between"
     >
       <View className="flex-1 justify-center">
         <Text
           style={{ fontSize, lineHeight: fontSize * 1.45 }}
-          className="font-serif text-ink"
+          className="font-serif text-plum"
         >
           {text}
         </Text>
@@ -59,7 +59,7 @@ export const VerseCard = forwardRef<
       <View className="flex-row items-end justify-between">
         <Text
           style={{ fontSize: 30 * scale }}
-          className="font-serif-bold text-clay"
+          className="font-serif-bold text-ember-ink"
         >
           {reference}
         </Text>
@@ -70,7 +70,10 @@ export const VerseCard = forwardRef<
             WhatsApp, la ve gente que no tiene la app, y hasta aquí el pie decía
             un nombre y ningún sitio al que ir. Es la unidad viral más pura que
             tiene el producto y no llevaba destino. */}
-        <Text style={{ fontSize: 24 * scale }} className="text-ink-soft">
+        <Text
+          style={{ fontSize: 24 * scale }}
+          className="font-sans text-mist-ink"
+        >
           ammen.app · Reina-Valera 1909
         </Text>
       </View>

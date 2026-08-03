@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "web"],
       "port": 8081
+    },
+    {
+      "name": "prototipo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "prototipo", "-l", "4173", "--no-clipboard"],
+      "port": 4173
     }
   ]
 }

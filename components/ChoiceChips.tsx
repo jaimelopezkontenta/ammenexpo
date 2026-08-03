@@ -54,15 +54,19 @@ export const ChoiceChips = ({
             disabled={isDisabled}
             accessibilityLabel={option.label}
             onPress={() => onToggle(option.value)}
+            // Elegida: pill de vidrio oscuro. Sin elegir: vidrio claro sobre el
+            // degradado, que es el patrón del wheel-selector del diseño.
             className={`rounded-full border px-4 py-2.5 ${
               isSelected
-                ? "border-ink bg-ink"
-                : "border-ink-line bg-paper-raised"
+                ? "border-white/30 bg-plum-chip"
+                : "border-white/60 bg-white/60"
             } ${isDisabled ? "opacity-40" : ""}`}
           >
             <Text
               className={
-                isSelected ? "font-semibold text-paper" : "text-ink-muted"
+                isSelected
+                  ? "font-sans-semibold text-white"
+                  : "font-sans text-plum"
               }
             >
               {option.label}

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen · Splash y Acceso</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="stage-nav">
+  <a class="home-link" href="index.html">← Sistema</a>
+  <span class="title">1 · Splash y Acceso</span>
+  <button data-go="splash" class="on">Splash</button>
+  <button data-go="entrar">Entrar</button>
+  <button data-go="crear">Crear cuenta</button>
+  <button data-go="recuperar">Recuperar</button>
+  <button data-go="nueva">Nueva contraseña</button>
+  <a href="onboarding.html">Siguiente flujo →</a>
+</div>
+
+<div class="stage">
+<div class="phone">
+
+  <!-- SPLASH -->
+  <div class="screen active bg-radial" data-id="splash" data-go="entrar" style="cursor:pointer">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center">
+      <div class="orb" style="width:150px;height:150px">
+        <span class="wordmark" style="font-size:26px">ammen</span>
+      </div>
+    </div>
+    <p class="center muted" style="padding-bottom:60px;font-size:12px;position:relative;z-index:2">(toca para continuar)</p>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- ENTRAR -->
+  <div class="screen bg-radial" data-id="entrar">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="screen-scroll px" style="display:flex;flex-direction:column;justify-content:center;gap:0">
+      <div class="center" style="margin-bottom:34px">
+        <p class="title-lg">Bienvenido de vuelta</p>
+        <p class="sub" style="margin-top:8px">Nos alegra verte de nuevo.</p>
+      </div>
+      <label class="input"><i data-ico="mail" data-size="19" class="ico"></i><input placeholder="tu@correo.com" value="jaime.lopez@gmail.com"></label>
+      <div style="height:14px"></div>
+      <label class="input"><i data-ico="lock" data-size="19" class="ico"></i><input type="password" value="············"><i data-ico="eye" data-size="19" class="ico"></i></label>
+      <p style="text-align:right;margin-top:12px"><a class="skip" data-go="recuperar" style="font-size:14.5px;text-decoration:none;cursor:pointer">¿Olvidaste tu contraseña?</a></p>
+      <div style="height:22px"></div>
+      <button class="btn-cta" data-go="splash">Entrar</button>
+      <div class="center" style="margin:26px 0 14px"><span class="muted" style="font-size:14.5px">o continúa con</span></div>
+      <div style="display:flex;gap:12px">
+        <button class="btn-white" style="font-size:15px;padding:14px">Google</button>
+        <button class="btn-white" style="font-size:15px;padding:14px"> Apple</button>
+      </div>
+      <p class="center" style="margin-top:26px;font-size:15px">¿No tienes cuenta? <b data-go="crear" style="cursor:pointer">Crear cuenta</b></p>
+    </div>
+    <div class="footer-wordmark">
+      <span class="wordmark" style="font-size:26px">ammen</span>
+      <p class="muted" style="font-size:11.5px;margin-top:4px">Al entrar aceptas los Términos de uso<br>y la Política de privacidad.</p>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- CREAR CUENTA -->
+  <div class="screen bg-radial" data-id="crear">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="screen-scroll px" style="display:flex;flex-direction:column;justify-content:center">
+      <div class="center" style="margin-bottom:34px">
+        <p class="title-lg">Crea tu cuenta</p>
+        <p class="sub" style="margin-top:8px">Únete y deja que otros oren contigo.</p>
+      </div>
+      <label class="input"><i data-ico="mail" data-size="19" class="ico"></i><input placeholder="tu@correo.com"></label>
+      <div style="height:14px"></div>
+      <label class="input"><i data-ico="lock" data-size="19" class="ico"></i><input placeholder="Mínimo 8 caracteres" type="password"></label>
+      <div style="height:26px"></div>
+      <button class="btn-cta" data-go="splash">Crear cuenta</button>
+      <p class="center" style="margin-top:26px;font-size:15px">¿Ya tienes cuenta? <b data-go="entrar" style="cursor:pointer">Entrar</b></p>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- RECUPERAR -->
+  <div class="screen bg-radial" data-id="recuperar">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row"><button class="btn-back" data-go="entrar">‹</button><div></div><div></div></div>
+    <div class="screen-scroll px" style="display:flex;flex-direction:column;justify-content:center">
+      <div class="center" style="margin-bottom:34px">
+        <p class="title-lg">¿Olvidaste tu<br>contraseña?</p>
+        <p class="sub" style="margin-top:8px">Te enviaremos un enlace para crear una nueva.</p>
+      </div>
+      <label class="input"><i data-ico="mail" data-size="19" class="ico"></i><input placeholder="tu@correo.com"></label>
+      <div style="height:26px"></div>
+      <button class="btn-cta" data-go="nueva">Enviar enlace</button>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- NUEVA CONTRASEÑA -->
+  <div class="screen bg-radial" data-id="nueva">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="screen-scroll px" style="display:flex;flex-direction:column;justify-content:center">
+      <div class="center" style="margin-bottom:34px">
+        <p class="title-lg">Crea una nueva<br>contraseña</p>
+      </div>
+      <label class="input"><i data-ico="lock" data-size="19" class="ico"></i><input placeholder="Mínimo 8 caracteres" type="password"></label>
+      <div style="height:14px"></div>
+      <label class="input"><i data-ico="lock" data-size="19" class="ico"></i><input placeholder="Repítela" type="password"></label>
+      <div style="height:26px"></div>
+      <button class="btn-cta" data-go="entrar">Guardar</button>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

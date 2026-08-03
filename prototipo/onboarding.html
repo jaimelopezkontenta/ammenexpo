@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen · Onboarding</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="stage-nav">
+  <a class="home-link" href="index.html">← Sistema</a>
+  <span class="title">2 · Onboarding</span>
+  <button data-go="bienvenida" class="on">Bienvenida</button>
+  <button data-go="nombre">Nombre</button>
+  <button data-go="etapa">Etapa</button>
+  <button data-go="temas">Temas</button>
+  <button data-go="hora">Hora</button>
+  <button data-go="solo">No camines solo</button>
+  <a href="hoy.html">Siguiente flujo →</a>
+</div>
+
+<div class="stage">
+<div class="phone">
+
+  <!-- BIENVENIDA -->
+  <div class="screen active bg-warm" data-id="bienvenida">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back">‹</button>
+      <div class="progress-track"><div class="progress-fill" style="width:10%"></div></div>
+      <button class="skip" data-go="solo">Saltar</button>
+    </div>
+    <div class="screen-scroll px center" style="display:flex;flex-direction:column;justify-content:center;gap:18px">
+      <div style="display:flex;justify-content:center;margin-bottom:10px">
+        <svg viewBox="0 0 24 24" width="72" height="72" fill="none" stroke="var(--plum)" stroke-width="1.1" stroke-linecap="round"><path d="M12 3.5c1.4 2.8 1.4 5.6 0 8.4m0-8.4c-1.4 2.8-1.4 5.6 0 8.4M7 20c1-3.8 2.6-6 5-8.1 2.4 2.1 4 4.3 5 8.1zM5.5 6.5l-1.6-1m3.3-1.2-.8-1.8m11.7 4 1.6-1m-3.3-1.2.8-1.8"/></svg>
+      </div>
+      <p class="title-lg">Bienvenido, James</p>
+      <p class="sub" style="font-size:19px">Este es tu espacio para<br>pausar, orar y crecer.</p>
+      <p class="sub" style="font-size:19px">No caminas solo<br>este camino.</p>
+      <div style="height:8px"></div>
+      <button class="btn-cta" data-go="nombre">Continuar</button>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- NOMBRE -->
+  <div class="screen bg-warm" data-id="nombre">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="bienvenida">‹</button>
+      <div class="progress-track"><div class="progress-fill" style="width:30%"></div></div>
+      <button class="skip" data-go="solo">Saltar</button>
+    </div>
+    <div class="screen-scroll px center" style="display:flex;flex-direction:column;justify-content:center;gap:24px">
+      <p class="title-lg">¿Cómo quieres que<br>te llamemos?</p>
+      <label class="input" style="text-align:center"><input placeholder="Tu nombre" style="text-align:center" value="James"></label>
+      <button class="btn-cta" data-go="etapa">Siguiente</button>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- ETAPA (wheel) -->
+  <div class="screen bg-warm" data-id="etapa">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="nombre">‹</button>
+      <div class="progress-track"><div class="progress-fill" style="width:52%"></div></div>
+      <button class="skip" data-go="solo">Saltar</button>
+    </div>
+    <div class="screen-scroll px center" style="display:flex;flex-direction:column;justify-content:center;gap:30px">
+      <p class="title-lg">¿Qué estás viviendo<br>ahora mismo?</p>
+      <div class="wheel">
+        <button class="opt">Ansiedad</button>
+        <button class="opt">Trabajo</button>
+        <button class="opt on" data-go="temas">Una decisión importante</button>
+        <button class="opt">Familia</button>
+        <button class="opt">Gratitud</button>
+      </div>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- TEMAS (chips) -->
+  <div class="screen bg-warm" data-id="temas">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="etapa">‹</button>
+      <div class="progress-track"><div class="progress-fill" style="width:74%"></div></div>
+      <button class="skip" data-go="solo">Saltar</button>
+    </div>
+    <div class="screen-scroll px center" style="display:flex;flex-direction:column;justify-content:center;gap:26px">
+      <div>
+        <p class="title-lg">¿Por qué te gustaría<br>orar?</p>
+        <p class="sub" style="margin-top:8px">Elige los que quieras.</p>
+      </div>
+      <div class="chips">
+        <button class="chip on">Paz interior</button>
+        <button class="chip">Mi pareja</button>
+        <button class="chip on">Sabiduría</button>
+        <button class="chip">Salud</button>
+        <button class="chip">Mis hijos</button>
+        <button class="chip on">Confiar en Dios</button>
+        <button class="chip">Gratitud</button>
+        <button class="chip">Perdón</button>
+      </div>
+      <button class="btn-cta" data-go="hora">Siguiente</button>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- HORA (wheel) -->
+  <div class="screen bg-warm" data-id="hora">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="temas">‹</button>
+      <div class="progress-track"><div class="progress-fill" style="width:90%"></div></div>
+      <button class="skip" data-go="solo">Saltar</button>
+    </div>
+    <div class="screen-scroll px center" style="display:flex;flex-direction:column;justify-content:center;gap:30px">
+      <p class="title-lg">¿A qué hora sueles<br>orar?</p>
+      <div class="wheel">
+        <button class="opt">Al despertar</button>
+        <button class="opt on" data-go="solo">Por la mañana</button>
+        <button class="opt">Al mediodía</button>
+        <button class="opt">Por la noche</button>
+      </div>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- NO CAMINES SOLO -->
+  <div class="screen bg-warm" data-id="solo">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="hora">‹</button>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+      <span style="width:46px"></span>
+    </div>
+    <div class="screen-scroll px center" style="display:flex;flex-direction:column;justify-content:center;gap:20px">
+      <p class="title-lg">No camines solo</p>
+      <p class="sub" style="font-size:21px;font-weight:500">La fe crece más fuerte<br>en comunidad.</p>
+      <p class="sub">Invita a tus amigos a orar, apoyarte<br>y creer contigo.</p>
+      <div style="height:6px"></div>
+      <button class="btn-cta">Invitar amigos</button>
+      <button class="btn-white" data-go="bienvenida">Ahora no</button>
+    </div>
+    <div class="footer-wordmark"><span class="wordmark" style="font-size:26px">ammen</span></div>
+    <div class="home-indicator"></div>
+  </div>
+
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

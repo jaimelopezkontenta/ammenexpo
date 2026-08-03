@@ -36,9 +36,9 @@ const HeaderIcons = () => {
           }
           className="pl-5 pr-3"
         >
-          <FontAwesome name="bell-o" size={20} color="#1C1917" />
+          <FontAwesome name="bell-o" size={20} color="#413653" />
           {unread ? (
-            <View className="absolute right-2 top-0 h-2.5 w-2.5 rounded-full bg-clay" />
+            <View className="absolute right-2 top-0 h-2.5 w-2.5 rounded-full bg-ember-accent" />
           ) : null}
         </Pressable>
       </Link>
@@ -49,7 +49,7 @@ const HeaderIcons = () => {
           accessibilityLabel={t("community.title")}
           className="pl-3 pr-5"
         >
-          <FontAwesome name="users" size={20} color="#1C1917" />
+          <FontAwesome name="users" size={20} color="#413653" />
         </Pressable>
       </Link>
     </View>
@@ -71,16 +71,16 @@ export default function TabLayout() {
       screenOptions={{
         // Los mismos valores que el tema, escritos a mano porque las opciones
         // de navegación no pasan por NativeWind.
-        tabBarActiveTintColor: "#1C1917",
-        tabBarInactiveTintColor: "#726A62",
+        tabBarActiveTintColor: "#E2703F",
+        tabBarInactiveTintColor: "#413653",
         tabBarStyle: {
-          backgroundColor: "#FBF8F4",
-          borderTopColor: "#E6DFD5",
+          backgroundColor: "#FFF6EA",
+          borderTopColor: "rgba(255,255,255,0.65)",
         },
-        headerStyle: { backgroundColor: "#FBF8F4" },
+        headerStyle: { backgroundColor: "#FFF6EA" },
         headerShadowVisible: false,
-        headerTintColor: "#1C1917",
-        sceneStyle: { backgroundColor: "#FBF8F4" },
+        headerTintColor: "#413653",
+        sceneStyle: { backgroundColor: "#FFF6EA" },
         // En **todas** las pestañas, no solo en Hoy. Vivían en la cabecera de
         // Hoy, así que quien abría la app en Orar o en Círculos no se enteraba
         // nunca de que alguien había orado por él: el mecanismo de retorno del
@@ -119,7 +119,7 @@ export default function TabLayout() {
           // El punto de mensajes sin leer se pintaba **dentro** de la pantalla,
           // así que había que entrar para saber que había algo que ver.
           tabBarBadge: unreadTotal || undefined,
-          tabBarBadgeStyle: { backgroundColor: "#8C5A3C" },
+          tabBarBadgeStyle: { backgroundColor: "#E2703F" },
         }}
       />
       <Tabs.Screen

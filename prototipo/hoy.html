@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen · Hoy</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="stage-nav">
+  <a class="home-link" href="index.html">← Sistema</a>
+  <span class="title">3 · Hoy</span>
+  <button data-go="home" class="on">Home</button>
+  <button data-go="sheet">Tema (sheet)</button>
+  <button data-go="dia">Mi día</button>
+  <button data-go="orado">Ya oré</button>
+  <button data-go="generando">Generando</button>
+  <a href="biblia.html">Siguiente flujo →</a>
+</div>
+
+<div class="stage">
+<div class="phone">
+
+  <!-- HOME -->
+  <div class="screen active bg-cool" data-id="home">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="tab-header">
+      <div>
+        <p class="title-md">Hoy</p>
+        <p class="label-serif muted" style="font-size:15px">Buenos días, James</p>
+      </div>
+      <span class="wordmark">ammen</span>
+    </div>
+    <div class="screen-scroll px">
+      <div class="card" data-go="dia" style="cursor:pointer;background:var(--plum-chip);color:#fff;margin-top:6px">
+        <p style="font-size:13px;opacity:.7;font-weight:600">TU DÍA DE HOY · 4 DE 14</p>
+        <p style="font-size:19px;font-weight:600;margin-top:6px">Confiar cuando no veo el camino</p>
+        <p style="font-size:13.5px;margin-top:8px;opacity:.85">🔥 4 días de racha · toca para orar</p>
+      </div>
+      <div style="height:16px"></div>
+      <div class="card">
+        <p class="label-serif">Versículo del día</p>
+        <p style="font-size:19px;line-height:1.5;font-weight:500;margin-top:10px">"Confía en el Señor con todo tu corazón, y no te apoyes en tu propia prudencia."</p>
+        <p class="label-serif muted" style="font-size:15px;margin-top:10px">Proverbios 3: 5–6</p>
+        <div style="display:flex;gap:12px;margin-top:16px">
+          <button class="btn-pill" data-go="sheet" style="flex:1;padding:11px 14px">Explicación <i data-ico="plus" data-size="15"></i></button>
+          <button class="btn-pill" style="flex:1;padding:11px 14px">Compartir <i data-ico="share" data-size="15"></i></button>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="card">
+        <p class="label-serif">Tema central</p>
+        <p style="font-size:20px;font-weight:700;margin-top:6px">Confiar más que controlar</p>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="chips-chip chip-dark" style="flex:1;padding:12px 10px;border-radius:12px;font-size:13.5px" data-go="dia">Mis decisiones</button>
+          <button class="chip-dark" style="flex:1;padding:12px 10px;border-radius:12px;font-size:13.5px;background:var(--glass-bg-strong);color:var(--plum);border:1px solid var(--glass-border)">Mis relaciones</button>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+    <div class="tabbar">
+      <a class="on"><i data-ico="home"></i>Hoy</a>
+      <a href="biblia.html"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a href="comunidad.html"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- SHEET: explicación del tema -->
+  <div class="screen bg-cool" data-id="sheet">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="tab-header">
+      <div>
+        <p class="title-md">Hoy</p>
+        <p class="label-serif muted" style="font-size:15px">Buenos días, James</p>
+      </div>
+      <span class="wordmark">ammen</span>
+    </div>
+    <div class="screen-scroll px" style="filter:blur(2px);opacity:.6">
+      <div class="card" style="margin-top:6px">
+        <p class="label-serif">Versículo del día</p>
+        <p style="font-size:19px;line-height:1.5;font-weight:500;margin-top:10px">"Confía en el Señor con todo tu corazón…"</p>
+      </div>
+    </div>
+    <div class="sheet-veil" data-go="home" style="cursor:pointer"></div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <p class="title-md">Confiar más que controlar</p>
+      <p class="label-serif" style="font-size:16px;margin-top:2px">Tema central</p>
+      <div class="card" style="margin:16px 0;padding:16px;text-align:center">
+        <p style="font-weight:600;font-size:18px">Confiar a Dios mis decisiones</p>
+      </div>
+      <p style="font-size:15.5px;line-height:1.55"><b>Enfoque de oración:</b> invita a Dios a tus decisiones.</p>
+      <p style="font-size:15.5px;line-height:1.55;margin-top:10px"><b>Cómo practicarlo hoy:</b><br>
+      · Antes de decidir algo (grande o pequeño), haz una pausa y ora: "Señor, guía esta elección".<br>
+      · Pregúntate: ¿esto nace de la paz o del miedo?<br>
+      · Elige la paciencia antes que la prisa.</p>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- MI DÍA (DayView) -->
+  <div class="screen bg-warm" data-id="dia">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row">
+      <button class="btn-back" data-go="home">‹</button>
+      <div style="flex:1;text-align:center">
+        <p style="font-weight:600;font-size:15px">Día 4 de 14 · 🔥 4 días de racha</p>
+      </div>
+      <span style="width:46px"></span>
+    </div>
+    <div class="screen-scroll px" style="padding-top:16px;padding-bottom:20px">
+      <p class="title-lg center" style="font-family:var(--font-serif);font-style:italic;font-weight:500">Confiar cuando<br>no veo el camino</p>
+      <div style="height:22px"></div>
+      <div class="card">
+        <p class="label-serif" style="font-size:16px">Palabra</p>
+        <p style="font-size:18px;line-height:1.6;margin-top:8px">"Confía en el Señor con todo tu corazón, y no te apoyes en tu propia prudencia."</p>
+        <p class="label-serif muted" style="font-size:15px;margin-top:8px">Proverbios 3:5</p>
+      </div>
+      <div style="height:14px"></div>
+      <div class="card">
+        <p class="label-serif" style="font-size:16px">Qué significa</p>
+        <p style="font-size:15.5px;line-height:1.6;margin-top:8px;color:var(--plum)">Confiar no es entender el plan completo, sino dar el siguiente paso sabiendo quién sostiene el mapa. Hoy no necesitas todas las respuestas.</p>
+      </div>
+      <div style="height:14px"></div>
+      <div class="card" style="background:linear-gradient(135deg,rgba(255,246,233,.85),rgba(252,235,216,.85))">
+        <p class="label-serif" style="font-size:16px">Hoy haz esto</p>
+        <p style="font-size:15.5px;line-height:1.6;margin-top:8px">Escribe la decisión que más te pesa y, antes de darle más vueltas, entrégasela a Dios en una frase.</p>
+      </div>
+      <div style="height:14px"></div>
+      <div class="card">
+        <p class="label-serif" style="font-size:16px">Oración</p>
+        <p style="font-size:17px;line-height:1.65;margin-top:8px;font-style:italic">"Padre, tomo esta decisión contigo. Cambia mi ansiedad por confianza, y mi prisa por paz. Amén."</p>
+      </div>
+      <div style="height:20px"></div>
+      <button class="btn-cta" data-go="orado">Ya oré hoy</button>
+    </div>
+    <div class="tabbar">
+      <a class="on"><i data-ico="home"></i>Hoy</a>
+      <a href="biblia.html"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a href="comunidad.html"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- YA ORÉ -->
+  <div class="screen bg-warm" data-id="orado">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="screen-scroll px" style="padding-top:40px">
+      <div class="center">
+        <div style="display:flex;justify-content:center;margin-bottom:18px">
+          <div class="orb" style="width:104px;height:104px">
+            <i data-ico="check" data-size="34"></i>
+          </div>
+        </div>
+        <p class="title-lg">Oraste hoy 🙏</p>
+        <p class="sub" style="margin-top:8px">Día 4 de 14 · 🔥 4 días de racha</p>
+      </div>
+      <div style="height:30px"></div>
+      <p style="font-weight:600;font-size:15px;margin-bottom:12px">Oraron por ti hoy</p>
+      <div class="card" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+        <div class="avatar tone2">A</div>
+        <div>
+          <p style="font-weight:600;font-size:15.5px">Ana López</p>
+          <p style="font-size:14.5px;color:var(--mist);margin-top:2px">"Pedí paz para tu decisión. Un abrazo."</p>
+        </div>
+      </div>
+      <div class="card" style="display:flex;gap:12px;align-items:center">
+        <div class="avatar tone3">D</div>
+        <p style="font-weight:600;font-size:15.5px">David oró por tu día</p>
+      </div>
+      <div style="height:20px"></div>
+      <button class="btn-white" data-go="home">Volver a Hoy</button>
+    </div>
+    <div class="tabbar">
+      <a class="on"><i data-ico="home"></i>Hoy</a>
+      <a href="biblia.html"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a href="comunidad.html"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- GENERANDO -->
+  <div class="screen bg-radial" data-id="generando">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px" class="px center">
+      <div class="orb" style="width:130px;height:130px"></div>
+      <p class="title-md">Preparando tu plan…</p>
+      <p class="sub">Puede tardar un minuto. Puedes cerrar<br>la app; te esperará aquí.</p>
+      <button class="skip" data-go="home" style="font-size:15px">(ver home)</button>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

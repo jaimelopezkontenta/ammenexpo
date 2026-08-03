@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen · Biblia</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="stage-nav">
+  <a class="home-link" href="index.html">← Sistema</a>
+  <span class="title">4 · Biblia</span>
+  <button data-go="biblia" class="on">Inicio</button>
+  <button data-go="libros">Libros</button>
+  <button data-go="capitulos">Capítulos</button>
+  <button data-go="lector">Lector</button>
+  <a href="orar.html">Siguiente flujo →</a>
+</div>
+
+<div class="stage">
+<div class="phone">
+
+  <!-- BIBLIA INICIO -->
+  <div class="screen active bg-cool" data-id="biblia">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="tab-header">
+      <div>
+        <p class="title-md">Biblia</p>
+        <p class="label-serif muted" style="font-size:15px">Reina-Valera 1909</p>
+      </div>
+      <span class="wordmark">ammen</span>
+    </div>
+    <div class="screen-scroll px">
+      <label class="input" style="margin-top:6px"><i data-ico="search" data-size="19" class="ico"></i><input placeholder="Buscar una palabra o una cita"></label>
+      <div style="height:16px"></div>
+      <div class="card" data-go="lector" style="cursor:pointer;background:var(--plum-chip);color:#fff">
+        <p style="font-size:13px;opacity:.7;font-weight:600">CONTINUAR LEYENDO</p>
+        <p style="font-size:19px;font-weight:600;margin-top:6px">Proverbios 3</p>
+      </div>
+      <div style="height:16px"></div>
+      <div class="card">
+        <p class="label-serif">Versículo del día</p>
+        <p style="font-size:17px;line-height:1.55;margin-top:8px">"Confía en el Señor con todo tu corazón, y no te apoyes en tu propia prudencia."</p>
+        <p class="label-serif muted" style="font-size:15px;margin-top:8px">Proverbios 3: 5–6</p>
+      </div>
+      <div style="height:18px"></div>
+      <button class="btn-white" data-go="libros" style="text-align:left;display:flex;justify-content:space-between"><span>Antiguo Testamento</span><span>›</span></button>
+      <div style="height:10px"></div>
+      <button class="btn-white" data-go="libros" style="text-align:left;display:flex;justify-content:space-between"><span>Nuevo Testamento</span><span>›</span></button>
+      <div style="height:20px"></div>
+    </div>
+    <div class="tabbar">
+      <a href="hoy.html"><i data-ico="home"></i>Hoy</a>
+      <a class="on"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a href="comunidad.html"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- LIBROS -->
+  <div class="screen bg-cool" data-id="libros">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="center" style="padding:6px 0 10px"><span class="wordmark" style="font-size:24px">ammen</span><p class="label-serif muted" style="font-size:15px">Libros</p></div>
+    <div class="screen-scroll px" style="padding-top:4px">
+      <div class="card" style="padding:16px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between" data-go="capitulos">
+          <p style="font-size:17px;font-weight:600;letter-spacing:.04em">GÉNESIS <span class="chip-dark" style="padding:3px 9px;margin-left:6px">2</span></p>
+          <span style="cursor:pointer">⌄</span>
+        </div>
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:10px;display:flex;justify-content:space-between"><p style="font-size:17px;font-weight:600;letter-spacing:.04em">ÉXODO</p><span>⌄</span></div>
+      <div class="card" style="padding:16px;margin-bottom:10px;display:flex;justify-content:space-between"><p style="font-size:17px;font-weight:600;letter-spacing:.04em">LEVÍTICO</p><span>⌄</span></div>
+      <div class="card" style="padding:16px;margin-bottom:10px;display:flex;justify-content:space-between"><p style="font-size:17px;font-weight:600;letter-spacing:.04em">NÚMEROS</p><span>⌄</span></div>
+      <div class="card" style="padding:16px;margin-bottom:10px;display:flex;justify-content:space-between"><p style="font-size:17px;font-weight:600;letter-spacing:.04em">DEUTERONOMIO</p><span>⌄</span></div>
+      <div class="card" style="padding:16px;margin-bottom:10px;display:flex;justify-content:space-between"><p style="font-size:17px;font-weight:600;letter-spacing:.04em">JOSUÉ</p><span>⌄</span></div>
+    </div>
+    <div style="flex-shrink:0;padding:10px 26px 40px">
+      <div class="seg">
+        <button class="on" style="font-weight:700">Antiguo Testamento</button>
+        <button>Nuevo Testamento</button>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- CAPÍTULOS -->
+  <div class="screen bg-cool" data-id="capitulos">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row" style="padding-top:6px">
+      <button class="btn-back" data-go="libros">‹</button>
+      <div style="flex:1;text-align:center"><p style="font-weight:700;font-size:17px;letter-spacing:.04em">PROVERBIOS</p></div>
+      <span class="chip-dark">RV</span>
+    </div>
+    <div class="screen-scroll px" style="padding-top:18px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div class="card center" style="padding:26px 0;font-size:22px">1</div>
+        <div class="card center" style="padding:26px 0;font-size:22px">2</div>
+        <div class="card center" data-go="lector" style="cursor:pointer;padding:26px 0;background:var(--plum-chip);color:#fff;font-size:22px">3</div>
+        <div class="card center" style="padding:26px 0;font-size:22px">4</div>
+        <div class="card center" style="padding:26px 0;font-size:22px">5</div>
+        <div class="card center" style="padding:26px 0;font-size:22px">6</div>
+        <div class="card center" style="padding:26px 0;font-size:22px">7</div>
+        <div class="card center" style="padding:26px 0;font-size:22px">8</div>
+        <div class="card center" style="padding:26px 0;font-size:22px">9</div>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- LECTOR -->
+  <div class="screen bg-cool" data-id="lector">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row" style="padding-top:6px">
+      <button class="btn-back" data-go="capitulos">‹</button>
+      <div style="flex:1;text-align:center"><p style="font-weight:700;font-size:16px;letter-spacing:.03em">PROVERBIOS 3</p></div>
+      <span class="chip-dark">RV</span>
+    </div>
+    <div class="screen-scroll glass-panel" style="padding:20px 30px 30px;margin-top:12px;border-radius:26px 26px 0 0">
+      <p style="font-size:20px;font-weight:700;margin-bottom:16px">Exhortación a la obediencia</p>
+      <p style="font-size:17.5px;line-height:1.75;font-family:var(--font-ui)">
+        <b>1</b> Hijo mío, no te olvides de mi ley; y tu corazón guarde mis mandamientos;
+        <b>2</b> porque largura de días, y años de vida y paz te aumentarán.
+        <b>3</b> Misericordia y verdad no te desamparen; átalas a tu cuello, escríbelas en la tabla de tu corazón;
+        <b>4</b> y hallarás gracia y buena opinión ante los ojos de Dios y de los hombres.
+        <span style="background:rgba(249,219,191,.6);border-radius:4px;padding:1px 2px"><b>5</b> Fíate de Jehová de todo tu corazón, y no estribes en tu propia prudencia.</span>
+        <b>6</b> Reconócelo en todos tus caminos, y él enderezará tus veredas.
+        <b>7</b> No seas sabio en tu propia opinión; teme a Jehová, y apártate del mal;
+        <b>8</b> porque será medicina a tu cuerpo, y refrigerio a tus huesos.
+      </p>
+    </div>
+    <div class="tabbar">
+      <a href="hoy.html"><i data-ico="home"></i>Hoy</a>
+      <a class="on"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a href="comunidad.html"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

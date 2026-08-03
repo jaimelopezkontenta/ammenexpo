@@ -1,6 +1,7 @@
 import "../global.css";
 import "../translation";
 
+import { CormorantGaramond_400Regular_Italic } from "@expo-google-fonts/cormorant-garamond";
 import { Lora_400Regular, Lora_600SemiBold } from "@expo-google-fonts/lora";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
@@ -31,7 +32,15 @@ export default function RootLayout() {
       }),
   );
 
+  // Tres familias, tres trabajos. General Sans lleva la interfaz; Cormorant
+  // itálica, lo editorial —el wordmark y los labels—; y Lora se queda con lo
+  // que se lee despacio, que es para lo que entró.
   const [fontsLoaded, fontError] = useFonts({
+    "GeneralSans-Regular": require("../assets/fonts/GeneralSans-Regular.ttf"),
+    "GeneralSans-Medium": require("../assets/fonts/GeneralSans-Medium.ttf"),
+    "GeneralSans-Semibold": require("../assets/fonts/GeneralSans-Semibold.ttf"),
+    "GeneralSans-Bold": require("../assets/fonts/GeneralSans-Bold.ttf"),
+    CormorantGaramond_400Regular_Italic,
     Lora_400Regular,
     Lora_600SemiBold,
   });
@@ -59,10 +68,15 @@ export default function RootLayout() {
             <Stack
               screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: "#FBF8F4" },
-                headerStyle: { backgroundColor: "#FBF8F4" },
+                // Los mismos valores que el tema, a mano: las opciones de
+                // navegación no pasan por NativeWind. La crema es el fondo que
+                // asoma **debajo** de los degradados mientras una pantalla
+                // monta, así que tiene que ser el tono más claro del sistema y
+                // no un blanco, que daría un destello.
+                contentStyle: { backgroundColor: "#FFF6EA" },
+                headerStyle: { backgroundColor: "#FFF6EA" },
                 headerShadowVisible: false,
-                headerTintColor: "#1C1917",
+                headerTintColor: "#413653",
               }}
             >
               <Stack.Screen name="(tabs)" />

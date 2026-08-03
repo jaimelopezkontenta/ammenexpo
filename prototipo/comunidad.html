@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen · Círculos y Comunidad</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="stage-nav">
+  <a class="home-link" href="index.html">← Sistema</a>
+  <span class="title">6 · Círculos y Comunidad</span>
+  <button data-go="muro" class="on">Muro</button>
+  <button data-go="circulos">Mis círculos</button>
+  <button data-go="chat">Chat</button>
+  <button data-go="avisos">Avisos</button>
+  <a href="perfil.html">Siguiente flujo →</a>
+</div>
+
+<div class="stage">
+<div class="phone">
+
+  <!-- MURO COMUNIDAD -->
+  <div class="screen active bg-comm" data-id="muro">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="px" style="padding-top:8px;padding-bottom:12px">
+      <div class="seg">
+        <button class="on" data-go="muro">Comunidad</button>
+        <button data-go="circulos">Círculos</button>
+        <button data-go="chat">Chat</button>
+        <button data-go="avisos">Avisos</button>
+      </div>
+    </div>
+    <div class="screen-scroll px">
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <div class="avatar tone2">A</div>
+          <span class="muted" style="font-size:15.5px">Ana López · Petición</span>
+        </div>
+        <p style="font-size:18.5px;font-weight:600;line-height:1.4">"Padre, trae sanidad a nuestras conversaciones, a nuestros recuerdos y a nuestros malentendidos."</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+          <div class="avatar-stack"><div class="avatar">M</div><div class="avatar tone2">J</div><div class="avatar tone3">+3</div></div>
+          <button class="chip-dark">Orar con ella</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <div class="avatar tone3">D</div>
+          <span class="muted" style="font-size:15.5px">David · Testimonio ✨</span>
+        </div>
+        <p style="font-size:18.5px;font-weight:600;line-height:1.4">Conseguí el trabajo. Gracias a los que oraron estas dos semanas conmigo.</p>
+        <div style="display:flex;gap:18px;margin-top:14px;color:var(--mist)">
+          <i data-ico="heart" data-size="20"></i>
+          <i data-ico="msg" data-size="20"></i>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <div class="avatar tone4">L</div>
+          <span class="muted" style="font-size:15.5px">Lucía · Plan abierto</span>
+        </div>
+        <p style="font-size:18.5px;font-weight:600;line-height:1.4">Lucía creó un plan de oración público por la paz interior.</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+          <div class="avatar-stack"><div class="avatar">R</div><div class="avatar tone2">S</div><div class="avatar tone3">+8</div></div>
+          <button class="chip-dark">Unirme a orar</button>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+    <div class="tabbar">
+      <a href="hoy.html"><i data-ico="home"></i>Hoy</a>
+      <a href="biblia.html"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a class="on"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- MIS CÍRCULOS -->
+  <div class="screen bg-comm" data-id="circulos">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="px" style="padding-top:8px;padding-bottom:12px">
+      <div class="seg">
+        <button data-go="muro">Comunidad</button>
+        <button class="on">Círculos</button>
+        <button data-go="chat">Chat</button>
+        <button data-go="avisos">Avisos</button>
+      </div>
+    </div>
+    <div class="screen-scroll px">
+      <p class="muted" style="font-size:14.5px;margin-bottom:14px">Familia, célula, amigos. Con quien compartes tus planes.</p>
+      <div class="card" style="margin-bottom:12px;display:flex;align-items:center;gap:14px">
+        <div class="avatar tone2" style="width:52px;height:52px;border-radius:16px">F</div>
+        <div style="flex:1">
+          <p style="font-weight:600;font-size:17px">Familia</p>
+          <p class="muted" style="font-size:13.5px">5 personas · 2 planes activos</p>
+        </div>
+        <span class="chev">›</span>
+      </div>
+      <div class="card" style="margin-bottom:12px;display:flex;align-items:center;gap:14px">
+        <div class="avatar tone3" style="width:52px;height:52px;border-radius:16px">C</div>
+        <div style="flex:1">
+          <p style="font-weight:600;font-size:17px">Célula del martes</p>
+          <p class="muted" style="font-size:13.5px">8 personas · <b style="color:var(--accent)">3 sin leer</b></p>
+        </div>
+        <span class="chev">›</span>
+      </div>
+      <div style="height:14px"></div>
+      <button class="btn-cta">Crear círculo</button>
+      <div style="height:10px"></div>
+      <button class="btn-white">Buscar círculos públicos</button>
+      <div style="height:16px"></div>
+    </div>
+    <div class="tabbar">
+      <a href="hoy.html"><i data-ico="home"></i>Hoy</a>
+      <a href="biblia.html"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a class="on"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="screen bg-comm" data-id="chat">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="progress-row" style="padding-top:6px">
+      <button class="btn-back" data-go="circulos">‹</button>
+      <div style="flex:1;text-align:center"><p style="font-weight:700;font-size:16.5px">Célula del martes</p><p class="muted" style="font-size:12.5px">8 personas</p></div>
+      <span style="width:46px"></span>
+    </div>
+    <div class="screen-scroll px" style="display:flex;flex-direction:column;gap:10px;padding-top:14px;padding-bottom:14px">
+      <div class="bubble them"><b style="font-size:12.5px;color:var(--accent)">Ana</b><br>¿Oramos hoy a las 9 por la petición de Marcos?</div>
+      <div class="bubble them"><b style="font-size:12.5px;color:var(--accent)">Marcos</b><br>Gracias 🙏 la cirugía es el jueves.</div>
+      <div class="bubble me">Cuenta conmigo. Pongo recordatorio.</div>
+      <div class="bubble them"><b style="font-size:12.5px;color:var(--accent)">Lucía</b><br>Yo también me uno.</div>
+    </div>
+    <div style="flex-shrink:0;padding:0 20px 40px">
+      <label class="input"><input placeholder="Escribe un mensaje…"><i data-ico="share" data-size="18" class="ico"></i></label>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- AVISOS -->
+  <div class="screen bg-comm" data-id="avisos">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="px" style="padding-top:8px;padding-bottom:12px">
+      <div class="seg">
+        <button data-go="muro">Comunidad</button>
+        <button data-go="circulos">Círculos</button>
+        <button data-go="chat">Chat</button>
+        <button class="on">Avisos</button>
+      </div>
+    </div>
+    <div class="screen-scroll px">
+      <div class="card" style="margin-bottom:12px;display:flex;gap:12px;align-items:center">
+        <div class="avatar tone2">A</div>
+        <p style="font-size:15px;line-height:1.4"><b>Ana</b> oró por tu día. <span class="muted">hace 2 h</span></p>
+      </div>
+      <div class="card" style="margin-bottom:12px;display:flex;gap:12px;align-items:center">
+        <div class="avatar tone3">D</div>
+        <p style="font-size:15px;line-height:1.4"><b>David</b> se unió a tu plan «Unión familiar». <span class="muted">ayer</span></p>
+      </div>
+      <div class="card" style="margin-bottom:12px;display:flex;gap:12px;align-items:center">
+        <div class="avatar tone4">L</div>
+        <p style="font-size:15px;line-height:1.4"><b>Lucía</b> escribió en Célula del martes. <span class="muted">ayer</span></p>
+      </div>
+      <div class="card" style="margin-bottom:12px;display:flex;gap:12px;align-items:center;opacity:.6">
+        <div class="avatar">M</div>
+        <p style="font-size:15px;line-height:1.4"><b>Marcos</b> pidió oración. <span class="muted">hace 3 días</span></p>
+      </div>
+    </div>
+    <div class="tabbar">
+      <a href="hoy.html"><i data-ico="home"></i>Hoy</a>
+      <a href="biblia.html"><i data-ico="book"></i>Biblia</a>
+      <a href="orar.html"><span class="orb-tab"></span>Orar</a>
+      <a class="on"><i data-ico="users"></i>Círculos</a>
+      <a href="perfil.html"><i data-ico="user"></i>Perfil</a>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

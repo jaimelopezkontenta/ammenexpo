@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammen · Compartir</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="stage-nav">
+  <a class="home-link" href="index.html">← Sistema</a>
+  <span class="title">8 · Compartir versículo</span>
+  <button data-go="sharesheet" class="on">Hoja de compartir</button>
+  <button data-go="story">Story 9:16</button>
+  <a href="auth.html">Volver al inicio →</a>
+</div>
+
+<div class="stage">
+
+<div class="phone">
+  <!-- SHARE SHEET -->
+  <div class="screen active bg-home" data-id="sharesheet">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div class="tab-header">
+      <span class="greet">Buenos días, James</span>
+      <span class="wordmark">ammen</span>
+    </div>
+    <div class="screen-scroll px">
+      <div class="center" style="padding:70px 0 26px">
+        <p class="label-serif">Versículo del día</p>
+        <p class="verse" style="margin-top:14px">"Confía en el Señor con todo tu corazón, y no te apoyes en tu propia prudencia."</p>
+        <p class="label-serif muted" style="margin-top:12px">Proverbios 3: 5–6</p>
+      </div>
+    </div>
+    <div class="glass-panel" style="flex-shrink:0;border-radius:26px 26px 0 0;padding:20px 26px 46px;position:relative">
+      <div style="position:absolute;top:-26px;left:50%;transform:translateX(-50%)">
+        <button class="btn-pill" data-go="story">Compartir <i data-ico="share" data-size="16"></i></button>
+      </div>
+      <div style="display:flex;justify-content:space-around;padding-top:22px">
+        <div class="center"><div style="width:52px;height:52px;border-radius:16px;background:linear-gradient(45deg,#F9CE34,#EE2A7B,#6228D7)"></div><p style="font-size:11.5px;margin-top:6px">Stories</p></div>
+        <div class="center"><div style="width:52px;height:52px;border-radius:50%;background:#25D366"></div><p style="font-size:11.5px;margin-top:6px">WhatsApp</p></div>
+        <div class="center"><div style="width:52px;height:52px;border-radius:50%;background:#1877F2"></div><p style="font-size:11.5px;margin-top:6px">Facebook</p></div>
+        <div class="center"><div style="width:52px;height:52px;border-radius:16px;background:var(--plum-chip);display:flex;align-items:center;justify-content:center;color:#fff">⧉</div><p style="font-size:11.5px;margin-top:6px">Copiar</p></div>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- STORY 9:16 -->
+  <div class="screen bg-story" data-id="story">
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⬤</span></div>
+    <div style="position:absolute;top:90px;right:44px">
+      <div class="orb" style="width:74px;height:74px"><span class="wordmark" style="font-size:13px">ammen</span></div>
+    </div>
+    <div class="screen-scroll" style="padding:200px 44px 0">
+      <p class="label-serif" style="font-size:22px">Versículo del día</p>
+      <p style="font-size:30px;line-height:1.4;font-weight:600;margin-top:18px;letter-spacing:-0.01em">"Confía en el Señor con todo tu corazón, y no te apoyes en tu propia prudencia."</p>
+      <p class="label-serif muted" style="font-size:19px;margin-top:22px">Proverbios 3: 5–6</p>
+    </div>
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;padding:0 44px 60px;font-style:italic;font-size:14px;opacity:.85">
+      <span>Versículo del día</span>
+      <span>ammen app</span>
+    </div>
+    <div class="home-indicator" style="background:rgba(255,255,255,.8)"></div>
+  </div>
+</div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
