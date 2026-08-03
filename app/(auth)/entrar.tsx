@@ -1,14 +1,9 @@
 import { Link } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Text, View } from "react-native";
 
+import { AuthScreen } from "@/components/AuthScreen";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { authErrorKey, isValidEmail } from "@/core/auth/validation";
@@ -54,80 +49,73 @@ export default function SignIn() {
     // On success the session listener routes away from this screen.
   };
 
+  // Sin la letra pequeña de "al entrar aceptas los términos" que lleva el
+  // diseño: aquí los términos se piden en su propia pantalla, con su versión y
+  // su registro, así que ese pie sería mentira.
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-paper"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerClassName="flex-grow justify-center px-7 py-12"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="gap-2">
-          <Text className="text-3xl font-bold text-ink">
-            {t("auth.signInTitle")}
-          </Text>
-          <Text className="text-base text-ink-muted">
-            {t("auth.signInIntro")}
-          </Text>
-        </View>
+    <AuthScreen title={t("auth.signInTitle")} intro={t("auth.signInIntro")}>
+      <View className="mt-8 gap-4">
+        <TextField
+          label={t("auth.email")}
+          error={errorField === "email" ? error : null}
+          value={email}
+          onChangeText={setEmail}
+          placeholder={t("auth.emailPlaceholder")}
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+        />
+        <TextField
+          label={t("auth.password")}
+          error={errorField === "password" ? error : null}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="current-password"
+          textContentType="password"
+          onSubmitEditing={handleSubmit}
+          returnKeyType="go"
+        />
 
-        <View className="mt-8 gap-4">
-          <TextField
-            label={t("auth.email")}
-            error={errorField === "email" ? error : null}
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t("auth.emailPlaceholder")}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            textContentType="emailAddress"
-          />
-          <TextField
-            label={t("auth.password")}
-            error={errorField === "password" ? error : null}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            autoComplete="current-password"
-            textContentType="password"
-            onSubmitEditing={handleSubmit}
-            returnKeyType="go"
-          />
-
-          {/* Only errors that belong to no single field stay here; the rest
+        {/* Only errors that belong to no single field stay here; the rest
               are rendered by the field itself, so a screen reader hears which
               one is wrong. */}
-          {error && !errorField ? (
-            <Text className="text-sm text-red-500" accessibilityRole="alert">
-              {error}
-            </Text>
-          ) : null}
-
-          <Button
-            title={t("auth.signIn")}
-            onPress={handleSubmit}
-            loading={isSubmitting}
-          />
-        </View>
+        {error && !errorField ? (
+          <Text
+            className="font-sans text-sm text-danger"
+            accessibilityRole="alert"
+          >
+            {error}
+          </Text>
+        ) : null}
 
         {/* The key has been translated in both languages since the beginning
-            with nothing behind it, so losing your password lost the account. */}
-        <View className="mt-6 items-center">
-          <Link href="/recuperar" className="text-ink-muted underline">
-            {t("auth.forgotPassword")}
-          </Link>
-        </View>
+            with nothing behind it, so losing your password lost the account.
+            Va **antes** del botón y alineado a la derecha, como en el diseño:
+            es lo que se busca cuando la contraseña no entra, y debajo del CTA
+            quedaba después del gesto que acaba de fallar. */}
+        <Link
+          href="/recuperar"
+          className="-mt-1 self-end font-sans-medium text-sm text-ember-ink"
+        >
+          {t("auth.forgotPassword")}
+        </Link>
 
-        <View className="mt-8 flex-row items-center justify-center gap-2">
-          <Text className="text-ink-muted">{t("auth.noAccount")}</Text>
-          <Link href="/crear-cuenta" className="font-semibold text-ink">
-            {t("auth.signUp")}
-          </Link>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <Button
+          title={t("auth.signIn")}
+          onPress={handleSubmit}
+          loading={isSubmitting}
+        />
+      </View>
+
+      <View className="mt-8 flex-row items-center justify-center gap-2">
+        <Text className="font-sans text-mist-ink">{t("auth.noAccount")}</Text>
+        <Link href="/crear-cuenta" className="font-sans-semibold text-plum">
+          {t("auth.signUp")}
+        </Link>
+      </View>
+    </AuthScreen>
   );
 }

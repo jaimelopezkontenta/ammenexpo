@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { LegalText } from "@/components/LegalText";
 import { legalDocument } from "@/core/legal/documents";
 
@@ -28,21 +29,22 @@ export default function LegalDocument() {
     <>
       <Stack.Screen options={{ title: document.title, headerShown: true }} />
 
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-5 px-7 py-8"
-      >
-        <View className="gap-1">
-          <Text className="font-serif-bold text-2xl text-ink">
-            {document.title}
-          </Text>
-          <Text className="text-sm text-ink-soft">{document.updated}</Text>
-        </View>
+      <DawnBackground variant="radial">
+        <ScrollView contentContainerClassName="gap-5 px-7 py-8">
+          <View className="gap-1">
+            <Text className="font-serif-bold text-2xl text-plum">
+              {document.title}
+            </Text>
+            <Text className="font-sans text-sm text-mist-ink">
+              {document.updated}
+            </Text>
+          </View>
 
-        {document.body.map((paragraph, index) => (
-          <LegalText key={index} text={paragraph} />
-        ))}
-      </ScrollView>
+          {document.body.map((paragraph, index) => (
+            <LegalText key={index} text={paragraph} />
+          ))}
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

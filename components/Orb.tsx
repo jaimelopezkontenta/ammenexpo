@@ -148,6 +148,10 @@ export const Orb = ({
                 />
               </RadialGradient>
             ))}
+            <RadialGradient id="orbRim" cx="50%" cy="50%" r="50%">
+              <Stop offset="0.55" stopColor="#FFFFFF" stopOpacity="0" />
+              <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.38" />
+            </RadialGradient>
             {/* Las capas se salen de la esfera: sin esto, el orbe sería un cuadrado. */}
             <ClipPath id="orbClip">
               <Circle cx="50" cy="50" r="50" />
@@ -163,6 +167,13 @@ export const Orb = ({
               clipPath="url(#orbClip)"
             />
           ))}
+          {/*
+            El brillo del borde hacia dentro. En el prototipo es un
+            `box-shadow: inset`, que en SVG no existe: aquí es una capa más,
+            transparente en el centro y blanca en el filo. Es lo que hace que
+            la esfera parezca vidrio y no un círculo de color.
+          */}
+          <Circle cx="50" cy="50" r="50" fill="url(#orbRim)" />
         </Svg>
         {children ? <View style={styles.center}>{children}</View> : null}
       </Animated.View>

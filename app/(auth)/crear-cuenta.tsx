@@ -1,14 +1,9 @@
 import { Link } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Text, View } from "react-native";
 
+import { AuthScreen } from "@/components/AuthScreen";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import {
@@ -79,77 +74,66 @@ export default function SignUp() {
   };
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-paper"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerClassName="flex-grow justify-center px-7 py-12"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="gap-2">
-          <Text className="text-3xl font-bold text-ink">
-            {t("auth.signUpTitle")}
-          </Text>
-          <Text className="text-base text-ink-muted">
-            {t("auth.signUpIntro")}
-          </Text>
-        </View>
+    <AuthScreen title={t("auth.signUpTitle")} intro={t("auth.signUpIntro")}>
+      <View className="mt-8 gap-4">
+        <TextField
+          label={t("auth.email")}
+          error={errorField === "email" ? error : null}
+          value={email}
+          onChangeText={setEmail}
+          placeholder={t("auth.emailPlaceholder")}
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+        />
+        <TextField
+          label={t("auth.password")}
+          error={errorField === "password" ? error : null}
+          value={password}
+          onChangeText={setPassword}
+          placeholder={t("auth.passwordPlaceholder")}
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="new-password"
+          textContentType="newPassword"
+          onSubmitEditing={handleSubmit}
+          returnKeyType="go"
+        />
 
-        <View className="mt-8 gap-4">
-          <TextField
-            label={t("auth.email")}
-            error={errorField === "email" ? error : null}
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t("auth.emailPlaceholder")}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            textContentType="emailAddress"
-          />
-          <TextField
-            label={t("auth.password")}
-            error={errorField === "password" ? error : null}
-            value={password}
-            onChangeText={setPassword}
-            placeholder={t("auth.passwordPlaceholder")}
-            secureTextEntry
-            autoCapitalize="none"
-            autoComplete="new-password"
-            textContentType="newPassword"
-            onSubmitEditing={handleSubmit}
-            returnKeyType="go"
-          />
-
-          {/* Only errors that belong to no single field stay here; the rest
+        {/* Only errors that belong to no single field stay here; the rest
               are rendered by the field itself, so a screen reader hears which
               one is wrong. */}
-          {error && !errorField ? (
-            <Text className="text-sm text-red-500" accessibilityRole="alert">
-              {error}
-            </Text>
-          ) : null}
-          {notice ? (
-            <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-              {notice}
-            </Text>
-          ) : null}
+        {error && !errorField ? (
+          <Text
+            className="font-sans text-sm text-danger"
+            accessibilityRole="alert"
+          >
+            {error}
+          </Text>
+        ) : null}
+        {notice ? (
+          <Text
+            className="font-sans text-sm text-mist-ink"
+            accessibilityRole="alert"
+          >
+            {notice}
+          </Text>
+        ) : null}
 
-          <Button
-            title={t("auth.signUp")}
-            onPress={handleSubmit}
-            loading={isSubmitting}
-          />
-        </View>
+        <Button
+          title={t("auth.signUp")}
+          onPress={handleSubmit}
+          loading={isSubmitting}
+        />
+      </View>
 
-        <View className="mt-8 flex-row items-center justify-center gap-2">
-          <Text className="text-ink-muted">{t("auth.hasAccount")}</Text>
-          <Link href="/entrar" className="font-semibold text-ink">
-            {t("auth.signIn")}
-          </Link>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <View className="mt-8 flex-row items-center justify-center gap-2">
+        <Text className="font-sans text-mist-ink">{t("auth.hasAccount")}</Text>
+        <Link href="/entrar" className="font-sans-semibold text-plum">
+          {t("auth.signIn")}
+        </Link>
+      </View>
+    </AuthScreen>
   );
 }

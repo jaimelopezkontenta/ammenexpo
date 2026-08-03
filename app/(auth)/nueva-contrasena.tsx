@@ -1,14 +1,9 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { View } from "react-native";
 
+import { AuthScreen } from "@/components/AuthScreen";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { MIN_PASSWORD_LENGTH } from "@/core/auth/validation";
@@ -52,41 +47,27 @@ export default function NewPassword() {
   };
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-paper"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <AuthScreen
+      title={t("auth.newPasswordTitle")}
+      intro={t("auth.newPasswordBody")}
     >
-      <ScrollView
-        contentContainerClassName="flex-grow justify-center px-7 py-12"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="gap-2">
-          <Text className="text-3xl font-bold text-ink">
-            {t("auth.newPasswordTitle")}
-          </Text>
-          <Text className="text-base leading-6 text-ink-muted">
-            {t("auth.newPasswordBody")}
-          </Text>
-        </View>
+      <View className="mt-8 gap-4">
+        <TextField
+          label={t("auth.password")}
+          value={password}
+          onChangeText={setPassword}
+          error={error}
+          placeholder={t("auth.passwordPlaceholder")}
+          secureTextEntry
+          autoComplete="new-password"
+        />
 
-        <View className="mt-8 gap-4">
-          <TextField
-            label={t("auth.password")}
-            value={password}
-            onChangeText={setPassword}
-            error={error}
-            placeholder={t("auth.passwordPlaceholder")}
-            secureTextEntry
-            autoComplete="new-password"
-          />
-
-          <Button
-            title={t("common.save")}
-            loading={isSubmitting}
-            onPress={() => void handleSubmit()}
-          />
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <Button
+          title={t("common.save")}
+          loading={isSubmitting}
+          onPress={() => void handleSubmit()}
+        />
+      </View>
+    </AuthScreen>
   );
 }

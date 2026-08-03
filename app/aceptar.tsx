@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { DawnBackground } from "@/components/DawnBackground";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useAcceptTerms } from "@/core/legal/queries";
 
@@ -37,55 +38,59 @@ export default function AcceptTerms() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-paper"
-      contentContainerClassName="flex-grow justify-center gap-6 px-7 py-12"
-    >
-      <Text className="font-serif-bold text-2xl text-ink">
-        {t("legal.gateTitle")}
-      </Text>
-
-      <Text className="text-base leading-6 text-ink-muted">
-        {t("legal.gateBody")}
-      </Text>
-
-      {/* Los dos documentos, para leerlos antes de aceptarlos. Sin esto, "acepto"
-          sería un botón sobre algo que no se puede ver. */}
-      <View className="gap-3">
-        <Link href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}>
-          <Text className="text-base text-clay underline">
-            {t("legal.terms")}
-          </Text>
-        </Link>
-
-        <Link
-          href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
-        >
-          <Text className="text-base text-clay underline">
-            {t("legal.privacy")}
-          </Text>
-        </Link>
-      </View>
-
-      <Button
-        title={t("legal.accept")}
-        loading={accept.isPending}
-        onPress={() => void handleAccept()}
-      />
-
-      {error ? (
-        <Text className="text-sm text-red-500" accessibilityRole="alert">
-          {error}
+    <DawnBackground variant="radial">
+      <ScrollView contentContainerClassName="flex-grow justify-center gap-6 px-7 py-12">
+        <Text className="font-serif-bold text-2xl text-plum">
+          {t("legal.gateTitle")}
         </Text>
-      ) : null}
 
-      {/* No aceptar tiene que llevar a algún sitio. Sin esta salida, quien no
+        <Text className="font-sans text-base leading-6 text-mist-ink">
+          {t("legal.gateBody")}
+        </Text>
+
+        {/* Los dos documentos, para leerlos antes de aceptarlos. Sin esto, "acepto"
+          sería un botón sobre algo que no se puede ver. */}
+        <View className="gap-3">
+          <Link
+            href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}
+          >
+            <Text className="font-sans-medium text-base text-ember-ink underline">
+              {t("legal.terms")}
+            </Text>
+          </Link>
+
+          <Link
+            href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
+          >
+            <Text className="font-sans-medium text-base text-ember-ink underline">
+              {t("legal.privacy")}
+            </Text>
+          </Link>
+        </View>
+
+        <Button
+          title={t("legal.accept")}
+          loading={accept.isPending}
+          onPress={() => void handleAccept()}
+        />
+
+        {error ? (
+          <Text
+            className="font-sans text-sm text-danger"
+            accessibilityRole="alert"
+          >
+            {error}
+          </Text>
+        ) : null}
+
+        {/* No aceptar tiene que llevar a algún sitio. Sin esta salida, quien no
           esté de acuerdo se queda encerrado en una pantalla con un solo botón. */}
-      <Button
-        title={t("auth.signOut")}
-        variant="ghost"
-        onPress={() => void signOut()}
-      />
-    </ScrollView>
+        <Button
+          title={t("auth.signOut")}
+          variant="ghost"
+          onPress={() => void signOut()}
+        />
+      </ScrollView>
+    </DawnBackground>
   );
 }

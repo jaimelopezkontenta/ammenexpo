@@ -79,16 +79,29 @@ export const DawnBackground = ({
           `expo-linear-gradient` no hace radiales, así que el halo va en SVG.
           Es una elipse ancha y baja, como en el diseño: no un círculo, que
           deja el centro con forma de foco.
+
+          **Con `viewBox` y unidades absolutas, no con porcentajes.** Un SVG sin
+          `viewBox` resuelve los porcentajes contra un lienzo por defecto y no
+          contra su tamaño real: el halo se quedaba pequeño y pegado a la
+          esquina superior izquierda. `preserveAspectRatio="none"` es lo que
+          deja que el cuadrado de 100×100 se estire a la forma de la pantalla.
         */}
-        <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Svg
+          style={StyleSheet.absoluteFill}
+          width="100%"
+          height="100%"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          pointerEvents="none"
+        >
           <Defs>
-            <RadialGradient id="dawnGlow" cx="50%" cy="47%" rx="90%" ry="55%">
+            <RadialGradient id="dawnGlow" cx="50%" cy="50%" r="50%">
               <Stop offset="0" stopColor="#FFF1DD" stopOpacity="1" />
               <Stop offset="0.45" stopColor="#FFF1DD" stopOpacity="0.55" />
               <Stop offset="0.72" stopColor="#FFF1DD" stopOpacity="0" />
             </RadialGradient>
           </Defs>
-          <Ellipse cx="50%" cy="47%" rx="90%" ry="55%" fill="url(#dawnGlow)" />
+          <Ellipse cx="50" cy="47" rx="90" ry="55" fill="url(#dawnGlow)" />
         </Svg>
         {children}
       </View>

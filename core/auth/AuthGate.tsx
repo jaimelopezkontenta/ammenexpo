@@ -4,7 +4,8 @@ import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
-import { LoadingState } from "@/components/ScreenState";
+import { Orb } from "@/components/Orb";
+import { Wordmark } from "@/components/Wordmark";
 
 import { useSession } from "./SessionProvider";
 
@@ -12,7 +13,32 @@ import { useSession } from "./SessionProvider";
 // descuido: vive en `core/`, que Tailwind no escaneaba, así que cualquier clase
 // del tema que se escribiera aquí no llegaba a generarse nunca. Ahora `core/**`
 // entra en `content` y la pantalla puede usar lo mismo que las demás.
-const Loading = () => <LoadingState />;
+//
+// **Este es el splash de la app**, y no una pantalla aparte con un toque para
+// continuar como en el prototipo. Es el sitio donde ya se esperaba —mientras se
+// resuelven la sesión y el onboarding— así que poner aquí el orbe no le añade
+// un segundo a nadie: cambia un spinner por la marca durante una espera que ya
+// existía. Una pantalla de bienvenida que hay que despachar es tiempo cobrado
+// al usuario a cambio de nada.
+const Loading = () => {
+  const { t } = useTranslation();
+
+  return (
+    <DawnBackground
+      variant="radial"
+      className="items-center justify-center"
+      accessibilityRole="progressbar"
+      // El orbe se esconde de la accesibilidad —es una marca—, así que sin esto
+      // la pantalla de arranque se anunciaría vacía.
+      accessibilityLabel={t("common.loading")}
+      accessibilityLiveRegion="polite"
+    >
+      <Orb size={150} halo>
+        <Wordmark size={26} />
+      </Orb>
+    </DawnBackground>
+  );
+};
 
 /**
  * Routes on session + onboarding state.
