@@ -11,7 +11,10 @@ import {
 
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
-import { attachPendingTokensToProfile } from "@/core/auth/pendingToken";
+import {
+  attachPendingTokensToProfile,
+  attachSignupSource,
+} from "@/core/auth/pendingToken";
 import {
   MIN_PASSWORD_LENGTH,
   authErrorKey,
@@ -64,6 +67,9 @@ export default function SignUp() {
       // Carry over the share link or invite that brought this person here, so
       // onboarding can redeem it and actually connect them to the inviter.
       await attachPendingTokensToProfile(data.user.id);
+      // Y por dónde entró, que se escribe una sola vez y aquí: el registro es
+      // el único momento en que «de dónde vino esta persona» significa algo.
+      await attachSignupSource(data.user.id);
     } else {
       // Email confirmation is on: there is no session yet.
       setNotice(t("auth.checkEmail"));

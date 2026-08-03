@@ -104,7 +104,7 @@ export default function SharePlan() {
   const stillWriting = plan.status === "generating";
   const isPublic = plan.visibility === "public";
   const shared = sharedCircles ?? [];
-  const linkUrl = link ? buildShareUrl(`/p/${link.token}`) : null;
+  const linkUrl = link ? buildShareUrl(`/p/${link.token}`, "plan") : null;
 
   const invitation = t("share.message", {
     theme: plan.theme ?? plan.title,

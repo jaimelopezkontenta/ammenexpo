@@ -64,10 +64,14 @@ export const VerseCard = forwardRef<
           {reference}
         </Text>
         {/* Sin logotipo ni marca de agua encima del texto: quien comparte esto
-            comparte un versículo, no un anuncio. El nombre abajo y pequeño es
-            todo lo que hace falta para que alguien pregunte de dónde salió. */}
+            comparte un versículo, no un anuncio.
+
+            Pero **con el dominio**: esta imagen viaja sola a un estado de
+            WhatsApp, la ve gente que no tiene la app, y hasta aquí el pie decía
+            un nombre y ningún sitio al que ir. Es la unidad viral más pura que
+            tiene el producto y no llevaba destino. */}
         <Text style={{ fontSize: 24 * scale }} className="text-ink-soft">
-          Ammen · Reina-Valera 1909
+          ammen.app · Reina-Valera 1909
         </Text>
       </View>
     </View>

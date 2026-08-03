@@ -19,8 +19,22 @@ export const appUrl = () => {
   return "https://ammen.app";
 };
 
-export const buildShareUrl = (path: string) =>
-  `${appUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+/**
+ * Por dónde entró alguien. Va en el enlace porque es lo único que viaja con él.
+ *
+ * **Hay que etiquetar antes de repartir**: un enlace que ya está en un grupo de
+ * WhatsApp no se puede reetiquetar después. Es de las pocas cosas donde llegar
+ * tarde no se arregla trabajando más.
+ */
+export type ShareSource = "plan" | "imagen" | "invitacion" | "circulo";
+
+export const buildShareUrl = (path: string, source?: ShareSource) => {
+  const base = `${appUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+
+  // `de` y no `utm_source`: es un enlace que la gente ve y a veces lee en voz
+  // alta, y las cinco letras de un UTM no dicen nada a nadie fuera del marketing.
+  return source ? `${base}?de=${source}` : base;
+};
 
 export type ShareOutcome = "shared" | "copied" | "failed";
 

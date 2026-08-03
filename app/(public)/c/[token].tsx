@@ -5,13 +5,17 @@ import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { rememberShareToken } from "@/core/auth/pendingToken";
+import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleInvitePreview, useJoinCircle } from "@/core/circles/queries";
 
 export default function CircleInvite() {
   const { t } = useTranslation();
-  const { token } = useLocalSearchParams<{ token: string }>();
+  const { token, de } = useLocalSearchParams<{
+    token: string;
+    /** Por dónde llegó: lo pone `buildShareUrl` al repartir el enlace. */
+    de?: string;
+  }>();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -29,8 +33,11 @@ export default function CircleInvite() {
   useEffect(() => {
     if (token) {
       void rememberShareToken(token);
+      // La etiqueta viaja con el enlace y se guarda **una sola vez**: quien
+      // abre tres antes de decidirse entró por el primero.
+      if (de) void rememberSource(de);
     }
-  }, [token]);
+  }, [token, de]);
 
   const handleJoin = async () => {
     if (!token) return;

@@ -4,6 +4,7 @@ import { supabase } from "@/utils/supabase";
 
 const SHARE_KEY = "ammen.pendingShareToken";
 const INVITE_KEY = "ammen.pendingInviteCode";
+const SOURCE_KEY = "ammen.signupSource";
 
 /**
  * Someone who opens a shared plan on the web has no account yet, so the token
@@ -31,22 +32,64 @@ export const rememberInviteCode = async (code: string) => {
   }
 };
 
+/**
+ * Por dónde llegó, guardado junto al token que lo trajo.
+ *
+ * Se escribe una sola vez: quien abre tres enlaces antes de decidirse entró por
+ * el primero, y quedarse con el último convertiría un dato de adquisición en un
+ * dato de la última cosa que le dio pereza cerrar.
+ */
+export const rememberSource = async (source: string) => {
+  try {
+    const already = await AsyncStorage.getItem(SOURCE_KEY);
+    if (already) return;
+
+    await AsyncStorage.setItem(SOURCE_KEY, source);
+  } catch {
+    // Mejor sin el dato que rompiendo la pantalla que trae a alguien nuevo.
+  }
+};
+
 export const readPendingTokens = async () => {
   try {
-    const [shareToken, inviteCode] = await Promise.all([
+    const [shareToken, inviteCode, source] = await Promise.all([
       AsyncStorage.getItem(SHARE_KEY),
       AsyncStorage.getItem(INVITE_KEY),
+      AsyncStorage.getItem(SOURCE_KEY),
     ]);
 
-    return { shareToken, inviteCode };
+    return { shareToken, inviteCode, source };
   } catch {
-    return { shareToken: null, inviteCode: null };
+    return { shareToken: null, inviteCode: null, source: null };
+  }
+};
+
+/**
+ * Lo escribe en el perfil **una sola vez**, y solo si está vacío: reescribirlo
+ * en cada inicio de sesión lo convertiría en «lo último que tocó» en vez de «por
+ * dónde entró».
+ */
+export const attachSignupSource = async (userId: string) => {
+  const { source } = await readPendingTokens();
+
+  if (!source) return;
+
+  try {
+    await supabase
+      .from("profile_settings")
+      .update({ signup_source: source })
+      .eq("id", userId)
+      .is("signup_source", null);
+
+    await AsyncStorage.removeItem(SOURCE_KEY);
+  } catch {
+    // Un dato de analítica no puede impedirle a nadie entrar en la app.
   }
 };
 
 export const clearPendingTokens = async () => {
   try {
-    await AsyncStorage.multiRemove([SHARE_KEY, INVITE_KEY]);
+    await AsyncStorage.multiRemove([SHARE_KEY, INVITE_KEY, SOURCE_KEY]);
   } catch {
     // Nothing actionable; the server clears its copy on redeem anyway.
   }

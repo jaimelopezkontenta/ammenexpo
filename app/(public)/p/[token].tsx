@@ -6,14 +6,18 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { LoadingState } from "@/components/ScreenState";
-import { rememberShareToken } from "@/core/auth/pendingToken";
+import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useSharedPlanPreview } from "@/core/plans/sharePreview";
 import { supabase } from "@/utils/supabase";
 
 export default function SharedPlanPreviewScreen() {
   const { t } = useTranslation();
-  const { token } = useLocalSearchParams<{ token: string }>();
+  const { token, de } = useLocalSearchParams<{
+    token: string;
+    /** Por dónde llegó: lo pone `buildShareUrl` al repartir el enlace. */
+    de?: string;
+  }>();
   const { session } = useSession();
   const { data, isLoading, isError, refetch } = useSharedPlanPreview(token);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -25,8 +29,11 @@ export default function SharedPlanPreviewScreen() {
   useEffect(() => {
     if (token) {
       void rememberShareToken(token);
+      // La etiqueta viaja con el enlace y se guarda **una sola vez**: quien
+      // abre tres antes de decidirse entró por el primero.
+      if (de) void rememberSource(de);
     }
-  }, [token]);
+  }, [token, de]);
 
   const handleOpenPlan = async () => {
     if (!token) return;

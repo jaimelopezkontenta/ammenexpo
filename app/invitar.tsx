@@ -40,7 +40,7 @@ export default function Invite() {
       // Se crea al pedirlo, no al abrir: navegar a un sitio no debería
       // escribir nada.
       const value = code ?? (await create.mutateAsync());
-      const url = buildShareUrl(`/i/${value}`);
+      const url = buildShareUrl(`/i/${value}`, "invitacion");
 
       const outcome = await shareOrCopy(t("invite.message"), url);
 
@@ -95,7 +95,7 @@ export default function Invite() {
             {/* Seleccionable a mano: es lo que salva el día que la hoja del
                 sistema falla o el portapapeles está capado. */}
             <Text selectable className="text-base text-ink">
-              {buildShareUrl(`/i/${code}`)}
+              {buildShareUrl(`/i/${code}`, "invitacion")}
             </Text>
           </View>
         ) : null}

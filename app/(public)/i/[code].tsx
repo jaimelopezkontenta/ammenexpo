@@ -5,7 +5,7 @@ import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { rememberInviteCode } from "@/core/auth/pendingToken";
+import { rememberInviteCode, rememberSource } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useInvitePreview } from "@/core/social/invites";
 
@@ -24,7 +24,11 @@ import { useInvitePreview } from "@/core/social/invites";
  */
 export default function InviteLanding() {
   const { t } = useTranslation();
-  const { code } = useLocalSearchParams<{ code: string }>();
+  const { code, de } = useLocalSearchParams<{
+    code: string;
+    /** Por dónde llegó: lo pone `buildShareUrl` al repartir el enlace. */
+    de?: string;
+  }>();
   const { session } = useSession();
 
   const { data: name, isLoading, isError, refetch } = useInvitePreview(code);
@@ -32,8 +36,11 @@ export default function InviteLanding() {
   useEffect(() => {
     if (code) {
       void rememberInviteCode(code);
+      // La etiqueta viaja con el enlace y se guarda **una sola vez**: quien
+      // abre tres antes de decidirse entró por el primero.
+      if (de) void rememberSource(de);
     }
-  }, [code]);
+  }, [code, de]);
 
   if (isLoading) {
     return <LoadingState />;

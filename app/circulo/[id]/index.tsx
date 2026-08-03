@@ -90,7 +90,9 @@ export default function CircleDetail() {
   // The token no longer travels with the circle row, so it can be missing for
   // a moment. Showing the invite block with a half-built URL in it would hand
   // somebody a link to nowhere, which is worse than showing it a beat later.
-  const inviteUrl = inviteToken ? buildShareUrl(`/c/${inviteToken}`) : null;
+  const inviteUrl = inviteToken
+    ? buildShareUrl(`/c/${inviteToken}`, "circulo")
+    : null;
 
   const isAdmin = (members ?? []).some(
     (m) => m.user_id === userId && m.role !== "member",

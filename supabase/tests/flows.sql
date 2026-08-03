@@ -610,6 +610,47 @@ select pg_temp.assert(
 
 commit;
 
+
+-- ===========================================================================
+-- Por dónde entró cada persona
+--
+-- Ningún enlace lo decía, y **esto hay que ponerlo antes de que los enlaces
+-- circulen**: uno que ya está en un grupo de WhatsApp no se puede reetiquetar.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select signup_source from public.profile_settings
+    where id = '11111111-1111-1111-1111-111111111111') is null,
+  'a profile starts without knowing where it came from');
+
+update public.profile_settings
+   set signup_source = 'plan'
+ where id = '11111111-1111-1111-1111-111111111111'
+   and signup_source is null;
+
+select pg_temp.assert(
+  (select signup_source from public.profile_settings
+    where id = '11111111-1111-1111-1111-111111111111') = 'plan',
+  'and records it when somebody arrives through a link');
+
+-- La guarda que hace que el dato signifique algo: se escribe una vez. Sin el
+-- `is null`, cada inicio de sesión lo reescribiría y el dato pasaría de «por
+-- dónde entró» a «lo último que tocó».
+update public.profile_settings
+   set signup_source = 'invitacion'
+ where id = '11111111-1111-1111-1111-111111111111'
+   and signup_source is null;
+
+select pg_temp.assert(
+  (select signup_source from public.profile_settings
+    where id = '11111111-1111-1111-1111-111111111111') = 'plan',
+  'and never overwrites it: where you came from happens once');
+
+commit;
+
 \echo '===================================='
 \echo ' ACQUISITION LOOP ASSERTIONS PASSED'
 \echo '===================================='
