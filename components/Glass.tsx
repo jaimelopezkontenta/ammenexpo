@@ -1,6 +1,12 @@
 import { BlurView } from "expo-blur";
+import { cssInterop } from "nativewind";
 import { ReactNode } from "react";
 import { Platform, StyleSheet, View, ViewProps, ViewStyle } from "react-native";
+
+// `BlurView` viene de fuera de React Native, así que NativeWind no sabe que su
+// `className` se traduce a `style`. Sin esta línea las clases de la tab bar y
+// de las tarjetas se quedarían sin aplicar.
+cssInterop(BlurView, { className: "style" });
 
 /**
  * El material de todo el UI: vidrio esmerilado sobre los degradados.
@@ -41,6 +47,11 @@ const DARK_TINT = "rgba(77, 64, 92, 0.60)";
 const LIGHT_BORDER = "rgba(255, 255, 255, 0.65)";
 const DARK_BORDER = "rgba(255, 255, 255, 0.28)";
 
+/**
+ * `className` se desestructura y se escribe a mano abajo. NativeWind compila
+ * la clase donde ve el atributo escrito en el JSX; si llega por un spread, la
+ * cadena se pasa sin convertir y no pinta nada en nativo.
+ */
 export const Glass = ({
   children,
   readable = false,
@@ -48,6 +59,7 @@ export const Glass = ({
   flat = false,
   intensity,
   style,
+  className,
   ...viewProps
 }: Props) => {
   const tint = dark ? DARK_TINT : readable ? LIGHT_TINT_READABLE : LIGHT_TINT;
@@ -73,7 +85,11 @@ export const Glass = ({
 
   if (flat) {
     return (
-      <View {...viewProps} style={[base, { backgroundColor: tint }, style]}>
+      <View
+        {...viewProps}
+        className={className}
+        style={[base, { backgroundColor: tint }, style]}
+      >
         {specular}
         {children}
       </View>
@@ -83,6 +99,7 @@ export const Glass = ({
   return (
     <BlurView
       {...viewProps}
+      className={className}
       intensity={intensity ?? (dark ? 14 : 22)}
       tint={dark ? "dark" : "light"}
       // En Android el blur nativo no viene de serie; este método lo habilita.

@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { DawnBackground } from "@/components/DawnBackground";
+import { Glass } from "@/components/Glass";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -170,7 +172,7 @@ export default function ChapterReader() {
         <Stack.Screen
           options={{ title: t("common.notFoundTitle"), headerShown: true }}
         />
-        <ErrorState message={t("bible.chapterNotFound")} />
+        <ErrorState variant="cool" message={t("bible.chapterNotFound")} />
       </>
     );
   }
@@ -181,7 +183,7 @@ export default function ChapterReader() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <LoadingState />
+        <LoadingState variant="cool" />
       </>
     );
   }
@@ -199,6 +201,7 @@ export default function ChapterReader() {
           }}
         />
         <ErrorState
+          variant="cool"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("bible.chapterNotFound")}
         />
@@ -211,180 +214,195 @@ export default function ChapterReader() {
       <Stack.Screen
         options={{ title: chapterLabel(all, current), headerShown: true }}
       />
-      <ScrollView
-        ref={scrollRef}
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-4 px-7 py-8"
-        onContentSizeChange={scrollToTarget}
-      >
-        {(verses ?? []).map((row) => {
-          const linked = row.verse === targetVerse;
-          const isHighlighted = marks?.highlighted.includes(row.verse) ?? false;
-          const note = marks?.notes[row.verse];
-          const isOpen = openVerse === row.verse;
+      <DawnBackground variant="cool">
+        <ScrollView
+          ref={scrollRef}
+          contentContainerClassName="px-5 py-6"
+          onContentSizeChange={scrollToTarget}
+        >
+          {/*
+            El capítulo entero va sobre un panel, y el panel es `flat`: sin
+            desenfoque. Un capítulo como Salmos 119 son 176 versículos de
+            scroll continuo, y desenfocar el fondo detrás de una superficie de
+            ese alto se recompone en cada fotograma. La translucidez sola
+            mantiene el aspecto y no el coste. Aquí se lee: manda la letra.
+          */}
+          <Glass readable flat className="rounded-card px-6 py-7 shadow-card">
+            <View className="gap-4">
+              {(verses ?? []).map((row) => {
+                const linked = row.verse === targetVerse;
+                const isHighlighted =
+                  marks?.highlighted.includes(row.verse) ?? false;
+                const note = marks?.notes[row.verse];
+                const isOpen = openVerse === row.verse;
 
-          return (
-            <View key={row.verse} className="gap-2">
-              {/* El versículo entero es el control. Un icono al margen sería
+                return (
+                  <View key={row.verse} className="gap-2">
+                    {/* El versículo entero es el control. Un icono al margen sería
                   más pequeño que el dedo que lo busca, y aquí el gesto natural
                   es tocar la frase que te ha parado. */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t("bible.markVerse", { verse: row.verse })}
-                accessibilityState={{ expanded: isOpen }}
-                onPress={() => openMarks(row.verse)}
-                className={`flex-row gap-3 rounded-xl px-2 py-1 ${
-                  linked
-                    ? "bg-clay-soft"
-                    : isHighlighted
-                      ? "bg-paper-sunken"
-                      : ""
-                }`}
-                // Measured only for the verse we were sent to. Collecting all
-                // 176 layouts of Salmos 119 to use one would be waste.
-                onLayout={
-                  linked
-                    ? (event) => {
-                        targetY.current = event.nativeEvent.layout.y;
-                        scrollToTarget();
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={t("bible.markVerse", {
+                        verse: row.verse,
+                      })}
+                      accessibilityState={{ expanded: isOpen }}
+                      onPress={() => openMarks(row.verse)}
+                      className={`flex-row gap-3 rounded-xl px-2 py-1 ${
+                        linked
+                          ? "bg-ember-pale"
+                          : isHighlighted
+                            ? "bg-dawn-peach-mid"
+                            : ""
+                      }`}
+                      // Measured only for the verse we were sent to. Collecting all
+                      // 176 layouts of Salmos 119 to use one would be waste.
+                      onLayout={
+                        linked
+                          ? (event) => {
+                              targetY.current = event.nativeEvent.layout.y;
+                              scrollToTarget();
+                            }
+                          : undefined
                       }
-                    : undefined
-                }
-              >
-                <Text className="pt-1 text-xs font-semibold text-ink-muted">
-                  {row.verse}
-                </Text>
-                <Text className="flex-1 font-serif text-lg leading-reading text-ink">
-                  {row.text}
-                </Text>
-              </Pressable>
+                    >
+                      <Text className="pt-1 font-sans-semibold text-xs text-ember-ink">
+                        {row.verse}
+                      </Text>
+                      <Text className="flex-1 font-serif text-lg leading-reading text-plum">
+                        {row.text}
+                      </Text>
+                    </Pressable>
 
-              {/* La nota se ve sin abrir nada: escribir algo al margen y que
+                    {/* La nota se ve sin abrir nada: escribir algo al margen y que
                   luego haya que ir a buscarlo es la forma de no volver a
                   escribir ninguna. */}
-              {note && !isOpen ? (
-                <Text className="px-2 text-sm leading-6 text-ink-muted">
-                  {note}
-                </Text>
-              ) : null}
+                    {note && !isOpen ? (
+                      <Text className="px-2 font-sans text-sm leading-6 text-mist-ink">
+                        {note}
+                      </Text>
+                    ) : null}
 
-              {isOpen ? (
-                <View className="gap-3 rounded-xl bg-paper-sunken p-4">
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() =>
-                      void runMark(() =>
-                        toggleHighlight.mutateAsync({
-                          verse: row.verse,
-                          on: !isHighlighted,
-                        }),
-                      )
-                    }
-                  >
-                    <Text className="text-sm font-medium text-clay">
-                      {isHighlighted
-                        ? t("bible.unhighlight")
-                        : t("bible.highlight")}
-                    </Text>
-                  </Pressable>
+                    {isOpen ? (
+                      <View className="gap-3 rounded-input bg-dawn-cream p-4">
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() =>
+                            void runMark(() =>
+                              toggleHighlight.mutateAsync({
+                                verse: row.verse,
+                                on: !isHighlighted,
+                              }),
+                            )
+                          }
+                        >
+                          <Text className="font-sans-medium text-sm text-ember-ink">
+                            {isHighlighted
+                              ? t("bible.unhighlight")
+                              : t("bible.highlight")}
+                          </Text>
+                        </Pressable>
 
-                  <TextInput
-                    className="w-full rounded-xl border border-ink-line bg-paper px-3 py-2.5 text-base text-ink"
-                    accessibilityLabel={t("bible.notePlaceholder")}
-                    value={noteDraft}
-                    onChangeText={setNoteDraft}
-                    placeholder={t("bible.notePlaceholder")}
-                    placeholderTextColor="#726A62"
-                    maxLength={NOTE_MAX}
-                    multiline
-                  />
+                        <TextInput
+                          className="w-full rounded-input border border-white/70 bg-surface px-3 py-2.5 font-sans text-base text-plum"
+                          accessibilityLabel={t("bible.notePlaceholder")}
+                          value={noteDraft}
+                          onChangeText={setNoteDraft}
+                          placeholder={t("bible.notePlaceholder")}
+                          placeholderTextColor="#6F6879"
+                          maxLength={NOTE_MAX}
+                          multiline
+                        />
 
-                  <View className="flex-row gap-4">
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() =>
-                        void runMark(() =>
-                          saveNote
-                            .mutateAsync({
-                              verse: row.verse,
-                              body: noteDraft,
-                            })
-                            .then(() => setOpenVerse(null)),
-                        )
-                      }
-                    >
-                      {/* Guardar vacío borra la nota, y lo dice: un botón de
+                        <View className="flex-row gap-4">
+                          <Pressable
+                            accessibilityRole="button"
+                            onPress={() =>
+                              void runMark(() =>
+                                saveNote
+                                  .mutateAsync({
+                                    verse: row.verse,
+                                    body: noteDraft,
+                                  })
+                                  .then(() => setOpenVerse(null)),
+                              )
+                            }
+                          >
+                            {/* Guardar vacío borra la nota, y lo dice: un botón de
                           guardar que borra sin avisar es una trampa. */}
-                      <Text className="text-sm font-medium text-ink">
-                        {!noteDraft.trim() && note
-                          ? t("bible.noteDelete")
-                          : t("common.save")}
-                      </Text>
-                    </Pressable>
+                            <Text className="font-sans-semibold text-sm text-plum">
+                              {!noteDraft.trim() && note
+                                ? t("bible.noteDelete")
+                                : t("common.save")}
+                            </Text>
+                          </Pressable>
 
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => setOpenVerse(null)}
-                    >
-                      <Text className="text-sm text-ink-soft underline">
-                        {t("common.cancel")}
-                      </Text>
-                    </Pressable>
-                  </View>
+                          <Pressable
+                            accessibilityRole="button"
+                            onPress={() => setOpenVerse(null)}
+                          >
+                            <Text className="font-sans text-sm text-mist-ink underline">
+                              {t("common.cancel")}
+                            </Text>
+                          </Pressable>
+                        </View>
 
-                  {/* Compartirlo como imagen vive aquí y no en un icono aparte:
+                        {/* Compartirlo como imagen vive aquí y no en un icono aparte:
                       ya has tocado el versículo que te ha parado, que es
                       exactamente el momento en que a alguien le apetece
                       mandárselo a otra persona. */}
-                  <Link
-                    href={{
-                      pathname: "/versiculo",
-                      params: {
-                        book: String(bookId),
-                        chapter: String(chapterNumber),
-                        verse: String(row.verse),
-                      },
-                    }}
-                    asChild
-                  >
-                    <Pressable accessibilityRole="link">
-                      <Text className="text-sm text-clay underline">
-                        {t("bible.shareVerse")}
-                      </Text>
-                    </Pressable>
-                  </Link>
+                        <Link
+                          href={{
+                            pathname: "/versiculo",
+                            params: {
+                              book: String(bookId),
+                              chapter: String(chapterNumber),
+                              verse: String(row.verse),
+                            },
+                          }}
+                          asChild
+                        >
+                          <Pressable accessibilityRole="link">
+                            <Text className="font-sans-medium text-sm text-ember-ink underline">
+                              {t("bible.shareVerse")}
+                            </Text>
+                          </Pressable>
+                        </Link>
 
-                  {markError ? (
-                    <Text
-                      className="text-sm text-red-500"
-                      accessibilityRole="alert"
-                    >
-                      {markError}
-                    </Text>
-                  ) : null}
-                </View>
-              ) : null}
+                        {markError ? (
+                          <Text
+                            className="font-sans text-sm text-danger"
+                            accessibilityRole="alert"
+                          >
+                            {markError}
+                          </Text>
+                        ) : null}
+                      </View>
+                    ) : null}
+                  </View>
+                );
+              })}
             </View>
-          );
-        })}
+          </Glass>
 
-        <View className="gap-3 pb-6 pt-6">
-          {previous ? (
-            <Button
-              title={`${t("bible.previous")} · ${chapterLabel(all, previous)}`}
-              variant="secondary"
-              onPress={() => go(previous)}
-            />
-          ) : null}
-          {following ? (
-            <Button
-              title={`${t("bible.next")} · ${chapterLabel(all, following)}`}
-              variant="secondary"
-              onPress={() => go(following)}
-            />
-          ) : null}
-        </View>
-      </ScrollView>
+          <View className="gap-3 pb-6 pt-6">
+            {previous ? (
+              <Button
+                title={`${t("bible.previous")} · ${chapterLabel(all, previous)}`}
+                variant="secondary"
+                onPress={() => go(previous)}
+              />
+            ) : null}
+            {following ? (
+              <Button
+                title={`${t("bible.next")} · ${chapterLabel(all, following)}`}
+                variant="secondary"
+                onPress={() => go(following)}
+              />
+            ) : null}
+          </View>
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

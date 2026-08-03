@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { Button } from "@/components/Button";
+import { DawnBackground } from "@/components/DawnBackground";
 import { useBibleBooks } from "@/core/bible/queries";
 
 export default function BookChapters() {
@@ -27,9 +28,9 @@ export default function BookChapters() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <View className="flex-1 items-center justify-center bg-paper">
-          <ActivityIndicator color="#1C1917" />
-        </View>
+        <DawnBackground variant="cool" className="items-center justify-center">
+          <ActivityIndicator color="#413653" />
+        </DawnBackground>
       </>
     );
   }
@@ -44,8 +45,11 @@ export default function BookChapters() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <View className="flex-1 items-center justify-center gap-4 bg-paper px-8">
-          <Text className="text-center text-base text-ink-muted">
+        <DawnBackground
+          variant="cool"
+          className="items-center justify-center gap-4 px-8"
+        >
+          <Text className="text-center font-sans text-base text-mist-ink">
             {t("common.notFoundTitle")}
           </Text>
           <View className="w-full">
@@ -55,7 +59,7 @@ export default function BookChapters() {
               onPress={() => router.replace("/biblia")}
             />
           </View>
-        </View>
+        </DawnBackground>
       </>
     );
   }
@@ -68,33 +72,37 @@ export default function BookChapters() {
   return (
     <>
       <Stack.Screen options={{ title: entry.modern_name, headerShown: true }} />
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-4 px-7 py-8"
-      >
-        <Text className="text-sm text-ink-soft">
-          {t("bible.chapters", { count: entry.chapter_count })}
-        </Text>
+      <DawnBackground variant="cool">
+        <ScrollView contentContainerClassName="gap-4 px-7 py-8">
+          <Text className="font-editorial text-lg text-ember-ink">
+            {t("bible.chapters", { count: entry.chapter_count })}
+          </Text>
 
-        <View className="flex-row flex-wrap gap-2">
-          {chapters.map((chapter) => (
-            <Pressable
-              key={chapter}
-              accessibilityRole="button"
-              accessibilityLabel={t("bible.chapter", { number: chapter })}
-              className="h-14 w-14 items-center justify-center rounded-2xl border border-ink-line"
-              onPress={() =>
-                router.push({
-                  pathname: "/libro/[book]/[chapter]",
-                  params: { book: String(entry.id), chapter: String(chapter) },
-                })
-              }
-            >
-              <Text className="text-base text-ink">{chapter}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+          <View className="flex-row flex-wrap gap-2">
+            {chapters.map((chapter) => (
+              <Pressable
+                key={chapter}
+                accessibilityRole="button"
+                accessibilityLabel={t("bible.chapter", { number: chapter })}
+                className="h-14 w-14 items-center justify-center rounded-input border border-white/60 bg-white/60 shadow-soft"
+                onPress={() =>
+                  router.push({
+                    pathname: "/libro/[book]/[chapter]",
+                    params: {
+                      book: String(entry.id),
+                      chapter: String(chapter),
+                    },
+                  })
+                }
+              >
+                <Text className="font-sans-medium text-base text-plum">
+                  {chapter}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

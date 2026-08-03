@@ -9,6 +9,8 @@ import {
   View,
 } from "react-native";
 
+import { Card } from "@/components/Card";
+import { DawnBackground } from "@/components/DawnBackground";
 import { TextField } from "@/components/TextField";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { VerseOfTheDay } from "@/components/VerseOfTheDay";
@@ -47,8 +49,8 @@ const BookRow = ({ book }: { book: BibleBook }) => {
         })
       }
     >
-      <Text className="text-base text-ink">{book.modern_name}</Text>
-      <Text className="text-sm text-ink-soft">
+      <Text className="font-sans text-base text-plum">{book.modern_name}</Text>
+      <Text className="font-sans text-sm text-mist-ink">
         {t("bible.chapters", { count: book.chapter_count })}
       </Text>
     </Pressable>
@@ -68,11 +70,11 @@ export default function Bible() {
   const { data: jump } = useReferenceJump(query);
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState variant="cool" />;
   }
 
   if (isError) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState variant="cool" onRetry={() => void refetch()} />;
   }
 
   const all = books ?? [];
@@ -89,128 +91,144 @@ export default function Bible() {
       : null;
 
   return (
-    <ScrollView
-      className="flex-1 bg-paper"
-      contentContainerClassName="gap-6 px-7 py-8"
-      keyboardShouldPersistTaps="handled"
-    >
-      <View className="gap-1">
-        <Text className="text-2xl font-bold text-ink">{t("bible.title")}</Text>
-        <Text className="text-base text-ink-muted">{t("bible.subtitle")}</Text>
-      </View>
-
-      <TextField
-        label={t("bible.searchLabel")}
-        value={query}
-        onChangeText={setQuery}
-        placeholder={t("bible.searchPlaceholder")}
-        autoCorrect={false}
-      />
-
-      {/* A reference beats a word search: typing "Juan 3" means go there. */}
-      {jump ? (
-        <Pressable
-          accessibilityRole="button"
-          className="rounded-2xl bg-ink px-5 py-4"
-          onPress={() => openChapter(jump.book_id, jump.chapter, jump.verse)}
-        >
-          <Text className="text-base font-semibold text-paper">
-            {t("bible.goTo", {
-              reference: `${bookName(all, jump.book_id)} ${jump.chapter}`,
-            })}
+    <DawnBackground variant="cool">
+      <ScrollView
+        contentContainerClassName="gap-6 px-7 py-8"
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="gap-1">
+          <Text className="font-sans-bold text-2xl text-plum">
+            {t("bible.title")}
           </Text>
-        </Pressable>
-      ) : null}
+          <Text className="font-sans text-base text-mist-ink">
+            {t("bible.subtitle")}
+          </Text>
+        </View>
 
-      {/* Solo cuando no se está buscando: quien escribió algo en la caja quiere
+        <TextField
+          label={t("bible.searchLabel")}
+          value={query}
+          onChangeText={setQuery}
+          placeholder={t("bible.searchPlaceholder")}
+          autoCorrect={false}
+        />
+
+        {/* A reference beats a word search: typing "Juan 3" means go there. */}
+        {jump ? (
+          <Pressable
+            accessibilityRole="button"
+            className="rounded-card bg-plum-chip px-5 py-4 shadow-card"
+            onPress={() => openChapter(jump.book_id, jump.chapter, jump.verse)}
+          >
+            <Text className="font-sans-semibold text-base text-white">
+              {t("bible.goTo", {
+                reference: `${bookName(all, jump.book_id)} ${jump.chapter}`,
+              })}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        {/* Solo cuando no se está buscando: quien escribió algo en la caja quiere
           resultados, no un versículo que no ha pedido empujando la lista hacia
           abajo. */}
-      {searching ? null : <VerseOfTheDay />}
+        {searching ? null : <VerseOfTheDay />}
 
-      {searching ? (
-        tooShort ? (
-          <Text className="text-sm text-ink-muted">
-            {t("bible.searchHint")}
-          </Text>
-        ) : isFetching && !results ? (
-          <ActivityIndicator
-            color="#1C1917"
-            accessibilityLabel={t("common.loading")}
-          />
-        ) : (results ?? []).length === 0 ? (
-          // Saying "nothing found" underneath "Go to Juan 3" is noise: the
-          // reference is what they were asking for.
-          jump ? null : (
-            <View className="gap-1">
-              <Text className="text-base text-ink">{t("bible.noResults")}</Text>
-              <Text className="text-sm text-ink-muted">
-                {t("bible.noResultsHint")}
+        {searching ? (
+          tooShort ? (
+            <Text className="font-sans text-sm text-mist-ink">
+              {t("bible.searchHint")}
+            </Text>
+          ) : isFetching && !results ? (
+            <ActivityIndicator
+              color="#413653"
+              accessibilityLabel={t("common.loading")}
+            />
+          ) : (results ?? []).length === 0 ? (
+            // Saying "nothing found" underneath "Go to Juan 3" is noise: the
+            // reference is what they were asking for.
+            jump ? null : (
+              <View className="gap-1">
+                <Text className="font-sans text-base text-plum">
+                  {t("bible.noResults")}
+                </Text>
+                <Text className="font-sans text-sm text-mist-ink">
+                  {t("bible.noResultsHint")}
+                </Text>
+              </View>
+            )
+          ) : (
+            <View className="gap-4">
+              <Text className="font-sans text-sm text-mist-ink">
+                {t("bible.results", { count: results![0].total_count })}
               </Text>
+
+              {results!.map((hit) => (
+                <Pressable
+                  key={`${hit.book_id}-${hit.chapter}-${hit.verse}`}
+                  accessibilityRole="button"
+                  className="gap-1"
+                  onPress={() =>
+                    openChapter(hit.book_id, hit.chapter, hit.verse)
+                  }
+                >
+                  <Text className="font-editorial text-base text-ember-ink">
+                    {hit.book_name} {hit.chapter}:{hit.verse}
+                  </Text>
+                  <Text className="font-serif text-base leading-7 text-plum">
+                    {splitHighlights(hit.text, query).map((part, index) => (
+                      <Text
+                        key={index}
+                        className={
+                          part.match ? "bg-ember-pale font-serif-bold" : ""
+                        }
+                      >
+                        {part.text}
+                      </Text>
+                    ))}
+                  </Text>
+                </Pressable>
+              ))}
             </View>
           )
         ) : (
-          <View className="gap-4">
-            <Text className="text-sm text-ink-soft">
-              {t("bible.results", { count: results![0].total_count })}
-            </Text>
-
-            {results!.map((hit) => (
+          <>
+            {resume ? (
               <Pressable
-                key={`${hit.book_id}-${hit.chapter}-${hit.verse}`}
                 accessibilityRole="button"
-                className="gap-1"
-                onPress={() => openChapter(hit.book_id, hit.chapter, hit.verse)}
+                onPress={() =>
+                  openChapter(resume.bookId, resume.chapter, resume.verse)
+                }
               >
-                <Text className="text-sm font-medium text-ink-soft">
-                  {hit.book_name} {hit.chapter}:{hit.verse}
-                </Text>
-                <Text className="font-serif text-base leading-7 text-ink">
-                  {splitHighlights(hit.text, query).map((part, index) => (
-                    <Text
-                      key={index}
-                      className={part.match ? "bg-clay-soft font-semibold" : ""}
-                    >
-                      {part.text}
-                    </Text>
-                  ))}
-                </Text>
+                <Card label={t("bible.continueReading")}>
+                  <Text className="font-sans-semibold text-lg text-plum">
+                    {bookName(all, resume.bookId)} {resume.chapter}
+                  </Text>
+                </Card>
               </Pressable>
-            ))}
-          </View>
-        )
-      ) : (
-        <>
-          {resume ? (
-            <Pressable
-              accessibilityRole="button"
-              className="gap-1 rounded-2xl bg-paper-sunken p-5"
-              onPress={() =>
-                openChapter(resume.bookId, resume.chapter, resume.verse)
-              }
-            >
-              <Text className="text-sm font-medium text-ink-soft">
-                {t("bible.continueReading")}
-              </Text>
-              <Text className="text-lg font-semibold text-ink">
-                {bookName(all, resume.bookId)} {resume.chapter}
-              </Text>
-            </Pressable>
-          ) : null}
+            ) : null}
 
-          {[false, true].map((testament) => (
-            <View key={String(testament)} className="gap-1">
-              <Text className="text-sm font-medium text-ink-soft">
-                {testament ? t("bible.newTestament") : t("bible.oldTestament")}
-              </Text>
-              {all
-                .filter((book) => book.new_testament === testament)
-                .map((book) => (
-                  <BookRow key={book.id} book={book} />
-                ))}
-            </View>
-          ))}
-        </>
-      )}
-    </ScrollView>
+            {[false, true].map((testament) => (
+              <View key={String(testament)} className="gap-1">
+                <Text className="font-editorial text-lg text-ember-ink">
+                  {testament
+                    ? t("bible.newTestament")
+                    : t("bible.oldTestament")}
+                </Text>
+                {/* Los libros van sobre vidrio y no sueltos sobre el degradado:
+                  son sesenta y seis filas seguidas, y sin una superficie
+                  debajo la lista se lee como texto flotando. */}
+                <Card className="mt-1 px-5 py-1">
+                  {all
+                    .filter((book) => book.new_testament === testament)
+                    .map((book) => (
+                      <BookRow key={book.id} book={book} />
+                    ))}
+                </Card>
+              </View>
+            ))}
+          </>
+        )}
+      </ScrollView>
+    </DawnBackground>
   );
 }

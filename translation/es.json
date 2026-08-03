@@ -477,7 +477,10 @@
     "shareImage": "Compartir la imagen",
     "imageDownloaded": "Descargada.",
     "imageShared": "Listo.",
-    "shareVerse": "Compartir como imagen"
+    "shareVerse": "Compartir como imagen",
+    "formatSquare": "Cuadrada",
+    "formatStory": "Historia",
+    "formatLabel": "Cómo se ve"
   },
   "chat": {
     "title": "Chat",

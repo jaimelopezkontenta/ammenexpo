@@ -4,8 +4,11 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { ChoiceChips } from "@/components/ChoiceChips";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { VerseCard } from "@/components/VerseCard";
+import { VerseStory } from "@/components/VerseStory";
 import { bookName } from "@/core/bible/navigation";
 import { useBibleBooks, useChapter } from "@/core/bible/queries";
 import { useShareVerseImage } from "@/core/bible/image";
@@ -37,6 +40,10 @@ export default function VerseImage() {
   const cardRef = useRef<View>(null);
   const share = useShareVerseImage(cardRef);
 
+  // Cuadrada para una publicación, vertical para un estado. Es la misma
+  // captura: cambia qué componente está montado bajo la referencia, no cómo se
+  // comparte.
+  const [format, setFormat] = useState<"square" | "story">("square");
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,7 +80,7 @@ export default function VerseImage() {
         <Stack.Screen
           options={{ title: t("bible.share"), headerShown: true }}
         />
-        <LoadingState />
+        <LoadingState variant="story" />
       </>
     );
   }
@@ -84,7 +91,7 @@ export default function VerseImage() {
         <Stack.Screen
           options={{ title: t("bible.share"), headerShown: true }}
         />
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState variant="story" onRetry={() => void refetch()} />
       </>
     );
   }
@@ -93,49 +100,76 @@ export default function VerseImage() {
     <>
       <Stack.Screen options={{ title: t("bible.share"), headerShown: true }} />
 
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-5 px-7 py-8"
-      >
-        {/* Lo que se ve, a tamaño de pantalla. */}
-        <View className="items-center">
-          <View style={{ overflow: "hidden", borderRadius: 16 }}>
-            <VerseCard text={row.text} reference={reference} size={300} />
+      <DawnBackground variant="story">
+        <ScrollView contentContainerClassName="gap-5 px-7 py-8">
+          <View className="items-center gap-1">
+            <Text className="font-editorial text-lg text-ember-ink">
+              {t("bible.formatLabel")}
+            </Text>
+            <ChoiceChips
+              options={[
+                { value: "square", label: t("bible.formatSquare") },
+                { value: "story", label: t("bible.formatStory") },
+              ]}
+              selected={[format]}
+              onToggle={(value) => setFormat(value as "square" | "story")}
+            />
           </View>
-        </View>
 
-        {/* Y lo que se captura, a 1080, fuera de la pantalla pero **pintado**:
+          {/* Lo que se ve, a tamaño de pantalla. */}
+          <View className="items-center">
+            <View style={{ overflow: "hidden", borderRadius: 16 }}>
+              {format === "square" ? (
+                <VerseCard text={row.text} reference={reference} size={300} />
+              ) : (
+                <VerseStory text={row.text} reference={reference} width={230} />
+              )}
+            </View>
+          </View>
+
+          {/* Y lo que se captura, a 1080, fuera de la pantalla pero **pintado**:
             `html2canvas` rasteriza el DOM, así que no puede capturar algo que no
             se ha renderizado, y capturar la vista reducida daba una imagen de
             450 px. Dos instancias del mismo componente, no dos maquetaciones. */}
-        <View
-          style={{ position: "absolute", left: -20000, top: 0 }}
-          pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          aria-hidden
-        >
-          <VerseCard ref={cardRef} text={row.text} reference={reference} />
-        </View>
+          <View
+            style={{ position: "absolute", left: -20000, top: 0 }}
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            aria-hidden
+          >
+            {format === "square" ? (
+              <VerseCard ref={cardRef} text={row.text} reference={reference} />
+            ) : (
+              <VerseStory ref={cardRef} text={row.text} reference={reference} />
+            )}
+          </View>
 
-        <Button
-          title={t("bible.shareImage")}
-          loading={share.isPending}
-          onPress={() => void handleShare()}
-        />
+          <Button
+            title={t("bible.shareImage")}
+            loading={share.isPending}
+            onPress={() => void handleShare()}
+          />
 
-        {notice ? (
-          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-            {notice}
-          </Text>
-        ) : null}
+          {notice ? (
+            <Text
+              className="text-center font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {notice}
+            </Text>
+          ) : null}
 
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
-      </ScrollView>
+          {error ? (
+            <Text
+              className="text-center font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

@@ -477,7 +477,10 @@
     "shareImage": "Share the image",
     "imageDownloaded": "Downloaded.",
     "imageShared": "Done.",
-    "shareVerse": "Share as an image"
+    "shareVerse": "Share as an image",
+    "formatSquare": "Square",
+    "formatStory": "Story",
+    "formatLabel": "How it looks"
   },
   "chat": {
     "title": "Chat",

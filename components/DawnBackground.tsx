@@ -1,7 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { cssInterop } from "nativewind";
 import { ReactNode } from "react";
 import { StyleSheet, View, ViewProps } from "react-native";
 import Svg, { Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
+
+// Igual que con `BlurView`: es un componente de fuera, y sin esto su
+// `className` no se traduce a estilo.
+cssInterop(LinearGradient, { className: "style" });
 
 /**
  * El amanecer, en seis variantes.
@@ -50,16 +55,28 @@ type Props = ViewProps & {
   children?: ReactNode;
 };
 
+/**
+ * `className` se desestructura y se escribe a mano en cada rama, en vez de
+ * viajar dentro del `...viewProps`.
+ *
+ * NativeWind compila la clase en el punto donde ve el atributo `className`
+ * **escrito en el JSX**. Si llega por un spread, el atributo no existe aquí,
+ * la cadena se pasa tal cual y no se convierte en estilo: en web colaba de
+ * milagro —el CSS de esa clase ya existía porque otra pantalla la usa— y en
+ * iOS y Android no habría hecho absolutamente nada.
+ */
 export const DawnBackground = ({
   variant,
   children,
   style,
+  className,
   ...viewProps
 }: Props) => {
   if (variant === "comm") {
     return (
       <View
         {...viewProps}
+        className={className}
         style={[styles.fill, { backgroundColor: "#FDF3E9" }, style]}
       >
         {children}
@@ -69,7 +86,7 @@ export const DawnBackground = ({
 
   if (variant === "radial") {
     return (
-      <View {...viewProps} style={[styles.fill, style]}>
+      <View {...viewProps} className={className} style={[styles.fill, style]}>
         <LinearGradient
           colors={RADIAL_BASE}
           locations={[0, 0.5, 1]}
@@ -113,6 +130,7 @@ export const DawnBackground = ({
   return (
     <LinearGradient
       {...viewProps}
+      className={className}
       colors={colors}
       locations={locations}
       style={[styles.fill, style]}
