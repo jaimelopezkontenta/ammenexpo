@@ -2,6 +2,7 @@ import { Link } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
+import { Card } from "@/components/Card";
 import { useVerseOfTheDay } from "@/core/bible/queries";
 
 /**
@@ -22,12 +23,8 @@ export const VerseOfTheDay = () => {
   if (!data) return null;
 
   return (
-    <View className="gap-2 rounded-2xl bg-paper-sunken p-5">
-      <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-        {t("bible.verseOfTheDay")}
-      </Text>
-
-      <Text className="font-serif text-lg leading-reading text-ink">
+    <Card label={t("bible.verseOfTheDay")} className="gap-2">
+      <Text className="font-serif text-lg leading-reading text-plum">
         {data.text}
       </Text>
 
@@ -47,7 +44,7 @@ export const VerseOfTheDay = () => {
           asChild
         >
           <Pressable accessibilityRole="link">
-            <Text className="text-sm text-clay underline">
+            <Text className="font-editorial text-base text-ember-ink">
               {data.reference}
             </Text>
           </Pressable>
@@ -65,12 +62,12 @@ export const VerseOfTheDay = () => {
           asChild
         >
           <Pressable accessibilityRole="link">
-            <Text className="text-sm text-ink-soft underline">
+            <Text className="font-sans-medium text-sm text-plum underline">
               {t("bible.shareVerse")}
             </Text>
           </Pressable>
         </Link>
       </View>
-    </View>
+    </Card>
   );
 };

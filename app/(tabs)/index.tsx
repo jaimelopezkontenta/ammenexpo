@@ -1,18 +1,15 @@
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { DawnBackground } from "@/components/DawnBackground";
 import { DaySection } from "@/components/DaySection";
 import { DayView } from "@/components/DayView";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
+import { Orb } from "@/components/Orb";
 import { VerseOfTheDay } from "@/components/VerseOfTheDay";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
@@ -181,29 +178,34 @@ export default function Today() {
   };
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState variant="home" />;
   }
 
   if (isError) {
-    return <ErrorState onRetry={() => void refetchPlan()} />;
+    return <ErrorState variant="home" onRetry={() => void refetchPlan()} />;
   }
 
   // Only block while there is nothing to pray yet. Generation runs in the
   // background, so this state survives closing the app.
   if (plan?.status === "generating" && !day && !stuck) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-paper px-8">
-        <ActivityIndicator
-          color="#1C1917"
-          accessibilityLabel={t("plan.generating")}
-        />
-        <Text className="text-center text-xl font-semibold text-ink">
+      <DawnBackground
+        variant="home"
+        className="items-center justify-center gap-5 px-8"
+        accessibilityRole="progressbar"
+        accessibilityLabel={t("plan.generating")}
+      >
+        {/* El orbe y no un indicador de carga: esperar a que se escriba un plan
+            de treinta dias es la espera mas larga del producto, y la marca
+            respirando dice "esta pasando algo" mejor que una rueda. */}
+        <Orb size={110} halo />
+        <Text className="text-center font-sans-semibold text-xl text-plum">
           {t("plan.generating")}
         </Text>
-        <Text className="text-center text-base text-ink-muted">
+        <Text className="text-center font-sans text-base text-mist-ink">
           {t("plan.generatingHint")}
         </Text>
-      </View>
+      </DawnBackground>
     );
   }
 
@@ -215,7 +217,7 @@ export default function Today() {
     const failed = plan?.status === "failed" || stuck;
 
     return (
-      <View className="flex-1 gap-3 bg-paper px-8 py-10">
+      <DawnBackground variant="home" className="gap-3 px-8 py-10">
         {/* A failed plan can be the newest one, and without a way off this
             screen the plans that do work become unreachable. */}
         {plan ? (
@@ -227,16 +229,16 @@ export default function Today() {
         ) : null}
 
         <View className="flex-1 items-center justify-center gap-3">
-          <Text className="text-center text-2xl font-bold text-ink">
+          <Text className="text-center font-sans-bold text-2xl text-plum">
             {failed ? t("plan.failedTitle") : t("plan.noPlanTitle")}
           </Text>
-          <Text className="text-center text-base leading-6 text-ink-muted">
+          <Text className="text-center font-sans text-base leading-6 text-mist-ink">
             {failed ? t("plan.failedBody") : t("plan.noPlanBody")}
           </Text>
 
           {actionError ? (
             <Text
-              className="text-center text-sm text-red-500"
+              className="text-center font-sans text-sm text-danger"
               accessibilityRole="alert"
             >
               {actionError}
@@ -268,7 +270,7 @@ export default function Today() {
             <Button title={t("invite.title")} variant="ghost" />
           </Link>
         </View>
-      </View>
+      </DawnBackground>
     );
   }
 
@@ -277,7 +279,7 @@ export default function Today() {
   // working. useTodayDay now polls while generating, so reaching here means
   // something is genuinely wrong.
   if (!day) {
-    return <ErrorState onRetry={() => void refetchDay()} />;
+    return <ErrorState variant="home" onRetry={() => void refetchDay()} />;
   }
 
   // The day a plan ends.
@@ -290,9 +292,97 @@ export default function Today() {
   // intention in the whole product, and it was being spent on a frozen screen.
   if (progress?.finished) {
     return (
+      <DawnBackground variant="home">
+        <ScrollView contentContainerClassName="flex-grow gap-3 px-8 py-14">
+          <PlanSwitcher
+            plans={plans ?? []}
+            activeId={plan.id}
+            onSelect={selectPlan}
+          />
+
+          <View className="flex-1 items-center justify-center gap-3">
+            <Text className="text-center font-sans-bold text-2xl text-plum">
+              {t("plan.finishedTitle")}
+            </Text>
+            <Text className="text-center font-serif text-base leading-6 text-plum">
+              {plan.title}
+            </Text>
+
+            {/* An honest count, not a congratulation. Someone who prayed 11 of 30
+              days is told 11 of 30 — rounding that up would make the one screen
+              that looks back the one screen that flatters. */}
+            <Text className="mt-4 text-center font-sans text-base leading-6 text-mist-ink">
+              {t("plan.finishedDays", {
+                count: progress.days_prayed,
+                total: progress.days_total,
+              })}
+            </Text>
+
+            {progress.intercessions_received > 0 ? (
+              <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+                {t("plan.finishedIntercessions", {
+                  count: progress.intercessions_received,
+                })}
+              </Text>
+            ) : null}
+          </View>
+
+          {actionError ? (
+            <Text
+              className="text-center font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {actionError}
+            </Text>
+          ) : null}
+
+          <View className="gap-3">
+            {/* The moment with the most intention the product has, and until now
+              it was spent on a frozen screen. Asking here rather than anywhere
+              else is the whole point: thirty days of praying for something is
+              exactly when you know whether it was answered. */}
+            <Link
+              href={{
+                pathname: "/testimonios/nuevo",
+                params: { plan: plan.id },
+              }}
+              asChild
+            >
+              <Button title={t("testimony.askAfterPlan")} variant="secondary" />
+            </Link>
+
+            <Button
+              title={t("plan.finishedCta")}
+              onPress={() => void startGeneration()}
+            />
+
+            {/* Y traer a alguien. Terminar treinta días de oración es el momento
+              del producto en que más sentido tiene decírselo a otra persona, y
+              hasta aquí esta pantalla miraba solo hacia atrás. */}
+            <Link href="/invitar" asChild>
+              <Button title={t("invite.title")} variant="ghost" />
+            </Link>
+            <Button
+              title={t("plan.seeDays")}
+              variant="ghost"
+              onPress={() =>
+                router.push({
+                  pathname: "/plan/[id]/dias",
+                  params: { id: plan.id },
+                })
+              }
+            />
+          </View>
+        </ScrollView>
+      </DawnBackground>
+    );
+  }
+
+  return (
+    <DawnBackground variant="home">
       <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="flex-grow gap-3 px-8 py-14"
+        contentContainerClassName="gap-6 px-7 py-8"
+        keyboardShouldPersistTaps="handled"
       >
         <PlanSwitcher
           plans={plans ?? []}
@@ -300,281 +390,195 @@ export default function Today() {
           onSelect={selectPlan}
         />
 
-        <View className="flex-1 items-center justify-center gap-3">
-          <Text className="text-center text-2xl font-bold text-ink">
-            {t("plan.finishedTitle")}
-          </Text>
-          <Text className="text-center text-base leading-6 text-ink-muted">
-            {plan.title}
-          </Text>
-
-          {/* An honest count, not a congratulation. Someone who prayed 11 of 30
-              days is told 11 of 30 — rounding that up would make the one screen
-              that looks back the one screen that flatters. */}
-          <Text className="mt-4 text-center text-base leading-6 text-ink-muted">
-            {t("plan.finishedDays", {
-              count: progress.days_prayed,
-              total: progress.days_total,
+        <View className="gap-1">
+          <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+            {t("plan.dayOf", {
+              current: day.day_number,
+              total: plan.duration_days,
             })}
+            {plan.status === "generating" && !stuck
+              ? ` · ${t("plan.stillPreparing")}`
+              : ""}
+            {days > 0 ? ` · ${t("plan.streak", { count: days })}` : ""}
           </Text>
 
-          {progress.intercessions_received > 0 ? (
-            <Text className="text-center text-base leading-6 text-ink-muted">
-              {t("plan.finishedIntercessions", {
-                count: progress.intercessions_received,
-              })}
-            </Text>
+          {/* A generation whose first stretch landed and whose second crashed
+            used to say "seguimos preparándolo" every day, forever: both
+            branches that handle a stuck plan require *no* day, and this one
+            has one. The days already written are worth keeping, so the way out
+            is to continue rather than to start over. */}
+          {stuck ? (
+            <Card className="mt-2 gap-2">
+              <Text className="font-sans text-sm leading-5 text-mist-ink">
+                {t("plan.stalledBody", {
+                  written: progress?.days_written ?? day.day_number,
+                  total: plan.duration_days,
+                })}
+              </Text>
+              <Button
+                title={t("plan.stalledCta")}
+                variant="secondary"
+                loading={continuePlan.isPending}
+                onPress={() => void resumeGeneration()}
+              />
+            </Card>
           ) : null}
+
+          <Text className="font-serif-bold text-3xl leading-10 text-plum">
+            {day.title}
+          </Text>
+
+          {draftTitle === null ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("plan.rename")}
+              onPress={() => setDraftTitle(plan.title)}
+            >
+              <Text className="font-sans text-base text-mist-ink">
+                {plan.title} ✎
+              </Text>
+            </Pressable>
+          ) : (
+            <View className="mt-2 gap-2">
+              <TextField
+                label={t("plan.titlePlaceholder")}
+                value={draftTitle}
+                onChangeText={setDraftTitle}
+                maxLength={140}
+                autoFocus
+                onSubmitEditing={() => void saveTitle()}
+                returnKeyType="done"
+              />
+              <Button
+                title={t("common.save")}
+                loading={rename.isPending}
+                onPress={() => void saveTitle()}
+              />
+            </View>
+          )}
+        </View>
+
+        <DayView day={day} books={books ?? []} />
+
+        <View className="pb-2 pt-2">
+          {prayed ? (
+            <Text className="text-center font-sans-medium text-base text-plum">
+              {t("plan.markedDone")}
+            </Text>
+          ) : (
+            <Button
+              title={t("plan.markDone")}
+              loading={markPrayed.isPending}
+              onPress={() =>
+                markPrayed.mutate(undefined, {
+                  onError: () => setActionError(t("common.errorGeneric")),
+                })
+              }
+            />
+          )}
         </View>
 
         {actionError ? (
           <Text
-            className="text-center text-sm text-red-500"
+            className="text-center font-sans text-sm text-danger"
             accessibilityRole="alert"
           >
             {actionError}
           </Text>
         ) : null}
 
-        <View className="gap-3">
-          {/* The moment with the most intention the product has, and until now
-              it was spent on a frozen screen. Asking here rather than anywhere
-              else is the whole point: thirty days of praying for something is
-              exactly when you know whether it was answered. */}
-          <Link
-            href={{
-              pathname: "/testimonios/nuevo",
-              params: { plan: plan.id },
-            }}
-            asChild
-          >
-            <Button title={t("testimony.askAfterPlan")} variant="secondary" />
-          </Link>
-
-          <Button
-            title={t("plan.finishedCta")}
-            onPress={() => void startGeneration()}
-          />
-
-          {/* Y traer a alguien. Terminar treinta días de oración es el momento
-              del producto en que más sentido tiene decírselo a otra persona, y
-              hasta aquí esta pantalla miraba solo hacia atrás. */}
-          <Link href="/invitar" asChild>
-            <Button title={t("invite.title")} variant="ghost" />
-          </Link>
-          <Button
-            title={t("plan.seeDays")}
-            variant="ghost"
-            onPress={() =>
-              router.push({
-                pathname: "/plan/[id]/dias",
-                params: { id: plan.id },
-              })
-            }
-          />
-        </View>
-      </ScrollView>
-    );
-  }
-
-  return (
-    <ScrollView
-      className="flex-1 bg-paper"
-      contentContainerClassName="gap-7 px-7 py-10"
-      keyboardShouldPersistTaps="handled"
-    >
-      <PlanSwitcher
-        plans={plans ?? []}
-        activeId={plan.id}
-        onSelect={selectPlan}
-      />
-
-      <View className="gap-1">
-        <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-          {t("plan.dayOf", {
-            current: day.day_number,
-            total: plan.duration_days,
-          })}
-          {plan.status === "generating" && !stuck
-            ? ` · ${t("plan.stillPreparing")}`
-            : ""}
-          {days > 0 ? ` · ${t("plan.streak", { count: days })}` : ""}
-        </Text>
-
-        {/* A generation whose first stretch landed and whose second crashed
-            used to say "seguimos preparándolo" every day, forever: both
-            branches that handle a stuck plan require *no* day, and this one
-            has one. The days already written are worth keeping, so the way out
-            is to continue rather than to start over. */}
-        {stuck ? (
-          <View className="mt-2 gap-2 rounded-2xl bg-paper-sunken p-4">
-            <Text className="text-sm leading-5 text-ink-muted">
-              {t("plan.stalledBody", {
-                written: progress?.days_written ?? day.day_number,
-                total: plan.duration_days,
-              })}
-            </Text>
+        {/* Only offered once there is a yesterday to go back to. */}
+        {day.day_number > 1 ? (
+          <View className="pb-2">
             <Button
-              title={t("plan.stalledCta")}
+              title={t("plan.seeDays")}
               variant="secondary"
-              loading={continuePlan.isPending}
-              onPress={() => void resumeGeneration()}
+              onPress={() =>
+                router.push({
+                  pathname: "/plan/[id]/dias",
+                  params: { id: plan.id },
+                })
+              }
             />
           </View>
         ) : null}
 
-        <Text className="font-serif-bold text-3xl leading-10 text-ink">
-          {day.title}
-        </Text>
-
-        {draftTitle === null ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("plan.rename")}
-            onPress={() => setDraftTitle(plan.title)}
-          >
-            <Text className="text-base text-ink-muted">{plan.title} ✎</Text>
-          </Pressable>
-        ) : (
-          <View className="mt-2 gap-2">
-            <TextField
-              label={t("plan.titlePlaceholder")}
-              value={draftTitle}
-              onChangeText={setDraftTitle}
-              maxLength={140}
-              autoFocus
-              onSubmitEditing={() => void saveTitle()}
-              returnKeyType="done"
-            />
-            <Button
-              title={t("common.save")}
-              loading={rename.isPending}
-              onPress={() => void saveTitle()}
-            />
-          </View>
-        )}
-      </View>
-
-      <DayView day={day} books={books ?? []} />
-
-      <View className="pb-2 pt-2">
-        {prayed ? (
-          <Text className="text-center text-base font-medium text-ink-muted">
-            {t("plan.markedDone")}
-          </Text>
-        ) : (
-          <Button
-            title={t("plan.markDone")}
-            loading={markPrayed.isPending}
-            onPress={() =>
-              markPrayed.mutate(undefined, {
-                onError: () => setActionError(t("common.errorGeneric")),
-              })
-            }
-          />
-        )}
-      </View>
-
-      {actionError ? (
-        <Text
-          className="text-center text-sm text-red-500"
-          accessibilityRole="alert"
-        >
-          {actionError}
-        </Text>
-      ) : null}
-
-      {/* Only offered once there is a yesterday to go back to. */}
-      {day.day_number > 1 ? (
         <View className="pb-2">
           <Button
-            title={t("plan.seeDays")}
+            title={t("share.open")}
             variant="secondary"
             onPress={() =>
               router.push({
-                pathname: "/plan/[id]/dias",
+                pathname: "/plan/[id]/compartir",
                 params: { id: plan.id },
               })
             }
           />
         </View>
-      ) : null}
 
-      <View className="pb-2">
-        <Button
-          title={t("share.open")}
-          variant="secondary"
-          onPress={() =>
-            router.push({
-              pathname: "/plan/[id]/compartir",
-              params: { id: plan.id },
-            })
-          }
-        />
-      </View>
-
-      {/* Seeing who showed up for you is the reason to come back tomorrow, so
+        {/* Seeing who showed up for you is the reason to come back tomorrow, so
           it lives on this screen rather than behind a notification. */}
-      <DaySection label={t("intercession.whoPrayed")}>
-        {/* Hoy was the last screen still reading a failed query as an empty
+        <DaySection label={t("intercession.whoPrayed")}>
+          {/* Hoy was the last screen still reading a failed query as an empty
             one — and it is the most personal one there is. "Todavía nadie ha
             orado hoy" when the read simply failed is the most expensive lie
             the app can tell. */}
-        {prayedForMeFailed ? (
-          <Text
-            className="text-base leading-6 text-ink-muted"
-            accessibilityRole="alert"
-          >
-            {t("common.errorBody")}
-          </Text>
-        ) : (
-          <WhoPrayed
-            people={prayedForMe ?? []}
-            onReport={(intercessionId) =>
-              void runOnIntercessor(
-                () => report.mutateAsync({ intercessionId }),
-                t("intercession.reported"),
-              )
-            }
-            onBlock={(blockedId) =>
-              void runOnIntercessor(
-                () => block.mutateAsync(blockedId),
-                t("moderation.blockDone"),
-              )
-            }
-          />
-        )}
+          {prayedForMeFailed ? (
+            <Text
+              className="font-sans text-base leading-6 text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {t("common.errorBody")}
+            </Text>
+          ) : (
+            <WhoPrayed
+              people={prayedForMe ?? []}
+              onReport={(intercessionId) =>
+                void runOnIntercessor(
+                  () => report.mutateAsync({ intercessionId }),
+                  t("intercession.reported"),
+                )
+              }
+              onBlock={(blockedId) =>
+                void runOnIntercessor(
+                  () => block.mutateAsync(blockedId),
+                  t("moderation.blockDone"),
+                )
+              }
+            />
+          )}
 
-        {notice ? (
-          <Text
-            className="text-sm text-ink-muted"
-            accessibilityRole="alert"
-            accessibilityLiveRegion="polite"
-          >
-            {notice}
-          </Text>
-        ) : null}
-      </DaySection>
+          {notice ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              {notice}
+            </Text>
+          ) : null}
+        </DaySection>
 
-      {/* "Pray for their plan" needs a "their", and it needs that person to
+        {/* "Pray for their plan" needs a "their", and it needs that person to
           actually have shared one. It used to push to /orar unconditionally,
           so anyone whose intercessor had not shared a plan landed on "Todavía
           nadie ha compartido su plan contigo" — flatly contradicting the list
           they had just tapped away from. */}
-      {prayBackPlanId ? (
-        <View className="pb-4">
-          <Button
-            title={t("intercession.prayBack")}
-            variant="secondary"
-            onPress={() =>
-              router.push({
-                pathname: "/orar/[planId]",
-                params: { planId: prayBackPlanId },
-              })
-            }
-          />
-        </View>
-      ) : null}
-    </ScrollView>
+        {prayBackPlanId ? (
+          <View className="pb-4">
+            <Button
+              title={t("intercession.prayBack")}
+              variant="secondary"
+              onPress={() =>
+                router.push({
+                  pathname: "/orar/[planId]",
+                  params: { planId: prayBackPlanId },
+                })
+              }
+            />
+          </View>
+        ) : null}
+      </ScrollView>
+    </DawnBackground>
   );
 }

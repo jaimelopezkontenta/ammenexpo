@@ -1,5 +1,7 @@
 import { Text, View } from "react-native";
 
+import { Card } from "@/components/Card";
+
 type Tone = "plain" | "scripture" | "action";
 
 interface DaySectionProps {
@@ -8,32 +10,38 @@ interface DaySectionProps {
   children: React.ReactNode;
 }
 
-const CONTAINER: Record<Tone, string> = {
-  plain: "gap-2",
-  scripture: "gap-3 rounded-2xl bg-paper-sunken p-6",
-  // The action is the only part of the day that leaves the phone, so it is the
-  // one block that visually asks for something — and the only place the accent
-  // is spent.
-  action: "gap-2 rounded-2xl border border-clay/25 bg-clay-soft p-5",
-};
-
-const LABEL: Record<Tone, string> = {
-  plain: "text-ink-soft",
-  scripture: "text-ink-soft",
-  action: "text-clay-deep",
-};
-
+/**
+ * Una de las partes del día: el versículo, lo que significa, la acción, la
+ * oración.
+ *
+ * Los rótulos pasaron de mayúsculas pequeñas con tracking a la itálica
+ * editorial del diseño. Es el mismo papel —decir qué es lo que viene— con la
+ * voz del sistema nuevo, y de paso se leen mejor: las versalitas con letra
+ * espaciada son de lo que peor envejece cuando alguien sube el tamaño del
+ * texto del sistema.
+ */
 export const DaySection = ({
   label,
   tone = "plain",
   children,
-}: DaySectionProps) => (
-  <View className={CONTAINER[tone]}>
-    <Text
-      className={`text-xs font-semibold uppercase tracking-wide ${LABEL[tone]}`}
+}: DaySectionProps) => {
+  if (tone === "plain") {
+    return (
+      <View className="gap-2">
+        <Text className="font-editorial text-lg text-ember-ink">{label}</Text>
+        {children}
+      </View>
+    );
+  }
+
+  // La acción es la única parte del día que sale del teléfono, así que es el
+  // único bloque que pide algo — y el único sitio donde se gasta el cálido.
+  return (
+    <Card
+      label={label}
+      className={`gap-3 ${tone === "action" ? "bg-ember-pale/60" : ""}`}
     >
-      {label}
-    </Text>
-    {children}
-  </View>
-);
+      {children}
+    </Card>
+  );
+};

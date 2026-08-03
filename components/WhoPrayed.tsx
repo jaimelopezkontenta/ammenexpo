@@ -26,7 +26,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
 
   if (people.length === 0) {
     return (
-      <Text className="text-base leading-6 text-ink-muted">
+      <Text className="font-sans text-base leading-6 text-mist-ink">
         {t("intercession.nobodyYet")}
       </Text>
     );
@@ -60,7 +60,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                   seed={person.intercessor_id}
                   size={32}
                 />
-                <Text className="flex-1 text-base font-medium text-ink">
+                <Text className="flex-1 font-sans-medium text-base text-plum">
                   {t("intercession.personPrayed", {
                     name: person.intercessor_name,
                   })}
@@ -72,7 +72,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                 is no "reported" placeholder to keep: the text is simply gone
                 and the prayer stays. */}
             {person.message ? (
-              <Text className="text-base leading-6 text-ink-muted">
+              <Text className="font-sans text-base leading-6 text-mist-ink">
                 «{person.message}»
               </Text>
             ) : null}
@@ -101,8 +101,8 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                   <Text
                     className={
                       isConfirming
-                        ? "text-sm font-semibold text-red-500"
-                        : "text-sm text-ink-soft underline"
+                        ? "font-sans-semibold text-sm text-danger"
+                        : "font-sans text-sm text-mist-ink underline"
                     }
                     // Nothing announced the label flipping, so a screen reader
                     // user tapped "Reportar", heard silence, and had no way to
@@ -121,7 +121,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                 accessibilityLabel={`${t("moderation.block")} ${person.intercessor_name}`}
                 onPress={() => onBlock(person.intercessor_id)}
               >
-                <Text className="text-sm text-ink-soft underline">
+                <Text className="font-sans text-sm text-mist-ink underline">
                   {t("moderation.block")}
                 </Text>
               </Pressable>

@@ -41,12 +41,12 @@ export const ScriptureSection = ({
 
   return (
     <DaySection label={t("plan.scripture")} tone="scripture">
-      <Text className="font-serif text-lg leading-reading text-ink">
+      <Text className="font-serif text-lg leading-reading text-plum">
         {scriptureText}
       </Text>
 
       {scriptureRef ? (
-        <Text className="text-sm font-medium text-ink-muted">
+        <Text className="font-sans-medium text-sm text-mist-ink">
           {scriptureRef}
         </Text>
       ) : null}
@@ -71,7 +71,7 @@ export const ScriptureSection = ({
             })
           }
         >
-          <Text className="text-sm font-medium text-ink-muted">
+          <Text className="font-sans-medium text-sm text-mist-ink">
             {t("bible.readInContext")} <Text aria-hidden>→</Text>
           </Text>
         </Pressable>
@@ -104,7 +104,7 @@ export const DayView = ({ day, books }: Props) => {
 
       {day.interpretation ? (
         <DaySection label={t("plan.meaning")}>
-          <Text className="text-base leading-7 text-ink-muted">
+          <Text className="font-sans text-base leading-7 text-plum">
             {day.interpretation}
           </Text>
         </DaySection>
@@ -112,14 +112,14 @@ export const DayView = ({ day, books }: Props) => {
 
       {day.daily_action ? (
         <DaySection label={t("plan.action")} tone="action">
-          <Text className="font-serif text-lg leading-reading text-ink">
+          <Text className="font-serif text-lg leading-reading text-plum">
             {day.daily_action}
           </Text>
         </DaySection>
       ) : null}
 
       <DaySection label={t("plan.prayer")}>
-        <Text className="font-serif text-lg leading-reading text-ink">
+        <Text className="font-serif text-lg leading-reading text-plum">
           {day.prayer_body}
         </Text>
       </DaySection>

@@ -53,14 +53,20 @@ export const PlanSwitcher = ({
             aria-checked={isActive}
             accessibilityLabel={plan.title}
             onPress={() => onSelect(plan.id)}
+            // Elegido: pill de vidrio oscuro. Sin elegir: vidrio claro, que
+            // sobre el degradado se lee como una pastilla y no como un hueco.
             className={`rounded-full border px-4 py-2 ${
-              isActive ? "border-ink bg-ink" : "border-ink-line bg-paper"
+              isActive
+                ? "border-white/30 bg-plum-chip"
+                : "border-white/60 bg-white/60"
             }`}
           >
             <Text
               numberOfLines={1}
               className={`max-w-48 text-sm ${
-                isActive ? "font-semibold text-paper" : "text-ink-muted"
+                isActive
+                  ? "font-sans-semibold text-white"
+                  : "font-sans text-plum"
               }`}
             >
               {plan.title}

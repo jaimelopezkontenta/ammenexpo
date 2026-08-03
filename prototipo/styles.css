@@ -306,7 +306,7 @@ body {
 /* Labels editoriales serif itálica */
 .label-serif {
   font-family: var(--font-serif); font-style: italic;
-  font-size: 19px; color: var(--accent);
+  font-size: 19px; color: var(--accent-ink);
 }
 .label-serif.muted { color: var(--plum); opacity: .85; }
 

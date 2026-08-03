@@ -1,8 +1,9 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link, Tabs } from "expo-router";
+import { Bell, Users } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
+import { Glass } from "../../components/Glass";
 import { TabBarIcon } from "../../components/TabBarIcon";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useUnreadCounts } from "@/core/circles/queries";
@@ -36,7 +37,7 @@ const HeaderIcons = () => {
           }
           className="pl-5 pr-3"
         >
-          <FontAwesome name="bell-o" size={20} color="#413653" />
+          <Bell size={20} color="#413653" strokeWidth={1.7} />
           {unread ? (
             <View className="absolute right-2 top-0 h-2.5 w-2.5 rounded-full bg-ember-accent" />
           ) : null}
@@ -49,7 +50,7 @@ const HeaderIcons = () => {
           accessibilityLabel={t("community.title")}
           className="pl-3 pr-5"
         >
-          <FontAwesome name="users" size={20} color="#413653" />
+          <Users size={20} color="#413653" strokeWidth={1.7} />
         </Pressable>
       </Link>
     </View>
@@ -73,14 +74,35 @@ export default function TabLayout() {
         // de navegación no pasan por NativeWind.
         tabBarActiveTintColor: "#E2703F",
         tabBarInactiveTintColor: "#413653",
+        // Transparente para que se vea el vidrio de `tabBarBackground`, que va
+        // detrás. La barra **no** es absoluta: en el diseño ocupa su sitio y no
+        // flota sobre el contenido, así que ninguna pantalla necesita reservar
+        // hueco abajo — y ninguna lista acaba con la última fila tapada.
         tabBarStyle: {
-          backgroundColor: "#FFF6EA",
-          borderTopColor: "rgba(255,255,255,0.65)",
+          backgroundColor: "transparent",
+          borderTopWidth: 0,
+          elevation: 0,
         },
+        tabBarBackground: () => (
+          <Glass
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderWidth: 0,
+                borderTopWidth: StyleSheet.hairlineWidth,
+                borderTopColor: "rgba(255,255,255,0.65)",
+              },
+            ]}
+            intensity={28}
+            readable
+          />
+        ),
         headerStyle: { backgroundColor: "#FFF6EA" },
         headerShadowVisible: false,
         headerTintColor: "#413653",
-        sceneStyle: { backgroundColor: "#FFF6EA" },
+        // Transparente: cada pantalla pone su propio degradado, y un color
+        // sólido aquí se vería como una costura en el borde.
+        sceneStyle: { backgroundColor: "transparent" },
         // En **todas** las pestañas, no solo en Hoy. Vivían en la cabecera de
         // Hoy, así que quien abría la app en Orar o en Círculos no se enteraba
         // nunca de que alguien había orado por él: el mecanismo de retorno del
@@ -92,7 +114,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("tabs.today"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="home" color={color} focused={focused} />
+          ),
         }}
       />
       {/* Second, next to Hoy: it is the tab most closely tied to the day's
@@ -101,21 +125,29 @@ export default function TabLayout() {
         name="biblia"
         options={{
           title: t("tabs.bible"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="book" color={color} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="orar"
         options={{
           title: t("tabs.pray"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
+          // El isotipo, no un corazón: es la pestaña del centro y el centro
+          // del producto.
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="orb" color={color} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="circulos"
         options={{
           title: t("tabs.circles"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="users" color={color} focused={focused} />
+          ),
           // El punto de mensajes sin leer se pintaba **dentro** de la pantalla,
           // así que había que entrar para saber que había algo que ver.
           tabBarBadge: unreadTotal || undefined,
@@ -126,7 +158,9 @@ export default function TabLayout() {
         name="perfil"
         options={{
           title: t("tabs.profile"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="user" color={color} focused={focused} />
+          ),
         }}
       />
     </Tabs>
