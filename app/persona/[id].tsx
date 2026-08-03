@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -16,8 +17,8 @@ import { useVisibleTestimonies } from "@/core/testimonies/queries";
 /** Un número y lo que significa. Tres veces en la misma fila. */
 const Stat = ({ value, label }: { value: number; label: string }) => (
   <View className="items-center gap-0.5">
-    <Text className="text-lg font-semibold text-ink">{value}</Text>
-    <Text className="text-xs text-ink-soft">{label}</Text>
+    <Text className="font-sans-semibold text-lg text-plum">{value}</Text>
+    <Text className="font-sans text-xs text-mist-ink">{label}</Text>
   </View>
 );
 
@@ -111,14 +112,17 @@ export default function PersonProfile() {
     return (
       <>
         <Stack.Screen options={{ title: "", headerShown: true }} />
-        <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
-          <Text className="text-center text-lg font-medium text-ink">
+        <DawnBackground
+          variant="comm"
+          className="items-center justify-center gap-3 px-8"
+        >
+          <Text className="text-center font-sans-medium text-lg text-plum">
             {t("profile.unavailable")}
           </Text>
-          <Text className="text-center text-base leading-6 text-ink-muted">
+          <Text className="text-center font-sans text-base leading-6 text-mist-ink">
             {t("profile.unavailableBody")}
           </Text>
-        </View>
+        </DawnBackground>
       </>
     );
   }
@@ -129,182 +133,187 @@ export default function PersonProfile() {
         options={{ title: person.display_name, headerShown: true }}
       />
 
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="flex-grow gap-8 px-7 py-8"
-      >
-        <View className="items-center gap-3">
-          <Avatar
-            name={person.display_name}
-            url={person.avatar_url}
-            seed={person.id}
-            size={96}
-          />
+      <DawnBackground variant="comm">
+        <ScrollView contentContainerClassName="flex-grow gap-8 px-7 py-8">
+          <View className="items-center gap-3">
+            <Avatar
+              name={person.display_name}
+              url={person.avatar_url}
+              seed={person.id}
+              size={96}
+            />
 
-          <Text className="text-center font-serif-bold text-2xl text-ink">
-            {person.display_name}
-          </Text>
+            <Text className="text-center font-serif-bold text-2xl text-plum">
+              {person.display_name}
+            </Text>
 
-          <Text className="text-center text-sm text-ink-soft">
-            {t("profile.memberSince", {
-              // El idioma de la app, no el del navegador: con `undefined`
-              // ponía "May 2026" en una pantalla entera en español.
-              date: new Date(person.member_since).toLocaleDateString(
-                i18n.language,
-                { year: "numeric", month: "long" },
-              ),
-            })}
-          </Text>
+            <Text className="text-center font-sans text-sm text-mist-ink">
+              {t("profile.memberSince", {
+                // El idioma de la app, no el del navegador: con `undefined`
+                // ponía "May 2026" en una pantalla entera en español.
+                date: new Date(person.member_since).toLocaleDateString(
+                  i18n.language,
+                  { year: "numeric", month: "long" },
+                ),
+              })}
+            </Text>
 
-          {/* Compartir círculo es lo que explica por qué esta persona puede ver
+            {/* Compartir círculo es lo que explica por qué esta persona puede ver
               tus peticiones, así que se dice en las dos direcciones. En tu
               propio perfil no: `shares_a_circle_with` contigo misma es cierto,
               y "compartís un círculo" sobre ti no significa nada. */}
-          {!person.is_me ? (
-            <Text className="text-center text-sm text-ink-muted">
-              {person.shares_circle
-                ? t("profile.sharesCircle")
-                : t("profile.noSharedCircle")}
-            </Text>
-          ) : null}
+            {!person.is_me ? (
+              <Text className="text-center font-sans text-sm text-mist-ink">
+                {person.shares_circle
+                  ? t("profile.sharesCircle")
+                  : t("profile.noSharedCircle")}
+              </Text>
+            ) : null}
 
-          {/* Los tres números. La racha va aquí por decisión de producto, y es
+            {/* Los tres números. La racha va aquí por decisión de producto, y es
               la única de las tres que antes era privada: en tu perfil es
               motivación, en el de otra persona es comparación. Se pinta ya
               decidida por el servidor, con el día de esa persona. */}
-          <View className="flex-row gap-6 pt-2">
-            <Stat value={person.streak} label={t("profile.statStreak")} />
-            <Stat
-              value={person.follower_count}
-              label={t("profile.statFollowers")}
-            />
-            <Stat
-              value={person.following_count}
-              label={t("profile.statFollowing")}
-            />
+            <View className="flex-row gap-6 pt-2">
+              <Stat value={person.streak} label={t("profile.statStreak")} />
+              <Stat
+                value={person.follower_count}
+                label={t("profile.statFollowers")}
+              />
+              <Stat
+                value={person.following_count}
+                label={t("profile.statFollowing")}
+              />
+            </View>
+
+            {!person.is_me ? (
+              <View className="w-full pt-2">
+                <Button
+                  title={
+                    person.i_follow ? t("social.following") : t("social.follow")
+                  }
+                  // Dejar de seguir no es la acción principal de esta pantalla, y
+                  // un botón lleno invitando a deshacerlo lo sería.
+                  variant={person.i_follow ? "secondary" : "primary"}
+                  loading={follow.isPending || unfollow.isPending}
+                  onPress={() => void handleFollow()}
+                />
+              </View>
+            ) : null}
           </View>
 
-          {!person.is_me ? (
-            <View className="w-full pt-2">
+          {(plans ?? []).length > 0 ? (
+            <View className="gap-4">
+              <Text className="font-sans-medium text-sm text-mist-ink">
+                {t("community.publicPlans")}
+              </Text>
+
+              {(plans ?? []).map((plan) => (
+                <Link
+                  key={plan.id}
+                  href={{
+                    pathname: "/orar/[planId]",
+                    params: { planId: plan.id },
+                  }}
+                  asChild
+                >
+                  <Pressable
+                    accessibilityRole="link"
+                    className="gap-1 rounded-2xl border border-white/60 p-5"
+                  >
+                    <Text className="font-serif-bold text-base text-plum">
+                      {plan.title}
+                    </Text>
+                    <Text className="font-sans text-sm text-mist-ink">
+                      {t("newPlan.days", { count: plan.duration_days })}
+                    </Text>
+                  </Pressable>
+                </Link>
+              ))}
+            </View>
+          ) : null}
+
+          {(posts ?? []).length > 0 ? (
+            <View className="gap-4">
+              <Text className="font-sans-medium text-sm text-mist-ink">
+                {t("feed.title")}
+              </Text>
+
+              {/* Solo lo que pidió con su nombre. Lo anónimo no llega hasta aquí
+                —el servidor lo excluye— porque una lista por persona es justo
+                la forma de deshacer un anonimato. */}
+              {(posts ?? []).map((post) => (
+                <View
+                  key={post.id}
+                  className="gap-2 rounded-2xl border border-white/60 p-5"
+                >
+                  <Text className="font-serif text-base leading-reading text-plum">
+                    {post.body}
+                  </Text>
+                  <Text className="font-sans text-sm text-mist-ink">
+                    {t("feed.prayCount", { count: post.prayer_count })}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {theirs.length > 0 ? (
+            <View className="gap-4">
+              <Text className="font-sans-medium text-sm text-mist-ink">
+                {t("testimony.title")}
+              </Text>
+
+              {theirs.map((entry) => (
+                <View
+                  key={entry.id}
+                  className="gap-2 rounded-2xl bg-white/60 p-5"
+                >
+                  {entry.plan_title ? (
+                    <Text className="font-sans text-sm text-mist-ink">
+                      {entry.plan_title}
+                    </Text>
+                  ) : null}
+                  <Text className="font-serif text-base leading-reading text-plum">
+                    {entry.body}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {notice ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {notice}
+            </Text>
+          ) : null}
+
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
+
+          {/* En tu propio perfil no, obviamente. Y aquí abajo, no arriba: alguien
+            que abre esto viene a ver quién oró por él, no a moderar. */}
+          {!person.is_me && !notice ? (
+            <View className="mt-auto pt-6">
               <Button
-                title={
-                  person.i_follow ? t("social.following") : t("social.follow")
-                }
-                // Dejar de seguir no es la acción principal de esta pantalla, y
-                // un botón lleno invitando a deshacerlo lo sería.
-                variant={person.i_follow ? "secondary" : "primary"}
-                loading={follow.isPending || unfollow.isPending}
-                onPress={() => void handleFollow()}
+                title={t("moderation.block")}
+                variant="ghost"
+                loading={block.isPending}
+                onPress={() => void handleBlock()}
               />
             </View>
           ) : null}
-        </View>
-
-        {(plans ?? []).length > 0 ? (
-          <View className="gap-4">
-            <Text className="text-sm font-medium text-ink-muted">
-              {t("community.publicPlans")}
-            </Text>
-
-            {(plans ?? []).map((plan) => (
-              <Link
-                key={plan.id}
-                href={{
-                  pathname: "/orar/[planId]",
-                  params: { planId: plan.id },
-                }}
-                asChild
-              >
-                <Pressable
-                  accessibilityRole="link"
-                  className="gap-1 rounded-2xl border border-ink-line p-5"
-                >
-                  <Text className="font-serif-bold text-base text-ink">
-                    {plan.title}
-                  </Text>
-                  <Text className="text-sm text-ink-soft">
-                    {t("newPlan.days", { count: plan.duration_days })}
-                  </Text>
-                </Pressable>
-              </Link>
-            ))}
-          </View>
-        ) : null}
-
-        {(posts ?? []).length > 0 ? (
-          <View className="gap-4">
-            <Text className="text-sm font-medium text-ink-muted">
-              {t("feed.title")}
-            </Text>
-
-            {/* Solo lo que pidió con su nombre. Lo anónimo no llega hasta aquí
-                —el servidor lo excluye— porque una lista por persona es justo
-                la forma de deshacer un anonimato. */}
-            {(posts ?? []).map((post) => (
-              <View
-                key={post.id}
-                className="gap-2 rounded-2xl border border-ink-line p-5"
-              >
-                <Text className="font-serif text-base leading-reading text-ink">
-                  {post.body}
-                </Text>
-                <Text className="text-sm text-ink-soft">
-                  {t("feed.prayCount", { count: post.prayer_count })}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
-
-        {theirs.length > 0 ? (
-          <View className="gap-4">
-            <Text className="text-sm font-medium text-ink-muted">
-              {t("testimony.title")}
-            </Text>
-
-            {theirs.map((entry) => (
-              <View
-                key={entry.id}
-                className="gap-2 rounded-2xl bg-paper-sunken p-5"
-              >
-                {entry.plan_title ? (
-                  <Text className="text-sm text-ink-soft">
-                    {entry.plan_title}
-                  </Text>
-                ) : null}
-                <Text className="font-serif text-base leading-reading text-ink">
-                  {entry.body}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
-
-        {notice ? (
-          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-            {notice}
-          </Text>
-        ) : null}
-
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
-
-        {/* En tu propio perfil no, obviamente. Y aquí abajo, no arriba: alguien
-            que abre esto viene a ver quién oró por él, no a moderar. */}
-        {!person.is_me && !notice ? (
-          <View className="mt-auto pt-6">
-            <Button
-              title={t("moderation.block")}
-              variant="ghost"
-              loading={block.isPending}
-              onPress={() => void handleBlock()}
-            />
-          </View>
-        ) : null}
-      </ScrollView>
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

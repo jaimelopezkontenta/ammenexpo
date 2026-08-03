@@ -39,7 +39,7 @@ export const CirclePlanCard = ({
     }
 
     return (
-      <View className="gap-2 rounded-2xl border border-white/60 p-5">
+      <View className="gap-2 rounded-card border border-white/60 bg-white/60 p-5 shadow-card">
         <Text className="font-sans-semibold text-base text-plum">
           {t("circles.planEmpty")}
         </Text>
@@ -57,7 +57,7 @@ export const CirclePlanCard = ({
   }
 
   return (
-    <View className="gap-3 rounded-2xl border border-white/60 p-5">
+    <View className="gap-3 rounded-card border border-white/60 bg-white/60 p-5 shadow-card">
       <View className="gap-1">
         <Text className="font-sans-medium text-sm text-mist-ink">
           {t("circles.planLabel")}

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { TextField } from "@/components/TextField";
@@ -65,59 +66,63 @@ export default function NewTestimony() {
       <Stack.Screen
         options={{ title: t("testimony.title"), headerShown: true }}
       />
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="flex-grow gap-6 px-7 py-8"
-        keyboardShouldPersistTaps="handled"
-      >
-        {plan ? (
-          <Text className="text-sm text-ink-muted">
-            {t("testimony.duringPlan", { title: plan.title })}
-          </Text>
-        ) : null}
+      <DawnBackground variant="comm">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-6 px-7 py-8"
+          keyboardShouldPersistTaps="handled"
+        >
+          {plan ? (
+            <Text className="font-sans text-sm text-mist-ink">
+              {t("testimony.duringPlan", { title: plan.title })}
+            </Text>
+          ) : null}
 
-        <View className="gap-2">
-          <TextField
-            label={t("testimony.body")}
-            value={body}
-            onChangeText={setBody}
-            placeholder={t("testimony.placeholder")}
-            maxLength={TESTIMONY_MAX}
-            multiline
-          />
-        </View>
+          <View className="gap-2">
+            <TextField
+              label={t("testimony.body")}
+              value={body}
+              onChangeText={setBody}
+              placeholder={t("testimony.placeholder")}
+              maxLength={TESTIMONY_MAX}
+              multiline
+            />
+          </View>
 
-        <View className="gap-3">
-          <Text className="text-lg font-semibold text-ink">
-            {t("testimony.whoSees")}
-          </Text>
-          <ChoiceChips
-            options={[
-              { value: "private", label: t("testimony.visPrivate") },
-              { value: "circles", label: t("testimony.visCircles") },
-              { value: "public", label: t("testimony.visPublic") },
-            ]}
-            selected={[visibility]}
-            onToggle={(value) => setVisibility(value as TestimonyVisibility)}
-          />
-          <Text className="text-sm text-ink-muted">{hint}</Text>
-        </View>
+          <View className="gap-3">
+            <Text className="font-sans-semibold text-lg text-plum">
+              {t("testimony.whoSees")}
+            </Text>
+            <ChoiceChips
+              options={[
+                { value: "private", label: t("testimony.visPrivate") },
+                { value: "circles", label: t("testimony.visCircles") },
+                { value: "public", label: t("testimony.visPublic") },
+              ]}
+              selected={[visibility]}
+              onToggle={(value) => setVisibility(value as TestimonyVisibility)}
+            />
+            <Text className="font-sans text-sm text-mist-ink">{hint}</Text>
+          </View>
 
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
 
-        <View className="mt-auto pt-6">
-          <Button
-            title={t("testimony.save")}
-            disabled={body.trim().length === 0}
-            loading={write.isPending}
-            onPress={() => void handleSave()}
-          />
-        </View>
-      </ScrollView>
+          <View className="mt-auto pt-6">
+            <Button
+              title={t("testimony.save")}
+              disabled={body.trim().length === 0}
+              loading={write.isPending}
+              onPress={() => void handleSave()}
+            />
+          </View>
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

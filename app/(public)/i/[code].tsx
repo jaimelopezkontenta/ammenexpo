@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { rememberInviteCode, rememberSource } from "@/core/auth/pendingToken";
@@ -51,14 +52,17 @@ export default function InviteLanding() {
   }
 
   return (
-    <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
-      <Text className="text-center font-serif-bold text-2xl text-ink">
+    <DawnBackground
+      variant="radial"
+      className="items-center justify-center gap-3 px-8"
+    >
+      <Text className="text-center font-serif-bold text-2xl text-plum">
         {/* Un código que ya no existe no es un error: se dice lo que hay, que
             es una invitación a la app, sin nombre. */}
         {name ? t("invite.landing", { name }) : t("invite.landingUnknown")}
       </Text>
 
-      <Text className="text-center text-base leading-6 text-ink-muted">
+      <Text className="text-center font-sans text-base leading-6 text-mist-ink">
         {t("invite.body")}
       </Text>
 
@@ -81,6 +85,6 @@ export default function InviteLanding() {
           </>
         )}
       </View>
-    </View>
+    </DawnBackground>
   );
 }

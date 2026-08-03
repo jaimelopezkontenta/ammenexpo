@@ -7,6 +7,7 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { LoadMore } from "@/components/LoadMore";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
@@ -110,228 +111,242 @@ export default function Community() {
         options={{ title: t("community.title"), headerShown: true }}
       />
 
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="gap-5 px-7 py-8"
-        keyboardShouldPersistTaps="handled"
-      >
-        <TextInput
-          className="w-full rounded-2xl border border-ink-line bg-paper px-4 py-3.5 text-base text-ink"
-          accessibilityLabel={t("community.searchPlaceholder")}
-          value={query}
-          onChangeText={setQuery}
-          placeholder={t("community.searchPlaceholder")}
-          placeholderTextColor="#726A62"
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="search"
-        />
+      <DawnBackground variant="comm">
+        <ScrollView
+          contentContainerClassName="gap-5 px-7 py-8"
+          keyboardShouldPersistTaps="handled"
+        >
+          <TextInput
+            className="w-full rounded-2xl border border-white/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base text-plum"
+            accessibilityLabel={t("community.searchPlaceholder")}
+            value={query}
+            onChangeText={setQuery}
+            placeholder={t("community.searchPlaceholder")}
+            placeholderTextColor="#726A62"
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+          />
 
-        {notice ? (
-          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-            {notice}
-          </Text>
-        ) : null}
-
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
-
-        {searching ? (
-          people.isLoading ? (
-            <LoadingState />
-          ) : people.isError ? (
-            <ErrorState onRetry={() => void people.refetch()} />
-          ) : (people.data ?? []).length === 0 ? (
-            <Text className="text-base leading-6 text-ink-muted">
-              {t("community.nobodyFound")}
+          {notice ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {notice}
             </Text>
-          ) : (
-            (people.data ?? []).map((person) => (
-              <View
-                key={person.id}
-                className="flex-row items-center gap-3 rounded-2xl border border-ink-line p-4"
-              >
-                <Link
-                  href={{
-                    pathname: "/persona/[id]",
-                    params: { id: person.id },
-                  }}
-                  asChild
-                >
-                  <Pressable
-                    accessibilityRole="link"
-                    className="flex-1 flex-row items-center gap-3"
-                  >
-                    <Avatar
-                      name={person.display_name}
-                      url={person.avatar_url}
-                      seed={person.id}
-                      size={40}
-                    />
-                    <View className="flex-1">
-                      <Text className="text-base font-medium text-ink">
-                        {person.display_name}
-                      </Text>
-                      <Text className="text-sm text-ink-soft">
-                        {t("community.followers", {
-                          count: person.follower_count,
-                        })}
-                      </Text>
-                    </View>
-                  </Pressable>
-                </Link>
+          ) : null}
 
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={pending === person.id}
-                  onPress={() => void handleFollow(person.id, person.i_follow)}
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
+
+          {searching ? (
+            people.isLoading ? (
+              <LoadingState variant="comm" />
+            ) : people.isError ? (
+              <ErrorState
+                variant="comm"
+                onRetry={() => void people.refetch()}
+              />
+            ) : (people.data ?? []).length === 0 ? (
+              <Text className="font-sans text-base leading-6 text-mist-ink">
+                {t("community.nobodyFound")}
+              </Text>
+            ) : (
+              (people.data ?? []).map((person) => (
+                <View
+                  key={person.id}
+                  className="flex-row items-center gap-3 rounded-2xl border border-white/60 p-4"
                 >
-                  <Text className="text-sm font-medium text-clay">
-                    {person.i_follow
-                      ? t("social.following")
-                      : t("social.follow")}
-                  </Text>
-                </Pressable>
-              </View>
-            ))
-          )
-        ) : feed.isLoading ? (
-          <LoadingState />
-        ) : feed.isError ? (
-          <ErrorState onRetry={() => void feed.refetch()} />
-        ) : (
-          <>
-            {/* De quién es lo que se ve. Con cero seguidos el servidor sirve
+                  <Link
+                    href={{
+                      pathname: "/persona/[id]",
+                      params: { id: person.id },
+                    }}
+                    asChild
+                  >
+                    <Pressable
+                      accessibilityRole="link"
+                      className="flex-1 flex-row items-center gap-3"
+                    >
+                      <Avatar
+                        name={person.display_name}
+                        url={person.avatar_url}
+                        seed={person.id}
+                        size={40}
+                      />
+                      <View className="flex-1">
+                        <Text className="font-sans-medium text-base text-plum">
+                          {person.display_name}
+                        </Text>
+                        <Text className="font-sans text-sm text-mist-ink">
+                          {t("community.followers", {
+                            count: person.follower_count,
+                          })}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  </Link>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={pending === person.id}
+                    onPress={() =>
+                      void handleFollow(person.id, person.i_follow)
+                    }
+                  >
+                    <Text className="font-sans-medium text-sm text-ember-ink">
+                      {person.i_follow
+                        ? t("social.following")
+                        : t("social.follow")}
+                    </Text>
+                  </Pressable>
+                </View>
+              ))
+            )
+          ) : feed.isLoading ? (
+            <LoadingState variant="comm" />
+          ) : feed.isError ? (
+            <ErrorState variant="comm" onRetry={() => void feed.refetch()} />
+          ) : (
+            <>
+              {/* De quién es lo que se ve. Con cero seguidos el servidor sirve
                 lo público reciente —un feed vacío el primer día es la forma más
                 rápida de no volver— y sin decirlo parece que la app enseña
                 desconocidos porque sí. */}
-            <Text className="text-sm leading-6 text-ink-muted">
-              {following > 0
-                ? t("community.fromFollowing", { count: following })
-                : t("community.fromEveryone")}
-            </Text>
-
-            <Link href="/peticiones/nueva" asChild>
-              <Button title={t("feed.newPost")} variant="secondary" />
-            </Link>
-
-            {(feed.data ?? []).length === 0 ? (
-              <Text className="text-base leading-6 text-ink-muted">
-                {t("community.empty")}
+              <Text className="font-sans text-sm leading-6 text-mist-ink">
+                {following > 0
+                  ? t("community.fromFollowing", { count: following })
+                  : t("community.fromEveryone")}
               </Text>
-            ) : (
-              (feed.data ?? []).map((entry) =>
-                entry.kind === "request" ? (
-                  // La misma tarjeta que el muro, con todo lo que trae:
-                  // reportar, bloquear, marcar respondida y borrar. `canHide` en
-                  // falso porque en el muro abierto no manda nadie, y eso la
-                  // propia pantalla del muro ya lo dice en voz alta.
-                  <PrayerRequestCard
-                    key={`${entry.kind}-${entry.id}`}
-                    request={{
-                      id: entry.id,
-                      body: entry.body ?? "",
-                      is_anonymous: entry.is_anonymous,
-                      author_id: entry.author_id,
-                      author_name: entry.author_name,
-                      author_avatar_url: entry.author_avatar_url,
-                      prayer_count: entry.prayer_count,
-                      comment_count: entry.comment_count,
-                      answered_at: entry.answered_at,
-                      held_at: entry.held_at,
-                      created_at: entry.created_at,
-                      i_prayed: entry.i_prayed,
-                      is_mine: entry.is_mine,
-                    }}
-                    canHide={false}
-                    onTogglePrayer={() =>
-                      void run(() =>
-                        togglePrayer
-                          .mutateAsync({
-                            postId: entry.id,
-                            prayed: entry.i_prayed,
-                          })
-                          .then(() => feed.refetch()),
-                      )
-                    }
-                    onOpen={() =>
-                      router.push({
-                        pathname: "/peticiones/[id]",
-                        params: { id: entry.id },
-                      })
-                    }
-                    onReport={() =>
-                      void run(
-                        () =>
-                          reportPost.mutateAsync({
-                            id: entry.id,
-                            kind: "post",
-                          }),
-                        t("moderation.reportDone"),
-                      )
-                    }
-                    onBlock={(who) =>
-                      void run(
-                        () => block.mutateAsync(who),
-                        t("moderation.blockDone"),
-                      )
-                    }
-                    // En el muro abierto no hay quien administre, así que esta
-                    // nunca se llama: `canHide` mantiene el control fuera.
-                    onHide={() => undefined}
-                    onMarkAnswered={() =>
-                      void run(() =>
-                        markAnswered
-                          .mutateAsync(entry.id)
-                          .then(() => feed.refetch()),
-                      )
-                    }
-                    onDelete={() =>
-                      void run(() =>
-                        remove.mutateAsync(entry.id).then(() => feed.refetch()),
-                      )
-                    }
-                  />
-                ) : (
-                  <StoryCard
-                    key={`${entry.kind}-${entry.id}`}
-                    entry={entry}
-                    onReport={() =>
-                      void run(
-                        () =>
-                          entry.kind === "testimony"
-                            ? reportTestimony.mutateAsync(entry.id)
-                            : reportPost.mutateAsync({
-                                id: entry.id,
-                                kind: "post",
-                              }),
-                        t("moderation.reportDone"),
-                      )
-                    }
-                    onBlock={() => {
-                      if (!entry.author_id) return;
 
-                      void run(
-                        () => block.mutateAsync(entry.author_id!),
-                        t("moderation.blockDone"),
-                      );
-                    }}
-                  />
-                ),
-              )
-            )}
+              <Link href="/peticiones/nueva" asChild>
+                <Button title={t("feed.newPost")} variant="secondary" />
+              </Link>
 
-            <LoadMore
-              hasMore={feed.hasNextPage}
-              loading={feed.isFetchingNextPage}
-              onPress={() => void feed.fetchNextPage()}
-            />
-          </>
-        )}
-      </ScrollView>
+              {(feed.data ?? []).length === 0 ? (
+                <Text className="font-sans text-base leading-6 text-mist-ink">
+                  {t("community.empty")}
+                </Text>
+              ) : (
+                (feed.data ?? []).map((entry) =>
+                  entry.kind === "request" ? (
+                    // La misma tarjeta que el muro, con todo lo que trae:
+                    // reportar, bloquear, marcar respondida y borrar. `canHide` en
+                    // falso porque en el muro abierto no manda nadie, y eso la
+                    // propia pantalla del muro ya lo dice en voz alta.
+                    <PrayerRequestCard
+                      key={`${entry.kind}-${entry.id}`}
+                      request={{
+                        id: entry.id,
+                        body: entry.body ?? "",
+                        is_anonymous: entry.is_anonymous,
+                        author_id: entry.author_id,
+                        author_name: entry.author_name,
+                        author_avatar_url: entry.author_avatar_url,
+                        prayer_count: entry.prayer_count,
+                        comment_count: entry.comment_count,
+                        answered_at: entry.answered_at,
+                        held_at: entry.held_at,
+                        created_at: entry.created_at,
+                        i_prayed: entry.i_prayed,
+                        is_mine: entry.is_mine,
+                      }}
+                      canHide={false}
+                      onTogglePrayer={() =>
+                        void run(() =>
+                          togglePrayer
+                            .mutateAsync({
+                              postId: entry.id,
+                              prayed: entry.i_prayed,
+                            })
+                            .then(() => feed.refetch()),
+                        )
+                      }
+                      onOpen={() =>
+                        router.push({
+                          pathname: "/peticiones/[id]",
+                          params: { id: entry.id },
+                        })
+                      }
+                      onReport={() =>
+                        void run(
+                          () =>
+                            reportPost.mutateAsync({
+                              id: entry.id,
+                              kind: "post",
+                            }),
+                          t("moderation.reportDone"),
+                        )
+                      }
+                      onBlock={(who) =>
+                        void run(
+                          () => block.mutateAsync(who),
+                          t("moderation.blockDone"),
+                        )
+                      }
+                      // En el muro abierto no hay quien administre, así que esta
+                      // nunca se llama: `canHide` mantiene el control fuera.
+                      onHide={() => undefined}
+                      onMarkAnswered={() =>
+                        void run(() =>
+                          markAnswered
+                            .mutateAsync(entry.id)
+                            .then(() => feed.refetch()),
+                        )
+                      }
+                      onDelete={() =>
+                        void run(() =>
+                          remove
+                            .mutateAsync(entry.id)
+                            .then(() => feed.refetch()),
+                        )
+                      }
+                    />
+                  ) : (
+                    <StoryCard
+                      key={`${entry.kind}-${entry.id}`}
+                      entry={entry}
+                      onReport={() =>
+                        void run(
+                          () =>
+                            entry.kind === "testimony"
+                              ? reportTestimony.mutateAsync(entry.id)
+                              : reportPost.mutateAsync({
+                                  id: entry.id,
+                                  kind: "post",
+                                }),
+                          t("moderation.reportDone"),
+                        )
+                      }
+                      onBlock={() => {
+                        if (!entry.author_id) return;
+
+                        void run(
+                          () => block.mutateAsync(entry.author_id!),
+                          t("moderation.blockDone"),
+                        );
+                      }}
+                    />
+                  ),
+                )
+              )}
+
+              <LoadMore
+                hasMore={feed.hasNextPage}
+                loading={feed.isFetchingNextPage}
+                onPress={() => void feed.fetchNextPage()}
+              />
+            </>
+          )}
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }
@@ -355,7 +370,7 @@ const StoryCard = ({
   const { t } = useTranslation();
 
   return (
-    <View className="gap-3 rounded-2xl border border-ink-line p-5">
+    <View className="gap-3 rounded-2xl border border-white/60 p-5">
       <View className="flex-row items-center gap-2">
         <Avatar
           name={entry.author_name ?? ""}
@@ -372,7 +387,7 @@ const StoryCard = ({
           asChild
         >
           <Pressable accessibilityRole="link" className="flex-1">
-            <Text className="text-sm font-medium text-ink-soft">
+            <Text className="font-sans-medium text-sm text-mist-ink">
               {entry.author_name}
             </Text>
           </Pressable>
@@ -380,19 +395,19 @@ const StoryCard = ({
 
         {/* Qué es cada fila. Sin esto, un testimonio y una petición se leen
             igual, y son cosas muy distintas: una pide, la otra cuenta. */}
-        <Text className="text-xs uppercase tracking-wide text-ink-soft">
+        <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
           {t(`community.kind.${entry.kind}`)}
         </Text>
       </View>
 
       {entry.title ? (
-        <Text className="font-serif-bold text-base text-ink">
+        <Text className="font-serif-bold text-base text-plum">
           {entry.title}
         </Text>
       ) : null}
 
       {entry.body ? (
-        <Text className="font-serif text-base leading-reading text-ink">
+        <Text className="font-serif text-base leading-reading text-plum">
           {entry.body}
         </Text>
       ) : null}
@@ -404,7 +419,7 @@ const StoryCard = ({
             asChild
           >
             <Pressable accessibilityRole="link">
-              <Text className="text-sm text-clay underline">
+              <Text className="font-sans text-sm text-ember-ink underline">
                 {t("community.openPlan")}
               </Text>
             </Pressable>
@@ -412,7 +427,7 @@ const StoryCard = ({
         ) : (
           <Link href="/testimonios" asChild>
             <Pressable accessibilityRole="link">
-              <Text className="text-sm text-clay underline">
+              <Text className="font-sans text-sm text-ember-ink underline">
                 {t("community.openTestimonies")}
               </Text>
             </Pressable>
@@ -422,7 +437,7 @@ const StoryCard = ({
         {entry.is_mine ? null : (
           <>
             <Pressable accessibilityRole="button" onPress={onReport}>
-              <Text className="text-sm text-ink-soft underline">
+              <Text className="font-sans text-sm text-mist-ink underline">
                 {t("moderation.report")}
               </Text>
             </Pressable>
@@ -432,7 +447,7 @@ const StoryCard = ({
               accessibilityLabel={`${t("moderation.block")} ${entry.author_name ?? ""}`}
               onPress={onBlock}
             >
-              <Text className="text-sm text-ink-soft underline">
+              <Text className="font-sans text-sm text-mist-ink underline">
                 {t("moderation.block")}
               </Text>
             </Pressable>

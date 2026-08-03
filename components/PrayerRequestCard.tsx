@@ -33,7 +33,7 @@ export const PrayerRequestCard = ({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
-    <View className="gap-3 rounded-2xl border border-ink-line p-5">
+    <View className="gap-3 rounded-card border border-white/60 bg-white/60 p-5 shadow-card">
       <View className="flex-row items-center justify-between gap-3">
         <View className="flex-1 flex-row items-center gap-2">
           <Avatar
@@ -49,7 +49,7 @@ export const PrayerRequestCard = ({
             seed={request.is_anonymous ? request.id : (request.author_id ?? "")}
             size={28}
           />
-          <Text className="flex-1 text-sm font-medium text-ink-soft">
+          <Text className="flex-1 font-sans-medium text-sm text-mist-ink">
             {/* Somebody who asked anonymously has no name to show and no id to
               correlate — that is the whole point of the checkbox. */}
             {request.is_anonymous
@@ -59,7 +59,7 @@ export const PrayerRequestCard = ({
         </View>
 
         {request.answered_at ? (
-          <Text className="text-sm font-medium text-ink-muted">
+          <Text className="font-sans-medium text-sm text-mist-ink">
             {t("feed.answered")}
           </Text>
         ) : null}
@@ -69,22 +69,22 @@ export const PrayerRequestCard = ({
           sin avisar deja a quien lo escribió creyendo que publicó, sin saber
           por qué nadie contesta — y volviéndolo a intentar. */}
       {request.held_at ? (
-        <View className="gap-1 rounded-xl bg-paper-sunken p-4">
-          <Text className="text-sm font-medium text-ink">
+        <View className="gap-1 rounded-input bg-dawn-cream p-4">
+          <Text className="font-sans-medium text-sm text-plum">
             {t("moderation.held")}
           </Text>
-          <Text className="text-sm leading-5 text-ink-muted">
+          <Text className="font-sans text-sm leading-5 text-mist-ink">
             {t("moderation.heldHint")}
           </Text>
         </View>
       ) : null}
 
-      <Text className="font-serif text-base leading-reading text-ink">
+      <Text className="font-serif text-base leading-reading text-plum">
         {request.body}
       </Text>
 
       {request.prayer_count > 0 ? (
-        <Text className="text-sm text-ink-muted">
+        <Text className="font-sans text-sm text-mist-ink">
           {t("feed.prayCount", { count: request.prayer_count })}
         </Text>
       ) : null}
@@ -97,12 +97,12 @@ export const PrayerRequestCard = ({
         aria-checked={request.i_prayed}
         onPress={onTogglePrayer}
         className={`items-center rounded-2xl px-4 py-3 ${
-          request.i_prayed ? "bg-paper-sunken" : "bg-ink"
+          request.i_prayed ? "bg-white/60" : "bg-plum-chip"
         }`}
       >
         <Text
-          className={`text-base font-semibold ${
-            request.i_prayed ? "text-ink-muted" : "text-paper"
+          className={`font-sans-semibold text-base ${
+            request.i_prayed ? "text-mist-ink" : "text-white"
           }`}
         >
           {request.i_prayed ? t("feed.prayed") : t("feed.pray")}
@@ -111,7 +111,7 @@ export const PrayerRequestCard = ({
 
       <View className="flex-row flex-wrap gap-4">
         <Pressable accessibilityRole="link" onPress={onOpen}>
-          <Text className="text-sm text-ink-soft underline">
+          <Text className="font-sans text-sm text-mist-ink underline">
             {request.comment_count > 0
               ? t("feed.commentCount", { count: request.comment_count })
               : t("feed.comment")}
@@ -122,7 +122,7 @@ export const PrayerRequestCard = ({
           <>
             {request.answered_at ? null : (
               <Pressable accessibilityRole="button" onPress={onMarkAnswered}>
-                <Text className="text-sm text-ink-soft underline">
+                <Text className="font-sans text-sm text-mist-ink underline">
                   {t("feed.markAnswered")}
                 </Text>
               </Pressable>
@@ -142,8 +142,8 @@ export const PrayerRequestCard = ({
               <Text
                 className={
                   confirmingDelete
-                    ? "text-sm font-semibold text-red-500"
-                    : "text-sm text-ink-soft underline"
+                    ? "font-sans-semibold text-sm text-danger"
+                    : "text-sm text-mist-ink underline"
                 }
                 accessibilityLiveRegion={confirmingDelete ? "polite" : "none"}
               >
@@ -154,7 +154,7 @@ export const PrayerRequestCard = ({
         ) : (
           <>
             <Pressable accessibilityRole="button" onPress={onReport}>
-              <Text className="text-sm text-ink-soft underline">
+              <Text className="font-sans text-sm text-mist-ink underline">
                 {t("moderation.report")}
               </Text>
             </Pressable>
@@ -168,7 +168,7 @@ export const PrayerRequestCard = ({
                 accessibilityLabel={`${t("moderation.block")} ${request.author_name ?? ""}`}
                 onPress={() => onBlock(request.author_id!)}
               >
-                <Text className="text-sm text-ink-soft underline">
+                <Text className="font-sans text-sm text-mist-ink underline">
                   {t("moderation.block")}
                 </Text>
               </Pressable>
@@ -176,7 +176,7 @@ export const PrayerRequestCard = ({
 
             {canHide ? (
               <Pressable accessibilityRole="button" onPress={onHide}>
-                <Text className="text-sm text-ink-soft underline">
+                <Text className="font-sans text-sm text-mist-ink underline">
                   {t("moderation.hide")}
                 </Text>
               </Pressable>

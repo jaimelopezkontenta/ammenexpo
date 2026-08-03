@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
@@ -59,7 +60,7 @@ export default function Invite() {
         <Stack.Screen
           options={{ title: t("invite.title"), headerShown: true }}
         />
-        <LoadingState />
+        <LoadingState variant="comm" />
       </>
     );
   }
@@ -70,7 +71,7 @@ export default function Invite() {
         <Stack.Screen
           options={{ title: t("invite.title"), headerShown: true }}
         />
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState variant="comm" onRetry={() => void refetch()} />
       </>
     );
   }
@@ -79,45 +80,50 @@ export default function Invite() {
     <>
       <Stack.Screen options={{ title: t("invite.title"), headerShown: true }} />
 
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="flex-grow gap-6 px-7 py-8"
-      >
-        <Text className="font-serif text-lg leading-reading text-ink">
-          {t("invite.body")}
-        </Text>
+      <DawnBackground variant="comm">
+        <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
+          <Text className="font-serif text-lg leading-reading text-plum">
+            {t("invite.body")}
+          </Text>
 
-        {code ? (
-          <View className="gap-2">
-            <Text className="text-sm font-medium text-ink-muted">
-              {t("invite.linkLabel")}
-            </Text>
-            {/* Seleccionable a mano: es lo que salva el día que la hoja del
+          {code ? (
+            <View className="gap-2">
+              <Text className="font-sans-medium text-sm text-mist-ink">
+                {t("invite.linkLabel")}
+              </Text>
+              {/* Seleccionable a mano: es lo que salva el día que la hoja del
                 sistema falla o el portapapeles está capado. */}
-            <Text selectable className="text-base text-ink">
-              {buildShareUrl(`/i/${code}`, "invitacion")}
+              <Text selectable className="font-sans text-base text-plum">
+                {buildShareUrl(`/i/${code}`, "invitacion")}
+              </Text>
+            </View>
+          ) : null}
+
+          <Button
+            title={t("invite.cta")}
+            loading={create.isPending}
+            onPress={() => void handleShare()}
+          />
+
+          {notice ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {notice}
             </Text>
-          </View>
-        ) : null}
+          ) : null}
 
-        <Button
-          title={t("invite.cta")}
-          loading={create.isPending}
-          onPress={() => void handleShare()}
-        />
-
-        {notice ? (
-          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-            {notice}
-          </Text>
-        ) : null}
-
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
-      </ScrollView>
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

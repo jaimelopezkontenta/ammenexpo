@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleMembers } from "@/core/circles/queries";
@@ -85,7 +86,7 @@ export default function PrayerRequestComments() {
         <Stack.Screen
           options={{ title: t("feed.comment"), headerShown: true }}
         />
-        <LoadingState />
+        <LoadingState variant="comm" />
       </>
     );
   }
@@ -96,7 +97,7 @@ export default function PrayerRequestComments() {
         <Stack.Screen
           options={{ title: t("feed.comment"), headerShown: true }}
         />
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState variant="comm" onRetry={() => void refetch()} />
       </>
     );
   }
@@ -104,124 +105,133 @@ export default function PrayerRequestComments() {
   return (
     <>
       <Stack.Screen options={{ title: t("feed.comment"), headerShown: true }} />
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="flex-grow gap-5 px-7 py-8"
-        keyboardShouldPersistTaps="handled"
-      >
-        {notice ? (
-          <Text
-            className="text-sm text-ink-muted"
-            accessibilityRole="alert"
-            accessibilityLiveRegion="polite"
-          >
-            {notice}
-          </Text>
-        ) : null}
+      <DawnBackground variant="comm">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-5 px-7 py-8"
+          keyboardShouldPersistTaps="handled"
+        >
+          {notice ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              {notice}
+            </Text>
+          ) : null}
 
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
 
-        {(comments ?? []).map((comment) => (
-          <View key={comment.id} className="gap-1">
-            <View className="flex-row items-center gap-2">
-              <Avatar
-                name={comment.author_name}
-                url={comment.author_avatar_url}
-                seed={comment.author_id}
-                size={24}
-              />
-              <Text className="text-sm font-medium text-ink-soft">
-                {comment.author_name}
+          {(comments ?? []).map((comment) => (
+            <View key={comment.id} className="gap-1">
+              <View className="flex-row items-center gap-2">
+                <Avatar
+                  name={comment.author_name}
+                  url={comment.author_avatar_url}
+                  seed={comment.author_id}
+                  size={24}
+                />
+                <Text className="font-sans-medium text-sm text-mist-ink">
+                  {comment.author_name}
+                </Text>
+              </View>
+              {comment.held_at ? (
+                <Text className="font-sans-medium text-sm text-mist-ink">
+                  {t("moderation.held")} · {t("moderation.heldHint")}
+                </Text>
+              ) : null}
+
+              <Text className="font-sans text-base leading-6 text-plum">
+                {comment.body}
               </Text>
-            </View>
-            {comment.held_at ? (
-              <Text className="text-sm font-medium text-ink-muted">
-                {t("moderation.held")} · {t("moderation.heldHint")}
-              </Text>
-            ) : null}
 
-            <Text className="text-base leading-6 text-ink">{comment.body}</Text>
-
-            {!comment.is_mine ? (
-              <View className="flex-row gap-4 pt-0.5">
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() =>
-                    void run(
-                      () =>
-                        report.mutateAsync({ id: comment.id, kind: "comment" }),
-                      t("moderation.reportDone"),
-                    )
-                  }
-                >
-                  <Text className="text-sm text-ink-soft underline">
-                    {t("moderation.report")}
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${t("moderation.block")} ${comment.author_name}`}
-                  onPress={() =>
-                    void run(
-                      () => block.mutateAsync(comment.author_id),
-                      t("moderation.blockDone"),
-                    )
-                  }
-                >
-                  <Text className="text-sm text-ink-soft underline">
-                    {t("moderation.block")}
-                  </Text>
-                </Pressable>
-
-                {/* Bloquear solo te lo quita a ti de delante; ocultar lo quita
-                    para todo el círculo, y es lo que hacía falta para que la
-                    moderación no se acabara en el mensaje y la petición. */}
-                {isAdmin ? (
+              {!comment.is_mine ? (
+                <View className="flex-row gap-4 pt-0.5">
                   <Pressable
                     accessibilityRole="button"
                     onPress={() =>
                       void run(
-                        () => hide.mutateAsync(comment.id),
-                        t("moderation.hideDone"),
+                        () =>
+                          report.mutateAsync({
+                            id: comment.id,
+                            kind: "comment",
+                          }),
+                        t("moderation.reportDone"),
                       )
                     }
                   >
-                    <Text className="text-sm text-ink-soft underline">
-                      {t("moderation.hide")}
+                    <Text className="font-sans text-sm text-mist-ink underline">
+                      {t("moderation.report")}
                     </Text>
                   </Pressable>
-                ) : null}
-              </View>
-            ) : null}
-          </View>
-        ))}
 
-        <View className="mt-auto flex-row items-end gap-2 pt-6">
-          <TextInput
-            className="max-h-32 min-w-0 flex-1 rounded-2xl border border-ink-line bg-paper px-4 py-3 text-base text-ink"
-            accessibilityLabel={t("feed.comment")}
-            value={draft}
-            onChangeText={setDraft}
-            placeholder={t("feed.commentPlaceholder")}
-            placeholderTextColor="#726A62"
-            multiline
-            numberOfLines={1}
-            maxLength={COMMENT_MAX}
-          />
-          <Button
-            title={t("chat.send")}
-            disabled={!canSend}
-            loading={write.isPending}
-            onPress={() => void handleSend()}
-            className="w-auto shrink-0"
-          />
-        </View>
-      </ScrollView>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${t("moderation.block")} ${comment.author_name}`}
+                    onPress={() =>
+                      void run(
+                        () => block.mutateAsync(comment.author_id),
+                        t("moderation.blockDone"),
+                      )
+                    }
+                  >
+                    <Text className="font-sans text-sm text-mist-ink underline">
+                      {t("moderation.block")}
+                    </Text>
+                  </Pressable>
+
+                  {/* Bloquear solo te lo quita a ti de delante; ocultar lo quita
+                    para todo el círculo, y es lo que hacía falta para que la
+                    moderación no se acabara en el mensaje y la petición. */}
+                  {isAdmin ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() =>
+                        void run(
+                          () => hide.mutateAsync(comment.id),
+                          t("moderation.hideDone"),
+                        )
+                      }
+                    >
+                      <Text className="font-sans text-sm text-mist-ink underline">
+                        {t("moderation.hide")}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+          ))}
+
+          <View className="mt-auto flex-row items-end gap-2 pt-6">
+            <TextInput
+              className="max-h-32 min-w-0 flex-1 rounded-2xl border border-white/60 bg-dawn-cream-bg px-4 py-3 font-sans text-base text-plum"
+              accessibilityLabel={t("feed.comment")}
+              value={draft}
+              onChangeText={setDraft}
+              placeholder={t("feed.commentPlaceholder")}
+              placeholderTextColor="#726A62"
+              multiline
+              numberOfLines={1}
+              maxLength={COMMENT_MAX}
+            />
+            <Button
+              title={t("chat.send")}
+              disabled={!canSend}
+              loading={write.isPending}
+              onPress={() => void handleSend()}
+              className="w-auto shrink-0"
+            />
+          </View>
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

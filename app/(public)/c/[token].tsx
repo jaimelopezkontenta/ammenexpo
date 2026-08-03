@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
@@ -64,8 +65,11 @@ export default function CircleInvite() {
 
   if (!circle) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
-        <Text className="text-center text-xl font-bold text-ink">
+      <DawnBackground
+        variant="radial"
+        className="items-center justify-center gap-3 px-8"
+      >
+        <Text className="text-center font-sans-bold text-xl text-plum">
           {t("circles.inviteNotFound")}
         </Text>
 
@@ -88,27 +92,30 @@ export default function CircleInvite() {
             </>
           )}
         </View>
-      </View>
+      </DawnBackground>
     );
   }
 
   return (
-    <View className="flex-1 items-center justify-center gap-3 bg-paper px-8">
-      <Text className="text-center text-2xl font-bold text-ink">
+    <DawnBackground
+      variant="radial"
+      className="items-center justify-center gap-3 px-8"
+    >
+      <Text className="text-center font-sans-bold text-2xl text-plum">
         {t("circles.joinTitle", { name: circle.name })}
       </Text>
-      <Text className="text-center text-base text-ink-muted">
+      <Text className="text-center font-sans text-base text-mist-ink">
         {t("circles.joinBody", { count: circle.member_count })}
       </Text>
       {circle.description ? (
-        <Text className="text-center text-base text-ink-muted">
+        <Text className="text-center font-sans text-base text-mist-ink">
           {circle.description}
         </Text>
       ) : null}
 
       {joinError ? (
         <Text
-          className="text-center text-sm text-red-500"
+          className="text-center font-sans text-sm text-danger"
           accessibilityRole="alert"
         >
           {joinError}
@@ -133,6 +140,6 @@ export default function CircleInvite() {
           </>
         )}
       </View>
-    </View>
+    </DawnBackground>
   );
 }

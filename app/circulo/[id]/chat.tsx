@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 
+import { DawnBackground } from "@/components/DawnBackground";
 import { Avatar } from "@/components/Avatar";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -153,186 +154,194 @@ export default function CircleChat() {
       <Stack.Screen
         options={{ title: circle?.name ?? t("chat.title"), headerShown: true }}
       />
-      <KeyboardAvoidingView
-        className="flex-1 bg-paper"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        {/* The first virtualized list in the project. Everything else is a
+      <DawnBackground variant="comm">
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          {/* The first virtualized list in the project. Everything else is a
             ScrollView with a .map(), which is fine for a 30-day plan and not
             fine for a conversation that only grows. Inverted because the RPC
             returns newest first and because a chat is read from the bottom. */}
-        <FlatList
-          className="flex-1"
-          contentContainerClassName="gap-4 px-7 py-6"
-          data={messages ?? []}
-          inverted
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={
-            <View className="items-center gap-2 py-16">
-              <Text className="text-center text-base text-ink-muted">
-                {t("chat.empty")}
-              </Text>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <View className={item.is_mine ? "items-end" : "items-start"}>
-              <View className="max-w-[85%] gap-1">
-                {!item.is_mine ? (
-                  <View className="flex-row items-center gap-2">
-                    <Avatar
-                      name={item.sender_name}
-                      url={item.sender_avatar_url}
-                      seed={item.sender_id}
-                      size={20}
-                    />
-                    <Text className="text-xs font-medium text-ink-soft">
-                      {item.sender_name}
-                    </Text>
-                  </View>
-                ) : null}
+          <FlatList
+            className="flex-1"
+            contentContainerClassName="gap-4 px-7 py-6"
+            data={messages ?? []}
+            inverted
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              <View className="items-center gap-2 py-16">
+                <Text className="text-center font-sans text-base text-mist-ink">
+                  {t("chat.empty")}
+                </Text>
+              </View>
+            }
+            renderItem={({ item }) => (
+              <View className={item.is_mine ? "items-end" : "items-start"}>
+                <View className="max-w-[85%] gap-1">
+                  {!item.is_mine ? (
+                    <View className="flex-row items-center gap-2">
+                      <Avatar
+                        name={item.sender_name}
+                        url={item.sender_avatar_url}
+                        seed={item.sender_id}
+                        size={20}
+                      />
+                      <Text className="font-sans-medium text-xs text-mist-ink">
+                        {item.sender_name}
+                      </Text>
+                    </View>
+                  ) : null}
 
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t("chat.messageActions", {
-                    name: item.sender_name,
-                  })}
-                  // A tap, not a long press. Long press is invisible — on the
-                  // web it is not even a convention — and the stores require
-                  // reporting and blocking to be *findable*, which a gesture
-                  // nothing on screen hints at is not.
-                  onPress={() =>
-                    setOpenMenu(openMenu === item.id ? null : item.id)
-                  }
-                  className={`rounded-2xl px-4 py-3 ${
-                    item.is_mine ? "bg-ink" : "bg-paper-sunken"
-                  }`}
-                >
-                  <Text
-                    className={`text-base leading-6 ${
-                      item.is_mine ? "text-paper" : "text-ink"
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t("chat.messageActions", {
+                      name: item.sender_name,
+                    })}
+                    // A tap, not a long press. Long press is invisible — on the
+                    // web it is not even a convention — and the stores require
+                    // reporting and blocking to be *findable*, which a gesture
+                    // nothing on screen hints at is not.
+                    onPress={() =>
+                      setOpenMenu(openMenu === item.id ? null : item.id)
+                    }
+                    // La burbuja propia es vidrio oscuro y la ajena vidrio
+                    // claro, como en el diseño. Ninguna de las dos desenfoca: van
+                    // dentro de una lista virtualizada, y ahí el desenfoque se
+                    // recompone en cada fila que entra.
+                    className={`rounded-card border px-4 py-3 ${
+                      item.is_mine
+                        ? "border-white/30 bg-plum-chip"
+                        : "border-white/60 bg-white/60"
                     }`}
                   >
-                    {item.body}
-                  </Text>
-                </Pressable>
+                    <Text
+                      className={`text-base leading-6 ${
+                        item.is_mine ? "text-white" : "text-plum"
+                      }`}
+                    >
+                      {item.body}
+                    </Text>
+                  </Pressable>
 
-                {/* Behind a tap rather than always visible: every message
+                  {/* Behind a tap rather than always visible: every message
                     carrying three moderation links would make the circle read
                     like a place where trouble is expected. */}
-                {openMenu === item.id && !item.is_mine ? (
-                  <View className="flex-row flex-wrap gap-4 pt-1">
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() =>
-                        void runModeration(t("moderation.reportDone"), () =>
-                          report.mutateAsync(item.id),
-                        )
-                      }
-                    >
-                      <Text className="text-sm text-ink-soft">
-                        {t("moderation.report")}
-                      </Text>
-                    </Pressable>
-
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() =>
-                        void runModeration(t("moderation.blockDone"), () =>
-                          block.mutateAsync(item.sender_id),
-                        )
-                      }
-                    >
-                      <Text className="text-sm text-ink-soft">
-                        {t("moderation.block")}
-                      </Text>
-                    </Pressable>
-
-                    {isAdmin ? (
+                  {openMenu === item.id && !item.is_mine ? (
+                    <View className="flex-row flex-wrap gap-4 pt-1">
                       <Pressable
                         accessibilityRole="button"
                         onPress={() =>
-                          void runModeration(t("moderation.hideDone"), () =>
-                            hide.mutateAsync(item.id),
+                          void runModeration(t("moderation.reportDone"), () =>
+                            report.mutateAsync(item.id),
                           )
                         }
                       >
-                        <Text className="text-sm text-ink-soft">
-                          {t("moderation.hide")}
+                        <Text className="font-sans text-sm text-mist-ink">
+                          {t("moderation.report")}
                         </Text>
                       </Pressable>
-                    ) : null}
-                  </View>
-                ) : null}
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() =>
+                          void runModeration(t("moderation.blockDone"), () =>
+                            block.mutateAsync(item.sender_id),
+                          )
+                        }
+                      >
+                        <Text className="font-sans text-sm text-mist-ink">
+                          {t("moderation.block")}
+                        </Text>
+                      </Pressable>
+
+                      {isAdmin ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() =>
+                            void runModeration(t("moderation.hideDone"), () =>
+                              hide.mutateAsync(item.id),
+                            )
+                          }
+                        >
+                          <Text className="font-sans text-sm text-mist-ink">
+                            {t("moderation.hide")}
+                          </Text>
+                        </Pressable>
+                      ) : null}
+                    </View>
+                  ) : null}
+                </View>
               </View>
-            </View>
-          )}
-        />
-
-        {notice ? (
-          <Text
-            className="px-7 pb-2 text-sm text-ink-muted"
-            accessibilityRole="alert"
-            accessibilityLiveRegion="polite"
-          >
-            {notice}
-          </Text>
-        ) : null}
-
-        {error ? (
-          <Text
-            className="px-7 pb-2 text-sm text-red-500"
-            accessibilityRole="alert"
-          >
-            {error}
-          </Text>
-        ) : null}
-
-        <View className="flex-row items-end gap-2 border-t border-ink-line px-5 py-3">
-          {/* A bare TextInput rather than TextField: the composer wants no
-              visible label above it, and the accessible name is what matters. */}
-          <TextInput
-            className="max-h-32 min-w-0 flex-1 rounded-2xl border border-ink-line bg-paper px-4 py-3 text-base text-ink"
-            accessibilityLabel={t("chat.inputLabel")}
-            value={draft}
-            onChangeText={setDraft}
-            placeholder={t("chat.placeholder")}
-            placeholderTextColor="#726A62"
-            multiline
-            // react-native-web renders a multiline input as `rows={2}`, so an
-            // empty composer stood two lines tall next to a one-line button.
-            // Most messages are one line; it grows from there on native and
-            // scrolls inside `max-h-32` on the web.
-            numberOfLines={1}
-            maxLength={4000}
+            )}
           />
 
-          {/* Not the shared Button: that one is `w-full`, sized for a screen's
+          {notice ? (
+            <Text
+              className="px-7 pb-2 font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              {notice}
+            </Text>
+          ) : null}
+
+          {error ? (
+            <Text
+              className="px-7 pb-2 font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
+
+          <View className="flex-row items-end gap-2 border-t border-white/60 px-5 py-3">
+            {/* A bare TextInput rather than TextField: the composer wants no
+              visible label above it, and the accessible name is what matters. */}
+            <TextInput
+              className="max-h-32 min-w-0 flex-1 rounded-input border border-white/70 bg-surface px-4 py-3 font-sans text-base text-plum"
+              accessibilityLabel={t("chat.inputLabel")}
+              value={draft}
+              onChangeText={setDraft}
+              placeholder={t("chat.placeholder")}
+              placeholderTextColor="#726A62"
+              multiline
+              // react-native-web renders a multiline input as `rows={2}`, so an
+              // empty composer stood two lines tall next to a one-line button.
+              // Most messages are one line; it grows from there on native and
+              // scrolls inside `max-h-32` on the web.
+              numberOfLines={1}
+              maxLength={4000}
+            />
+
+            {/* Not the shared Button: that one is `w-full`, sized for a screen's
               primary action, so in this row it claimed everything and left the
               composer 33px wide. A send control belongs to its own label. */}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("chat.send")}
-            accessibilityState={{
-              disabled: !canSend,
-              busy: send.isPending,
-            }}
-            aria-busy={send.isPending}
-            disabled={!canSend}
-            onPress={() => void handleSend()}
-            className={`h-12 shrink-0 items-center justify-center rounded-2xl bg-ink px-5 ${
-              canSend ? "" : "opacity-40"
-            }`}
-          >
-            {send.isPending ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text className="text-base font-semibold text-paper">
-                {t("chat.send")}
-              </Text>
-            )}
-          </Pressable>
-        </View>
-      </KeyboardAvoidingView>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("chat.send")}
+              accessibilityState={{
+                disabled: !canSend,
+                busy: send.isPending,
+              }}
+              aria-busy={send.isPending}
+              disabled={!canSend}
+              onPress={() => void handleSend()}
+              className={`h-12 shrink-0 items-center justify-center rounded-2xl bg-plum-chip px-5 ${
+                canSend ? "" : "opacity-40"
+              }`}
+            >
+              {send.isPending ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text className="font-sans-semibold text-base text-white">
+                  {t("chat.send")}
+                </Text>
+              )}
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </DawnBackground>
     </>
   );
 }

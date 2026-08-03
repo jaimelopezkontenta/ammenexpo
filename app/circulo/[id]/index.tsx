@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -67,7 +68,7 @@ export default function CircleDetail() {
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState variant="comm" />;
   }
 
   // These two used to be one branch with no header and no controls, so a flaky
@@ -80,6 +81,7 @@ export default function CircleDetail() {
           options={{ title: t("circles.title"), headerShown: true }}
         />
         <ErrorState
+          variant="comm"
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("circles.inviteNotFound")}
         />
@@ -184,228 +186,233 @@ export default function CircleDetail() {
   return (
     <>
       <Stack.Screen options={{ title: circle.name, headerShown: true }} />
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="flex-grow gap-6 px-7 py-8"
-      >
-        {/* The name is already in the navigation header; repeating it here as a
+      <DawnBackground variant="comm">
+        <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
+          {/* The name is already in the navigation header; repeating it here as a
             heading just pushed the useful content down. */}
-        <View className="gap-1">
-          {circle.description ? (
-            <Text className="text-base text-ink-muted">
-              {circle.description}
+          <View className="gap-1">
+            {circle.description ? (
+              <Text className="font-sans text-base text-mist-ink">
+                {circle.description}
+              </Text>
+            ) : null}
+            <Text className="font-sans text-sm text-mist-ink">
+              {t("circles.members", { count: circle.member_count })} ·{" "}
+              {circle.visibility === "private"
+                ? t("circles.visibilityPrivate")
+                : t("circles.visibilityPublic")}
             </Text>
-          ) : null}
-          <Text className="text-sm text-ink-soft">
-            {t("circles.members", { count: circle.member_count })} ·{" "}
-            {circle.visibility === "private"
-              ? t("circles.visibilityPrivate")
-              : t("circles.visibilityPublic")}
-          </Text>
-        </View>
+          </View>
 
-        {/* Above the roster on purpose: what the circle is *doing* matters more
+          {/* Above the roster on purpose: what the circle is *doing* matters more
             than who is in it, and this screen used to answer only the second. */}
-        <CirclePlanCard
-          circle={circle}
-          plan={circlePlan}
-          canCreate={canCreatePlan === true}
-          isPending={markCircleDay.isPending}
-          error={null}
-          onMarkPrayed={(dayId) => void handleMarkCircleDay(dayId)}
-        />
+          <CirclePlanCard
+            circle={circle}
+            plan={circlePlan}
+            canCreate={canCreatePlan === true}
+            isPending={markCircleDay.isPending}
+            error={null}
+            onMarkPrayed={(dayId) => void handleMarkCircleDay(dayId)}
+          />
 
-        <View className="gap-3">
-          <Text className="text-sm font-medium text-ink-soft">
-            {t("circles.membersTitle")}
-          </Text>
-          {/* A failed roster read used to render an empty list —
+          <View className="gap-3">
+            <Text className="font-sans-medium text-sm text-mist-ink">
+              {t("circles.membersTitle")}
+            </Text>
+            {/* A failed roster read used to render an empty list —
               indistinguishable from a circle of one — and silently set
               `isAdmin` to false, hiding "Expulsar" from a real admin at the
               moment they most likely need it. */}
-          {membersFailed ? (
-            <Text
-              className="text-base leading-6 text-ink-muted"
-              accessibilityRole="alert"
-            >
-              {t("common.errorBody")}
-            </Text>
-          ) : null}
+            {membersFailed ? (
+              <Text
+                className="font-sans text-base leading-6 text-mist-ink"
+                accessibilityRole="alert"
+              >
+                {t("common.errorBody")}
+              </Text>
+            ) : null}
 
-          {(members ?? []).map((member) => (
-            <View key={member.user_id} className="gap-1">
-              <View className="flex-row items-center justify-between gap-3">
-                {/* El censo era una lista de nombres muertos. Ahora cada uno
+            {(members ?? []).map((member) => (
+              <View key={member.user_id} className="gap-1">
+                <View className="flex-row items-center justify-between gap-3">
+                  {/* El censo era una lista de nombres muertos. Ahora cada uno
                     lleva a su perfil, que es donde se ve desde cuándo lleva
                     aquí y lo que haya querido contar. */}
-                <Link
-                  href={{
-                    pathname: "/persona/[id]",
-                    params: { id: member.user_id },
-                  }}
-                  asChild
-                >
-                  <Pressable
-                    accessibilityRole="link"
-                    className="flex-1 flex-row items-center gap-3"
+                  <Link
+                    href={{
+                      pathname: "/persona/[id]",
+                      params: { id: member.user_id },
+                    }}
+                    asChild
                   >
-                    <Avatar
-                      name={member.display_name}
-                      url={member.avatar_url}
-                      seed={member.user_id}
-                      size={32}
-                    />
-                    <Text className="flex-1 text-base text-ink">
-                      {member.display_name}
-                    </Text>
-                  </Pressable>
-                </Link>
-                {member.role !== "member" ? (
-                  <Text className="text-sm text-ink-soft">
-                    {member.role === "owner"
-                      ? t("circles.owner")
-                      : t("circles.admin")}
-                  </Text>
-                ) : null}
-              </View>
-
-              {/* Now that strangers can find and join a public circle, the two
-                  ways out have to be reachable from the roster itself — not
-                  buried behind a message somebody has to receive first. */}
-              {member.user_id !== userId ? (
-                <View className="flex-row gap-4">
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => void handleBlock(member.user_id)}
-                  >
-                    <Text className="text-sm text-ink-soft">
-                      {t("moderation.block")}
-                    </Text>
-                  </Pressable>
-
-                  {isAdmin && member.role !== "owner" ? (
                     <Pressable
-                      accessibilityRole="button"
-                      onPress={() => void handleRemove(member.user_id)}
+                      accessibilityRole="link"
+                      className="flex-1 flex-row items-center gap-3"
                     >
-                      <Text className="text-sm text-ink-soft">
-                        {pendingRemoval === member.user_id
-                          ? t("circles.removeConfirmCta")
-                          : t("circles.remove")}
+                      <Avatar
+                        name={member.display_name}
+                        url={member.avatar_url}
+                        seed={member.user_id}
+                        size={32}
+                      />
+                      <Text className="flex-1 font-sans text-base text-plum">
+                        {member.display_name}
                       </Text>
                     </Pressable>
+                  </Link>
+                  {member.role !== "member" ? (
+                    <Text className="font-sans text-sm text-mist-ink">
+                      {member.role === "owner"
+                        ? t("circles.owner")
+                        : t("circles.admin")}
+                    </Text>
                   ) : null}
                 </View>
-              ) : null}
-            </View>
-          ))}
-        </View>
 
-        {/* What is actually being shared in here, which the screen said
+                {/* Now that strangers can find and join a public circle, the two
+                  ways out have to be reachable from the roster itself — not
+                  buried behind a message somebody has to receive first. */}
+                {member.user_id !== userId ? (
+                  <View className="flex-row gap-4">
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => void handleBlock(member.user_id)}
+                    >
+                      <Text className="font-sans text-sm text-mist-ink">
+                        {t("moderation.block")}
+                      </Text>
+                    </Pressable>
+
+                    {isAdmin && member.role !== "owner" ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => void handleRemove(member.user_id)}
+                      >
+                        <Text className="font-sans text-sm text-mist-ink">
+                          {pendingRemoval === member.user_id
+                            ? t("circles.removeConfirmCta")
+                            : t("circles.remove")}
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ) : null}
+              </View>
+            ))}
+          </View>
+
+          {/* What is actually being shared in here, which the screen said
             nothing about before — including whether your own plan is among
             them, the answer to "is this circle seeing my requests?". */}
-        <View className="gap-3">
-          <Text className="text-sm font-medium text-ink-soft">
-            {t("circles.sharedTitle")}
-          </Text>
-
-          {(sharedPlans ?? []).length === 0 ? (
-            <Text className="text-base text-ink-muted">
-              {t("circles.sharedEmpty")}
+          <View className="gap-3">
+            <Text className="font-sans-medium text-sm text-mist-ink">
+              {t("circles.sharedTitle")}
             </Text>
-          ) : null}
 
-          {(sharedPlans ?? []).map((shared) => (
-            <Pressable
-              key={shared.plan_id}
-              accessibilityRole="link"
-              accessibilityLabel={`${shared.plan_title}. ${shared.owner_name}`}
-              className="gap-0.5 rounded-2xl border border-ink-line p-4"
-              onPress={() =>
-                shared.is_mine
-                  ? router.push("/")
-                  : router.push({
-                      pathname: "/orar/[planId]",
-                      params: { planId: shared.plan_id },
-                    })
-              }
-            >
-              <Text className="text-base font-medium text-ink">
-                {shared.plan_title}
+            {(sharedPlans ?? []).length === 0 ? (
+              <Text className="font-sans text-base text-mist-ink">
+                {t("circles.sharedEmpty")}
               </Text>
-              <Text className="text-sm text-ink-muted">
-                {shared.is_mine ? t("circles.sharedMine") : shared.owner_name}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+            ) : null}
 
-        <Link
-          href={{ pathname: "/peticiones", params: { circulo: id! } }}
-          asChild
-        >
-          <Button title={t("feed.circleTitle")} variant="secondary" />
-        </Link>
-
-        <Link
-          href={{ pathname: "/circulo/[id]/chat", params: { id: id! } }}
-          asChild
-        >
-          <Button title={t("chat.open")} variant="secondary" />
-        </Link>
-
-        {inviteUrl ? (
-          <View className="gap-2 rounded-2xl bg-paper-sunken p-5">
-            <Text className="text-sm font-medium text-ink-soft">
-              {t("circles.inviteLink")}
-            </Text>
-            <Text className="text-sm text-ink-muted" selectable>
-              {inviteUrl}
-            </Text>
+            {(sharedPlans ?? []).map((shared) => (
+              <Pressable
+                key={shared.plan_id}
+                accessibilityRole="link"
+                accessibilityLabel={`${shared.plan_title}. ${shared.owner_name}`}
+                className="gap-0.5 rounded-2xl border border-white/60 p-4"
+                onPress={() =>
+                  shared.is_mine
+                    ? router.push("/")
+                    : router.push({
+                        pathname: "/orar/[planId]",
+                        params: { planId: shared.plan_id },
+                      })
+                }
+              >
+                <Text className="font-sans-medium text-base text-plum">
+                  {shared.plan_title}
+                </Text>
+                <Text className="font-sans text-sm text-mist-ink">
+                  {shared.is_mine ? t("circles.sharedMine") : shared.owner_name}
+                </Text>
+              </Pressable>
+            ))}
           </View>
-        ) : null}
 
-        {notice ? (
-          <Text className="text-sm text-ink-muted" accessibilityRole="alert">
-            {notice}
-          </Text>
-        ) : null}
-
-        {error ? (
-          <Text className="text-sm text-red-500" accessibilityRole="alert">
-            {error}
-          </Text>
-        ) : null}
-
-        {confirmingLeave ? (
-          <Text
-            className="text-sm text-ink-muted"
-            accessibilityRole="alert"
-            accessibilityLiveRegion="polite"
+          <Link
+            href={{ pathname: "/peticiones", params: { circulo: id! } }}
+            asChild
           >
-            {t("circles.leaveConfirm")}
-          </Text>
-        ) : null}
+            <Button title={t("feed.circleTitle")} variant="secondary" />
+          </Link>
 
-        <View className="mt-auto gap-3 pt-6">
+          <Link
+            href={{ pathname: "/circulo/[id]/chat", params: { id: id! } }}
+            asChild
+          >
+            <Button title={t("chat.open")} variant="secondary" />
+          </Link>
+
           {inviteUrl ? (
-            <Button
-              title={t("circles.invite")}
-              onPress={() => void handleInvite()}
-            />
+            <View className="gap-2 rounded-2xl bg-white/60 p-5">
+              <Text className="font-sans-medium text-sm text-mist-ink">
+                {t("circles.inviteLink")}
+              </Text>
+              <Text className="font-sans text-sm text-mist-ink" selectable>
+                {inviteUrl}
+              </Text>
+            </View>
           ) : null}
-          <Button
-            title={
-              confirmingLeave
-                ? t("circles.leaveConfirmCta")
-                : t("circles.leave")
-            }
-            variant={confirmingLeave ? "secondary" : "ghost"}
-            loading={leave.isPending}
-            onPress={() => void handleLeave()}
-          />
-        </View>
-      </ScrollView>
+
+          {notice ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {notice}
+            </Text>
+          ) : null}
+
+          {error ? (
+            <Text
+              className="font-sans text-sm text-danger"
+              accessibilityRole="alert"
+            >
+              {error}
+            </Text>
+          ) : null}
+
+          {confirmingLeave ? (
+            <Text
+              className="font-sans text-sm text-mist-ink"
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              {t("circles.leaveConfirm")}
+            </Text>
+          ) : null}
+
+          <View className="mt-auto gap-3 pt-6">
+            {inviteUrl ? (
+              <Button
+                title={t("circles.invite")}
+                onPress={() => void handleInvite()}
+              />
+            ) : null}
+            <Button
+              title={
+                confirmingLeave
+                  ? t("circles.leaveConfirmCta")
+                  : t("circles.leave")
+              }
+              variant={confirmingLeave ? "secondary" : "ghost"}
+              loading={leave.isPending}
+              onPress={() => void handleLeave()}
+            />
+          </View>
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }

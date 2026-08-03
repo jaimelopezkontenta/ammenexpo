@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { LoadMore } from "@/components/LoadMore";
+import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -52,7 +53,7 @@ export default function Notifications() {
         <Stack.Screen
           options={{ title: t("notifications.title"), headerShown: true }}
         />
-        <LoadingState />
+        <LoadingState variant="comm" />
       </>
     );
   }
@@ -63,7 +64,7 @@ export default function Notifications() {
         <Stack.Screen
           options={{ title: t("notifications.title"), headerShown: true }}
         />
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState variant="comm" onRetry={() => void refetch()} />
       </>
     );
   }
@@ -74,79 +75,78 @@ export default function Notifications() {
         options={{ title: t("notifications.title"), headerShown: true }}
       />
 
-      <ScrollView
-        className="flex-1 bg-paper"
-        contentContainerClassName="flex-grow gap-4 px-7 py-8"
-      >
-        {(data ?? []).length === 0 ? (
-          <Text className="text-base leading-6 text-ink-muted">
-            {t("notifications.empty")}
-          </Text>
-        ) : (
-          (data ?? []).map((entry) => {
-            const name = entry.payload.intercessor_name ?? "";
-            const who = entry.payload.intercessor_id;
+      <DawnBackground variant="comm">
+        <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-8">
+          {(data ?? []).length === 0 ? (
+            <Text className="font-sans text-base leading-6 text-mist-ink">
+              {t("notifications.empty")}
+            </Text>
+          ) : (
+            (data ?? []).map((entry) => {
+              const name = entry.payload.intercessor_name ?? "";
+              const who = entry.payload.intercessor_id;
 
-            const row = (
-              <View className="flex-1 flex-row items-center gap-3">
-                <Avatar name={name} seed={who ?? entry.id} size={36} />
+              const row = (
+                <View className="flex-1 flex-row items-center gap-3">
+                  <Avatar name={name} seed={who ?? entry.id} size={36} />
 
-                <View className="flex-1 gap-0.5">
-                  <Text className="text-base text-ink">
-                    {t("notifications.prayedForYou", {
-                      name,
-                      planTitle: entry.payload.plan_title ?? "",
-                    })}
-                  </Text>
-                  <Text className="text-xs text-ink-soft">
-                    {new Date(entry.created_at).toLocaleDateString(
-                      i18n.language,
-                      { day: "numeric", month: "long" },
-                    )}
-                  </Text>
-                </View>
+                  <View className="flex-1 gap-0.5">
+                    <Text className="font-sans text-base text-plum">
+                      {t("notifications.prayedForYou", {
+                        name,
+                        planTitle: entry.payload.plan_title ?? "",
+                      })}
+                    </Text>
+                    <Text className="font-sans text-xs text-mist-ink">
+                      {new Date(entry.created_at).toLocaleDateString(
+                        i18n.language,
+                        { day: "numeric", month: "long" },
+                      )}
+                    </Text>
+                  </View>
 
-                {/* Sin leer, y sin contarlo: el número exacto no ayuda a nadie
+                  {/* Sin leer, y sin contarlo: el número exacto no ayuda a nadie
                     dentro de una lista que se acaba de marcar entera. */}
-                {entry.read_at ? null : (
-                  <View className="h-2 w-2 rounded-full bg-clay" />
-                )}
-              </View>
-            );
+                  {entry.read_at ? null : (
+                    <View className="h-2 w-2 rounded-full bg-ember-accent" />
+                  )}
+                </View>
+              );
 
-            // A dónde lleva un aviso: al perfil de quien oró, que existe desde
-            // hace tres commits. Antes de eso no había ningún sitio al que ir,
-            // que es parte de por qué esta pantalla no se construyó entonces.
-            return who ? (
-              <Link
-                key={entry.id}
-                href={{ pathname: "/persona/[id]", params: { id: who } }}
-                asChild
-              >
-                <Pressable
-                  accessibilityRole="link"
-                  className="flex-row rounded-2xl border border-ink-line p-4"
+              // A dónde lleva un aviso: al perfil de quien oró, que existe desde
+              // hace tres commits. Antes de eso no había ningún sitio al que ir,
+              // que es parte de por qué esta pantalla no se construyó entonces.
+              return who ? (
+                <Link
+                  key={entry.id}
+                  href={{ pathname: "/persona/[id]", params: { id: who } }}
+                  asChild
+                >
+                  <Pressable
+                    accessibilityRole="link"
+                    className="flex-row rounded-2xl border border-white/60 p-4"
+                  >
+                    {row}
+                  </Pressable>
+                </Link>
+              ) : (
+                <View
+                  key={entry.id}
+                  className="flex-row rounded-2xl border border-white/60 p-4"
                 >
                   {row}
-                </Pressable>
-              </Link>
-            ) : (
-              <View
-                key={entry.id}
-                className="flex-row rounded-2xl border border-ink-line p-4"
-              >
-                {row}
-              </View>
-            );
-          })
-        )}
+                </View>
+              );
+            })
+          )}
 
-        <LoadMore
-          hasMore={hasNextPage}
-          loading={isFetchingNextPage}
-          onPress={() => void fetchNextPage()}
-        />
-      </ScrollView>
+          <LoadMore
+            hasMore={hasNextPage}
+            loading={isFetchingNextPage}
+            onPress={() => void fetchNextPage()}
+          />
+        </ScrollView>
+      </DawnBackground>
     </>
   );
 }
