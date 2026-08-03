@@ -326,7 +326,9 @@ body {
   padding-top: 6px; position: relative;
 }
 .tabbar a svg { width: 24px; height: 24px; stroke-width: 1.7; }
-.tabbar a.on { color: var(--accent); }
+/* El acento decorativo no vale para una etiqueta de 10,5px: da 3,17:1.
+   Lo que marca la pestaña activa en naranja pleno es la barra de arriba. */
+.tabbar a.on { color: var(--accent-ink); }
 .tabbar a.on::before {
   content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
   width: 34px; height: 3px; border-radius: 2px; background: var(--accent);

@@ -22,7 +22,11 @@ export default function TabLayout() {
       screenOptions={{
         // Los mismos valores que el tema, escritos a mano porque las opciones
         // de navegación no pasan por NativeWind.
-        tabBarActiveTintColor: "#E2703F",
+        // `ember.ink` y no el acento decorativo: la etiqueta de la pestaña
+        // activa son once píxeles y medio, y el acento da 3,17:1 sobre el
+        // vidrio de la barra. El naranja pleno se queda donde no lleva texto:
+        // la barrita de encima del icono.
+        tabBarActiveTintColor: "#B24A22",
         tabBarInactiveTintColor: "#413653",
         // Transparente para que se vea el vidrio de `tabBarBackground`, que va
         // detrás. La barra **no** es absoluta: en el diseño ocupa su sitio y no
