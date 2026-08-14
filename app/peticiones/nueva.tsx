@@ -27,7 +27,18 @@ export default function NewPrayerRequest() {
     setError(null);
 
     try {
-      await write.mutateAsync({ body, isAnonymous, circleId: circulo });
+      const result = await write.mutateAsync({
+        body,
+        isAnonymous,
+        circleId: circulo,
+      });
+
+      // B1b: nunca se enseña como si se hubiera publicado con normalidad.
+      if (result.crisisFlagged) {
+        router.replace("/crisis");
+        return;
+      }
+
       router.replace({
         pathname: "/peticiones",
         params: circulo ? { circulo } : {},

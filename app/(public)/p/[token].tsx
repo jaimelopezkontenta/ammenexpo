@@ -9,6 +9,8 @@ import { Button } from "@/components/Button";
 import { LoadingState } from "@/components/ScreenState";
 import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
+import { track } from "@/core/observability/track";
+import { resolveRedeemOutcome } from "@/core/plans/redeemOutcome";
 import { useSharedPlanPreview } from "@/core/plans/sharePreview";
 import { supabase } from "@/utils/supabase";
 
@@ -36,6 +38,14 @@ export default function SharedPlanPreviewScreen() {
     }
   }, [token, de]);
 
+  // Un evento por lectura resuelta, no por cada remontaje: solo cuando la
+  // preview ya trajo datos reales, nunca en el estado de carga o de error.
+  useEffect(() => {
+    if (data) {
+      track("preview", { surface: "share_link" });
+    }
+  }, [data]);
+
   const handleOpenPlan = async () => {
     if (!token) return;
 
@@ -48,14 +58,24 @@ export default function SharedPlanPreviewScreen() {
 
     setIsRedeeming(false);
 
+    const result = outcome as { ok?: boolean; reason?: string } | null;
+
     // The RPC answers `{ok:false, reason}` for a revoked or expired token
     // *without* raising, so ignoring both the error and the payload made a dead
     // link and a successful redemption produce identical UX: a spinner, then
     // the home screen.
-    if (error || !(outcome as { ok?: boolean } | null)?.ok) {
+    if (error || !result?.ok) {
+      track("redeem", {
+        outcome: resolveRedeemOutcome({
+          hadError: Boolean(error),
+          reason: result?.reason,
+        }),
+      });
       setRedeemError(t("share.previewNotFoundHint"));
       return;
     }
+
+    track("redeem", { outcome: "ok" });
 
     // Redeeming is what makes this plan — and possibly a circle — visible.
     // Navigating without refreshing landed people on a Hoy and an Orar tab that

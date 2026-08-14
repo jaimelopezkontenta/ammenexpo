@@ -22,6 +22,13 @@ export type PrayerRequest = {
    * nota— y nadie más: eso lo decide la policy, no esta pantalla.
    */
   held_at: string | null;
+  /**
+   * B1b: distinto de `held_at` a propósito. Un post retenido por espam espera
+   * turno en una cola; uno marcado de crisis nunca debió esperar nada — el
+   * cliente lo usa para mostrar recursos de inmediato, no para explicar por
+   * qué tarda en publicarse.
+   */
+  crisis_flagged_at: string | null;
   created_at: string;
   i_prayed: boolean;
   is_mine: boolean;
@@ -35,6 +42,8 @@ export type PostComment = {
   author_avatar_url: string | null;
   /** Retenido para revisión: lo ve su autor y nadie más. */
   held_at: string | null;
+  /** B1b: ver la nota equivalente en `PrayerRequest`. */
+  crisis_flagged_at: string | null;
   created_at: string;
   is_mine: boolean;
 };
@@ -74,14 +83,23 @@ export const useWritePrayerRequest = (userId: string | undefined) => {
       isAnonymous: boolean;
       circleId?: string;
     }) => {
-      const { error } = await supabase.from("posts").insert({
-        author_id: userId!,
-        body: input.body.trim().slice(0, POST_MAX),
-        is_anonymous: input.isAnonymous,
-        group_id: input.circleId ?? null,
-      });
+      // `.select()` en vez de un insert a ciegas: B1b necesita saber, en el
+      // momento, si esto se marcó de crisis — no en la siguiente carga del
+      // muro — para poder llevar a quien escribió directo a los recursos.
+      const { data, error } = await supabase
+        .from("posts")
+        .insert({
+          author_id: userId!,
+          body: input.body.trim().slice(0, POST_MAX),
+          is_anonymous: input.isAnonymous,
+          group_id: input.circleId ?? null,
+        })
+        .select("crisis_flagged_at")
+        .single();
 
       if (error) throw error;
+
+      return { crisisFlagged: data.crisis_flagged_at !== null };
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
@@ -148,15 +166,21 @@ export const useWriteComment = (
   return useMutation({
     mutationFn: async (body: string) => {
       const trimmed = body.trim();
-      if (!trimmed) return;
+      if (!trimmed) return { crisisFlagged: false };
 
-      const { error } = await supabase.from("comments").insert({
-        post_id: postId!,
-        author_id: userId!,
-        body: trimmed.slice(0, COMMENT_MAX),
-      });
+      const { data, error } = await supabase
+        .from("comments")
+        .insert({
+          post_id: postId!,
+          author_id: userId!,
+          body: trimmed.slice(0, COMMENT_MAX),
+        })
+        .select("crisis_flagged_at")
+        .single();
 
       if (error) throw error;
+
+      return { crisisFlagged: data.crisis_flagged_at !== null };
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({

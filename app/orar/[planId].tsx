@@ -15,7 +15,7 @@ import {
   AlreadyPrayed,
   MESSAGE_MAX,
   QUICK_MESSAGE_KEYS,
-  usePlansSharedWithMe,
+  useSharedPlanDay,
   usePrayForSomeone,
 } from "@/core/intercessions/queries";
 
@@ -32,12 +32,7 @@ export default function PrayForSomeone() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const {
-    data: plans,
-    isLoading,
-    isError,
-    refetch,
-  } = usePlansSharedWithMe(userId);
+  const { data: plan, isLoading, isError, refetch } = useSharedPlanDay(planId);
   const pray = usePrayForSomeone(userId);
 
   const [message, setMessage] = useState("");
@@ -45,8 +40,6 @@ export default function PrayForSomeone() {
   const [sent, setSent] = useState(false);
 
   const { data: books } = useBibleBooks();
-
-  const plan = (plans ?? []).find((entry) => entry.plan_id === planId);
 
   if (isLoading) {
     return (

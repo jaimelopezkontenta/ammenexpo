@@ -27,6 +27,22 @@ levanta la pila entera:
 No hay ninguna dependencia de un proveedor de nube: lo que corre aquí es lo
 mismo que corre en producción, con las mismas migraciones y las mismas policies.
 
+### El emulador Android
+
+El `.env` usa `http://127.0.0.1:54421`, que vale para web. En el emulador
+Android, `127.0.0.1` es el emulador mismo, no el host. Sin más, la app no
+alcanza Supabase y el login muestra "Algo salió mal".
+
+La solución es `adb reverse`, que redirige el puerto del emulador al host sin
+tocar el `.env`:
+
+```bash
+adb reverse tcp:54421 tcp:54421
+```
+
+Así `127.0.0.1:54421` funciona igual en web que en el emulador. Solo afecta
+al desarrollo local; en staging y producción la URL apunta al Supabase remoto.
+
 ### Arrancar
 
 ```bash

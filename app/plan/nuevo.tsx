@@ -16,6 +16,7 @@ import {
 } from "@/core/onboarding/options";
 import { useOnboardingAnswers } from "@/core/profile/queries";
 import {
+  GenerationUnavailable,
   PlanLimitReached,
   useGeneratePlan,
   type PlanVisibility,
@@ -95,6 +96,14 @@ export default function NewPlan() {
       if (caught instanceof PlanLimitReached) {
         setAtLimit(true);
         setError(null);
+        return;
+      }
+
+      // The provider being off is not the same as "you ran out" and not a
+      // generic failure: say which one it is, truthfully.
+      if (caught instanceof GenerationUnavailable) {
+        setAtLimit(false);
+        setError(t("plan.generationUnavailable"));
         return;
       }
 

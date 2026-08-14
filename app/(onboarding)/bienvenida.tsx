@@ -65,7 +65,8 @@ export default function Onboarding() {
     // The free text counts: somebody who does not see themselves in any chip
     // has still answered the question.
     (step === 3 && (topics.length > 0 || customTopic.trim().length > 0)) ||
-    (step === 4 && reminderKeys.length > 0);
+    // Horas vacías son válidas: hoy no se envían recordatorios.
+    step === 4;
 
   const handleFinish = async () => {
     setError(null);

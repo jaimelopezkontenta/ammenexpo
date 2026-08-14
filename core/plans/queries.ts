@@ -1,5 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRef } from "react";
 
+import {
+  classifyContinueReject,
+  CreateAttemptKey,
+  functionErrorStatus,
+  readFunctionErrorCode,
+} from "@/core/plans/requestId";
+import {
+  isStuckGenerating,
+  STUCK_AFTER_MS,
+  type PlanProgressLike,
+} from "@/core/plans/stuckDetection";
 import { supabase } from "@/utils/supabase";
 
 export type PlanStatus =
@@ -14,19 +26,21 @@ export type OwnPlan = {
   start_date: string;
   generation_error: string | null;
   created_at: string;
+  /**
+   * General row timestamp. It changes for a rename too, so recovery must not
+   * use it as a generation clock.
+   */
+  updated_at: string;
+  /**
+   * Dedicated generation clock, independent of rename/visibility writes. This
+   * is the heartbeat `isStuckGenerating` prefers; it falls back directly to
+   * `created_at`, never to `updated_at`.
+   */
+  generation_heartbeat_at: string | null;
 };
 
-/**
- * Generation runs in a background task with a wall-clock budget. If the isolate
- * is killed mid-flight nothing ever updates the row, so a plan can sit in
- * 'generating' forever and the app would spin on it indefinitely. After this
- * long we stop believing it and offer a retry.
- */
-export const STUCK_AFTER_MS = 5 * 60 * 1000;
-
-export const isStuckGenerating = (plan: OwnPlan | null | undefined) =>
-  plan?.status === "generating" &&
-  Date.now() - new Date(plan.created_at).getTime() > STUCK_AFTER_MS;
+export { isStuckGenerating, STUCK_AFTER_MS };
+export type { PlanProgressLike };
 
 export type PlanDay = {
   id: string;
@@ -41,8 +55,6 @@ export type PlanDay = {
   intercession_count: number;
 };
 
-const today = () => new Date().toISOString().slice(0, 10);
-
 export type PlanProgress = {
   days_total: number;
   days_written: number;
@@ -53,7 +65,7 @@ export type PlanProgress = {
 };
 
 const PLAN_COLUMNS =
-  "id, title, theme, status, duration_days, start_date, generation_error, created_at";
+  "id, title, theme, status, duration_days, start_date, generation_error, created_at, updated_at, generation_heartbeat_at";
 
 /**
  * All the plans you own, newest first.
@@ -204,6 +216,41 @@ export class PlanLimitReached extends Error {
   }
 }
 
+/**
+ * Another invocation is already writing the next stretch of this plan (the
+ * server lease is held). Not a failure: the work is already happening, and
+ * saying "algo salió mal" would be a lie at the exact moment it is working.
+ */
+export class GenerationInFlight extends Error {
+  constructor() {
+    super("generation_in_flight");
+    this.name = "GenerationInFlight";
+  }
+}
+
+/**
+ * This request_id already belongs to another ledger row (another plan, or
+ * this plan's own reservation). Definitive: the next tap must mint a new key.
+ */
+export class RequestIdConflict extends Error {
+  constructor() {
+    super("request_id_conflict");
+    this.name = "RequestIdConflict";
+  }
+}
+
+/**
+ * The AI provider is not configured or unreachable (503 from the function).
+ * Distinct from "you ran out" so the screen can say something true instead of
+ * a generic red line.
+ */
+export class GenerationUnavailable extends Error {
+  constructor() {
+    super("generation_unavailable");
+    this.name = "GenerationUnavailable";
+  }
+}
+
 export type PlanVisibility = "private" | "circles" | "link" | "public";
 
 export type NewPlanInput = {
@@ -219,11 +266,17 @@ export type NewPlanInput = {
 export const useGeneratePlan = (userId: string | undefined) => {
   const queryClient = useQueryClient();
 
+  // A stable idempotency key per create attempt. A network timeout and an
+  // immediate retry of the SAME form must not consume another slot, so the key
+  // is minted once and reused across retries; `clear()` on definitive success
+  // guarantees the next create never reuses a consumed key.
+  const attemptKey = useRef(new CreateAttemptKey());
+
   return useMutation({
     mutationFn: async (input: NewPlanInput) => {
       const { data, error } = await supabase.functions.invoke(
         "generate-prayer-plan",
-        { body: input },
+        { body: { ...input, request_id: attemptKey.current.acquire() } },
       );
 
       if (error) {
@@ -233,6 +286,12 @@ export const useGeneratePlan = (userId: string | undefined) => {
 
         if (status === 402) {
           throw new PlanLimitReached();
+        }
+
+        // 503 means the provider is off or misconfigured, not that the user
+        // did anything wrong.
+        if (status === 503) {
+          throw new GenerationUnavailable();
         }
 
         throw error;
@@ -248,6 +307,10 @@ export const useGeneratePlan = (userId: string | undefined) => {
       };
     },
     onSuccess: (_result, input) => {
+      // The reservation went through: this attempt is closed, and the next
+      // create must mint a fresh key (reusing it would return the old plan).
+      attemptKey.current.clear();
+
       void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
 
       // A circle's plan is not one of yours, so invalidating `myPlans` alone
@@ -263,28 +326,18 @@ export const useGeneratePlan = (userId: string | undefined) => {
         });
       }
     },
-  });
-};
+    onError: (error) => {
+      // Discard the key on definitive errors (402 paywall, 400/403/409) so the
+      // next attempt gets a fresh request_id. Network timeouts and 500/503 keep
+      // the key so a retry stays idempotent.
+      if (error instanceof PlanLimitReached) {
+        // 402 (quota exhausted) is definitive: the mutation rethrows it as
+        // PlanLimitReached, which has no context.status for clearOnError to see.
+        attemptKey.current.clear();
+        return;
+      }
 
-/**
- * Marks an abandoned generation as failed before retrying. Failed plans are
- * excluded from the free-plan allowance, so a crashed attempt does not burn the
- * user's only free plan.
- */
-export const useAbandonPlan = (userId: string | undefined) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (planId: string) => {
-      const { error } = await supabase
-        .from("prayer_plans")
-        .update({ status: "failed", generation_error: "abandoned" })
-        .eq("id", planId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
+      attemptKey.current.clearOnError(error);
     },
   });
 };
@@ -310,6 +363,29 @@ export const useRenamePlan = (userId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
+    },
+  });
+};
+
+/**
+ * Archives an active/completed plan you own. Quota is not refunded — the
+ * ledger is not touched. Status writes go through the RPC because the
+ * client grant on `prayer_plans.status` was revoked.
+ */
+export const useArchivePlan = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (planId: string) => {
+      const { error } = await supabase.rpc("archive_my_plan", {
+        p_plan_id: planId,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
+      void queryClient.invalidateQueries({ queryKey: ["activePlan", userId] });
     },
   });
 };
@@ -340,8 +416,6 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
     },
   });
 };
-
-export const todayIso = today;
 
 export type PlanDaySummary = {
   /** Null until the day opens: a locked day has no readable row. */
@@ -374,6 +448,42 @@ export const usePlanDays = (planId: string | undefined) =>
       if (error) throw error;
 
       return (data ?? []) as PlanDaySummary[];
+    },
+  });
+
+export type PublicPlanDay = {
+  plan_id: string;
+  plan_title: string;
+  plan_theme: string | null;
+  owner_id: string;
+  owner_name: string;
+  owner_avatar_url: string | null;
+  day_number: number;
+  day_title: string;
+  scripture_ref: string | null;
+  scripture_text: string | null;
+  intercession_count: number;
+};
+
+/**
+ * A `public` plan opened from Comunidad — descubrible/abrible for anybody,
+ * per the B2 contract, but read-only: this is not the Orar surface, so it
+ * never returns the first-person prayer and there is no way to pray for it
+ * from here. Praying requires an explicit share, which is `/orar/[planId]`
+ * backed by `get_shared_plan_day`.
+ */
+export const usePublicPlanDay = (planId: string | undefined) =>
+  useQuery({
+    queryKey: ["publicPlanDay", planId],
+    enabled: Boolean(planId),
+    queryFn: async (): Promise<PublicPlanDay | null> => {
+      const { data, error } = await supabase.rpc("get_public_plan_day", {
+        p_plan_id: planId!,
+      });
+
+      if (error) throw error;
+
+      return ((data ?? []) as PublicPlanDay[])[0] ?? null;
     },
   });
 
@@ -413,18 +523,54 @@ export const usePlanDay = (
 export const useContinuePlan = (userId: string | undefined) => {
   const queryClient = useQueryClient();
 
+  // Stable idempotency key per plan. A timeout and an immediate retry of the
+  // same "Continue" tap must not mint a new request_id — the server would see
+  // it as a new claim and either reclaim (new lease, old worker orphaned) or
+  // report `in_flight` (stuck behind the old lease). Each plan gets its own
+  // CreateAttemptKey: 400/402/403/409-conflict/422 discard it; in_flight and
+  // network/5xx keep it.
+  const continueKeys = useRef(new Map<string, CreateAttemptKey>());
+
   return useMutation({
     mutationFn: async (planId: string) => {
+      let attempt = continueKeys.current.get(planId);
+      if (!attempt) {
+        attempt = new CreateAttemptKey();
+        continueKeys.current.set(planId, attempt);
+      }
+
       const { error } = await supabase.functions.invoke(
         "generate-prayer-plan",
         {
-          body: { continue_plan_id: planId },
+          body: { continue_plan_id: planId, request_id: attempt.acquire() },
         },
       );
 
-      if (error) throw error;
+      if (error) {
+        const status = functionErrorStatus(error);
+        const code = await readFunctionErrorCode(error);
+        const reject = classifyContinueReject(status, code);
+
+        // in_flight is not definitive: keep the key so a retry is the same
+        // request instead of minting one that then sits behind the live lease.
+        if (reject === "in_flight") {
+          throw new GenerationInFlight();
+        }
+
+        attempt.clearOnError(error);
+
+        if (reject === "request_id_conflict") {
+          throw new RequestIdConflict();
+        }
+
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_result, planId) => {
+      // The continuation was accepted: close this attempt so the next cycle
+      // gets a fresh key.
+      continueKeys.current.get(planId)?.clear();
+
       void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
       void queryClient.invalidateQueries({ queryKey: ["todayDay"] });
       void queryClient.invalidateQueries({ queryKey: ["planProgress"] });

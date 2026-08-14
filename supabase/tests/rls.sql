@@ -183,9 +183,8 @@ $$;
 do $$
 begin
   delete from public.prayer_plans where id = 'aaaa0000-0000-0000-0000-000000000001';
-  if found then
-    raise exception 'FAIL  Beto deleted Ana''s plan';
-  end if;
+  raise exception 'FAIL  Beto deleted Ana''s plan';
+exception when insufficient_privilege then
   raise notice 'PASS  Beto cannot delete Ana''s plan';
 end;
 $$;
@@ -279,25 +278,25 @@ $$;
 commit;
 
 -- ===========================================================================
--- 8. INSERT ... RETURNING works for the owner
+-- 8. Plan creation goes through reserve_generation, not a direct INSERT
 --
--- Regression: the SELECT policy used to re-query prayer_plans through a STABLE
--- function, which cannot see the row being inserted. Every client library
--- returns the created row by default, so this broke plan creation outright
--- while reporting itself as a WITH CHECK violation.
+-- Regression in reverse: the SELECT policy used to re-query prayer_plans
+-- through a STABLE function, which cannot see the row being inserted — and
+-- that broke plan creation outright. Plan creation now happens inside
+-- `reserve_generation` (SECURITY DEFINER, tested in generation.sql), and the
+-- client's INSERT grant is revoked, so a direct insert must be rejected.
 -- ===========================================================================
 begin;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 
-with created as (
-  insert into public.prayer_plans (owner_id, title, duration_days, start_date, visibility)
-  values ('11111111-1111-1111-1111-111111111111', 'con returning', 3, current_date, 'private')
-  returning id
-)
 select pg_temp.assert(
-  (select count(*) from created) = 1,
-  'a plan can be created with INSERT ... RETURNING');
+  pg_temp.raises($q$
+    insert into public.prayer_plans (owner_id, title, duration_days, start_date, visibility)
+    values ('11111111-1111-1111-1111-111111111111', 'con returning', 3, current_date, 'private')
+    returning id
+  $q$),
+  'the client cannot create a plan with a direct INSERT ... RETURNING');
 
 with created as (
   insert into public.groups (owner_id, name) values
@@ -328,6 +327,14 @@ insert into public.prayer_plans (id, owner_id, title, duration_days, start_date,
 values ('aaaa0000-0000-0000-0000-000000000002',
         '11111111-1111-1111-1111-111111111111',
         'Plan compartido con circulos', 1, current_date, 'private');
+
+-- Eva's own plan, created as superuser: the client cannot INSERT directly
+-- anymore (that path is reserve_generation's), so the "sharing into a circle
+-- you do not belong to" test below only needs the plan to exist.
+insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility)
+values ('aaaa0000-0000-0000-0000-000000000003',
+        '55555555-5555-5555-5555-555555555555',
+        'Plan de Eva', 1, current_date, 'private');
 
 insert into public.prayer_plan_days (plan_id, day_number, title, prayer_body, unlock_date)
 values ('aaaa0000-0000-0000-0000-000000000002', 1, 'Día uno', 'Privado', current_date);
@@ -388,10 +395,6 @@ set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","r
 
 do $$
 begin
-  insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility)
-  values ('aaaa0000-0000-0000-0000-000000000003',
-          '55555555-5555-5555-5555-555555555555', 'Plan de Eva', 1, current_date, 'private');
-
   insert into public.plan_shares (plan_id, group_id, created_by)
   values ('aaaa0000-0000-0000-0000-000000000003',
           '99990000-0000-0000-0000-000000000001',
@@ -608,6 +611,273 @@ set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","r
 select pg_temp.assert(
   (select count(*) from public.my_plan_days('aaaa0000-0000-0000-0000-000000000001')) = 0,
   'a plan shared with Beto is still not his history');
+
+commit;
+
+
+-- ===========================================================================
+-- B0: nadie se nombra staff a sí mismo, y la racha no se edita a mano
+--
+-- El grant de tabla entera sobre `profiles` convertía `is_staff` —añadido
+-- después, en otra migración— en un interruptor que cualquier cuenta podía
+-- pulsar sobre su propia fila. Desde `20260819100000` el rol cliente solo
+-- toca `display_name` y `avatar_url`, que es lo que la app edita de verdad.
+-- ===========================================================================
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values
+  ('77777777-7777-7777-7777-777777777777', 'carlos@test.local',
+   'authenticated', 'authenticated', '{"display_name":"Carlos"}');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.profiles set is_staff = true
+     where id = '11111111-1111-1111-1111-111111111111'
+  $q$),
+  'a normal account cannot mark itself as staff');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.profiles set streak_count = 999
+     where id = '11111111-1111-1111-1111-111111111111'
+  $q$),
+  'nor inflate its own streak');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.profiles set streak_last_day = current_date - 30
+     where id = '11111111-1111-1111-1111-111111111111'
+  $q$),
+  'nor rewrite when the streak last moved');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.admin_set_staff(
+      '11111111-1111-1111-1111-111111111111', true, 'ana', 'self-appointment')
+  $q$),
+  'and the administrative channel is not callable from a client session');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select count(*) from public.staff_admin_events
+  $q$),
+  'the appointment log is not readable over the API either');
+
+-- Lo legítimo sigue abierto: nombre y foto, sobre la fila propia.
+update public.profiles set display_name = 'Ana de verdad'
+ where id = '11111111-1111-1111-1111-111111111111';
+
+select pg_temp.assert(
+  (select display_name from public.profiles
+    where id = '11111111-1111-1111-1111-111111111111') = 'Ana de verdad',
+  'editing your own name still works');
+
+update public.profiles
+   set avatar_url = 'http://127.0.0.1:54421/storage/v1/object/public/avatars/11111111-1111-1111-1111-111111111111/avatar.png'
+ where id = '11111111-1111-1111-1111-111111111111';
+
+select pg_temp.assert(
+  (select avatar_url from public.profiles
+    where id = '11111111-1111-1111-1111-111111111111')
+      like '%/avatars/11111111-1111-1111-1111-111111111111/%',
+  'and so does changing your own avatar');
+
+-- La policy sigue decidiendo filas: el nombre de otra persona, cero filas.
+update public.profiles set display_name = 'Suplantada'
+ where id = '77777777-7777-7777-7777-777777777777';
+
+select pg_temp.assert(
+  (select display_name from public.profiles
+    where id = '77777777-7777-7777-7777-777777777777') = 'Carlos',
+  'and somebody else''s row stays exactly as it was');
+
+commit;
+
+-- La racha solo se mueve orando: el trigger es SECURITY DEFINER y no pasa por
+-- el grant, así que revocarlo no apaga el canal legítimo.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+insert into public.prayer_logs (user_id, plan_day_id)
+values ('11111111-1111-1111-1111-111111111111',
+        'dddd0000-0000-0000-0000-000000000002');
+
+-- La lectura ya no pasa por la tabla —el grant la esconde—, sino por la RPC
+-- que devuelve solo la racha del usuario autenticado.
+select pg_temp.assert(
+  (select streak_count from public.my_profile_data()) = 1
+  and (select streak_last_day from public.my_profile_data()) = current_date,
+  'the streak still moves through prayer, not through the API');
+
+commit;
+
+-- El canal administrativo: solo service_role, y deja actor, motivo y hora.
+-- Las lecturas de comprobación van como superuser: service_role no tiene
+-- grant de lectura sobre `profiles` (ni lo necesita para llamar la RPC, que
+-- corre como definer).
+begin;
+set local role service_role;
+
+select pg_temp.assert(
+  public.admin_set_staff(
+    '77777777-7777-7777-7777-777777777777', true,
+    'ops-runner', 'moderation rota, week 1'),
+  'the administrative channel appoints staff');
+
+commit;
+
+begin;
+
+select pg_temp.assert(
+  (select is_staff from public.profiles
+    where id = '77777777-7777-7777-7777-777777777777'),
+  'and the bit is actually set');
+
+select pg_temp.assert(
+  (select count(*) from public.staff_admin_events
+    where target_user_id = '77777777-7777-7777-7777-777777777777'
+      and action = 'grant'
+      and actor = 'ops-runner'
+      and reason = 'moderation rota, week 1') = 1,
+  'with who, why and when written down');
+
+commit;
+
+begin;
+set local role service_role;
+
+select pg_temp.assert(
+  public.admin_set_staff(
+    '77777777-7777-7777-7777-777777777777', false,
+    'ops-runner', 'rotation ended'),
+  'and revoking goes through the same channel');
+
+select pg_temp.assert(
+  not public.admin_set_staff(
+    '00000000-0000-0000-0000-000000000000', true, 'ops-runner', 'ghost'),
+  'appointing a user that does not exist says so');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.admin_set_staff(
+      '77777777-7777-7777-7777-777777777777', true, '', 'no operator named')
+  $q$),
+  'an appointment without an operator is refused');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.admin_set_staff(
+      '77777777-7777-7777-7777-777777777777', true, 'ops-runner', '  ')
+  $q$),
+  'and one without a reason is refused too');
+
+-- Append-only de verdad: ni el service_role corrige el pasado.
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.staff_admin_events set reason = 'rewritten'
+  $q$),
+  'the log cannot be rewritten');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    delete from public.staff_admin_events
+  $q$),
+  'nor emptied');
+
+commit;
+
+begin;
+
+select pg_temp.assert(
+  (select count(*) from public.staff_admin_events
+    where target_user_id = '77777777-7777-7777-7777-777777777777') = 2,
+  'and the log keeps both appointments, it does not overwrite');
+
+select pg_temp.assert(
+  not (select is_staff from public.profiles
+    where id = '77777777-7777-7777-7777-777777777777'),
+  'and the bit is back off after the revocation');
+
+commit;
+
+-- ===========================================================================
+-- B1: la racha y el staff no se leen por la API REST
+--
+-- `public_profile()` los esconde desde 20260809100000, pero el grant de SELECT
+-- sobre toda la tabla los dejaba a un `select` de distancia. Desde
+-- `20260906100000_restrict_profile_select.sql` el rol cliente solo lee
+-- `id`, `display_name`, `avatar_url`, `follower_count`, `following_count` y
+-- `search_vector`; la racha y el bit de staff salen por `my_profile_data()`,
+-- que solo devuelve los del usuario autenticado.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+-- La racha de otro, fuera de alcance: el grant de columna la rechaza.
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select streak_count from public.profiles
+     where id = '77777777-7777-7777-7777-777777777777'
+  $q$),
+  'a user cannot read somebody else''s streak');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select streak_last_day from public.profiles
+     where id = '77777777-7777-7777-7777-777777777777'
+  $q$),
+  'nor the day their streak last moved');
+
+-- Y el bit de staff, que es la llave de la moderación.
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select is_staff from public.profiles
+     where id = '77777777-7777-7777-7777-777777777777'
+  $q$),
+  'nor somebody else''s staff bit');
+
+-- Ni los timestamps crudos, que el perfil público ya resume en member_since.
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select created_at, updated_at from public.profiles
+     where id = '77777777-7777-7777-7777-777777777777'
+  $q$),
+  'nor the raw timestamps');
+
+-- Lo público sigue abierto: nombre y cara de cualquiera.
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    select display_name, avatar_url from public.profiles
+     where id = '77777777-7777-7777-7777-777777777777'
+  $q$),
+  'display name and avatar stay readable on anyone''s profile');
+
+-- La RPC devuelve lo del usuario autenticado: su racha y su bit, no otro.
+select pg_temp.assert(
+  (select streak_count from public.my_profile_data()) = 1
+  and (select streak_last_day from public.my_profile_data()) = current_date
+  and (select is_staff from public.my_profile_data()) = false,
+  'my_profile_data returns the caller''s own streak and staff bit');
+
+commit;
+
+-- Para un usuario que no existe, la RPC devuelve vacío — jamás los datos de otro.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"99999999-9999-9999-9999-999999999999","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.my_profile_data()) = 0,
+  'my_profile_data returns nothing for a user that does not exist');
 
 commit;
 

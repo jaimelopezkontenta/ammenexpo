@@ -205,11 +205,16 @@ export default function PersonProfile() {
                 {t("community.publicPlans")}
               </Text>
 
+              {/* `person_plans` solo devuelve planes `visibility = 'public'`,
+                así que toda esta lista es la lectura pública, no la oración.
+                Desde B2, `/orar/[planId]` rechaza un plan público sin share
+                explícito — apuntar aquí a Orar dejaba el enlace roto para
+                exactamente lo que esta lista promete (ver DEF-01 del plan). */}
               {(plans ?? []).map((plan) => (
                 <Link
                   key={plan.id}
                   href={{
-                    pathname: "/orar/[planId]",
+                    pathname: "/plan-publico/[planId]",
                     params: { planId: plan.id },
                   }}
                   asChild

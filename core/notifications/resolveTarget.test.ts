@@ -1,0 +1,118 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  navigationTargetFor,
+  outboxIdFromPayload,
+  responseIdentifier,
+  type NotificationPayload,
+  type ResolvedNotification,
+} from "./resolveTarget";
+
+/**
+ * RDY-11 corrección — el tap de una notificación nunca navega a partir del
+ * payload por sí solo. Estas dos funciones son la mitad de esa regla que se
+ * puede probar sin un dispositivo real: qué se lee del payload (nada más
+ * que un id opaco) y qué se decide con la respuesta del servidor (nunca con
+ * lo que el payload afirmaba).
+ */
+describe("outboxIdFromPayload", () => {
+  it("reads the outbox id from a well-formed intercession payload", () => {
+    const payload: NotificationPayload = {
+      type: "intercession",
+      outboxId: "11111111-1111-1111-1111-111111111111",
+    };
+
+    expect(outboxIdFromPayload(payload)).toBe(
+      "11111111-1111-1111-1111-111111111111",
+    );
+  });
+
+  it("is null for any other notification type", () => {
+    const payload = {
+      type: "some_future_event",
+      outboxId: "11111111-1111-1111-1111-111111111111",
+    };
+
+    expect(outboxIdFromPayload(payload)).toBeNull();
+  });
+
+  it("is null when there is no payload at all", () => {
+    expect(outboxIdFromPayload(null)).toBeNull();
+    expect(outboxIdFromPayload(undefined)).toBeNull();
+  });
+
+  it("is null for a malformed or tampered outboxId", () => {
+    expect(
+      outboxIdFromPayload({ type: "intercession", outboxId: 12345 }),
+    ).toBeNull();
+    expect(
+      outboxIdFromPayload({ type: "intercession", outboxId: "" }),
+    ).toBeNull();
+    expect(outboxIdFromPayload({ type: "intercession" })).toBeNull();
+  });
+
+  // El caso real que esto cierra: un payload nunca lleva un `planId`, así que
+  // aunque alguien lo inyectara, no hay ningún camino de código que lo lea.
+  it("never reads a planId even if one were smuggled into the payload", () => {
+    const tampered = {
+      type: "intercession",
+      outboxId: "11111111-1111-1111-1111-111111111111",
+      planId: "aaaa0000-0000-0000-0000-000000000001",
+    } as NotificationPayload & { planId: string };
+
+    const result = outboxIdFromPayload(tampered);
+
+    expect(result).toBe("11111111-1111-1111-1111-111111111111");
+    // outboxIdFromPayload's return type is just a string — there is no
+    // planId anywhere downstream of this function to accidentally trust.
+  });
+});
+
+describe("navigationTargetFor", () => {
+  it("navigates to /avisos when the server authorizes it", () => {
+    const resolved: ResolvedNotification = {
+      authorized: true,
+      intercessor_name: "Beto",
+    };
+
+    expect(navigationTargetFor(resolved)).toBe("/avisos");
+  });
+
+  it("navigates nowhere when the server refuses — wrong owner, stale, or blocked since", () => {
+    const resolved: ResolvedNotification = {
+      authorized: false,
+      intercessor_name: null,
+    };
+
+    expect(navigationTargetFor(resolved)).toBeNull();
+  });
+
+  it("navigates nowhere when there was no server answer at all", () => {
+    expect(navigationTargetFor(null)).toBeNull();
+  });
+});
+
+describe("responseIdentifier", () => {
+  it("reads the notification's own request identifier", () => {
+    const response = {
+      notification: { request: { identifier: "notif-123" } },
+    };
+
+    expect(responseIdentifier(response)).toBe("notif-123");
+  });
+
+  it("is null when there is no response, no notification, or no identifier", () => {
+    expect(responseIdentifier(null)).toBeNull();
+    expect(responseIdentifier({})).toBeNull();
+    expect(responseIdentifier({ notification: {} })).toBeNull();
+    expect(responseIdentifier({ notification: { request: {} } })).toBeNull();
+  });
+
+  it("is null for a malformed, non-string identifier", () => {
+    expect(
+      responseIdentifier({
+        notification: { request: { identifier: 12345 } },
+      }),
+    ).toBeNull();
+  });
+});

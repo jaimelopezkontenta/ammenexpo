@@ -35,19 +35,23 @@
     "empty": "Todavía nadie ha compartido su plan contigo.",
     "emptyBody": "Cuando alguien lo haga, aparecerá aquí para que ores por su día.",
     "emptyCta": "Compartir mi plan",
-    "planGone": "Ya no tienes acceso a este plan."
+    "planGone": "Ya no tienes acceso a este plan.",
+    "progressTitle": "Oraciones de hoy",
+    "progress": "{{completed}} de {{total}} completadas",
+    "progressAccessibility": "Progreso de las oraciones de hoy: {{completed}} de {{total}} completadas",
+    "pending": "Pendientes",
+    "completed": "Completados"
   },
   "profile": {
     "title": "Tu perfil",
     "subtitle": "Tu idioma y tu cuenta.",
     "name": "Cómo te llamamos",
     "reminder": "Tu momento de oración",
-    "reminderHint": "Lo usaremos para recordártelo cuando activemos los avisos.",
+    "reminderHint": "Esta preferencia queda guardada, pero hoy no enviamos recordatorios. Los activaremos más adelante.",
     "saved": "Guardado.",
     "delete": "Borrar mi cuenta",
     "deleteConfirm": "Sí, borrar todo",
     "deleteWarning": "Se borran tus planes, tus círculos y todo lo que hayan orado por ti. No se puede deshacer.",
-    "plus": "Ammen Plus",
     "photo": "Tu foto",
     "changePhoto": "Cambiar la foto",
     "addPhoto": "Poner una foto",
@@ -71,7 +75,12 @@
     "unavailableBody": "Puede que hayas bloqueado a esta persona, o que su cuenta ya no exista. Los bloqueos se deshacen en «Personas bloqueadas», dentro de tu perfil.",
     "statStreak": "racha",
     "statFollowers": "seguidores",
-    "statFollowing": "siguiendo"
+    "statFollowing": "siguiendo",
+    "identity": "Identidad",
+    "preferences": "Preferencias",
+    "communitySupport": "Comunidad y ayuda",
+    "dangerZone": "Zona de peligro",
+    "plusComingSoon": "Ammen Plus · próximamente"
   },
   "auth": {
     "signInTitle": "Bienvenido de vuelta",
@@ -188,7 +197,8 @@
     "noPlanBody": "Creamos uno a tu medida a partir de lo que nos contaste.",
     "createCta": "Crear mi plan de oración",
     "failedTitle": "No pudimos crear tu plan",
-    "failedBody": "A veces pasa. Inténtalo otra vez.",
+    "failedBody": "Crear otro usa otro de tus tres planes gratuitos.",
+    "createAnother": "Crear otro plan",
     "limitTitle": "Has usado tus tres planes gratuitos",
     "limitBody": "Con Ammen Plus puedes crear todos los planes que quieras.",
     "meaning": "Qué significa",
@@ -213,8 +223,17 @@
     "finishedCta": "Empezar otro plan",
     "switcherLabel": "Tus planes",
     "stalledBody": "Se escribieron {{written}} de {{total}} días y la generación se quedó a medias.",
+    "stalledTitle": "Tu plan se quedó a medias",
     "stalledCta": "Seguir escribiendo el plan",
-    "resumed": "Seguimos escribiéndolo. Vuelve en un minuto."
+    "resumed": "Seguimos escribiéndolo. Vuelve en un minuto.",
+    "generationInFlight": "Ya lo estamos escribiendo. No hace falta que vuelvas a pulsar.",
+    "requestIdConflict": "Esta petición ya se usó. Pulsa de nuevo para seguir escribiendo el plan.",
+    "generationUnavailable": "La generación de planes no está disponible ahora mismo. Inténtalo dentro de un rato.",
+    "archive": "Archivar este plan",
+    "archiveConfirm": "Sí, archivar",
+    "archiveHint": "No hay vuelta atrás. Archivar no te devuelve un plan gratuito.",
+    "archived": "Plan archivado.",
+    "notArchivable": "Este plan no se puede archivar."
   },
   "share": {
     "title": "Compartir mi plan",
@@ -243,7 +262,7 @@
     "deadLinkInvite": "Puedes crear el tuyo y compartirlo con quien quieras.",
     "deadLinkCta": "Crear mi cuenta",
     "publicTitle": "En tu perfil",
-    "publicOn": "Cualquiera puede abrir este plan desde tu perfil y orar por ti.",
+    "publicOn": "Cualquiera puede abrir y leer este plan desde tu perfil y la comunidad. Para que alguien pueda orar por ti hace falta compartirlo con esa persona o con un círculo.",
     "publicOff": "Este plan no aparece en tu perfil ni en la comunidad.",
     "publish": "Publicarlo en mi perfil",
     "unpublish": "Quitarlo de mi perfil",
@@ -447,7 +466,7 @@
     "create": "Crear el plan",
     "days_plural": "{{count}} días",
     "visPublic": "Todo el mundo",
-    "visPublicHint": "Aparecerá en tu perfil y en la comunidad. Cualquiera podrá abrirlo y orar por ti."
+    "visPublicHint": "Aparecerá en tu perfil y en la comunidad. Cualquiera podrá leerlo. Para que alguien ore por ti hace falta compartirlo con esa persona o con un círculo."
   },
   "bible": {
     "title": "Biblia",
@@ -529,7 +548,48 @@
       "message": "Mensaje",
       "testimony": "Testimonio",
       "intercession": "Mensaje de intercesión"
-    }
+    },
+    "mode": {
+      "reports": "Reportes",
+      "held": "Retenidos",
+      "crisis": "Crisis"
+    },
+    "holdStatus": {
+      "pending": "Pendiente",
+      "claimed": "Reclamado",
+      "released": "Liberado",
+      "removed": "Retirado"
+    },
+    "holdEmpty": "No hay nada retenido.",
+    "claim": "Reclamar",
+    "claimedBy": "Reclamado por {{name}}",
+    "release": "Liberar (falso positivo)",
+    "remove": "Retirar (abusivo)",
+    "reasonPlaceholder": "Motivo de la decisión…",
+    "reasonRequired": "Escribe un motivo antes de confirmar.",
+    "confirm": "Confirmar",
+    "releaseDone": "Liberado. Vuelve a ser visible.",
+    "removeDone": "Retirado. Nadie más lo verá.",
+    "crisisEmpty": "No hay ninguna escalada de crisis abierta.",
+    "crisisHint": "Ninguna de estas frases se publicó nunca con normalidad. Este es el registro de guardia, no una cola de contenido.",
+    "acknowledge": "Acusar recibo",
+    "acknowledgedBy": "Atendido por {{name}}",
+    "notePlaceholder": "Qué se hizo, brevemente…",
+    "noteRequired": "Escribe una nota antes de confirmar.",
+    "acknowledgeDone": "Registrado."
+  },
+  "crisis": {
+    "title": "Antes de seguir",
+    "intro": "Lo que escribiste suena a que estás pasando un momento muy difícil, quizá pensando en hacerte daño. No lo publicamos como una petición normal — no porque esté mal pedir ayuda, sino porque esto merece más que un botón de \"Amén\".",
+    "notDiagnosis": "Esto no es un diagnóstico ni una evaluación: es un aviso automático a partir de las palabras que usaste, y puede equivocarse. Ninguna persona ni ningún sistema va a intervenir sin que tú hables primero.",
+    "resourcesTitle": "Ayuda inmediata",
+    "resourceEsTitle": "España — Línea 024",
+    "resourceEsBody": "024, gratuita y todo el día. Atención a la conducta suicida.",
+    "resourceIntlTitle": "Internacional",
+    "resourceIntlBody": "Si no estás en España, busca \"línea de crisis\" o \"línea de prevención del suicidio\" junto con tu país, o llama al número de emergencias local.",
+    "resourceEmergency": "Si hay un riesgo inmediato para tu vida, llama a emergencias (112 en España, 911 en EE. UU., o el número de tu país) ahora mismo.",
+    "staying": "Puedes quedarte en la app. Esto no borra lo que escribiste ni te expulsa de ninguna parte.",
+    "goHome": "Volver a Hoy"
   },
   "social": {
     "follow": "Seguir",
@@ -543,6 +603,12 @@
     "followers": "{{count}} seguidor",
     "followers_plural": "{{count}} seguidores",
     "openPlan": "Ver el plan",
+    "publicPlan": {
+      "title": "El plan de {{name}}",
+      "readOnlyHint": "Este plan es abierto: cualquiera puede leerlo. Para orar por {{name}} hace falta que lo comparta directamente contigo o en un círculo.",
+      "notFound": "Este plan ya no está disponible.",
+      "notFoundHint": "Puede que quien lo publicó lo haya quitado de su perfil."
+    },
     "kind": {
       "request": "Petición",
       "testimony": "Testimonio",

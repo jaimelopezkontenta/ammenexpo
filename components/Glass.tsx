@@ -3,6 +3,8 @@ import { cssInterop } from "nativewind";
 import { ReactNode } from "react";
 import { Platform, StyleSheet, View, ViewProps, ViewStyle } from "react-native";
 
+import { useDawnBlurTarget } from "@/components/DawnBackground";
+
 // `BlurView` viene de fuera de React Native, así que NativeWind no sabe que su
 // `className` se traduce a `style`. Sin esta línea las clases de la tab bar y
 // de las tarjetas se quedarían sin aplicar.
@@ -64,6 +66,8 @@ export const Glass = ({
 }: Props) => {
   const tint = dark ? DARK_TINT : readable ? LIGHT_TINT_READABLE : LIGHT_TINT;
 
+  const blurTarget = useDawnBlurTarget();
+
   const base: ViewStyle = {
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: dark ? DARK_BORDER : LIGHT_BORDER,
@@ -83,7 +87,12 @@ export const Glass = ({
     />
   );
 
-  if (flat) {
+  // En Android, el blur necesita un target explícito (expo-blur 56): un ref a
+  // la vista que se desenfoca. Sin target (la tab bar no vive dentro de un
+  // `DawnBackground`), `flat` es lo honesto: translucidez sin fingir blur.
+  const effectiveFlat = flat || (Platform.OS === "android" && !blurTarget);
+
+  if (effectiveFlat) {
     return (
       <View
         {...viewProps}
@@ -114,8 +123,14 @@ export const Glass = ({
       // ve exactamente lo mismo que ya hace `flat`. No hay que elegir entre el
       // efecto y el rendimiento, y no hay que adivinar el parque de
       // dispositivos.
-      experimentalBlurMethod={
+      blurMethod={
         Platform.OS === "android" ? "dimezisBlurViewSdk31Plus" : undefined
+      }
+      // El ref al fondo que se desenfoca. Solo Android lo usa: en iOS el blur
+      // es el nativo del sistema y no necesita target. El `?? undefined` es
+      // para TypeScript —aquí el target ya es seguro, lo cubrió `effectiveFlat`.
+      blurTarget={
+        Platform.OS === "android" ? (blurTarget ?? undefined) : undefined
       }
       style={[base, { backgroundColor: tint }, style]}
     >

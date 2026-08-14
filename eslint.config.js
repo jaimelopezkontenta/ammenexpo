@@ -15,6 +15,18 @@ module.exports = defineConfig([
       // Deno, not React Native: different runtime, different module resolution.
       // The Deno toolchain validates these when the functions are served.
       "supabase/functions/*",
+      // RDY-07/verificación: artefactos de una corrida de Playwright — HTML,
+      // JSON de resultados, capturas, vídeos, trazas. Un E2E que falla los
+      // genera con más detalle todavía (screenshots, `.zip` de traza), y
+      // ninguno de ellos es código nuestro. Sin este ignore explícito, un
+      // `test-results/.last-run.json` que Playwright no formatea como
+      // Prettier tumbaba `npm run lint` — y por tanto `npm run verify` — por
+      // un E2E que ni siquiera tiene que ver con el código fuente.
+      "playwright-report/**",
+      "test-results/**",
+      "blob-report/**",
+      "playwright/.cache/**",
+      ".tmp/**",
     ],
   },
   {

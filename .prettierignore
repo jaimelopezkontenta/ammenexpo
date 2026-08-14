@@ -9,3 +9,13 @@ dist-test/
 .expo/
 
 node_modules/
+
+# RDY-07/verificación: artefactos de Playwright (RDY-08 punto 2 del segundo
+# ciclo de corrección). Prettier 3 ya respeta `.gitignore` por defecto, pero
+# esto no depende de eso: un E2E fallido no puede tumbar `npm run lint` ni
+# `npm run verify` por un `.json`/reporte generado que no es código nuestro.
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+.tmp/

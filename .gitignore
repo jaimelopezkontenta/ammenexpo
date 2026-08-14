@@ -13,9 +13,13 @@ web-build/
 expo-env.d.ts
 # firebase/supabase/vexo
 .env
+.env.staging.local
+.firebase/
+firebase-debug.log*
+firebase-tools.log*
 
-ios
-android
+/ios
+/android
 
 # macOS
 .DS_Store
@@ -29,3 +33,13 @@ dist-test/
 # Es la referencia visual del rediseño y vive en local; lo que sí está versionado
 # es `prototipo/`, que es donde los valores quedaron decididos y medidos.
 diseno/
+
+# Playwright (RDY-07): reportes y artefactos de una corrida local, nunca el
+# spec ni la config.
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Atomic local DB lock and test scratch space.
+/.tmp/

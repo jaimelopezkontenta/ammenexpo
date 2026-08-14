@@ -1,0 +1,17 @@
+appId: app.ammen.ammen
+---
+# SCAFFOLDED — RDY-12. No ejecutado. Ver `maestro/android/README.md`.
+#
+# Cubre el guion A de la sección 5 del plan (share → canje → Orar → oración →
+# aviso) y el permiso de push en contexto (RDY-10). Necesita dos cuentas
+# reales en el build: quien comparte y quien canjea no pueden ser la misma.
+- launchApp
+- tapOn: "Correo electrónico"
+- inputText: "${DEVICE_TEST_EMAIL}"
+- tapOn: "Contraseña"
+- inputText: "${DEVICE_TEST_PASSWORD}"
+- tapOn: "Entrar"
+- assertVisible: "Hoy"
+# Permiso de push: allow, en contexto, no al abrir la app.
+- assertVisible: "Alguien va a leerlo antes de que se publique" # placeholder de un texto real de la pantalla que pida permiso
+- tapOn: "Permitir"

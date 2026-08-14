@@ -1286,9 +1286,23 @@ select pg_temp.assert(
   not public.is_objectionable('la reputación de la disputa'),
   'and a word that merely contains another is not');
 
+-- Desde B1b, la crisis vive en su propio clasificador: `is_objectionable` ya
+-- no reconoce estas frases, y `is_crisis_text` sí.
 select pg_temp.assert(
-  public.is_objectionable('kill yourself'),
-  'and it works in the other language too');
+  not public.is_objectionable('kill yourself'),
+  'crisis phrases moved out of the generic filter entirely');
+
+select pg_temp.assert(
+  public.is_crisis_text('kill yourself'),
+  'and into their own, separate one');
+
+select pg_temp.assert(
+  public.is_crisis_text('quiero matarme'),
+  'in Spanish too');
+
+select pg_temp.assert(
+  not public.is_crisis_text('Oren por mi madre, está en el hospital'),
+  'an ordinary prayer request is not a crisis');
 
 commit;
 
@@ -1357,6 +1371,278 @@ select pg_temp.assert(
 delete from public.posts
  where id in ('9051d000-0000-0000-0000-00000000000e',
               '9051d000-0000-0000-0000-00000000000f');
+
+commit;
+
+-- ===========================================================================
+-- B1a: la cola de lo retenido — reclamar, liberar, retirar
+--
+-- Hasta aquí el filtro solo sabía retener. Esta sección prueba lo que faltaba:
+-- que un falso positivo tenga salida, que uno abusivo se quede fuera para
+-- siempre, y que las dos decisiones queden firmadas.
+-- ===========================================================================
+begin;
+
+-- Nombrar staff a mano, como superusuario: el canal administrativo real
+-- (`admin_set_staff`, solo service_role) ya se prueba en rls.sql, y no es lo
+-- que este archivo examina.
+update public.profiles set is_staff = true where id = :ANA;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body)
+values ('9051d000-0000-0000-0000-000000000030',
+        '55555555-5555-5555-5555-555555555555', 'eres un idiota');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.held_content_queue()) = 0,
+  'a non-staff account sees an empty hold queue, not an error');
+
+commit;
+
+-- El id de la cola solo se puede leer a través de la RPC —la tabla no tiene
+-- grant para `authenticated`—, así que se captura aquí, como staff, y viaja
+-- de aquí en adelante como variable de psql: es exactamente lo que una
+-- pantalla real haría con el `id` que ya trae la fila.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select id as hold30_id from public.held_content_queue()
+ where target_id = '9051d000-0000-0000-0000-000000000030' \gset
+
+select pg_temp.assert(
+  (select count(*) from public.held_content_queue()
+    where target_id = '9051d000-0000-0000-0000-000000000030') = 1,
+  'staff sees the held post in the queue');
+
+select pg_temp.assert(
+  public.open_hold_count() >= 1,
+  'and the badge counts it');
+
+commit;
+
+-- Ahora sí: el extraño intenta reclamar un id que nunca debería tener, y aun
+-- teniéndolo, la RPC lo rechaza por no ser staff — no por no saber el id.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  not public.claim_hold(:'hold30_id'),
+  'and cannot claim a hold either, even with its id in hand');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.claim_hold(:'hold30_id'),
+  'staff claims it');
+
+select pg_temp.assert(
+  not public.claim_hold(:'hold30_id'),
+  'and claiming an already-claimed hold refuses instead of double-booking it');
+
+select pg_temp.assert(
+  pg_temp.raises(format($q$ select public.release_hold(%L, '') $q$, :'hold30_id')),
+  'releasing without a reason is refused');
+
+select pg_temp.assert(
+  public.release_hold(:'hold30_id',
+    'false positive: it is an insult about a Bible character, not a person'),
+  'staff releases the false positive, with a reason');
+
+select pg_temp.assert(
+  (select status from public.held_content_queue(
+      array['pending', 'claimed', 'released', 'removed'])
+    where id = :'hold30_id') = 'released',
+  'the audit trail says released');
+
+select pg_temp.assert(
+  (select held_at from public.posts
+    where id = '9051d000-0000-0000-0000-000000000030') is null,
+  'and the post is not held any more');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  exists (
+    select 1 from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000030'
+  ),
+  'and a stranger can read it again');
+
+commit;
+
+-- El segundo caso: retirado, no liberado.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body)
+values ('9051d000-0000-0000-0000-000000000031',
+        '55555555-5555-5555-5555-555555555555', 'zorra');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select id as hold31_id from public.held_content_queue()
+ where target_id = '9051d000-0000-0000-0000-000000000031' \gset
+
+select pg_temp.assert(
+  public.remove_hold(:'hold31_id', 'targeted harassment, not a false positive'),
+  'staff retires the abusive one instead');
+
+select pg_temp.assert(
+  (select status from public.held_content_queue(
+      array['pending', 'claimed', 'released', 'removed'])
+    where id = :'hold31_id') = 'removed',
+  'the audit trail says removed, not released');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000031'
+  ),
+  'a stranger never sees the removed one');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+-- A propósito no se libera `held_at`: el autor sigue leyendo "en revisión",
+-- nunca lo contrario de la verdad, que sería que se publicó con normalidad.
+select pg_temp.assert(
+  (select held_at from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000031') is not null,
+  'its own author still sees it as held, never as a normal, published post');
+
+commit;
+
+-- ===========================================================================
+-- B1b: crisis, separada del filtro genérico desde la raíz
+--
+-- Antes de esta migración, "quiero matarme" entraba en la misma cola que un
+-- insulto. Esta sección prueba que ya no: ni comparte clasificador, ni
+-- comparte cola, ni espera turno detrás del espam.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+insert into public.posts (id, author_id, body)
+values ('9051d000-0000-0000-0000-000000000032',
+        '55555555-5555-5555-5555-555555555555', 'quiero matarme');
+
+select pg_temp.assert(
+  (select crisis_flagged_at from public.posts
+    where id = '9051d000-0000-0000-0000-000000000032') is not null,
+  'a crisis phrase is flagged as crisis');
+
+select pg_temp.assert(
+  (select held_at from public.posts
+    where id = '9051d000-0000-0000-0000-000000000032') is not null,
+  'and still never appears as a normal published post');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.prayer_feed()
+    where id = '9051d000-0000-0000-0000-000000000032'
+  ),
+  'a stranger does not see it either');
+
+select pg_temp.assert(
+  (select count(*) from public.crisis_queue()) = 0,
+  'a non-staff account sees an empty crisis queue');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.held_content_queue(array['pending', 'claimed'])
+    where target_id = '9051d000-0000-0000-0000-000000000032'
+  ),
+  'the generic hold queue never receives a crisis case');
+
+select id as crisis32_id from public.crisis_queue()
+ where target_id = '9051d000-0000-0000-0000-000000000032' \gset
+
+select pg_temp.assert(
+  (select count(*) from public.crisis_queue()
+    where target_id = '9051d000-0000-0000-0000-000000000032') = 1,
+  'it lands in the crisis queue instead');
+
+select pg_temp.assert(
+  public.open_crisis_count() >= 1,
+  'and the guard badge counts it');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  not public.acknowledge_crisis(:'crisis32_id', 'attempted by a stranger'),
+  'and a non-staff account cannot acknowledge one either');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises(format($q$ select public.acknowledge_crisis(%L, '') $q$, :'crisis32_id')),
+  'acknowledging without a note is refused');
+
+select pg_temp.assert(
+  public.acknowledge_crisis(:'crisis32_id',
+    'reached out directly, they are safe with family tonight'),
+  'staff acknowledges the escalation, with a note');
+
+select pg_temp.assert(
+  (select acknowledged_by from public.crisis_queue(null, 50)
+    where id = :'crisis32_id') = :ANA,
+  'and the acknowledgement is attributed');
 
 commit;
 

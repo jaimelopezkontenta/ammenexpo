@@ -35,19 +35,23 @@
     "empty": "Nobody has shared a plan with you yet.",
     "emptyBody": "When someone does, it will show up here so you can pray for their day.",
     "emptyCta": "Share my plan",
-    "planGone": "You no longer have access to this plan."
+    "planGone": "You no longer have access to this plan.",
+    "progressTitle": "Today's prayers",
+    "progress": "{{completed}} of {{total}} completed",
+    "progressAccessibility": "Today's prayer progress: {{completed}} of {{total}} completed",
+    "pending": "Pending",
+    "completed": "Completed"
   },
   "profile": {
     "title": "Your profile",
     "subtitle": "Your language and your account.",
     "name": "What we call you",
     "reminder": "Your time to pray",
-    "reminderHint": "We will use it to remind you once notifications are on.",
+    "reminderHint": "This preference is saved, but we do not send reminders today. We will turn them on later.",
     "saved": "Saved.",
     "delete": "Delete my account",
     "deleteConfirm": "Yes, delete everything",
     "deleteWarning": "Your plans, your circles and everything anyone prayed for you will go. This cannot be undone.",
-    "plus": "Ammen Plus",
     "photo": "Your photo",
     "changePhoto": "Change photo",
     "addPhoto": "Add a photo",
@@ -71,7 +75,12 @@
     "unavailableBody": "You may have blocked this person, or their account may no longer exist. Blocks can be undone in “Blocked people”, inside your profile.",
     "statStreak": "streak",
     "statFollowers": "followers",
-    "statFollowing": "following"
+    "statFollowing": "following",
+    "identity": "Identity",
+    "preferences": "Preferences",
+    "communitySupport": "Community and support",
+    "dangerZone": "Danger zone",
+    "plusComingSoon": "Ammen Plus · coming soon"
   },
   "auth": {
     "signInTitle": "Welcome back",
@@ -188,7 +197,8 @@
     "noPlanBody": "We'll build one for you from what you told us.",
     "createCta": "Create my prayer plan",
     "failedTitle": "We couldn't create your plan",
-    "failedBody": "It happens sometimes. Please try again.",
+    "failedBody": "Starting another uses another of your three free plans.",
+    "createAnother": "Create another plan",
     "limitTitle": "You've used your three free plans",
     "limitBody": "With Ammen Plus you can create as many plans as you like.",
     "meaning": "What it means",
@@ -213,8 +223,17 @@
     "finishedCta": "Start another plan",
     "switcherLabel": "Your plans",
     "stalledBody": "{{written}} of {{total}} days were written and generation stopped partway.",
+    "stalledTitle": "Your plan stalled partway",
     "stalledCta": "Finish writing the plan",
-    "resumed": "We're writing the rest. Check back in a minute."
+    "resumed": "We're writing the rest. Check back in a minute.",
+    "generationInFlight": "We're already writing it. No need to tap again.",
+    "requestIdConflict": "This request was already used. Tap again to keep writing the plan.",
+    "generationUnavailable": "Plan generation isn't available right now. Please try again in a while.",
+    "archive": "Archive this plan",
+    "archiveConfirm": "Yes, archive it",
+    "archiveHint": "There is no going back. Archiving does not give you a free plan back.",
+    "archived": "Plan archived.",
+    "notArchivable": "This plan cannot be archived."
   },
   "share": {
     "title": "Share my plan",
@@ -243,7 +262,7 @@
     "deadLinkInvite": "You can create your own and share it with whoever you like.",
     "deadLinkCta": "Create my account",
     "publicTitle": "On your profile",
-    "publicOn": "Anybody can open this plan from your profile and pray for you.",
+    "publicOn": "Anybody can open and read this plan from your profile and the community. For someone to actually pray for you, share it with them directly or with a circle.",
     "publicOff": "This plan is not on your profile or in the community.",
     "publish": "Put it on my profile",
     "unpublish": "Take it off my profile",
@@ -447,7 +466,7 @@
     "create": "Create the plan",
     "days_plural": "{{count}} days",
     "visPublic": "Everyone",
-    "visPublicHint": "It will sit on your profile and in the community. Anybody can open it and pray for you."
+    "visPublicHint": "It will sit on your profile and in the community. Anybody can read it. For someone to pray for you, share it with them directly or with a circle."
   },
   "bible": {
     "title": "Bible",
@@ -529,7 +548,48 @@
       "message": "Message",
       "testimony": "Testimony",
       "intercession": "Intercession message"
-    }
+    },
+    "mode": {
+      "reports": "Reports",
+      "held": "Held",
+      "crisis": "Crisis"
+    },
+    "holdStatus": {
+      "pending": "Pending",
+      "claimed": "Claimed",
+      "released": "Released",
+      "removed": "Removed"
+    },
+    "holdEmpty": "Nothing held right now.",
+    "claim": "Claim",
+    "claimedBy": "Claimed by {{name}}",
+    "release": "Release (false positive)",
+    "remove": "Remove (abusive)",
+    "reasonPlaceholder": "Reason for this decision…",
+    "reasonRequired": "Write a reason before confirming.",
+    "confirm": "Confirm",
+    "releaseDone": "Released. It's visible again.",
+    "removeDone": "Removed. Nobody else will see it.",
+    "crisisEmpty": "No open crisis escalation right now.",
+    "crisisHint": "None of these phrases were ever published normally. This is the on-call log, not a content queue.",
+    "acknowledge": "Acknowledge",
+    "acknowledgedBy": "Handled by {{name}}",
+    "notePlaceholder": "What was done, briefly…",
+    "noteRequired": "Write a note before confirming.",
+    "acknowledgeDone": "Logged."
+  },
+  "crisis": {
+    "title": "Before you continue",
+    "intro": "What you wrote sounds like you're going through something very hard, maybe thinking about hurting yourself. We didn't publish it as a normal request — not because asking for help is wrong, but because this deserves more than an \"Amen\" button.",
+    "notDiagnosis": "This is not a diagnosis or an assessment: it's an automatic notice based on the words you used, and it can be wrong. No person and no system will step in without you speaking first.",
+    "resourcesTitle": "Immediate help",
+    "resourceEsTitle": "Spain — Línea 024",
+    "resourceEsBody": "024, free and available all day. Suicide prevention support.",
+    "resourceIntlTitle": "International",
+    "resourceIntlBody": "If you are not in Spain, search for \"crisis line\" or \"suicide prevention line\" together with your country, or call your local emergency number.",
+    "resourceEmergency": "If there is immediate danger to your life, call emergency services now (112 in Spain, 911 in the US, or your country's number).",
+    "staying": "You can stay in the app. This does not delete what you wrote or remove you from anything.",
+    "goHome": "Back to Today"
   },
   "social": {
     "follow": "Follow",
@@ -543,6 +603,12 @@
     "followers": "{{count}} follower",
     "followers_plural": "{{count}} followers",
     "openPlan": "See the plan",
+    "publicPlan": {
+      "title": "{{name}}'s plan",
+      "readOnlyHint": "This plan is open: anybody can read it. For {{name}} to actually receive your prayer, they need to share it with you directly or in a circle.",
+      "notFound": "This plan is no longer available.",
+      "notFoundHint": "Whoever published it may have taken it off their profile."
+    },
     "kind": {
       "request": "Request",
       "testimony": "Testimony",

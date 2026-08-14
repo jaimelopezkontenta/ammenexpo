@@ -1,0 +1,68 @@
+name: verify
+
+# RDY-03 (B5 alto): `npm run verify` como señal obligatoria y reproducible.
+#
+# Corre en `ubuntu-latest`: Docker viene preinstalado en los runners hospedados
+# de GitHub, así que Supabase local arranca igual que en el README, sin pasos
+# extra. Un solo job, no una matriz — el punto de este workflow es que exista
+# una señal, no paralelizar builds que todavía no existen.
+#
+# Serialización (decisión §2.13 del plan): un solo job en un runner efímero ya
+# serializa DB y E2E por construcción — no hay otro proceso compartiendo esta
+# instancia de Postgres. Si en el futuro se añade una matriz o jobs en
+# paralelo sobre el mismo proyecto Supabase, tendrán que declarar
+# `concurrency` explícito para no romper esta garantía.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar Chromium y dependencias del sistema
+        run: npx playwright install --with-deps chromium
+
+      - name: Arrancar Supabase local
+        run: npx supabase start
+
+      - name: Exportar configuración pública de Supabase local
+        run: node scripts/supabaseCiEnv.mjs
+
+      - name: Verificación completa (termina con db:test serial)
+        run: npm run verify
+
+      - name: Playwright Chromium serial sobre el mismo Supabase
+        run: npx playwright test --project=chromium --workers=1
+
+      - name: Publicar artefactos de Playwright al fallar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Parar Supabase local
+        if: always()
+        run: npx supabase stop

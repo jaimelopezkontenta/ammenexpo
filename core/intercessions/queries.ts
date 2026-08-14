@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { track } from "@/core/observability/track";
 import { supabase } from "@/utils/supabase";
 
 /** A plan someone else shared with me, showing their day for today. */
@@ -53,6 +54,34 @@ export const usePlansSharedWithMe = (userId: string | undefined) =>
       if (error) throw error;
 
       return (data ?? []) as SharedPlan[];
+    },
+  });
+
+/**
+ * One shared day, resolved on the server rather than found inside the list
+ * above.
+ *
+ * `/orar/[planId]` used to look this plan up by filtering
+ * `usePlansSharedWithMe`'s result client-side. That happened to read right,
+ * but it made the authorization real answer whatever the list's cache said —
+ * a stale or partial cache would show a day that a fresh check would refuse,
+ * or hide one that is genuinely shared. `get_shared_plan_day` applies the same
+ * B2 contract (explicit share or circle, never a bare `public`) directly in
+ * Postgres for this one plan, so a direct link — including a push deep link —
+ * gets the real answer instead of whatever happened to be cached.
+ */
+export const useSharedPlanDay = (planId: string | undefined) =>
+  useQuery({
+    queryKey: ["sharedPlanDay", planId],
+    enabled: Boolean(planId),
+    queryFn: async (): Promise<SharedPlan | null> => {
+      const { data, error } = await supabase.rpc("get_shared_plan_day", {
+        p_plan_id: planId!,
+      });
+
+      if (error) throw error;
+
+      return ((data ?? []) as SharedPlan[])[0] ?? null;
     },
   });
 
@@ -114,6 +143,21 @@ export const usePrayForSomeone = (userId: string | undefined) => {
     onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: ["sharedWithMe", userId],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["sharedPlanDay"],
+      });
+    },
+    onSuccess: () => {
+      track("intercession", { outcome: "created" });
+    },
+    onError: (caught) => {
+      // El doble tap no es un fallo del funnel: es la misma intercesión
+      // contada una vez, que es exactamente el punto de "una sola entrega
+      // por oración" — se distingue del evento de arriba, nunca se cuenta
+      // como una segunda `created`.
+      track("intercession", {
+        outcome: caught instanceof AlreadyPrayed ? "already_prayed" : "error",
       });
     },
   });

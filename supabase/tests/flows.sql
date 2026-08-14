@@ -389,13 +389,14 @@ select pg_temp.assert(
   $q$),
   'and so is an hour that does not exist');
 
-select pg_temp.assert(
-  pg_temp.raises($q$
-    update public.profile_settings
-       set reminder_hours = array[]::smallint[]
-     where id = '33333333-3333-3333-3333-333333333333'
-  $q$),
-  'and so is none at all');
+  update public.profile_settings
+     set reminder_hours = array[]::smallint[]
+   where id = '33333333-3333-3333-3333-333333333333';
+
+  select pg_temp.assert(
+    (select reminder_hours from public.profile_settings
+      where id = '33333333-3333-3333-3333-333333333333') = array[]::smallint[],
+    'and none at all is allowed: reminders are not sent today');
 
 commit;
 

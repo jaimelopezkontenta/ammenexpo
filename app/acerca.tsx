@@ -18,8 +18,8 @@ const SUPPORT_EMAIL = "hola@ammen.app";
  * app. Sale de `expo-constants`, que la lee de `app.json`, así que no hay un
  * segundo número que se olvide de subir.
  *
- * Aquí vivirán los términos y la política de privacidad cuando lleguen (N5): la
- * Guideline 1.2 los pide dentro de la app, no en una web aparte.
+ * Los términos y la privacidad ya viven en `app/legal/[doc]` (texto en
+ * `core/legal/documents.ts`) y están enlazados más abajo y desde `aceptar.tsx`.
  */
 export default function About() {
   const { t } = useTranslation();

@@ -18,6 +18,7 @@ const SOCIAL_DESCRIPTION =
 const SOCIAL_URL = (
   process.env.EXPO_PUBLIC_APP_URL ?? "https://ammen.app"
 ).replace(/\/$/, "");
+const IS_STAGING = process.env.EXPO_PUBLIC_DEPLOY_ENV === "staging";
 
 // This file is web-only and used to configure the root HTML for every
 // web page during static rendering.
@@ -83,6 +84,9 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="twitter:description" content={SOCIAL_DESCRIPTION} />
         <meta name="twitter:image" content={`${SOCIAL_URL}/og.png`} />
         <meta name="description" content={SOCIAL_DESCRIPTION} />
+        {IS_STAGING ? (
+          <meta name="robots" content="noindex,nofollow,noarchive" />
+        ) : null}
         <meta name="theme-color" content="#C7D6F2" />
         <title>{SOCIAL_TITLE}</title>
 

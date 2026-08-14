@@ -24,6 +24,8 @@ export type FeedEntry = {
   comment_count: number;
   answered_at: string | null;
   held_at: string | null;
+  /** B1b: nunca se confunde con `held_at` — ver la nota en `core/posts/queries.ts`. */
+  crisis_flagged_at: string | null;
   created_at: string;
   i_prayed: boolean;
   is_mine: boolean;

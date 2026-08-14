@@ -14,6 +14,11 @@ import { supabase } from "@/utils/supabase";
 
 import { gateStateFrom, type OnboardingRead } from "./onboardingState";
 import { redeemPendingTokens } from "./pendingToken";
+import {
+  revokeThisDevicePush,
+  usePushRegistration,
+  useNotificationResponseHandler,
+} from "@/core/notifications/push";
 
 type SessionState = {
   session: Session | null;
@@ -161,11 +166,34 @@ export const SessionProvider = ({
     readFailed,
   });
 
+  // RDY-10: se pide permiso ya dentro de la app, no en el primer frame — de
+  // ahí depender de `hasOnboarded`/`termsAccepted` y no solo de `userId`.
+  usePushRegistration(
+    userId ?? undefined,
+    Boolean(userId) && hasOnboarded === true && termsAccepted === true,
+  );
+
+  // El listener del tap no pide permiso ni depende de onboarding: solo
+  // escucha. Si nunca llega una notificación, no hace nada; si llega,
+  // `resolve_push_notification()` decide, nunca el payload por sí solo.
+  useNotificationResponseHandler({
+    isSessionLoading: isLoading,
+    userId,
+  });
+
   const refreshOnboarding = useCallback(async () => {
     await refetch();
   }, [refetch]);
 
   const signOut = useCallback(async () => {
+    // Revocar necesita el token de *este* dispositivo, que ya no se puede
+    // pedir una vez la sesión se fue. Pero `getExpoPushTokenAsync` a veces
+    // no vuelve: await de la revocación atrapaba a quien solo quería salir.
+    // Se lanza y se olvida; el logout no espera.
+    void revokeThisDevicePush().catch((caught) => {
+      console.error("revoke_push_device before sign out", caught);
+    });
+
     // `scope: "local"` so a server that is down or a token already rejected
     // cannot trap somebody in a session they asked to leave. Signing out is the
     // one action that must always work — it is the escape hatch every other

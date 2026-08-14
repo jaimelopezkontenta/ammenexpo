@@ -160,3 +160,21 @@ select d.id, '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0000-00
 insert into public.plan_shares (plan_id, group_id, created_by)
 values ('5eed0000-0000-0000-0000-0000000000a1',
         '5eed0000-0000-0000-0000-0000000000b1', '5eed0000-0000-0000-0000-000000000001');
+
+-- ---------------------------------------------------------------------------
+-- Flags: la comunidad se abre en local.
+--
+-- `community_feed` nace OFF en la migración
+-- (`20260826100000_feature_flags.sql`), que es el default de una instalación
+-- limpia/remota. El seed lo enciende a propósito: las suites de `db:test` y la
+-- revisión manual de la app parten del contrato B2 vigente — el feed sirve lo
+-- público reciente —, y probar que "OFF bloquea el feed" es trabajo de
+-- `supabase/tests/flags.sql`, que lo apaga y lo enciende él mismo. En remoto
+-- no pasa nada de esto: `db push` no ejecuta seeds, así que allá sigue OFF
+-- hasta que el canal administrativo lo abra.
+-- ---------------------------------------------------------------------------
+
+update public.feature_flags
+   set enabled = true,
+       updated_at = now()
+ where key = 'community_feed';

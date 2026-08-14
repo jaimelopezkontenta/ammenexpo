@@ -22,18 +22,27 @@ export const useStreak = (userId: string | undefined) =>
     enabled: Boolean(userId),
     queryFn: async (): Promise<Streak | null> => {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("streak_count, streak_last_day")
-        .eq("id", userId!)
+        .rpc("my_profile_data")
         .maybeSingle();
 
       if (error) throw error;
+      if (!data) return null;
 
-      return data as Streak | null;
+      // La RPC devuelve is_staff además; el tipo Streak solo lleva la racha.
+      const row = data as {
+        is_staff: boolean;
+        streak_count: number;
+        streak_last_day: string | null;
+      };
+
+      return {
+        streak_count: row.streak_count,
+        streak_last_day: row.streak_last_day,
+      };
     },
   });
 
-/** Name lives on `profiles`; the rest is owner-only on `profile_settings`. */
+/** Nombre y cara en `profiles`; el bit de staff en `my_profile_data()`; el resto, solo del dueño, en `profile_settings`. */
 export const useProfile = (userId: string | undefined) =>
   useQuery({
     queryKey: ["profile", userId],
@@ -41,13 +50,15 @@ export const useProfile = (userId: string | undefined) =>
     queryFn: async (): Promise<Profile | null> => {
       const [
         { data: profile, error },
+        { data: staff, error: staffError },
         { data: settings, error: settingsError },
       ] = await Promise.all([
         supabase
           .from("profiles")
-          .select("display_name, avatar_url, is_staff")
+          .select("display_name, avatar_url")
           .eq("id", userId!)
           .maybeSingle(),
+        supabase.rpc("my_profile_data").maybeSingle(),
         supabase
           .from("profile_settings")
           .select("reminder_hours, timezone, locale")
@@ -56,14 +67,16 @@ export const useProfile = (userId: string | undefined) =>
       ]);
 
       if (error) throw error;
+      if (staffError) throw staffError;
       if (settingsError) throw settingsError;
       if (!profile || !settings) return null;
 
+      const staffRow = staff as { is_staff: boolean } | null;
+
       return {
-        ...(profile as Pick<
-          Profile,
-          "display_name" | "avatar_url" | "is_staff"
-        >),
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        is_staff: staffRow?.is_staff ?? false,
         ...(settings as Omit<
           Profile,
           "display_name" | "avatar_url" | "is_staff"

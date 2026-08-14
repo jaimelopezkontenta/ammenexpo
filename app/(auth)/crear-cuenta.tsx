@@ -9,12 +9,15 @@ import { TextField } from "@/components/TextField";
 import {
   attachPendingTokensToProfile,
   attachSignupSource,
+  readPendingTokens,
 } from "@/core/auth/pendingToken";
+import { resolveSignupSource } from "@/core/auth/signupSource";
 import {
   MIN_PASSWORD_LENGTH,
   authErrorKey,
   isValidEmail,
 } from "@/core/auth/validation";
+import { track } from "@/core/observability/track";
 import { supabase } from "@/utils/supabase";
 
 export default function SignUp() {
@@ -64,7 +67,9 @@ export default function SignUp() {
       await attachPendingTokensToProfile(data.user.id);
       // Y por dónde entró, que se escribe una sola vez y aquí: el registro es
       // el único momento en que «de dónde vino esta persona» significa algo.
+      const { source } = await readPendingTokens();
       await attachSignupSource(data.user.id);
+      track("signup", { source: resolveSignupSource(source) });
     } else {
       // Email confirmation is on: there is no session yet.
       setNotice(t("auth.checkEmail"));

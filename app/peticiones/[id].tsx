@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -61,7 +61,13 @@ export default function PrayerRequestComments() {
     setDraft("");
 
     try {
-      await write.mutateAsync(body);
+      const result = await write.mutateAsync(body);
+
+      // B1b: igual que la petición, nunca se enseña como comentado con
+      // normalidad — se lleva a los recursos en el momento.
+      if (result.crisisFlagged) {
+        router.replace("/crisis");
+      }
     } catch {
       setDraft(body);
       setError(t("common.errorGeneric"));

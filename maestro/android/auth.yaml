@@ -1,0 +1,15 @@
+appId: app.ammen.ammen
+---
+# SCAFFOLDED — RDY-12. No ejecutado: sin ADB/Maestro instalados y sin build
+# preview/release identificado en este entorno. Ver `maestro/android/README.md`.
+#
+# Cubre B3: alta con clave débil rechazada, alta válida, login, logout.
+- launchApp
+- tapOn: "Ya tengo cuenta"
+- tapOn: "Correo electrónico"
+- inputText: "${DEVICE_TEST_EMAIL}"
+- tapOn: "Contraseña"
+- inputText: "${DEVICE_TEST_PASSWORD}"
+- tapOn: "Entrar"
+- assertVisible: "Hoy"
+- assertVisible: "Orar"

@@ -251,6 +251,7 @@ export default function Community() {
                         comment_count: entry.comment_count,
                         answered_at: entry.answered_at,
                         held_at: entry.held_at,
+                        crisis_flagged_at: entry.crisis_flagged_at,
                         created_at: entry.created_at,
                         i_prayed: entry.i_prayed,
                         is_mine: entry.is_mine,
@@ -411,8 +412,14 @@ const StoryCard = ({
 
       <View className="flex-row flex-wrap gap-4">
         {entry.kind === "plan" ? (
+          // Comunidad solo enseña planes `public` (home_feed los filtra así),
+          // y desde B2 esos ya no se abren en /orar/[planId] sin un share
+          // explícito: la lectura y la oración dejaron de ser la misma ruta.
           <Link
-            href={{ pathname: "/orar/[planId]", params: { planId: entry.id } }}
+            href={{
+              pathname: "/plan-publico/[planId]",
+              params: { planId: entry.id },
+            }}
             asChild
           >
             <Pressable accessibilityRole="link">
