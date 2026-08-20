@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import type { SharedPlan } from "@/core/intercessions/queries";
+
+import { Tap } from "@/components/ui/Tap";
 
 type Props = {
   plan: SharedPlan;
@@ -21,10 +23,10 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
   const { t } = useTranslation();
 
   return (
-    <Pressable
+    <Tap
       accessibilityRole="link"
       accessibilityLabel={`${plan.owner_name}. ${plan.day_title}`}
-      className="gap-3 rounded-card border border-white/60 bg-white/60 p-5 shadow-card"
+      className="gap-3 rounded-card border border-glassedge/60 bg-glass/60 p-5 shadow-card"
       onPress={onOpen}
     >
       <View className="flex-row items-center gap-3">
@@ -64,6 +66,6 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
           ? t("intercession.prayedFor", { name: plan.owner_name })
           : t("intercession.openToPray")}
       </Text>
-    </Pressable>
+    </Tap>
   );
 };

@@ -2,11 +2,14 @@ import Constants from "expo-constants";
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { useExportMyData } from "@/core/legal/export";
+
+import { Tap } from "@/components/ui/Tap";
 
 const SUPPORT_EMAIL = "hola@ammen.app";
 
@@ -23,6 +26,7 @@ const SUPPORT_EMAIL = "hola@ammen.app";
  */
 export default function About() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const exportData = useExportMyData();
 
   const [notice, setNotice] = useState<string | null>(null);
@@ -53,7 +57,10 @@ export default function About() {
       />
 
       <DawnBackground>
-        <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <Text className="font-serif text-base leading-reading text-plum">
             {t("profile.aboutBody")}
           </Text>
@@ -89,7 +96,7 @@ export default function About() {
               {t("profile.version", { version })}
             </Text>
 
-            <Pressable
+            <Tap
               accessibilityRole="link"
               onPress={() => {
                 // Abre el compositor de correo con la versión ya puesta. No manda
@@ -104,7 +111,7 @@ export default function About() {
               <Text className="font-sans text-base text-ember-ink underline">
                 {t("profile.support")}
               </Text>
-            </Pressable>
+            </Tap>
 
             <Text className="font-sans text-sm leading-6 text-mist-ink">
               {t("profile.supportHint")}

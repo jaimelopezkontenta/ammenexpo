@@ -7,6 +7,7 @@ import { Avatar } from "@/components/Avatar";
 import { DaySection } from "@/components/DaySection";
 import { ScriptureSection } from "@/components/DayView";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useBibleBooks } from "@/core/bible/queries";
 import { track } from "@/core/observability/track";
@@ -26,6 +27,7 @@ import { usePublicPlanDay } from "@/core/plans/queries";
  */
 export default function PublicPlanDayScreen() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { planId } = useLocalSearchParams<{ planId: string }>();
   const { data: plan, isLoading, isError, refetch } = usePublicPlanDay(planId);
   const { data: books } = useBibleBooks();
@@ -65,7 +67,10 @@ export default function PublicPlanDayScreen() {
     <>
       <Stack.Screen options={{ title: plan.owner_name, headerShown: true }} />
       <DawnBackground>
-        <ScrollView contentContainerClassName="gap-7 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="gap-7 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <View className="flex-row items-center gap-3">
             <Avatar
               name={plan.owner_name}

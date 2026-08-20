@@ -73,6 +73,11 @@ module.exports = ({ config }) => {
     },
     orientation: "portrait",
     icon: "./assets/icon.png",
+    // Solo clara, a propósito. El anochecer existe como capa preparada
+    // (colorsDark en theme/tokens.js, medida y congelada en
+    // theme/contrast.test.ts) pero está apagado: activar es "automatic" aquí
+    // + reencender useThemeColors/useIsDark y el bloque dark del plugin de
+    // tailwind.config.
     userInterfaceStyle: "light",
     assetBundlePatterns: ["**/*"],
     ios: {
@@ -85,6 +90,9 @@ module.exports = ({ config }) => {
         backgroundColor: "#FFF6EA",
       },
       package: "app.ammen.ammen",
+      // Supabase local es http://. Sin esto Android 9+ bloquea el login
+      // en el emulador. En producción la URL es https y no se usa.
+      usesCleartextTraffic: true,
     },
     // Solo se declara `extra.eas` cuando hay un projectId de verdad que
     // poner — un objeto `{ eas: { projectId: undefined } }` no es lo mismo

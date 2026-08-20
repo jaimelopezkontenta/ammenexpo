@@ -1,11 +1,12 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleMembers } from "@/core/circles/queries";
@@ -18,6 +19,10 @@ import {
   useWriteComment,
 } from "@/core/posts/queries";
 
+import { useThemeColors } from "@/theme";
+
+import { Tap } from "@/components/ui/Tap";
+
 /**
  * The words people leave on a request.
  *
@@ -27,6 +32,8 @@ import {
  */
 export default function PrayerRequestComments() {
   const { t } = useTranslation();
+  const colors = useThemeColors();
+  const { scrollBottom } = useScreenPadding();
   const { id, circulo } = useLocalSearchParams<{
     id: string;
     circulo?: string;
@@ -113,7 +120,8 @@ export default function PrayerRequestComments() {
       <Stack.Screen options={{ title: t("feed.comment"), headerShown: true }} />
       <DawnBackground>
         <ScrollView
-          contentContainerClassName="flex-grow gap-5 px-7 py-8"
+          contentContainerClassName="flex-grow gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           {notice ? (
@@ -160,7 +168,7 @@ export default function PrayerRequestComments() {
 
               {!comment.is_mine ? (
                 <View className="flex-row gap-4 pt-0.5">
-                  <Pressable
+                  <Tap
                     accessibilityRole="button"
                     onPress={() =>
                       void run(
@@ -176,9 +184,9 @@ export default function PrayerRequestComments() {
                     <Text className="font-sans text-sm text-mist-ink underline">
                       {t("moderation.report")}
                     </Text>
-                  </Pressable>
+                  </Tap>
 
-                  <Pressable
+                  <Tap
                     accessibilityRole="button"
                     accessibilityLabel={`${t("moderation.block")} ${comment.author_name}`}
                     onPress={() =>
@@ -191,13 +199,13 @@ export default function PrayerRequestComments() {
                     <Text className="font-sans text-sm text-mist-ink underline">
                       {t("moderation.block")}
                     </Text>
-                  </Pressable>
+                  </Tap>
 
                   {/* Bloquear solo te lo quita a ti de delante; ocultar lo quita
                     para todo el círculo, y es lo que hacía falta para que la
                     moderación no se acabara en el mensaje y la petición. */}
                   {isAdmin ? (
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       onPress={() =>
                         void run(
@@ -209,7 +217,7 @@ export default function PrayerRequestComments() {
                       <Text className="font-sans text-sm text-mist-ink underline">
                         {t("moderation.hide")}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   ) : null}
                 </View>
               ) : null}
@@ -218,12 +226,12 @@ export default function PrayerRequestComments() {
 
           <View className="mt-auto flex-row items-end gap-2 pt-6">
             <TextInput
-              className="max-h-32 min-w-0 flex-1 rounded-2xl border border-white/60 bg-dawn-cream-bg px-4 py-3 font-sans text-base text-plum"
+              className="max-h-32 min-w-0 flex-1 rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3 font-sans text-base text-plum"
               accessibilityLabel={t("feed.comment")}
               value={draft}
               onChangeText={setDraft}
               placeholder={t("feed.commentPlaceholder")}
-              placeholderTextColor="#6F6879"
+              placeholderTextColor={colors.mist.ink}
               multiline
               numberOfLines={1}
               maxLength={COMMENT_MAX}

@@ -1,19 +1,20 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { useBibleBooks } from "@/core/bible/queries";
+
+import { useThemeColors } from "@/theme";
+
+import { Tap } from "@/components/ui/Tap";
 
 export default function BookChapters() {
   const { t } = useTranslation();
+  const colors = useThemeColors();
+  const { scrollBottom } = useScreenPadding();
   const { book } = useLocalSearchParams<{ book: string }>();
   const bookId = Number(book);
 
@@ -29,7 +30,7 @@ export default function BookChapters() {
           options={{ title: t("bible.title"), headerShown: true }}
         />
         <DawnBackground className="items-center justify-center">
-          <ActivityIndicator color="#413653" />
+          <ActivityIndicator color={colors.plum.DEFAULT} />
         </DawnBackground>
       </>
     );
@@ -70,18 +71,21 @@ export default function BookChapters() {
     <>
       <Stack.Screen options={{ title: entry.modern_name, headerShown: true }} />
       <DawnBackground>
-        <ScrollView contentContainerClassName="gap-4 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="gap-4 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <Text className="font-editorial text-lg text-ember-ink">
             {t("bible.chapters", { count: entry.chapter_count })}
           </Text>
 
           <View className="flex-row flex-wrap gap-2">
             {chapters.map((chapter) => (
-              <Pressable
+              <Tap
                 key={chapter}
                 accessibilityRole="button"
                 accessibilityLabel={t("bible.chapter", { number: chapter })}
-                className="h-14 w-14 items-center justify-center rounded-input border border-white/60 bg-white/60 shadow-soft"
+                className="h-14 w-14 items-center justify-center rounded-input border border-glassedge/60 bg-glass/60 shadow-soft"
                 onPress={() =>
                   router.push({
                     pathname: "/libro/[book]/[chapter]",
@@ -95,7 +99,7 @@ export default function BookChapters() {
                 <Text className="font-sans-medium text-base text-plum">
                   {chapter}
                 </Text>
-              </Pressable>
+              </Tap>
             ))}
           </View>
         </ScrollView>

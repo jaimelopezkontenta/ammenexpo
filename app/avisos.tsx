@@ -1,17 +1,20 @@
 import { Link, Stack } from "expo-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { LoadMore } from "@/components/LoadMore";
 import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   useMarkNotificationsRead,
   useNotifications,
 } from "@/core/notifications/queries";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * Los avisos.
@@ -38,6 +41,8 @@ export default function Notifications() {
     fetchNextPage,
   } = useNotifications(userId);
   const markRead = useMarkNotificationsRead(userId);
+
+  const { scrollBottom } = useScreenPadding();
 
   // Al abrir, y una sola vez: entrar aquí es haberlos visto. `mutate` y no
   // `mutateAsync` a propósito — si falla, lo peor que pasa es que el punto
@@ -76,7 +81,10 @@ export default function Notifications() {
       />
 
       <DawnBackground>
-        <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-4 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           {(data ?? []).length === 0 ? (
             <Text className="font-sans text-base leading-6 text-mist-ink">
               {t("notifications.empty")}
@@ -122,17 +130,17 @@ export default function Notifications() {
                   href={{ pathname: "/persona/[id]", params: { id: who } }}
                   asChild
                 >
-                  <Pressable
+                  <Tap
                     accessibilityRole="link"
-                    className="flex-row rounded-2xl border border-white/60 p-4"
+                    className="flex-row rounded-card border border-glassedge/60 p-4"
                   >
                     {row}
-                  </Pressable>
+                  </Tap>
                 </Link>
               ) : (
                 <View
                   key={entry.id}
-                  className="flex-row rounded-2xl border border-white/60 p-4"
+                  className="flex-row rounded-card border border-glassedge/60 p-4"
                 >
                   {row}
                 </View>

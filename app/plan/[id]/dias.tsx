@@ -1,11 +1,14 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { usePlanDays } from "@/core/plans/queries";
 import { usePlanSummary } from "@/core/plans/sharing";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * Every day you have reached, so yesterday's prayer is not gone.
@@ -15,6 +18,7 @@ import { usePlanSummary } from "@/core/plans/sharing";
  */
 export default function PlanDays() {
   const { t, i18n } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { data: plan } = usePlanSummary(id);
@@ -44,7 +48,10 @@ export default function PlanDays() {
         options={{ title: plan?.title ?? t("plan.days"), headerShown: true }}
       />
       <DawnBackground>
-        <ScrollView contentContainerClassName="gap-3 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="gap-3 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <Text className="font-sans text-sm text-mist-ink">
             {t("plan.daysHint", {
               count: (days ?? []).filter((day) => day.unlocked).length,
@@ -60,7 +67,7 @@ export default function PlanDays() {
               return (
                 <View
                   key={day.day_number}
-                  className="gap-1 rounded-2xl border border-dashed border-white/60 p-5"
+                  className="gap-1 rounded-card border border-dashed border-glassedge/60 p-5"
                 >
                   <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
                     {t("common.day", { number: day.day_number })}
@@ -78,11 +85,11 @@ export default function PlanDays() {
             }
 
             return (
-              <Pressable
+              <Tap
                 key={day.day_number}
                 accessibilityRole="link"
                 accessibilityLabel={`${t("common.day", { number: day.day_number })}. ${day.title}`}
-                className="gap-1 rounded-2xl border border-white/60 p-5"
+                className="gap-1 rounded-card border border-glassedge/60 p-5"
                 onPress={() =>
                   router.push({
                     pathname: "/plan/[id]/dia/[numero]",
@@ -112,7 +119,7 @@ export default function PlanDays() {
                     {day.scripture_ref}
                   </Text>
                 ) : null}
-              </Pressable>
+              </Tap>
             );
           })}
         </ScrollView>

@@ -13,6 +13,7 @@ web-build/
 expo-env.d.ts
 # firebase/supabase/vexo
 .env
+.env.local
 .env.staging.local
 .firebase/
 firebase-debug.log*
@@ -43,3 +44,10 @@ diseno/
 
 # Atomic local DB lock and test scratch space.
 /.tmp/
+
+# Herramientas de agente y scratch de sesiones locales.
+.opencode/
+.playwright-mcp/
+concurrency.out
+concurrency.err
+verify.out

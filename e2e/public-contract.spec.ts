@@ -174,7 +174,15 @@ test.describe("B2 — contrato public/Orar, por la UI", () => {
       ).toBeVisible({ timeout: 15_000 });
 
       await ownerPage.goto(`/plan/${PLAN_ID}/compartir`);
-      await ownerPage.getByRole("button", { name: "Crear enlace" }).click();
+      const createLink = ownerPage.getByRole("button", {
+        name: "Crear enlace",
+      });
+      // Si una corrida anterior dejó el enlace vivo, no hay que crearlo otra
+      // vez: el botón pasa a "Desactivar enlace" y un click a "Crear enlace"
+      // esperaría hasta el timeout del test.
+      if (await createLink.isVisible().catch(() => false)) {
+        await createLink.click({ timeout: 15_000 });
+      }
 
       // El texto es `selectable` en la pantalla real, no un dato inventado
       // por el test: el mismo `<Text>` que alguien copiaría a mano.
@@ -187,32 +195,41 @@ test.describe("B2 — contrato public/Orar, por la UI", () => {
 
       const guestPage = await guestContext.newPage();
 
-      await guestPage.goto("/entrar");
+      // Mismo journey que share-loop: B abre el enlace anónimo, se autentica
+      // y el canje al entrar aterriza en `/orar/[id]`. Entrar primero y luego
+      // abrir `/p/…` dispara un remount de SessionProvider que canjea y
+      // navega antes de que exista el botón «Ver el plan».
+      await guestPage.goto(shareUrl!);
+      await expect(
+        guestPage.getByRole("link", { name: "Ya tengo cuenta" }),
+      ).toBeVisible({ timeout: 10_000 });
+      await guestPage.getByRole("link", { name: "Ya tengo cuenta" }).click();
+      await expect(guestPage.getByLabel("Correo electrónico")).toBeVisible();
       await guestPage.getByLabel("Correo electrónico").fill(SEED_B.email);
       await guestPage.getByLabel("Contraseña").fill(SEED_B.password);
       await guestPage.getByRole("button", { name: "Entrar" }).click();
-      await expect(
-        guestPage.getByRole("tab", { name: "Hoy" }).first(),
-      ).toBeVisible({ timeout: 15_000 });
 
-      await guestPage.goto(shareUrl!);
-      await guestPage.getByRole("button", { name: "Ver el plan" }).click();
-
-      // El canje navega a "/" — Orar es la pestaña donde el contrato dice
-      // que un share explícito sí tiene que aparecer.
-      await expect(
-        guestPage.getByRole("tab", { name: "Hoy" }).first(),
-      ).toBeVisible({ timeout: 15_000 });
-
-      await guestPage.getByRole("tab", { name: "Orar" }).first().click();
-      await expect(guestPage.getByText(DAY_TITLE)).toBeVisible({
-        timeout: 10_000,
+      // El canje navega a `/orar/[planId]` — el contrato dice que un share
+      // explícito abre el día que toca orar, no Hoy. Por si aterriza en tabs,
+      // el camino viejo (tab Orar → título) sigue valiendo.
+      const prayButton = guestPage.getByRole("button", {
+        name: "Oré por ti",
       });
 
-      await guestPage.getByText(DAY_TITLE).click();
-      await expect(
-        guestPage.getByRole("button", { name: "Oré por ti" }),
-      ).toBeVisible({ timeout: 10_000 });
+      const landedOnDay = await prayButton
+        .waitFor({ state: "visible", timeout: 15_000 })
+        .then(() => true)
+        .catch(() => false);
+
+      if (!landedOnDay) {
+        await guestPage.getByRole("tab", { name: "Orar" }).first().click();
+        await expect(guestPage.getByText(DAY_TITLE)).toBeVisible({
+          timeout: 10_000,
+        });
+        await guestPage.getByText(DAY_TITLE).click();
+      }
+
+      await expect(prayButton).toBeVisible({ timeout: 10_000 });
     } finally {
       // El share que este test crea de verdad (link + redención) se limpia
       // aparte del `afterAll`: revocar la fila no es responsabilidad del

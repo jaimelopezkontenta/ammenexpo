@@ -1,5 +1,6 @@
 import { ScrollViewStyleReset } from "expo-router/html";
 
+import { colors } from "@/theme";
 import { fallbackLng } from "@/translation";
 
 /**
@@ -45,6 +46,12 @@ export default function Root({ children }: { children: React.ReactNode }) {
           posibilidad de acercar el texto con dos dedos es un precio que no
           compensa parecerse a nada.
         */}
+        {/*
+          `viewport-fit=cover` deja que el notch exista. El hueco lo pone
+          TabHeader / useScreenPadding leyendo insets: react-native-safe-area-context
+          en web ya mide `env(safe-area-inset-*)`. Un padding en `html` se
+          sumaría a ese inset y el título quedaría dos veces más abajo.
+        */}
         <meta
           name="viewport"
           content="width=device-width,initial-scale=1,viewport-fit=cover"
@@ -87,7 +94,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         {IS_STAGING ? (
           <meta name="robots" content="noindex,nofollow,noarchive" />
         ) : null}
-        <meta name="theme-color" content="#C7D6F2" />
+        <meta name="theme-color" content={colors.dawn.sky} />
         <title>{SOCIAL_TITLE}</title>
 
         <ScrollViewStyleReset />
@@ -106,10 +113,10 @@ export default function Root({ children }: { children: React.ReactNode }) {
 // —o en crema, que es el centro y no el borde— dejaba una costura alrededor de
 // una app que ya no es ni lo uno ni lo otro.
 //
-// Sin rama de modo oscuro: la app todavía no lo tiene, y pintar el fondo de
-// negro debajo de pantallas claras da un destello negro al cargar, que es peor
-// que no tenerlo.
+// Sin rama de modo oscuro: la app es solo clara a propósito (el anochecer
+// existe como capa preparada, pero apagada — ver app.config.js). Pintar el
+// body oscuro con la app clara encima sería una costura, no un tema.
 const responsiveBackground = `
 body {
-  background-color: #C7D6F2;
+  background-color: ${colors.dawn.sky};
 }`;

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import type { PrayerRequest } from "@/core/posts/queries";
+
+import { Tap } from "@/components/ui/Tap";
 
 interface Props {
   request: PrayerRequest;
@@ -33,7 +35,7 @@ export const PrayerRequestCard = ({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
-    <View className="gap-3 rounded-card border border-white/60 bg-white/60 p-5 shadow-card">
+    <View className="gap-3 rounded-card border border-glassedge/60 bg-glass/60 p-5 shadow-card">
       <View className="flex-row items-center justify-between gap-3">
         <View className="flex-1 flex-row items-center gap-2">
           <Avatar
@@ -91,13 +93,13 @@ export const PrayerRequestCard = ({
 
       {/* The gesture, and the way to take it back: a counter that only ever
           goes up stops meaning anything the first time somebody mis-taps. */}
-      <Pressable
+      <Tap
         accessibilityRole="button"
         accessibilityState={{ checked: request.i_prayed }}
         aria-checked={request.i_prayed}
         onPress={onTogglePrayer}
-        className={`items-center rounded-2xl px-4 py-3 ${
-          request.i_prayed ? "bg-white/60" : "bg-plum-chip"
+        className={`items-center rounded-cta px-4 py-3 ${
+          request.i_prayed ? "bg-glass/60" : "bg-plum-chip"
         }`}
       >
         <Text
@@ -107,28 +109,28 @@ export const PrayerRequestCard = ({
         >
           {request.i_prayed ? t("feed.prayed") : t("feed.pray")}
         </Text>
-      </Pressable>
+      </Tap>
 
       <View className="flex-row flex-wrap gap-4">
-        <Pressable accessibilityRole="link" onPress={onOpen}>
+        <Tap accessibilityRole="link" onPress={onOpen}>
           <Text className="font-sans text-sm text-mist-ink underline">
             {request.comment_count > 0
               ? t("feed.commentCount", { count: request.comment_count })
               : t("feed.comment")}
           </Text>
-        </Pressable>
+        </Tap>
 
         {request.is_mine ? (
           <>
             {request.answered_at ? null : (
-              <Pressable accessibilityRole="button" onPress={onMarkAnswered}>
+              <Tap accessibilityRole="button" onPress={onMarkAnswered}>
                 <Text className="font-sans text-sm text-mist-ink underline">
                   {t("feed.markAnswered")}
                 </Text>
-              </Pressable>
+              </Tap>
             )}
 
-            <Pressable
+            <Tap
               accessibilityRole="button"
               onPress={() => {
                 if (!confirmingDelete) {
@@ -149,21 +151,21 @@ export const PrayerRequestCard = ({
               >
                 {confirmingDelete ? t("feed.deleteConfirm") : t("feed.delete")}
               </Text>
-            </Pressable>
+            </Tap>
           </>
         ) : (
           <>
-            <Pressable accessibilityRole="button" onPress={onReport}>
+            <Tap accessibilityRole="button" onPress={onReport}>
               <Text className="font-sans text-sm text-mist-ink underline">
                 {t("moderation.report")}
               </Text>
-            </Pressable>
+            </Tap>
 
             {/* Missing on purpose for anonymous requests: there is no id to
                 block, which is the cost of letting somebody ask without their
                 name. Reporting still works. */}
             {request.author_id ? (
-              <Pressable
+              <Tap
                 accessibilityRole="button"
                 accessibilityLabel={`${t("moderation.block")} ${request.author_name ?? ""}`}
                 onPress={() => onBlock(request.author_id!)}
@@ -171,15 +173,15 @@ export const PrayerRequestCard = ({
                 <Text className="font-sans text-sm text-mist-ink underline">
                   {t("moderation.block")}
                 </Text>
-              </Pressable>
+              </Tap>
             ) : null}
 
             {canHide ? (
-              <Pressable accessibilityRole="button" onPress={onHide}>
+              <Tap accessibilityRole="button" onPress={onHide}>
                 <Text className="font-sans text-sm text-mist-ink underline">
                   {t("moderation.hide")}
                 </Text>
-              </Pressable>
+              </Tap>
             ) : null}
           </>
         )}

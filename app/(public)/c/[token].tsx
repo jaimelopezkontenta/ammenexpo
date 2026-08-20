@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
@@ -12,6 +13,7 @@ import { useCircleInvitePreview, useJoinCircle } from "@/core/circles/queries";
 
 export default function CircleInvite() {
   const { t } = useTranslation();
+  const { top, scrollBottom } = useScreenPadding();
   const { token, de } = useLocalSearchParams<{
     token: string;
     /** Por dónde llegó: lo pone `buildShareUrl` al repartir el enlace. */
@@ -65,7 +67,10 @@ export default function CircleInvite() {
 
   if (!circle) {
     return (
-      <DawnBackground className="items-center justify-center gap-3 px-8">
+      <DawnBackground
+        className="items-center justify-center gap-3 px-8"
+        style={{ paddingTop: top, paddingBottom: scrollBottom }}
+      >
         <Text className="text-center font-sans-bold text-xl text-plum">
           {t("circles.inviteNotFound")}
         </Text>
@@ -94,7 +99,10 @@ export default function CircleInvite() {
   }
 
   return (
-    <DawnBackground className="items-center justify-center gap-3 px-8">
+    <DawnBackground
+      className="items-center justify-center gap-3 px-8"
+      style={{ paddingTop: top, paddingBottom: scrollBottom }}
+    >
       <Text className="text-center font-sans-bold text-2xl text-plum">
         {t("circles.joinTitle", { name: circle.name })}
       </Text>

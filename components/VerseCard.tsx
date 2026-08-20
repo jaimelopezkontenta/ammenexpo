@@ -1,6 +1,8 @@
 import { forwardRef } from "react";
 import { Text, View } from "react-native";
 
+import { colors } from "@/theme";
+
 /**
  * El versículo, como imagen.
  *
@@ -43,7 +45,7 @@ export const VerseCard = forwardRef<
         // píxeles de margen es un choque esperando a una métrica ligeramente
         // distinta.
         gap: size * 0.05,
-        backgroundColor: "#FFF1DD",
+        backgroundColor: colors.dawn.cream,
       }}
       className="justify-between"
     >

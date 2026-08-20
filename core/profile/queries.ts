@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import i18n from "i18next";
 
 import { supabase } from "@/utils/supabase";
+
+import { syncLocalReminders } from "@/core/notifications/localReminders";
 
 import type { Streak } from "./streak";
 
@@ -117,11 +120,24 @@ export const useUpdateProfile = (userId: string | undefined) => {
         if (!data?.length) throw new Error("settings_update_no_rows");
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
       // The name is stamped into plans and shown to everyone praying for you.
       void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
       void queryClient.invalidateQueries({ queryKey: ["whoPrayedForMe"] });
+
+      // Las horas elegidas son las horas del recordatorio local: se
+      // reprograman al guardar, sin esperar al refetch que el SessionProvider
+      // también escucha. Solo cuando vinieron en la mutación; un cambio de
+      // nombre no toca las notificaciones.
+      if (variables.reminderHours !== undefined) {
+        void syncLocalReminders(variables.reminderHours, {
+          // `i18next` también exporta un `t` suelto (sin `this`); el singleton
+          // por defecto es el que `core/i18n/init` dejó inicializado.
+          // eslint-disable-next-line import/no-named-as-default-member
+          title: i18n.t("notifications.reminder"),
+        });
+      }
     },
   });
 };

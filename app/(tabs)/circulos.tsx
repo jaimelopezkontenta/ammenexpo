@@ -1,7 +1,7 @@
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { TabHeader } from "@/components/TabHeader";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -16,6 +16,10 @@ import {
   useUnreadCounts,
   type CircleVisibility,
 } from "@/core/circles/queries";
+
+import { EmptyState } from "@/components/ui/EmptyState";
+
+import { Tap } from "@/components/ui/Tap";
 
 export default function Circles() {
   const { t } = useTranslation();
@@ -57,7 +61,7 @@ export default function Circles() {
   };
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState skeleton="list" />;
   }
 
   // A failed read used to fall through to "you have no circles yet", which is
@@ -71,7 +75,7 @@ export default function Circles() {
       <DawnBackground>
         <TabHeader title={t("tabs.circles")} />
         <ScrollView
-          contentContainerClassName="gap-6 px-7 py-10"
+          contentContainerClassName="gap-6 px-7 py-10 md:w-full md:max-w-read md:self-center"
           keyboardShouldPersistTaps="handled"
         >
           <Text className="font-sans-bold text-2xl text-plum">
@@ -145,15 +149,12 @@ export default function Circles() {
   return (
     <DawnBackground>
       <TabHeader title={t("tabs.circles")} />
-      <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-10">
-        <View className="gap-1">
-          <Text className="font-sans-bold text-2xl text-plum">
-            {t("circles.title")}
-          </Text>
-          <Text className="font-sans text-base text-mist-ink">
-            {t("circles.subtitle")}
-          </Text>
-        </View>
+      <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-10 md:w-full md:max-w-read md:self-center">
+        {/* El título ya lo dice TabHeader; dos "Círculos" apilados no eran
+          jerarquía sino eco. Queda la línea que explica qué es esto. */}
+        <Text className="font-sans text-base text-mist-ink">
+          {t("circles.subtitle")}
+        </Text>
 
         {circles && circles.length > 0 ? (
           <View className="gap-3">
@@ -166,9 +167,9 @@ export default function Circles() {
                 {/* The only interactive element in the app with no role: a screen
                   reader announced the whole list as static text, so the way
                   into a circle was invisible when swiping for controls. */}
-                <Pressable
+                <Tap
                   accessibilityRole="link"
-                  className="gap-1 rounded-2xl border border-white/60 p-5"
+                  className="gap-1 rounded-card border border-glassedge/60 p-5"
                 >
                   <View className="flex-row items-center justify-between gap-3">
                     <Text className="flex-1 font-sans-semibold text-lg text-plum">
@@ -192,19 +193,15 @@ export default function Circles() {
                   <Text className="font-sans text-sm text-mist-ink">
                     {t("circles.members", { count: circle.member_count })}
                   </Text>
-                </Pressable>
+                </Tap>
               </Link>
             ))}
           </View>
         ) : (
-          <View className="items-center gap-2 py-10">
-            <Text className="text-center font-sans-semibold text-lg text-mist-ink">
-              {t("circles.empty")}
-            </Text>
-            <Text className="text-center font-sans text-base text-mist-ink">
-              {t("circles.emptyBody")}
-            </Text>
-          </View>
+          <EmptyState
+            title={t("circles.empty")}
+            body={t("circles.emptyBody")}
+          />
         )}
 
         {/* Two ways in, and the second one matters most on an empty account:

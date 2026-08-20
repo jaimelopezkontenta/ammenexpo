@@ -1,7 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text } from "react-native";
+import { ScrollView, Text } from "react-native";
 
 import type { OwnPlan } from "@/core/plans/queries";
+
+import { Tap } from "@/components/ui/Tap";
 
 interface PlanSwitcherProps {
   plans: OwnPlan[];
@@ -43,7 +45,7 @@ export const PlanSwitcher = ({
         const isActive = plan.id === activeId;
 
         return (
-          <Pressable
+          <Tap
             key={plan.id}
             // Both, deliberately: accessibilityState is what iOS and Android
             // read, and react-native-web 0.21 no longer maps it, so the web DOM
@@ -58,7 +60,7 @@ export const PlanSwitcher = ({
             className={`rounded-full border px-4 py-2 ${
               isActive
                 ? "border-white/30 bg-plum-chip"
-                : "border-white/60 bg-white/60"
+                : "border-glassedge/60 bg-glass/60"
             }`}
           >
             <Text
@@ -71,7 +73,7 @@ export const PlanSwitcher = ({
             >
               {plan.title}
             </Text>
-          </Pressable>
+          </Tap>
         );
       })}
     </ScrollView>

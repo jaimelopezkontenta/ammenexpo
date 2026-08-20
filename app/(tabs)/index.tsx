@@ -1,22 +1,21 @@
 import { Link, router } from "expo-router";
-import { Check } from "lucide-react-native";
+import { Check, MoreHorizontal } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
+import Animated, { ZoomIn } from "react-native-reanimated";
 
 import { TabHeader } from "@/components/TabHeader";
 import { Button } from "@/components/Button";
-import { Card, CardDark } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
 import { DaySection } from "@/components/DaySection";
 import { DayView } from "@/components/DayView";
-import { Glass } from "@/components/Glass";
+import { PlanOptionsSheet } from "@/components/PlanOptionsSheet";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
 import { Orb } from "@/components/Orb";
 import { ResponsiveTabContent } from "@/components/ResponsiveTabContent";
 import { VerseOfTheDay } from "@/components/VerseOfTheDay";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { TextField } from "@/components/TextField";
 import { WhoPrayed } from "@/components/WhoPrayed";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBibleBooks } from "@/core/bible/queries";
@@ -43,8 +42,24 @@ import {
   useTodayDay,
 } from "@/core/plans/queries";
 
+import { Tap, triggerHaptic } from "@/components/ui/Tap";
+import { useToast } from "@/core/toast/ToastProvider";
+import { useThemeColors } from "@/theme";
+import { enterFade } from "@/theme/motion";
+
+// Los tres pasos del journey diario. La Palabra no está aquí: no es un paso,
+// es la puerta, y por eso se queda siempre encima de la parte elegida.
+const JOURNEY_STEPS = [
+  { key: "meaning", labelKey: "plan.stepReflect" },
+  { key: "action", labelKey: "plan.stepApply" },
+  { key: "prayer", labelKey: "plan.stepPray" },
+] as const;
+
+type JourneyStep = (typeof JOURNEY_STEPS)[number]["key"];
+
 export default function Today() {
   const { t, i18n } = useTranslation();
+  const colors = useThemeColors();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -88,13 +103,25 @@ export default function Today() {
 
   const [draftTitle, setDraftTitle] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [socialActionError, setSocialActionError] = useState<string | null>(
-    null,
-  );
-  const [notice, setNotice] = useState<string | null>(null);
+  // Resultados de acción por el toast del sistema; el error de generación
+  // (actionError) sí se queda inline, pegado a su CTA de reintento.
+  const toast = useToast();
   const [confirmingArchiveId, setConfirmingArchiveId] = useState<string | null>(
     null,
   );
+  // El paso del journey que se está leyendo. Empieza por el significado:
+  // entender el texto va antes de hacer algo con él y de rezarlo.
+  const [step, setStep] = useState<JourneyStep>("meaning");
+  const [optionsOpen, setOptionsOpen] = useState(false);
+
+  // Al cerrar el cajón se desarma lo efímero: ni el archivar queda a un toque
+  // de dispararse ni el rename abierto, para que la próxima apertura empiece
+  // de cero.
+  const closeOptions = () => {
+    setOptionsOpen(false);
+    setConfirmingArchiveId(null);
+    setDraftTitle(null);
+  };
 
   // The first person who prayed for you today and whose own plan you can open.
   const prayBackPlanId =
@@ -128,14 +155,11 @@ export default function Today() {
     action: () => Promise<unknown>,
     done: string,
   ) => {
-    setSocialActionError(null);
-    setNotice(null);
-
     try {
       await action();
-      setNotice(done);
+      toast.success(done);
     } catch {
-      setSocialActionError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
@@ -143,11 +167,9 @@ export default function Today() {
     if (!plan) return;
 
     setActionError(null);
-    setNotice(null);
-
     try {
       await continuePlan.mutateAsync(plan.id);
-      setNotice(t("plan.resumed"));
+      toast.success(t("plan.resumed"));
     } catch (caught) {
       // "Ya lo estamos escribiendo" no es un fallo: otro toque rápido no debe
       // pintar una línea roja encima de un plan que sí se está escribiendo.
@@ -175,6 +197,13 @@ export default function Today() {
     }
   };
 
+  // Cambiar de plan desde el cajón lo cierra: la pantalla que aparece debajo
+  // ya es del plan nuevo, y dejar el sheet encima sería enseñar el anterior.
+  const selectPlanFromSheet = async (planId: string) => {
+    setOptionsOpen(false);
+    await selectPlan(planId);
+  };
+
   const archiveCurrentPlan = async () => {
     if (!plan) return;
 
@@ -182,18 +211,18 @@ export default function Today() {
     // forward-only and does not refund the free-plan slot.
     if (confirmingArchiveId !== plan.id) {
       setActionError(null);
-      setNotice(null);
       setConfirmingArchiveId(plan.id);
       return;
     }
 
     setActionError(null);
-    setNotice(null);
-
     try {
       await archivePlan.mutateAsync(plan.id);
       setConfirmingArchiveId(null);
-      setNotice(t("plan.archived"));
+      // El plan archivado desaparece de la lista al refrescar: el sheet se
+      // quedaría abierto sobre un plan que ya no está. Se cierra con él.
+      setOptionsOpen(false);
+      toast.success(t("plan.archived"));
     } catch (caught) {
       setConfirmingArchiveId(null);
       const detail =
@@ -227,7 +256,7 @@ export default function Today() {
   };
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState skeleton="day" />;
   }
 
   if (isError) {
@@ -336,18 +365,6 @@ export default function Today() {
             pantalla era un botón y nada más: quien no genera el plan hoy no
             tenía absolutamente nada que hacer aquí. */}
           <VerseOfTheDay />
-
-          {/* Y dos salidas más, discretas: orar por alguien y traer a alguien no
-            dependen de tener plan, y son justo lo que puede hacer quien todavía
-            no está listo para contarle su vida a una IA. */}
-          <View className="gap-2 pt-2">
-            <Link href="/comunidad" asChild>
-              <Button title={t("community.title")} variant="ghost" />
-            </Link>
-            <Link href="/invitar" asChild>
-              <Button title={t("invite.title")} variant="ghost" />
-            </Link>
-          </View>
         </ResponsiveTabContent>
       </DawnBackground>
     );
@@ -441,12 +458,6 @@ export default function Today() {
                   onPress={() => void startGeneration()}
                 />
 
-                {/* Y traer a alguien. Terminar treinta días de oración es el momento
-              del producto en que más sentido tiene decírselo a otra persona, y
-              hasta aquí esta pantalla miraba solo hacia atrás. */}
-                <Link href="/invitar" asChild>
-                  <Button title={t("invite.title")} variant="ghost" />
-                </Link>
                 <Button
                   title={t("plan.seeDays")}
                   variant="ghost"
@@ -495,241 +506,272 @@ export default function Today() {
         keyboardShouldPersistTaps="handled"
       >
         <ResponsiveTabContent className="gap-6">
-          <PlanSwitcher
-            plans={plans ?? []}
-            activeId={plan.id}
-            onSelect={selectPlan}
-          />
+          {/* El journey es una sola columna de lectura también en tablet. Lo
+            que rodeaba al día —cambiar de plan, renombrar, ver días, compartir,
+            archivar— ya no está en el scroll: vive en el cajón del `···`. */}
+          <View className="w-full gap-6 self-center md:max-w-3xl">
+            {/* La fila meta: dónde estás y cuánto llevas. A la derecha, el
+              `···` que abre el cajón del plan. */}
+            <View className="flex-row items-center justify-between gap-3">
+              <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-2 gap-y-1">
+                <Text className="font-sans-medium text-sm text-mist-ink">
+                  {t("plan.dayOf", {
+                    current: day.day_number,
+                    total: plan.duration_days,
+                  })}
+                  {plan.status === "generating" && !stuck
+                    ? ` · ${t("plan.stillPreparing")}`
+                    : ""}
+                </Text>
+                {/* La racha es un chip y no un segmento más de la línea: es la
+                  única pieza de la fila que celebra, y merece forma propia. */}
+                {days > 0 ? (
+                  <View className="rounded-full bg-plum-chip px-3 py-1">
+                    <Text className="font-sans-semibold text-xs text-white">
+                      {t("plan.streak", { count: days })}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
 
-          {/* El contexto del día es la portada oscura del prototipo. No inventa
-            un tema: solo jerarquiza los datos que ya devuelve el plan. */}
-          <CardDark className="gap-2">
-            <Text className="font-sans-semibold text-sm text-white/80">
-              {t("plan.dayOf", {
-                current: day.day_number,
-                total: plan.duration_days,
-              })}
-              {plan.status === "generating" && !stuck
-                ? ` · ${t("plan.stillPreparing")}`
-                : ""}
-              {days > 0 ? ` · ${t("plan.streak", { count: days })}` : ""}
-            </Text>
+              <Tap
+                accessibilityRole="button"
+                accessibilityLabel={t("plan.planOptions")}
+                onPress={() => setOptionsOpen(true)}
+                // 44×44, el mínimo táctil, alrededor de un icono de 22. El
+                // vidrio es el mismo de los chips sin elegir: sin él el icono
+                // flotaba como una mancha gris sobre el amanecer.
+                className="h-11 w-11 items-center justify-center rounded-full border border-glassedge/60 bg-glass/60"
+              >
+                <MoreHorizontal
+                  size={22}
+                  color={colors.plum.DEFAULT}
+                  strokeWidth={1.7}
+                />
+              </Tap>
+            </View>
 
-            <Text className="font-serif-bold text-3xl leading-10 text-white">
+            {/* El aviso de generación a medias es verdad, pero no puede
+              sentarse entre la Palabra y el amén: vive aquí, debajo de la
+              fila meta y antes del título, para que el journey quede libre
+              para rezar. Una línea discreta y no un Card: quien ya tiene día
+              hoy viene a orar, no a arreglar la generación. */}
+            {stuck ? (
+              <View className="gap-1.5">
+                <Text className="font-sans text-sm leading-5 text-mist-ink">
+                  {t("plan.stalledBody", {
+                    written: progress?.days_written ?? day.day_number,
+                    total: plan.duration_days,
+                  })}
+                </Text>
+                <Tap
+                  accessibilityRole="button"
+                  accessibilityState={{ busy: continuePlan.isPending }}
+                  aria-busy={continuePlan.isPending}
+                  disabled={continuePlan.isPending}
+                  hitSlop={8}
+                  onPress={() => void resumeGeneration()}
+                  className={`self-start py-1 ${
+                    continuePlan.isPending ? "opacity-50" : ""
+                  }`}
+                >
+                  {/* El mismo tono que el label del Button ghost: el naranja
+                    que sí se lee, reservado para lo que pide acción. */}
+                  <Text className="font-sans-semibold text-sm text-ember-ink">
+                    {t("plan.stalledCta")}
+                  </Text>
+                </Tap>
+              </View>
+            ) : null}
+
+            {/* El título es el del día y no el del plan con lápiz: hoy se ora
+              esto. Renombrar el plan vive en el cajón, fuera del journey. */}
+            <Text className="font-serif-bold text-3xl leading-10 text-plum">
               {day.title}
             </Text>
 
-            {draftTitle === null ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t("plan.rename")}
-                onPress={() => setDraftTitle(plan.title)}
-              >
-                <Text className="font-sans text-base text-white">
-                  {plan.title} ✎
-                </Text>
-              </Pressable>
-            ) : null}
-          </CardDark>
+            {/* Los tres pasos del journey, con la misma píldora que usa el
+              switcher: la elegida oscura, las otras de vidrio. */}
+            <View accessibilityRole="tablist" className="flex-row gap-2">
+              {JOURNEY_STEPS.map((journeyStep) => {
+                const selected = step === journeyStep.key;
 
-          {draftTitle !== null ? (
-            <Glass readable className="gap-2 rounded-card p-5 shadow-card">
-              <TextField
-                label={t("plan.titlePlaceholder")}
-                value={draftTitle}
-                onChangeText={setDraftTitle}
-                maxLength={140}
-                autoFocus
-                onSubmitEditing={() => void saveTitle()}
-                returnKeyType="done"
-              />
-              <Button
-                title={t("common.save")}
-                loading={rename.isPending}
-                onPress={() => void saveTitle()}
-              />
-            </Glass>
-          ) : null}
-
-          {/* A generation whose first stretch landed and whose second crashed
-            keeps the written days and offers to continue instead of restarting. */}
-          {stuck ? (
-            <Card className="gap-2">
-              <Text className="font-sans text-sm leading-5 text-mist-ink">
-                {t("plan.stalledBody", {
-                  written: progress?.days_written ?? day.day_number,
-                  total: plan.duration_days,
-                })}
-              </Text>
-              <Button
-                title={t("plan.stalledCta")}
-                variant="secondary"
-                loading={continuePlan.isPending}
-                onPress={() => void resumeGeneration()}
-              />
-            </Card>
-          ) : null}
-
-          <View className="gap-6 md:flex-row md:items-start">
-            {/* La lectura larga sigue siendo una sola columna incluso en tablet. */}
-            <View className="gap-6 md:min-w-0 md:max-w-3xl md:flex-1">
-              <DayView day={day} books={books ?? []} />
-
-              <View className="pb-2 pt-2">
-                {prayed ? (
-                  // El orbe con la marca, como en el montaje. Es el único momento
-                  // del día en que la app dice "hecho", y decirlo con una línea de
-                  // texto centrada era desaprovecharlo.
-                  <View className="items-center gap-3">
-                    <Orb size={92} halo>
-                      <Check size={30} color="#413653" strokeWidth={2} />
-                    </Orb>
-                    <Text className="text-center font-sans-medium text-base text-plum">
-                      {t("plan.markedDone")}
+                return (
+                  <Tap
+                    key={journeyStep.key}
+                    // Como en PlanSwitcher: accessibilityState es lo que leen
+                    // iOS y Android, y react-native-web 0.21 no lo mapea, así
+                    // que aria-selected va aparte o la web nunca dice cuál de
+                    // los pasos está elegido.
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected }}
+                    aria-selected={selected}
+                    accessibilityLabel={t(journeyStep.labelKey)}
+                    onPress={() => setStep(journeyStep.key)}
+                    className={`min-h-11 items-center justify-center rounded-full border px-4 py-2 ${
+                      selected
+                        ? "border-white/30 bg-plum-chip"
+                        : "border-glassedge/60 bg-glass/60"
+                    }`}
+                  >
+                    <Text
+                      className={`text-sm ${
+                        selected
+                          ? "font-sans-semibold text-white"
+                          : "font-sans text-plum"
+                      }`}
+                    >
+                      {t(journeyStep.labelKey)}
                     </Text>
-                  </View>
-                ) : (
-                  <Button
-                    title={t("plan.markDone")}
-                    loading={markPrayed.isPending}
-                    onPress={() =>
-                      markPrayed.mutate(undefined, {
-                        onSuccess: () => setActionError(null),
-                        onError: () => setActionError(t("common.errorGeneric")),
-                      })
-                    }
-                  />
-                )}
-              </View>
-
-              {actionError ? (
-                <Text
-                  className="text-center font-sans text-sm text-danger"
-                  accessibilityRole="alert"
-                >
-                  {actionError}
-                </Text>
-              ) : null}
+                  </Tap>
+                );
+              })}
             </View>
 
-            {/* En tablet solo el contexto y las acciones secundarias pasan a la
-              columna lateral; la oración nunca se estrecha en dos columnas. */}
-            <View className="gap-5 md:w-56">
-              <Glass readable className="gap-3 rounded-card p-5 shadow-card">
-                {/* Only offered once there is a yesterday to go back to. */}
-                {day.day_number > 1 ? (
+            {/* El `key` remonta el contenido al cambiar de chip: el paso
+              elegido entra con un fade en vez de aparecer de golpe. */}
+            <Animated.View key={step} entering={enterFade}>
+              <DayView day={day} books={books ?? []} focus={step} />
+            </Animated.View>
+
+            {/* La única acción primaria del journey. */}
+            <View className="pb-2 pt-2">
+              {prayed ? (
+                // El orbe con la marca, como en el montaje. Es el único momento
+                // del día en que la app dice "hecho", y decirlo con una línea de
+                // texto centrada era desaprovecharlo. Entra con un pequeño
+                // estallido de muelle — la celebración, junto con la háptica de
+                // éxito. Sin confetti: no es el tono de esta app.
+                <Animated.View
+                  entering={ZoomIn.springify().damping(14).stiffness(180)}
+                  className="items-center gap-3"
+                >
+                  <Orb size={92} halo>
+                    <Check
+                      size={30}
+                      color={colors.plum.DEFAULT}
+                      strokeWidth={2}
+                    />
+                  </Orb>
+                  <Text className="text-center font-sans-medium text-base text-plum">
+                    {t("plan.markedDone")}
+                  </Text>
+                </Animated.View>
+              ) : (
+                <Button
+                  title={t("plan.markDone")}
+                  loading={markPrayed.isPending}
+                  onPress={() =>
+                    markPrayed.mutate(undefined, {
+                      onSuccess: () => {
+                        setActionError(null);
+                        // La háptica de resultado, no la del toque: el amén del
+                        // día es el único "hecho" que la app celebra.
+                        triggerHaptic("success");
+                      },
+                      onError: () => setActionError(t("common.errorGeneric")),
+                    })
+                  }
+                />
+              )}
+            </View>
+
+            {actionError ? (
+              <Text
+                className="text-center font-sans text-sm text-danger"
+                accessibilityRole="alert"
+              >
+                {actionError}
+              </Text>
+            ) : null}
+
+            {/* Lo social espera al "hecho": primero lo íntimo, después la
+              comunidad. Antes vivía siempre visible en la columna lateral y le
+              quitaba al CTA su momento. */}
+            {prayed === true ? (
+              <>
+                {/* Seeing who showed up for you is the reason to come back
+                  tomorrow, but it stays visually separate from private prayer. */}
+                <DaySection label={t("intercession.whoPrayed")}>
+                  {prayedForMeFailed ? (
+                    <Text
+                      className="font-sans text-base leading-6 text-mist-ink"
+                      accessibilityRole="alert"
+                    >
+                      {t("common.errorBody")}
+                    </Text>
+                  ) : (
+                    <WhoPrayed
+                      people={prayedForMe ?? []}
+                      onReport={(intercessionId) =>
+                        void runOnIntercessor(
+                          () => report.mutateAsync({ intercessionId }),
+                          t("intercession.reported"),
+                        )
+                      }
+                      onBlock={(blockedId) =>
+                        void runOnIntercessor(
+                          () => block.mutateAsync(blockedId),
+                          t("moderation.blockDone"),
+                        )
+                      }
+                    />
+                  )}
+                </DaySection>
+
+                {/* "Pray for their plan" needs a real shared plan to target. */}
+                {prayBackPlanId ? (
                   <Button
-                    title={t("plan.seeDays")}
+                    title={t("intercession.prayBack")}
                     variant="secondary"
                     onPress={() =>
                       router.push({
-                        pathname: "/plan/[id]/dias",
-                        params: { id: plan.id },
+                        pathname: "/orar/[planId]",
+                        params: { planId: prayBackPlanId },
                       })
                     }
                   />
                 ) : null}
-
-                <Button
-                  title={t("share.open")}
-                  variant="secondary"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/plan/[id]/compartir",
-                      params: { id: plan.id },
-                    })
-                  }
-                />
-
-                {plan.status === "active" || plan.status === "completed" ? (
-                  <>
-                    <Button
-                      title={
-                        confirmingArchiveId === plan.id
-                          ? t("plan.archiveConfirm")
-                          : t("plan.archive")
-                      }
-                      variant="ghost"
-                      loading={archivePlan.isPending}
-                      onPress={() => void archiveCurrentPlan()}
-                    />
-                    <Text
-                      className="font-sans text-sm leading-5 text-mist-ink"
-                      accessibilityLiveRegion={
-                        confirmingArchiveId === plan.id ? "polite" : "none"
-                      }
-                    >
-                      {t("plan.archiveHint")}
-                    </Text>
-                  </>
-                ) : null}
-              </Glass>
-
-              {/* Seeing who showed up for you is the reason to come back
-                tomorrow, but it stays visually separate from private prayer. */}
-              <DaySection label={t("intercession.whoPrayed")}>
-                {prayedForMeFailed ? (
-                  <Text
-                    className="font-sans text-base leading-6 text-mist-ink"
-                    accessibilityRole="alert"
-                  >
-                    {t("common.errorBody")}
-                  </Text>
-                ) : (
-                  <WhoPrayed
-                    people={prayedForMe ?? []}
-                    onReport={(intercessionId) =>
-                      void runOnIntercessor(
-                        () => report.mutateAsync({ intercessionId }),
-                        t("intercession.reported"),
-                      )
-                    }
-                    onBlock={(blockedId) =>
-                      void runOnIntercessor(
-                        () => block.mutateAsync(blockedId),
-                        t("moderation.blockDone"),
-                      )
-                    }
-                  />
-                )}
-
-                {socialActionError ? (
-                  <Text
-                    className="font-sans text-sm text-danger"
-                    accessibilityRole="alert"
-                  >
-                    {socialActionError}
-                  </Text>
-                ) : null}
-
-                {notice ? (
-                  <Text
-                    className="font-sans text-sm text-mist-ink"
-                    accessibilityRole="alert"
-                    accessibilityLiveRegion="polite"
-                  >
-                    {notice}
-                  </Text>
-                ) : null}
-              </DaySection>
-
-              {/* "Pray for their plan" needs a real shared plan to target. */}
-              {prayBackPlanId ? (
-                <Button
-                  title={t("intercession.prayBack")}
-                  variant="secondary"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/orar/[planId]",
-                      params: { planId: prayBackPlanId },
-                    })
-                  }
-                />
-              ) : null}
-            </View>
+              </>
+            ) : null}
           </View>
         </ResponsiveTabContent>
       </ScrollView>
+
+      {/* El cajón del plan: todo lo que se quitó del journey sigue a un toque,
+        en la hoja que abre el `···` de la fila meta. */}
+      <PlanOptionsSheet
+        visible={optionsOpen}
+        onClose={closeOptions}
+        planTitle={plan.title}
+        plans={plans ?? []}
+        activePlanId={plan.id}
+        onSelectPlan={(planId) => void selectPlanFromSheet(planId)}
+        draftTitle={draftTitle}
+        onDraftTitleChange={setDraftTitle}
+        onSaveTitle={() => void saveTitle()}
+        renamePending={rename.isPending}
+        showSeeDays={day.day_number > 1}
+        onSeeDays={() => {
+          setOptionsOpen(false);
+          router.push({
+            pathname: "/plan/[id]/dias",
+            params: { id: plan.id },
+          });
+        }}
+        onShare={() => {
+          setOptionsOpen(false);
+          router.push({
+            pathname: "/plan/[id]/compartir",
+            params: { id: plan.id },
+          });
+        }}
+        canArchive={plan.status === "active" || plan.status === "completed"}
+        confirmingArchive={confirmingArchiveId === plan.id}
+        archivePending={archivePlan.isPending}
+        onArchive={() => void archiveCurrentPlan()}
+        error={actionError}
+      />
     </DawnBackground>
   );
 }

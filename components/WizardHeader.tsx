@@ -1,7 +1,11 @@
 import { ChevronLeft } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+
+import { gradients, useThemeColors } from "@/theme";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * La cabecera del asistente: volver, y cuánto queda.
@@ -25,19 +29,20 @@ export const WizardHeader = ({
   onBack?: () => void;
 }) => {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const percent = Math.round((step / total) * 100);
 
   return (
     <View className="flex-row items-center gap-4 px-1 pb-6">
       {onBack ? (
-        <Pressable
+        <Tap
           accessibilityRole="button"
           accessibilityLabel={t("common.back")}
           onPress={onBack}
-          className="h-11 w-11 items-center justify-center rounded-input border border-white/60 bg-white/60 shadow-soft"
+          className="h-11 w-11 items-center justify-center rounded-input border border-glassedge/60 bg-glass/60 shadow-soft"
         >
-          <ChevronLeft size={20} color="#413653" strokeWidth={2} />
-        </Pressable>
+          <ChevronLeft size={20} color={colors.plum.DEFAULT} strokeWidth={2} />
+        </Tap>
       ) : (
         // Hueco del mismo tamaño en el primer paso: sin él, la barra salta de
         // sitio al pasar al segundo.
@@ -45,13 +50,13 @@ export const WizardHeader = ({
       )}
 
       <View
-        className="h-1 flex-1 overflow-hidden rounded-sm bg-white/70"
+        className="h-1 flex-1 overflow-hidden rounded-sm bg-glass/70"
         accessibilityRole="progressbar"
         accessibilityLabel={t("onboarding.step", { current: step, total })}
         accessibilityValue={{ min: 0, max: total, now: step }}
       >
         <LinearGradient
-          colors={["#F2A578", "#FBDFC2"]}
+          colors={gradients.cta}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{ width: `${percent}%`, height: "100%" }}

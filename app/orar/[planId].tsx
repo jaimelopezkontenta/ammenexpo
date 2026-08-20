@@ -1,12 +1,13 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
 import { ScriptureSection } from "@/components/DayView";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -19,6 +20,8 @@ import {
   usePrayForSomeone,
 } from "@/core/intercessions/queries";
 
+import { Tap } from "@/components/ui/Tap";
+
 /**
  * Someone else's day, and a prayer written for you to pray over them.
  *
@@ -28,6 +31,7 @@ import {
  */
 export default function PrayForSomeone() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { planId } = useLocalSearchParams<{ planId: string }>();
   const { session } = useSession();
   const userId = session?.user.id;
@@ -92,7 +96,8 @@ export default function PrayForSomeone() {
       <Stack.Screen options={{ title: plan.owner_name, headerShown: true }} />
       <DawnBackground>
         <ScrollView
-          contentContainerClassName="gap-7 px-7 py-8"
+          contentContainerClassName="gap-7 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           <View className="gap-1">
@@ -152,7 +157,7 @@ export default function PrayForSomeone() {
                   const chosen = message.trim() === label;
 
                   return (
-                    <Pressable
+                    <Tap
                       key={key}
                       accessibilityRole="radio"
                       accessibilityState={{ checked: chosen }}
@@ -162,7 +167,7 @@ export default function PrayForSomeone() {
                       className={`rounded-full border px-4 py-2.5 ${
                         chosen
                           ? "border-plum bg-plum-chip"
-                          : "border-white/60 bg-dawn-cream-bg"
+                          : "border-glassedge/60 bg-dawn-cream-bg"
                       }`}
                     >
                       <Text
@@ -174,7 +179,7 @@ export default function PrayForSomeone() {
                       >
                         {label}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   );
                 })}
               </View>

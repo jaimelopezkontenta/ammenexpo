@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { TextField } from "@/components/TextField";
@@ -27,6 +28,7 @@ import {
  */
 export default function NewTestimony() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
   const { plan: planId, listItem: listItemId } = useLocalSearchParams<{
@@ -68,7 +70,8 @@ export default function NewTestimony() {
       />
       <DawnBackground>
         <ScrollView
-          contentContainerClassName="flex-grow gap-6 px-7 py-8"
+          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           {plan ? (

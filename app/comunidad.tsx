@@ -1,7 +1,7 @@
 import { Link, router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
@@ -9,6 +9,7 @@ import { LoadMore } from "@/components/LoadMore";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
 import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { usePublicProfile } from "@/core/profile/queries";
@@ -25,6 +26,12 @@ import {
 } from "@/core/social/feed";
 import { useFollowUser, useUnfollowUser } from "@/core/social/follows";
 import { useReportTestimony } from "@/core/testimonies/queries";
+
+import { useThemeColors } from "@/theme";
+
+import { EmptyState } from "@/components/ui/EmptyState";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * La comunidad.
@@ -44,6 +51,7 @@ import { useReportTestimony } from "@/core/testimonies/queries";
  */
 export default function Community() {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -53,6 +61,8 @@ export default function Community() {
   // Una sola mutación para todas las tarjetas: sin saber cuál está en vuelo,
   // pulsar dos seguidas dejaría las dos con el indicador puesto.
   const [pending, setPending] = useState<string | null>(null);
+
+  const { scrollBottom } = useScreenPadding();
 
   const searching = query.trim().length > 0;
   // Tu propio perfil ya trae este número y está en caché desde cualquier
@@ -113,16 +123,17 @@ export default function Community() {
 
       <DawnBackground>
         <ScrollView
-          contentContainerClassName="gap-5 px-7 py-8"
+          contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           <TextInput
-            className="w-full rounded-2xl border border-white/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base text-plum"
+            className="w-full rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base text-plum"
             accessibilityLabel={t("community.searchPlaceholder")}
             value={query}
             onChangeText={setQuery}
             placeholder={t("community.searchPlaceholder")}
-            placeholderTextColor="#6F6879"
+            placeholderTextColor={colors.mist.ink}
             autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="search"
@@ -159,7 +170,7 @@ export default function Community() {
               (people.data ?? []).map((person) => (
                 <View
                   key={person.id}
-                  className="flex-row items-center gap-3 rounded-2xl border border-white/60 p-4"
+                  className="flex-row items-center gap-3 rounded-card border border-glassedge/60 p-4"
                 >
                   <Link
                     href={{
@@ -168,7 +179,7 @@ export default function Community() {
                     }}
                     asChild
                   >
-                    <Pressable
+                    <Tap
                       accessibilityRole="link"
                       className="flex-1 flex-row items-center gap-3"
                     >
@@ -188,10 +199,10 @@ export default function Community() {
                           })}
                         </Text>
                       </View>
-                    </Pressable>
+                    </Tap>
                   </Link>
 
-                  <Pressable
+                  <Tap
                     accessibilityRole="button"
                     disabled={pending === person.id}
                     onPress={() =>
@@ -203,7 +214,7 @@ export default function Community() {
                         ? t("social.following")
                         : t("social.follow")}
                     </Text>
-                  </Pressable>
+                  </Tap>
                 </View>
               ))
             )
@@ -228,9 +239,7 @@ export default function Community() {
               </Link>
 
               {(feed.data ?? []).length === 0 ? (
-                <Text className="font-sans text-base leading-6 text-mist-ink">
-                  {t("community.empty")}
-                </Text>
+                <EmptyState title={t("community.empty")} />
               ) : (
                 (feed.data ?? []).map((entry) =>
                   entry.kind === "request" ? (
@@ -368,7 +377,7 @@ const StoryCard = ({
   const { t } = useTranslation();
 
   return (
-    <View className="gap-3 rounded-2xl border border-white/60 p-5">
+    <View className="gap-3 rounded-card border border-glassedge/60 p-5">
       <View className="flex-row items-center gap-2">
         <Avatar
           name={entry.author_name ?? ""}
@@ -384,11 +393,11 @@ const StoryCard = ({
           }}
           asChild
         >
-          <Pressable accessibilityRole="link" className="flex-1">
+          <Tap accessibilityRole="link" className="flex-1">
             <Text className="font-sans-medium text-sm text-mist-ink">
               {entry.author_name}
             </Text>
-          </Pressable>
+          </Tap>
         </Link>
 
         {/* Qué es cada fila. Sin esto, un testimonio y una petición se leen
@@ -422,31 +431,31 @@ const StoryCard = ({
             }}
             asChild
           >
-            <Pressable accessibilityRole="link">
+            <Tap accessibilityRole="link">
               <Text className="font-sans text-sm text-ember-ink underline">
                 {t("community.openPlan")}
               </Text>
-            </Pressable>
+            </Tap>
           </Link>
         ) : (
           <Link href="/testimonios" asChild>
-            <Pressable accessibilityRole="link">
+            <Tap accessibilityRole="link">
               <Text className="font-sans text-sm text-ember-ink underline">
                 {t("community.openTestimonies")}
               </Text>
-            </Pressable>
+            </Tap>
           </Link>
         )}
 
         {entry.is_mine ? null : (
           <>
-            <Pressable accessibilityRole="button" onPress={onReport}>
+            <Tap accessibilityRole="button" onPress={onReport}>
               <Text className="font-sans text-sm text-mist-ink underline">
                 {t("moderation.report")}
               </Text>
-            </Pressable>
+            </Tap>
 
-            <Pressable
+            <Tap
               accessibilityRole="button"
               accessibilityLabel={`${t("moderation.block")} ${entry.author_name ?? ""}`}
               onPress={onBlock}
@@ -454,7 +463,7 @@ const StoryCard = ({
               <Text className="font-sans text-sm text-mist-ink underline">
                 {t("moderation.block")}
               </Text>
-            </Pressable>
+            </Tap>
           </>
         )}
       </View>

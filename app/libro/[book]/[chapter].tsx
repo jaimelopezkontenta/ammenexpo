@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
-import { Button } from "@/components/Button";
+import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { Glass } from "@/components/Glass";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -26,6 +27,9 @@ import {
   useSaveReadingPosition,
 } from "@/core/bible/queries";
 
+import { Tap } from "@/components/ui/Tap";
+import { icon, useThemeColors } from "@/theme";
+
 /** Long enough that flicking through chapters writes only where you stop. */
 const SAVE_AFTER_MS = 2000;
 
@@ -36,7 +40,9 @@ const SAVE_AFTER_MS = 2000;
 let lastWritten: string | null = null;
 
 export default function ChapterReader() {
+  const { scrollBottom } = useScreenPadding();
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const { book, chapter, verse } = useLocalSearchParams<{
     book: string;
     chapter: string;
@@ -216,7 +222,8 @@ export default function ChapterReader() {
       <DawnBackground>
         <ScrollView
           ref={scrollRef}
-          contentContainerClassName="px-5 py-6"
+          contentContainerClassName="px-5 py-6 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           onContentSizeChange={scrollToTarget}
         >
           {/*
@@ -303,12 +310,12 @@ export default function ChapterReader() {
                         </Pressable>
 
                         <TextInput
-                          className="w-full rounded-input border border-white/70 bg-surface px-3 py-2.5 font-sans text-base text-plum"
+                          className="w-full rounded-input border border-glassedge/70 bg-surface px-3 py-2.5 font-sans text-base text-plum"
                           accessibilityLabel={t("bible.notePlaceholder")}
                           value={noteDraft}
                           onChangeText={setNoteDraft}
                           placeholder={t("bible.notePlaceholder")}
-                          placeholderTextColor="#6F6879"
+                          placeholderTextColor={colors.mist.ink}
                           maxLength={NOTE_MAX}
                           multiline
                         />
@@ -384,21 +391,53 @@ export default function ChapterReader() {
             </View>
           </Glass>
 
-          <View className="gap-3 pb-6 pt-6">
+          {/* Una fila, no dos botones apilados a lo ancho: atrás a la
+            izquierda y adelante a la derecha, como pasa una página. */}
+          <View className="flex-row items-center justify-between gap-3 pb-6 pt-6">
             {previous ? (
-              <Button
-                title={`${t("bible.previous")} · ${chapterLabel(all, previous)}`}
-                variant="secondary"
+              <Tap
+                accessibilityRole="button"
+                accessibilityLabel={`${t("bible.previous")} · ${chapterLabel(all, previous)}`}
                 onPress={() => go(previous)}
-              />
-            ) : null}
+                className="min-h-11 max-w-[48%] flex-row items-center gap-1 rounded-cta border border-glassedge/60 bg-glass/60 py-2 pl-2 pr-4"
+              >
+                <ChevronLeft
+                  size={icon.sm}
+                  color={colors.plum.DEFAULT}
+                  strokeWidth={icon.strokeWidth}
+                />
+                <Text
+                  numberOfLines={1}
+                  className="shrink font-sans-medium text-sm text-plum"
+                >
+                  {chapterLabel(all, previous)}
+                </Text>
+              </Tap>
+            ) : (
+              <View />
+            )}
             {following ? (
-              <Button
-                title={`${t("bible.next")} · ${chapterLabel(all, following)}`}
-                variant="secondary"
+              <Tap
+                accessibilityRole="button"
+                accessibilityLabel={`${t("bible.next")} · ${chapterLabel(all, following)}`}
                 onPress={() => go(following)}
-              />
-            ) : null}
+                className="min-h-11 max-w-[48%] flex-row items-center gap-1 rounded-cta border border-glassedge/60 bg-glass/60 py-2 pl-4 pr-2"
+              >
+                <Text
+                  numberOfLines={1}
+                  className="shrink font-sans-medium text-sm text-plum"
+                >
+                  {chapterLabel(all, following)}
+                </Text>
+                <ChevronRight
+                  size={icon.sm}
+                  color={colors.plum.DEFAULT}
+                  strokeWidth={icon.strokeWidth}
+                />
+              </Tap>
+            ) : (
+              <View />
+            )}
           </View>
         </ScrollView>
       </DawnBackground>

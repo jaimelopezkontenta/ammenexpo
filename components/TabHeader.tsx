@@ -1,11 +1,16 @@
 import { Link } from "expo-router";
-import { Bell, Users } from "lucide-react-native";
+import { Bell } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Wordmark } from "@/components/Wordmark";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useUnreadNotifications } from "@/core/notifications/queries";
+
+import { useThemeColors } from "@/theme";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * La cabecera de las cinco pestañas.
@@ -38,11 +43,19 @@ export const TabHeader = ({
   name?: string | null;
 }) => {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const { session } = useSession();
   const { data: unread } = useUnreadNotifications(session?.user.id);
+  const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-row items-center justify-between gap-3 px-7 pb-2 pt-2">
+    // El Provider no aplica padding; sin esto el título y la campana
+    // quedan bajo la status bar. NativeWind no conoce el notch: el 8
+    // extra va en style, no en una clase pt-*.
+    <View
+      className="flex-row items-center justify-between gap-3 px-7 pb-2"
+      style={{ paddingTop: insets.top + 8 }}
+    >
       <View className="min-w-0 flex-1">
         <Text className="font-sans-bold text-3xl text-plum">{title}</Text>
         {name ? (
@@ -56,13 +69,15 @@ export const TabHeader = ({
       </View>
 
       <View className="flex-row items-center gap-4">
-        {/* Los dos accesos que no son pestaña, en **todas** ellas. Vivían solo
-            en la cabecera de Hoy, así que quien abría la app en Orar o en
+        {/* El único acceso que no es pestaña, y va en **todas** ellas. Vivía
+            solo en la cabecera de Hoy, así que quien abría la app en Orar o en
             Círculos no se enteraba nunca de que alguien había orado por él: el
             mecanismo de retorno del producto, escondido en el único sitio
-            donde ya estabas. */}
+            donde ya estabas. Comunidad ya no vive en la cabecera: se
+            alcanza desde Orar y desde Perfil, no como un icono en cada
+            pantalla. */}
         <Link href="/avisos" asChild>
-          <Pressable
+          <Tap
             accessibilityRole="link"
             // El número en el nombre accesible, no solo en el punto: un punto
             // de color no se anuncia, y el aviso es justo lo que trae a
@@ -72,21 +87,13 @@ export const TabHeader = ({
                 ? `${t("notifications.title")}, ${t("community.unread", { count: unread })}`
                 : t("notifications.title")
             }
+            className="relative h-11 w-11 items-center justify-center"
           >
-            <Bell size={21} color="#413653" strokeWidth={1.7} />
+            <Bell size={21} color={colors.plum.DEFAULT} strokeWidth={1.7} />
             {unread ? (
               <View className="absolute -right-1 top-0 h-2.5 w-2.5 rounded-full bg-ember-accent" />
             ) : null}
-          </Pressable>
-        </Link>
-
-        <Link href="/comunidad" asChild>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={t("community.title")}
-          >
-            <Users size={21} color="#413653" strokeWidth={1.7} />
-          </Pressable>
+          </Tap>
         </Link>
 
         <Wordmark size={23} />

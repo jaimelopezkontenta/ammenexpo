@@ -1,9 +1,10 @@
 import { Link, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -13,6 +14,8 @@ import { usePublicProfile } from "@/core/profile/queries";
 import { usePersonPlans, usePersonPosts } from "@/core/social/feed";
 import { useFollowUser, useUnfollowUser } from "@/core/social/follows";
 import { useVisibleTestimonies } from "@/core/testimonies/queries";
+
+import { Tap } from "@/components/ui/Tap";
 
 /** Un número y lo que significa. Tres veces en la misma fila. */
 const Stat = ({ value, label }: { value: number; label: string }) => (
@@ -36,6 +39,7 @@ const Stat = ({ value, label }: { value: number; label: string }) => (
  */
 export default function PersonProfile() {
   const { t, i18n } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
   const userId = session?.user.id;
@@ -131,7 +135,10 @@ export default function PersonProfile() {
       />
 
       <DawnBackground>
-        <ScrollView contentContainerClassName="flex-grow gap-8 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <View className="items-center gap-3">
             <Avatar
               name={person.display_name}
@@ -219,9 +226,9 @@ export default function PersonProfile() {
                   }}
                   asChild
                 >
-                  <Pressable
+                  <Tap
                     accessibilityRole="link"
-                    className="gap-1 rounded-2xl border border-white/60 p-5"
+                    className="gap-1 rounded-card border border-glassedge/60 p-5"
                   >
                     <Text className="font-serif-bold text-base text-plum">
                       {plan.title}
@@ -229,7 +236,7 @@ export default function PersonProfile() {
                     <Text className="font-sans text-sm text-mist-ink">
                       {t("newPlan.days", { count: plan.duration_days })}
                     </Text>
-                  </Pressable>
+                  </Tap>
                 </Link>
               ))}
             </View>
@@ -247,7 +254,7 @@ export default function PersonProfile() {
               {(posts ?? []).map((post) => (
                 <View
                   key={post.id}
-                  className="gap-2 rounded-2xl border border-white/60 p-5"
+                  className="gap-2 rounded-card border border-glassedge/60 p-5"
                 >
                   <Text className="font-serif text-base leading-reading text-plum">
                     {post.body}
@@ -269,7 +276,7 @@ export default function PersonProfile() {
               {theirs.map((entry) => (
                 <View
                   key={entry.id}
-                  className="gap-2 rounded-2xl bg-white/60 p-5"
+                  className="gap-2 rounded-card bg-glass/60 p-5"
                 >
                   {entry.plan_title ? (
                     <Text className="font-sans text-sm text-mist-ink">

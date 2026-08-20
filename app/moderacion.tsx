@@ -1,11 +1,12 @@
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { LoadMore } from "@/components/LoadMore";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -25,6 +26,8 @@ import {
 import { useHideComment, useHidePost } from "@/core/posts/queries";
 import { useHideMessage } from "@/core/circles/chat";
 
+import { Tap } from "@/components/ui/Tap";
+
 type ModerationMode = "reports" | "held" | "crisis";
 
 /**
@@ -41,6 +44,7 @@ type ModerationMode = "reports" | "held" | "crisis";
  */
 export default function Moderation() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const [mode, setMode] = useState<ModerationMode>("reports");
 
   return (
@@ -50,7 +54,10 @@ export default function Moderation() {
       />
 
       <DawnBackground>
-        <ScrollView contentContainerClassName="gap-5 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <ChoiceChips
             options={[
               { value: "reports", label: t("moderation.mode.reports") },
@@ -162,7 +169,7 @@ function ReportsQueue() {
           return (
             <View
               key={report.id}
-              className="gap-3 rounded-2xl border border-white/60 p-5"
+              className="gap-3 rounded-card border border-glassedge/60 p-5"
             >
               <View className="flex-row items-center justify-between gap-3">
                 <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
@@ -197,29 +204,29 @@ function ReportsQueue() {
                   }}
                   asChild
                 >
-                  <Pressable accessibilityRole="link">
+                  <Tap accessibilityRole="link">
                     <Text className="font-sans text-sm text-ember-ink underline">
                       {t("moderation.openProfile")}
                     </Text>
-                  </Pressable>
+                  </Tap>
                 </Link>
               ) : null}
 
               {status === "open" ? (
                 <View className="flex-row flex-wrap gap-4 pt-1">
                   {hide && !report.already_hidden ? (
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       onPress={() => void run(hide, t("moderation.hideDone"))}
                     >
                       <Text className="font-sans text-sm text-mist-ink underline">
                         {t("moderation.hide")}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   ) : null}
 
                   {report.author_id ? (
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       onPress={() =>
                         void run(
@@ -231,10 +238,10 @@ function ReportsQueue() {
                       <Text className="font-sans text-sm text-mist-ink underline">
                         {t("moderation.block")}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   ) : null}
 
-                  <Pressable
+                  <Tap
                     accessibilityRole="button"
                     onPress={() =>
                       void run(
@@ -250,9 +257,9 @@ function ReportsQueue() {
                     <Text className="font-sans-medium text-sm text-plum underline">
                       {t("moderation.markReviewed")}
                     </Text>
-                  </Pressable>
+                  </Tap>
 
-                  <Pressable
+                  <Tap
                     accessibilityRole="button"
                     onPress={() =>
                       void run(
@@ -268,7 +275,7 @@ function ReportsQueue() {
                     <Text className="font-sans text-sm text-mist-ink underline">
                       {t("moderation.dismiss")}
                     </Text>
-                  </Pressable>
+                  </Tap>
                 </View>
               ) : null}
             </View>
@@ -332,7 +339,7 @@ function HeldQueue() {
   const renderRow = (hold: HeldContent) => (
     <View
       key={hold.id}
-      className="gap-3 rounded-2xl border border-white/60 p-5"
+      className="gap-3 rounded-card border border-glassedge/60 p-5"
     >
       <View className="flex-row items-center justify-between gap-3">
         <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
@@ -359,15 +366,15 @@ function HeldQueue() {
         href={{ pathname: "/persona/[id]", params: { id: hold.author_id } }}
         asChild
       >
-        <Pressable accessibilityRole="link">
+        <Tap accessibilityRole="link">
           <Text className="font-sans text-sm text-ember-ink underline">
             {t("moderation.openProfile")}
           </Text>
-        </Pressable>
+        </Tap>
       </Link>
 
       {hold.status === "pending" ? (
-        <Pressable
+        <Tap
           accessibilityRole="button"
           onPress={() =>
             void run(() => claim.mutateAsync(hold.id), t("moderation.claim"))
@@ -376,7 +383,7 @@ function HeldQueue() {
           <Text className="font-sans-medium text-sm text-plum underline">
             {t("moderation.claim")}
           </Text>
-        </Pressable>
+        </Tap>
       ) : null}
 
       {hold.status === "pending" || hold.status === "claimed" ? (
@@ -390,7 +397,7 @@ function HeldQueue() {
           />
 
           <View className="flex-row flex-wrap gap-4">
-            <Pressable
+            <Tap
               accessibilityRole="button"
               onPress={() => {
                 const reason = requireReason(hold.id);
@@ -405,9 +412,9 @@ function HeldQueue() {
               <Text className="font-sans text-sm text-mist-ink underline">
                 {t("moderation.release")}
               </Text>
-            </Pressable>
+            </Tap>
 
-            <Pressable
+            <Tap
               accessibilityRole="button"
               onPress={() => {
                 const reason = requireReason(hold.id);
@@ -422,7 +429,7 @@ function HeldQueue() {
               <Text className="font-sans text-sm text-danger underline">
                 {t("moderation.remove")}
               </Text>
-            </Pressable>
+            </Tap>
           </View>
         </View>
       ) : null}
@@ -541,7 +548,7 @@ function CrisisQueue() {
         open.map((escalation) => (
           <View
             key={escalation.id}
-            className="gap-3 rounded-2xl border border-danger p-5"
+            className="gap-3 rounded-card border border-danger p-5"
           >
             <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
               {new Date(escalation.created_at).toLocaleString()}
@@ -562,11 +569,11 @@ function CrisisQueue() {
               }}
               asChild
             >
-              <Pressable accessibilityRole="link">
+              <Tap accessibilityRole="link">
                 <Text className="font-sans text-sm text-ember-ink underline">
                   {t("moderation.openProfile")}
                 </Text>
-              </Pressable>
+              </Tap>
             </Link>
 
             <TextField
@@ -577,7 +584,7 @@ function CrisisQueue() {
               multiline
             />
 
-            <Pressable
+            <Tap
               accessibilityRole="button"
               onPress={() => {
                 const note = noteFor(escalation.id).trim();
@@ -600,7 +607,7 @@ function CrisisQueue() {
               <Text className="font-sans-medium text-sm text-plum underline">
                 {t("moderation.acknowledge")}
               </Text>
-            </Pressable>
+            </Tap>
           </View>
         ))
       )}

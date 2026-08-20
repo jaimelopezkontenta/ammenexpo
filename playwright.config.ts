@@ -39,6 +39,20 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      // Las capturas de referencia (@visual) no corren en el suite normal:
+      // son deliberadas — `npm run e2e:visual` — porque cada fase de UI las
+      // regenera a propósito y un run funcional no debe caerse por un pixel.
+      grepInvert: /@visual/,
+    },
+    {
+      name: "visual",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Con las animaciones quietas: una captura a mitad de un fade no es
+        // reproducible, y lo que se protege aquí es el layout y el color.
+        contextOptions: { reducedMotion: "reduce" },
+      },
+      grep: /@visual/,
     },
   ],
   webServer: {
@@ -46,5 +60,13 @@ export default defineConfig({
     url: "http://127.0.0.1:8081",
     reuseExistingServer: true,
     timeout: 120_000,
+    // `.env.local` puede apuntar Supabase a `10.0.2.2` (el alias del emulador
+    // Android), que desde un navegador de escritorio no existe: si Playwright
+    // levantaba el server con ese valor, TODOS los tests morían en el login
+    // sin decir por qué. Las variables de proceso ganan a los .env de Expo,
+    // así que aquí se fija la URL que los e2e siempre usan: el Kong local.
+    env: {
+      EXPO_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54421",
+    },
   },
 });

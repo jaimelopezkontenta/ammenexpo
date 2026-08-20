@@ -1,10 +1,11 @@
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -22,9 +23,13 @@ import { Avatar } from "@/components/Avatar";
 import { CirclePlanCard } from "@/components/CirclePlanCard";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
+import { useToast } from "@/core/toast/ToastProvider";
+
+import { Tap } from "@/components/ui/Tap";
 
 export default function CircleDetail() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
   const userId = session?.user.id;
@@ -40,35 +45,16 @@ export default function CircleDetail() {
   const removeMember = useRemoveMember(id);
   const block = useBlockUser(userId);
 
-  const [notice, setNoticeState] = useState<string | null>(null);
+  // Los resultados de acción —"listo", "no se pudo"— van por el toast del
+  // sistema: caducan solos y no empujan el layout. El `noticeTimer` de 6 s
+  // que vivía aquí (copiado literal en el chat) se fue con ellos.
+  const toast = useToast();
 
-  // A notice with no expiry outlives the action it describes: "Listo. No
-  // volverás a ver a esta persona" was still sitting there several unrelated
-  // taps later, reading as a response to whatever had just been pressed.
-  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const setNotice = useCallback((message: string | null) => {
-    if (noticeTimer.current) clearTimeout(noticeTimer.current);
-    setNoticeState(message);
-
-    if (message) {
-      noticeTimer.current = setTimeout(() => setNoticeState(null), 6000);
-    }
-  }, []);
-
-  useEffect(
-    () => () => {
-      if (noticeTimer.current) clearTimeout(noticeTimer.current);
-    },
-    [],
-  );
-
-  const [error, setError] = useState<string | null>(null);
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState skeleton="circle" />;
   }
 
   // These two used to be one branch with no header and no controls, so a flaky
@@ -101,40 +87,33 @@ export default function CircleDetail() {
 
   const handleRemove = async (memberId: string) => {
     if (pendingRemoval !== memberId) {
-      setNotice(null);
-      setError(null);
       setPendingRemoval(memberId);
       return;
     }
 
-    setError(null);
     setPendingRemoval(null);
 
     try {
       await removeMember.mutateAsync(memberId);
     } catch {
-      setError(t("circles.removeFailed"));
+      toast.error(t("circles.removeFailed"));
     }
   };
 
   const handleBlock = async (memberId: string) => {
-    setError(null);
-
     try {
       await block.mutateAsync(memberId);
-      setNotice(t("moderation.blockDone"));
+      toast.success(t("moderation.blockDone"));
     } catch {
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
   const handleMarkCircleDay = async (planDayId: string) => {
-    setError(null);
-
     try {
       await markCircleDay.mutateAsync(planDayId);
     } catch {
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
@@ -148,13 +127,11 @@ export default function CircleDetail() {
 
     // "failed" used to fall into the same branch as a successful native share
     // and show nothing at all, so a blocked clipboard looked like a dead button.
-    setNotice(
-      outcome === "copied"
-        ? t("circles.linkCopied")
-        : outcome === "failed"
-          ? t("share.shareFailed")
-          : null,
-    );
+    if (outcome === "copied") {
+      toast.success(t("circles.linkCopied"));
+    } else if (outcome === "failed") {
+      toast.error(t("share.shareFailed"));
+    }
   };
 
   const handleLeave = async () => {
@@ -162,13 +139,9 @@ export default function CircleDetail() {
     // used to happen on a single tap of a ghost button. `circles.leaveConfirm`
     // has been translated in both languages all along, waiting.
     if (!confirmingLeave) {
-      setNotice(null);
-      setError(null);
       setConfirmingLeave(true);
       return;
     }
-
-    setError(null);
 
     try {
       await leave.mutateAsync(circle.id);
@@ -178,7 +151,7 @@ export default function CircleDetail() {
       // nothing was said, and the person stayed in the circle believing they
       // had left.
       setConfirmingLeave(false);
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
@@ -186,7 +159,10 @@ export default function CircleDetail() {
     <>
       <Stack.Screen options={{ title: circle.name, headerShown: true }} />
       <DawnBackground>
-        <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           {/* The name is already in the navigation header; repeating it here as a
             heading just pushed the useful content down. */}
           <View className="gap-1">
@@ -244,7 +220,7 @@ export default function CircleDetail() {
                     }}
                     asChild
                   >
-                    <Pressable
+                    <Tap
                       accessibilityRole="link"
                       className="flex-1 flex-row items-center gap-3"
                     >
@@ -257,7 +233,7 @@ export default function CircleDetail() {
                       <Text className="flex-1 font-sans text-base text-plum">
                         {member.display_name}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   </Link>
                   {member.role !== "member" ? (
                     <Text className="font-sans text-sm text-mist-ink">
@@ -273,17 +249,17 @@ export default function CircleDetail() {
                   buried behind a message somebody has to receive first. */}
                 {member.user_id !== userId ? (
                   <View className="flex-row gap-4">
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       onPress={() => void handleBlock(member.user_id)}
                     >
                       <Text className="font-sans text-sm text-mist-ink">
                         {t("moderation.block")}
                       </Text>
-                    </Pressable>
+                    </Tap>
 
                     {isAdmin && member.role !== "owner" ? (
-                      <Pressable
+                      <Tap
                         accessibilityRole="button"
                         onPress={() => void handleRemove(member.user_id)}
                       >
@@ -292,7 +268,7 @@ export default function CircleDetail() {
                             ? t("circles.removeConfirmCta")
                             : t("circles.remove")}
                         </Text>
-                      </Pressable>
+                      </Tap>
                     ) : null}
                   </View>
                 ) : null}
@@ -315,11 +291,11 @@ export default function CircleDetail() {
             ) : null}
 
             {(sharedPlans ?? []).map((shared) => (
-              <Pressable
+              <Tap
                 key={shared.plan_id}
                 accessibilityRole="link"
                 accessibilityLabel={`${shared.plan_title}. ${shared.owner_name}`}
-                className="gap-0.5 rounded-2xl border border-white/60 p-4"
+                className="gap-0.5 rounded-card border border-glassedge/60 p-4"
                 onPress={() =>
                   shared.is_mine
                     ? router.push("/")
@@ -335,7 +311,7 @@ export default function CircleDetail() {
                 <Text className="font-sans text-sm text-mist-ink">
                   {shared.is_mine ? t("circles.sharedMine") : shared.owner_name}
                 </Text>
-              </Pressable>
+              </Tap>
             ))}
           </View>
 
@@ -354,7 +330,7 @@ export default function CircleDetail() {
           </Link>
 
           {inviteUrl ? (
-            <View className="gap-2 rounded-2xl bg-white/60 p-5">
+            <View className="gap-2 rounded-card bg-glass/60 p-5">
               <Text className="font-sans-medium text-sm text-mist-ink">
                 {t("circles.inviteLink")}
               </Text>
@@ -362,24 +338,6 @@ export default function CircleDetail() {
                 {inviteUrl}
               </Text>
             </View>
-          ) : null}
-
-          {notice ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
-              accessibilityRole="alert"
-            >
-              {notice}
-            </Text>
-          ) : null}
-
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
           ) : null}
 
           {confirmingLeave ? (

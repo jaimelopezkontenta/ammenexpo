@@ -1,6 +1,7 @@
 import { Link, router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 
 import { TabHeader } from "@/components/TabHeader";
 import { Button } from "@/components/Button";
@@ -13,7 +14,14 @@ import { useSession } from "@/core/auth/SessionProvider";
 import { derivePrayerProgress } from "@/core/intercessions/progress";
 import { usePlansSharedWithMe } from "@/core/intercessions/queries";
 import { useMyPlans } from "@/core/plans/queries";
+import { enterStagger } from "@/theme/motion";
 
+/**
+ * Orar es un hub de tres bloques siempre visibles, no una bandeja que se
+ * vacía cuando nadie te ha compartido nada: Mis planes (crear/compartir),
+ * Mi lista (a un tap) y Por otros (la intercesión, con su empty local).
+ * El plan propio se reza en Hoy; aquí solo se crea y se comparte.
+ */
 export default function Pray() {
   const { t } = useTranslation();
   const { session } = useSession();
@@ -29,7 +37,7 @@ export default function Pray() {
   const prayerProgress = derivePrayerProgress(plans ?? []);
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState skeleton="list" />;
   }
 
   // Before this, a failed read fell straight through to the empty state and told
@@ -39,58 +47,8 @@ export default function Pray() {
     return <ErrorState onRetry={() => void refetch()} />;
   }
 
-  if (!plans || plans.length === 0) {
-    return (
-      <DawnBackground>
-        <TabHeader title={t("tabs.pray")} />
-        <ResponsiveTabContent className="flex-1 justify-center pb-10">
-          <View className="w-full items-center gap-3 self-center md:max-w-2xl">
-            <Text className="text-center font-sans-bold text-2xl text-plum">
-              {t("pray.empty")}
-            </Text>
-            <Text className="text-center font-sans text-base leading-6 text-mist-ink">
-              {t("pray.emptyBody")}
-            </Text>
-            {/* Nobody has shared with you yet, so the useful move is to share
-            yours — which is what the button says. It used to read "Crear un
-            círculo" and land on the circles *list*, two steps away from the
-            thing this screen is actually asking for. */}
-            <View className="mt-6 w-full gap-3">
-              {/* Tu lista no depende de que nadie comparta nada contigo: es lo que
-              se puede hacer aquí el primer día, cuando esta pantalla no tiene
-              todavía a nadie por quien orar. */}
-              <Link href="/lista" asChild>
-                <Button title={t("list.title")} />
-              </Link>
-
-              {/* A la comunidad, no al muro suelto. Eran dos puertas al mismo
-              contenido con nombres distintos, y la comunidad además trae los
-              testimonios y los planes públicos. */}
-              <Link href="/comunidad" asChild>
-                <Button title={t("community.title")} variant="secondary" />
-              </Link>
-              <Button
-                title={
-                  (myPlans ?? []).length > 0
-                    ? t("pray.emptyCta")
-                    : t("plan.createCta")
-                }
-                variant="secondary"
-                onPress={() =>
-                  (myPlans ?? []).length > 0
-                    ? router.push({
-                        pathname: "/plan/[id]/compartir",
-                        params: { id: myPlans![0].id },
-                      })
-                    : router.push("/plan/nuevo")
-                }
-              />
-            </View>
-          </View>
-        </ResponsiveTabContent>
-      </DawnBackground>
-    );
-  }
+  const myFirstPlan = (myPlans ?? [])[0];
+  const hasSharedPlans = (plans ?? []).length > 0;
 
   return (
     <DawnBackground>
@@ -99,118 +57,192 @@ export default function Pray() {
         contentContainerClassName="py-8"
         keyboardShouldPersistTaps="handled"
       >
-        <ResponsiveTabContent className="gap-6">
-          <View className="gap-1">
-            <Text className="font-sans-bold text-2xl text-plum">
-              {t("pray.title")}
+        <ResponsiveTabContent className="gap-6 md:max-w-2xl">
+          {/* El microcopy fija el reparto: tu plan se reza en Hoy; esta tab
+          es para crearlo, compartirlo y orar por otros. */}
+          <Animated.View entering={enterStagger(0)}>
+            <Text className="font-sans text-base leading-6 text-mist-ink">
+              {t("pray.intro")}
             </Text>
-            <Text className="font-sans text-base text-mist-ink">
-              {t("pray.subtitle")}
-            </Text>
-          </View>
+          </Animated.View>
 
-          <Card className="gap-3">
-            <View className="flex-row items-center justify-between gap-3">
-              <Text className="font-sans-semibold text-base text-plum">
-                {t("pray.progressTitle")}
-              </Text>
-              <Text className="font-sans-semibold text-base text-plum">
-                {t("pray.progress", {
-                  completed: prayerProgress.completedCount,
-                  total: prayerProgress.total,
-                })}
-              </Text>
-            </View>
-            <View
-              className="h-2 overflow-hidden rounded-full bg-white/70"
-              accessibilityRole="progressbar"
-              accessibilityLabel={t("pray.progressAccessibility", {
-                completed: prayerProgress.completedCount,
-                total: prayerProgress.total,
-              })}
-              accessibilityValue={{
-                min: 0,
-                max: prayerProgress.total,
-                now: prayerProgress.completedCount,
-              }}
-            >
-              <View
-                className="h-full rounded-full bg-ember-accent"
-                style={{
-                  width: `${
-                    (prayerProgress.completedCount / prayerProgress.total) * 100
-                  }%`,
-                }}
-              />
-            </View>
-          </Card>
-
-          <View className="gap-6 md:flex-row md:items-start">
-            <View className="gap-5 md:min-w-0 md:flex-1">
-              {/* The finish line. The server already sorts prayed-for last, but
-                the UI derives this state itself instead of trusting that order. */}
-              {prayerProgress.allPrayed ? (
-                <Card className="gap-1">
+          {/* Mis planes: el CTA primario (Nuevo plan) no depende de que
+          exista ya un plan ni de que nadie haya compartido contigo — es la
+          puerta que antes solo aparecía dentro del empty-wall. */}
+          <Animated.View entering={enterStagger(1)}>
+            <Card label={t("pray.sectionMyPlans")} className="gap-3">
+              {myFirstPlan ? (
+                <>
                   <Text className="font-sans-semibold text-base text-plum">
-                    {t("intercession.allPrayed")}
+                    {myFirstPlan.title}
                   </Text>
-                  <Text className="font-sans text-base leading-6 text-mist-ink">
-                    {t("intercession.allPrayedBody")}
-                  </Text>
-                </Card>
+                  <Button
+                    title={t("pray.emptyCta")}
+                    variant="secondary"
+                    onPress={() =>
+                      router.push({
+                        pathname: "/plan/[id]/compartir",
+                        params: { id: myFirstPlan.id },
+                      })
+                    }
+                  />
+                </>
               ) : null}
+              <Button
+                title={t("pray.newPlan")}
+                onPress={() => router.push("/plan/nuevo")}
+              />
+            </Card>
+          </Animated.View>
 
-              {prayerProgress.pending.length > 0 ? (
-                <View className="gap-3">
-                  <Text className="font-editorial text-lg text-ember-ink">
-                    {t("pray.pending")}
-                  </Text>
-                  {prayerProgress.pending.map((plan) => (
-                    <PrayForCard
-                      key={plan.plan_id}
-                      plan={plan}
-                      onOpen={() =>
-                        router.push({
-                          pathname: "/orar/[planId]",
-                          params: { planId: plan.plan_id },
-                        })
-                      }
-                    />
-                  ))}
-                </View>
-              ) : null}
-
-              {prayerProgress.completed.length > 0 ? (
-                <View className="gap-3">
-                  <Text className="font-editorial text-lg text-ember-ink">
-                    {t("pray.completed")}
-                  </Text>
-                  {prayerProgress.completed.map((plan) => (
-                    <PrayForCard
-                      key={plan.plan_id}
-                      plan={plan}
-                      onOpen={() =>
-                        router.push({
-                          pathname: "/orar/[planId]",
-                          params: { planId: plan.plan_id },
-                        })
-                      }
-                    />
-                  ))}
-                </View>
-              ) : null}
-            </View>
-
-            <View className="gap-3 md:w-72">
+          {/* Mi lista: un tap desde Orar, siempre. No depende de que nadie
+          comparta nada contigo. */}
+          <Animated.View entering={enterStagger(2)}>
+            <Card label={t("pray.sectionMyList")} className="gap-3">
+              {/* Secundario: el degradado del CTA es de "Nuevo plan". Tres
+                botones melocotón apilados eran tres gritos del mismo volumen. */}
               <Link href="/lista" asChild>
-                <Button title={t("list.title")} variant="secondary" />
+                <Button title={t("pray.openList")} variant="secondary" />
               </Link>
+            </Card>
+          </Animated.View>
 
-              <Link href="/comunidad" asChild>
-                <Button title={t("community.title")} variant="secondary" />
-              </Link>
-            </View>
-          </View>
+          {/* Por otros: la intercesión. Sin planes ajenos el empty es local
+          a este bloque — nunca una pared que esconda los dos bloques de
+          arriba. */}
+          <Animated.View entering={enterStagger(3)} className="gap-4">
+            <Text className="font-editorial text-lg text-ember-ink">
+              {t("pray.sectionForOthers")}
+            </Text>
+
+            {hasSharedPlans ? (
+              <>
+                <Card className="gap-3">
+                  <View className="flex-row items-center justify-between gap-3">
+                    <Text className="font-sans-semibold text-base text-plum">
+                      {t("pray.progressTitle")}
+                    </Text>
+                    <Text className="font-sans-semibold text-base text-plum">
+                      {t("pray.progress", {
+                        completed: prayerProgress.completedCount,
+                        total: prayerProgress.total,
+                      })}
+                    </Text>
+                  </View>
+                  <View
+                    className="h-2 overflow-hidden rounded-full bg-glass/70"
+                    accessibilityRole="progressbar"
+                    accessibilityLabel={t("pray.progressAccessibility", {
+                      completed: prayerProgress.completedCount,
+                      total: prayerProgress.total,
+                    })}
+                    accessibilityValue={{
+                      min: 0,
+                      max: prayerProgress.total,
+                      now: prayerProgress.completedCount,
+                    }}
+                  >
+                    <View
+                      className="h-full rounded-full bg-ember-accent"
+                      style={{
+                        // El guard evita el NaN% si `total` llegara a 0 (hoy
+                        // este bloque solo pinta con planes, pero un divisor
+                        // sin guard es una trampa esperando su refactor).
+                        width: `${
+                          prayerProgress.total > 0
+                            ? (prayerProgress.completedCount /
+                                prayerProgress.total) *
+                              100
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </View>
+                </Card>
+
+                {/* The finish line. The server already sorts prayed-for last,
+                  but the UI derives this state itself instead of trusting
+                  that order. */}
+                {prayerProgress.allPrayed ? (
+                  <Card className="gap-1">
+                    <Text className="font-sans-semibold text-base text-plum">
+                      {t("intercession.allPrayed")}
+                    </Text>
+                    <Text className="font-sans text-base leading-6 text-mist-ink">
+                      {t("intercession.allPrayedBody")}
+                    </Text>
+                  </Card>
+                ) : null}
+
+                {prayerProgress.pending.length > 0 ? (
+                  <View className="gap-3">
+                    <Text className="font-editorial text-lg text-ember-ink">
+                      {t("pray.pending")}
+                    </Text>
+                    {prayerProgress.pending.map((plan) => (
+                      <PrayForCard
+                        key={plan.plan_id}
+                        plan={plan}
+                        onOpen={() =>
+                          router.push({
+                            pathname: "/orar/[planId]",
+                            params: { planId: plan.plan_id },
+                          })
+                        }
+                      />
+                    ))}
+                  </View>
+                ) : null}
+
+                {prayerProgress.completed.length > 0 ? (
+                  <View className="gap-3">
+                    <Text className="font-editorial text-lg text-ember-ink">
+                      {t("pray.completed")}
+                    </Text>
+                    {prayerProgress.completed.map((plan) => (
+                      <PrayForCard
+                        key={plan.plan_id}
+                        plan={plan}
+                        onOpen={() =>
+                          router.push({
+                            pathname: "/orar/[planId]",
+                            params: { planId: plan.plan_id },
+                          })
+                        }
+                      />
+                    ))}
+                  </View>
+                ) : null}
+              </>
+            ) : (
+              <Card className="gap-3">
+                <Text className="font-sans text-base leading-6 text-mist-ink">
+                  {t("pray.forOthersEmpty")}
+                </Text>
+                <Text className="font-sans text-base leading-6 text-mist-ink">
+                  {t("pray.forOthersEmptyHint")}
+                </Text>
+                {/* El copy ya remata en Avisos («si alguien oró por ti, está
+                en Avisos»); el enlace lo hace accionable. Un enlace de texto,
+                no otro botón. */}
+                <Link
+                  href="/avisos"
+                  className="min-h-11 justify-center self-start py-2 font-sans-semibold text-base text-ember-ink underline"
+                >
+                  {t("notifications.title")}
+                </Link>
+              </Card>
+            )}
+          </Animated.View>
+
+          {/* Terciario: la comunidad queda a un tap pero no compite con los
+          tres bloques; un enlace de texto, no otro botón. */}
+          <Link
+            href="/comunidad"
+            className="min-h-11 justify-center self-center py-2 font-sans-semibold text-base text-ember-ink"
+          >
+            {t("community.title")}
+          </Link>
         </ResponsiveTabContent>
       </ScrollView>
     </DawnBackground>

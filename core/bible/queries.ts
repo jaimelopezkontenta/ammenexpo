@@ -7,6 +7,8 @@ import {
 
 import { supabase } from "@/utils/supabase";
 
+import { useSession } from "@/core/auth/SessionProvider";
+
 import type { BibleBook } from "./navigation";
 
 export type Verse = {
@@ -39,9 +41,14 @@ export const MIN_SEARCH_LENGTH = 3;
  * loaded by migration. The chapter grid needs no query of its own because it
  * reads chapter_count from here.
  */
-export const useBibleBooks = () =>
-  useQuery({
+export const useBibleBooks = () => {
+  const { session } = useSession();
+
+  return useQuery({
     queryKey: ["bibleBooks"],
+    // Estas lecturas no aportan nada en el login y el 401 asusta en consola:
+    // no se disparan sin sesión.
+    enabled: Boolean(session),
     staleTime: Infinity,
     gcTime: Infinity,
     queryFn: async (): Promise<BibleBook[]> => {
@@ -55,6 +62,7 @@ export const useBibleBooks = () =>
       return (data ?? []) as BibleBook[];
     },
   });
+};
 
 /** One chapter, in verse order. Immutable, so it is cached forever. */
 export const useChapter = (
@@ -202,9 +210,14 @@ export type DailyVerse = {
  * de él y lo que hace que no cambie si abres la app dos veces. Por eso
  * `staleTime: Infinity`: dentro de una sesión no puede cambiar.
  */
-export const useVerseOfTheDay = () =>
-  useQuery({
+export const useVerseOfTheDay = () => {
+  const { session } = useSession();
+
+  return useQuery({
     queryKey: ["verseOfTheDay"],
+    // Estas lecturas no aportan nada en el login y el 401 asusta en consola:
+    // no se disparan sin sesión.
+    enabled: Boolean(session),
     staleTime: Infinity,
     queryFn: async (): Promise<DailyVerse | null> => {
       const { data, error } = await supabase.rpc("verse_of_the_day");
@@ -214,3 +227,4 @@ export const useVerseOfTheDay = () =>
       return ((data ?? []) as DailyVerse[])[0] ?? null;
     },
   });
+};

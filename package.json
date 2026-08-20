@@ -35,7 +35,9 @@
     "db:test:push": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/push.sql",
     "db:test:generation": "supabase db reset && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/generation.sql",
     "test:generation:concurrency": "bash supabase/tests/generation-concurrency.sh",
-    "e2e": "playwright test",
+    "e2e": "playwright test --project=chromium",
+    "e2e:visual": "playwright test --project=visual",
+    "e2e:visual:update": "playwright test --project=visual --update-snapshots",
     "push:drain": "node scripts/pushDrain.mjs"
   },
   "dependencies": {
@@ -52,6 +54,7 @@
     "expo-constants": "~56.0.15",
     "expo-device": "~56.0.4",
     "expo-font": "~56.0.5",
+    "expo-haptics": "~56.0.3",
     "expo-image": "~56.0.11",
     "expo-image-picker": "~56.0.22",
     "expo-linear-gradient": "~56.0.4",

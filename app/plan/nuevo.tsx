@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { TextField } from "@/components/TextField";
@@ -26,6 +27,7 @@ const DURATIONS = [7, 14, 21, 30];
 
 export default function NewPlan() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
   // Set when this form was opened from a circle: the plan belongs to the
@@ -128,7 +130,8 @@ export default function NewPlan() {
       />
       <DawnBackground>
         <ScrollView
-          contentContainerClassName="gap-8 px-7 py-8"
+          contentContainerClassName="gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           <View className="gap-3">
@@ -243,7 +246,7 @@ export default function NewPlan() {
 
           {atLimit ? (
             <View
-              className="gap-2 rounded-2xl bg-white/60 p-5"
+              className="gap-2 rounded-card bg-glass/60 p-5"
               accessibilityRole="alert"
             >
               <Text className="font-sans-semibold text-base text-plum">
@@ -252,8 +255,14 @@ export default function NewPlan() {
               <Text className="font-sans text-base leading-6 text-mist-ink">
                 {t("plan.limitBody")}
               </Text>
+              {/* Al techo la salida es la lista de espera, no una suscripción:
+                el botón dice «apuntarme a la lista» y no el nombre de Plus,
+                porque lo que se ofrece aquí es dejar nombre y correo. */}
               <Link href="/plus" asChild>
-                <Button title={t("paywall.title")} variant="secondary" />
+                <Button
+                  title={t("plan.limitWaitlistCta")}
+                  variant="secondary"
+                />
               </Link>
             </View>
           ) : null}

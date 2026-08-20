@@ -40,7 +40,15 @@
     "progress": "{{completed}} de {{total}} completadas",
     "progressAccessibility": "Progreso de las oraciones de hoy: {{completed}} de {{total}} completadas",
     "pending": "Pendientes",
-    "completed": "Completados"
+    "completed": "Completados",
+    "intro": "Tu plan se reza en Hoy. Aquí lo creas, lo compartes y oras por otros.",
+    "sectionMyPlans": "Mis planes",
+    "sectionMyList": "Mi lista",
+    "sectionForOthers": "Por otros",
+    "forOthersEmpty": "Aquí aparecen los planes que alguien te ha confiado para orar. Si alguien oró por ti, está en Avisos.",
+    "forOthersEmptyHint": "Puedes compartir el tuyo desde Mis planes.",
+    "newPlan": "Nuevo plan",
+    "openList": "Orar mi lista"
   },
   "profile": {
     "title": "Tu perfil",
@@ -48,6 +56,9 @@
     "name": "Cómo te llamamos",
     "reminder": "Tu momento de oración",
     "reminderHint": "Esta preferencia queda guardada, pero hoy no enviamos recordatorios. Los activaremos más adelante.",
+    "reminderHintNative": "Te avisaremos en este teléfono a las horas que elijas. Si no das permiso, la app sigue igual.",
+    "reminderHintWeb": "En el navegador no podemos avisarte. En el teléfono, sí: las horas se guardan para cuando abras la app nativa.",
+    "reminderDenied": "Sin permiso no podemos avisarte. Puedes darlo en los ajustes del teléfono.",
     "saved": "Guardado.",
     "delete": "Borrar mi cuenta",
     "deleteConfirm": "Sí, borrar todo",
@@ -80,7 +91,7 @@
     "preferences": "Preferencias",
     "communitySupport": "Comunidad y ayuda",
     "dangerZone": "Zona de peligro",
-    "plusComingSoon": "Ammen Plus · próximamente"
+    "plusComingSoon": "Ammen Plus · todavía no se puede pagar"
   },
   "auth": {
     "signInTitle": "Bienvenido de vuelta",
@@ -186,6 +197,10 @@
   },
   "plan": {
     "todayTitle": "Tu oración de hoy",
+    "stepReflect": "Reflexiona",
+    "stepApply": "Aplica",
+    "stepPray": "Ora",
+    "planOptions": "Este plan",
     "scripture": "Palabra",
     "prayer": "Oración",
     "markDone": "Ya oré hoy",
@@ -200,7 +215,8 @@
     "failedBody": "Crear otro usa otro de tus tres planes gratuitos.",
     "createAnother": "Crear otro plan",
     "limitTitle": "Has usado tus tres planes gratuitos",
-    "limitBody": "Con Ammen Plus puedes crear todos los planes que quieras.",
+    "limitBody": "Has usado tus tres planes gratuitos. Déjanos tu nombre y te avisamos cuando se puedan crear más. No es un pago.",
+    "limitWaitlistCta": "Apuntarme a la lista",
     "meaning": "Qué significa",
     "action": "Hoy haz esto",
     "rename": "Cambiar el nombre",
@@ -430,6 +446,13 @@
     "paid": "Con Ammen Plus",
     "paidPlans": "Todos los planes que quieras, no tres.",
     "notYet": "Todavía no se puede pagar. Estamos en ello, y te avisaremos.",
+    "waitlistTitle": "Lista de espera",
+    "waitlistBody": "No hay pago. Si quieres que te avisemos cuando se puedan crear más planes, déjanos cómo llamarte y un correo.",
+    "waitlistName": "Cómo te llamamos",
+    "waitlistEmail": "Correo",
+    "waitlistCta": "Apuntarme",
+    "waitlistDone": "Quedaste en la lista. Te escribiremos cuando se pueda.",
+    "waitlistAlready": "Ya estabas en la lista.",
     "back": "Volver"
   },
   "notifications": {
@@ -514,6 +537,8 @@
     "sendFailed": "No hemos podido enviar tu mensaje.",
     "messageActions": "Mensaje de {{name}}. Toca para reportar o bloquear.",
     "unread": "{{count}} mensaje sin leer",
+    "today": "Hoy",
+    "yesterday": "Ayer",
     "unread_plural": "{{count}} mensajes sin leer"
   },
   "moderation": {

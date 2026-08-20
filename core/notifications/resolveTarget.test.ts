@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  destinationForTap,
+  isLocalReminderIdentifier,
   navigationTargetFor,
   outboxIdFromPayload,
   responseIdentifier,
@@ -89,6 +91,49 @@ describe("navigationTargetFor", () => {
 
   it("navigates nowhere when there was no server answer at all", () => {
     expect(navigationTargetFor(null)).toBeNull();
+  });
+});
+
+describe("isLocalReminderIdentifier", () => {
+  it("is true only for the daily reminder prefix", () => {
+    expect(isLocalReminderIdentifier("ammen-reminder-8")).toBe(true);
+    expect(isLocalReminderIdentifier("ammen-reminder-21")).toBe(true);
+  });
+
+  it("is false for push identifiers and anything else", () => {
+    expect(isLocalReminderIdentifier("notif-123")).toBe(false);
+    expect(isLocalReminderIdentifier("ammen-reminder")).toBe(false);
+    expect(isLocalReminderIdentifier("")).toBe(false);
+  });
+});
+
+describe("destinationForTap", () => {
+  it("sends a local reminder to Hoy, never to /avisos", () => {
+    expect(destinationForTap("ammen-reminder-8", null)).toBe("/");
+    // Aunque el payload mintiera una intercesión autorizada, el identifier
+    // local manda: un recordatorio diario no puede abrir Avisos.
+    expect(
+      destinationForTap("ammen-reminder-8", {
+        authorized: true,
+        intercessor_name: "Beto",
+      }),
+    ).toBe("/");
+  });
+
+  it("sends an authorized intercession to /avisos", () => {
+    expect(
+      destinationForTap("notif-123", {
+        authorized: true,
+        intercessor_name: "Beto",
+      }),
+    ).toBe("/avisos");
+  });
+
+  it("navigates nowhere when an intercession is not authorized", () => {
+    expect(destinationForTap("notif-123", null)).toBeNull();
+    expect(
+      destinationForTap(null, { authorized: false, intercessor_name: null }),
+    ).toBeNull();
   });
 });
 

@@ -35,6 +35,18 @@ export type ResolvedNotification = {
   intercessor_name: string | null;
 } | null;
 
+export type NotificationNavigationTarget = "/" | "/avisos";
+
+/**
+ * Vive aquí y no en `localReminders` para que el coordinador del tap —que
+ * no puede importar de ahí: ese archivo arrastra `expo-notifications`—
+ * sepa reconocer un recordatorio diario sin un ciclo de imports.
+ */
+export const LOCAL_REMINDER_IDENTIFIER_PREFIX = "ammen-reminder-";
+
+export const isLocalReminderIdentifier = (identifier: string): boolean =>
+  identifier.startsWith(LOCAL_REMINDER_IDENTIFIER_PREFIX);
+
 /**
  * La decisión de a dónde navegar, separada de la llamada a la red. `null`
  * significa "no navegar a ninguna parte" — ni una pantalla de error: un
@@ -46,6 +58,22 @@ export const navigationTargetFor = (
 ): "/avisos" | null => {
   if (!resolved || !resolved.authorized) return null;
   return "/avisos";
+};
+
+/**
+ * Destino del tap: un recordatorio local abre Hoy (no hay nada que
+ * autorizar en el servidor); una intercesión autorizada abre Avisos.
+ * El identifier local manda aunque el payload mintiera una intercesión —
+ * si no, un recordatorio diario podría acabar en `/avisos`.
+ */
+export const destinationForTap = (
+  identifier: string | null,
+  resolved: ResolvedNotification,
+): NotificationNavigationTarget | null => {
+  if (identifier !== null && isLocalReminderIdentifier(identifier)) {
+    return "/";
+  }
+  return navigationTargetFor(resolved);
 };
 
 type MinimalNotificationResponse = {

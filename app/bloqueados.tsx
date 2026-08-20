@@ -1,12 +1,15 @@
 import { Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useMyBlocks, useUnblockUser } from "@/core/moderation/blocks";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * Without this screen, blocking is one-way.
@@ -17,6 +20,7 @@ import { useMyBlocks, useUnblockUser } from "@/core/moderation/blocks";
  */
 export default function BlockedPeople() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -47,7 +51,10 @@ export default function BlockedPeople() {
 
       {!isLoading && !isError ? (
         <DawnBackground>
-          <ScrollView contentContainerClassName="gap-4 px-7 py-8">
+          <ScrollView
+            contentContainerClassName="gap-4 px-7 py-8 md:w-full md:max-w-read md:self-center"
+            contentContainerStyle={{ paddingBottom: scrollBottom }}
+          >
             <Text className="font-sans text-base leading-6 text-mist-ink">
               {t("moderation.blockedHint")}
             </Text>
@@ -75,7 +82,7 @@ export default function BlockedPeople() {
                 <Text className="font-sans text-base text-plum">
                   {entry.display_name}
                 </Text>
-                <Pressable
+                <Tap
                   accessibilityRole="button"
                   accessibilityLabel={`${t("moderation.unblock")} ${entry.display_name}`}
                   onPress={() => void handleUnblock(entry.blocked_id)}
@@ -83,7 +90,7 @@ export default function BlockedPeople() {
                   <Text className="font-sans text-sm text-mist-ink">
                     {t("moderation.unblock")}
                   </Text>
-                </Pressable>
+                </Tap>
               </View>
             ))}
           </ScrollView>

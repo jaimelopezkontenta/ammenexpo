@@ -1,0 +1,3354 @@
+{
+  "version": "2.14",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Ammen — Plan de mejora UX",
+      "clip": true,
+      "width": 1440,
+      "height": 1120,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#C7D6F2",
+            "position": 0
+          },
+          {
+            "color": "#FFF1DD",
+            "position": 0.5
+          },
+          {
+            "color": "#C7D6F2",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "vertical",
+      "gap": 32,
+      "padding": 64,
+      "children": [
+        {
+          "type": "frame",
+          "id": "uyvdX",
+          "name": "Cabecera del plan",
+          "width": "fill_container",
+          "height": 240,
+          "gap": 48,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "oKF5b",
+              "name": "Introducción",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "JNCak",
+                  "name": "Etiqueta",
+                  "fill": "$ember-ink",
+                  "content": "AUDITORÍA UX · AGOSTO 2026",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 13,
+                  "fontWeight": "600",
+                  "letterSpacing": 1.8
+                },
+                {
+                  "type": "text",
+                  "id": "tHhyS",
+                  "name": "Título",
+                  "fill": "$plum",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Ammen debe sentirse como una guía, no como una lista.",
+                  "lineHeight": 1.02,
+                  "fontFamily": "$font-editorial",
+                  "fontSize": 52,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "M7iMd",
+                  "name": "Subtítulo",
+                  "fill": "$mist-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Preservar la identidad Amanecer y reorganizar la experiencia alrededor de tres momentos: mi oración, orar por otros y cuidar mi cuenta.",
+                  "lineHeight": 1.45,
+                  "fontFamily": "$font-ui",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Q4FuLd",
+              "name": "Principio rector",
+              "width": 400,
+              "fill": "#FFFFFFA8",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFFD9",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#4136531A",
+                "offset": {
+                  "x": 0,
+                  "y": 10
+                },
+                "blur": 28
+              },
+              "layout": "vertical",
+              "gap": 14,
+              "padding": 28,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "JZZDw",
+                  "name": "Principio etiqueta",
+                  "fill": "$ember-ink",
+                  "content": "PRINCIPIO RECTOR",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 12,
+                  "fontWeight": "700",
+                  "letterSpacing": 1.5
+                },
+                {
+                  "type": "text",
+                  "id": "GC7YB",
+                  "name": "Principio",
+                  "fill": "$plum",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Menos decisiones por pantalla. Una acción primaria visible. Lo social después del momento íntimo.",
+                  "lineHeight": 1.15,
+                  "fontFamily": "$font-editorial",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "J3lqv",
+          "name": "Fortalezas actuales",
+          "width": "fill_container",
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "o8aPO",
+              "name": "Fortaleza Contraste medido",
+              "width": "fill_container",
+              "fill": "#FFFFFF8F",
+              "cornerRadius": 18,
+              "stroke": "#FFFFFFC7",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                18,
+                22
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "t90Zey",
+                  "name": "Valor",
+                  "fill": "$plum",
+                  "content": "AA",
+                  "fontFamily": "$font-editorial",
+                  "fontSize": 32,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "BIkXq",
+                  "name": "Descripción",
+                  "fill": "$mist-ink",
+                  "content": "Contraste medido",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "kY6xl",
+              "name": "Fortaleza Tabs estables",
+              "width": "fill_container",
+              "fill": "#FFFFFF8F",
+              "cornerRadius": 18,
+              "stroke": "#FFFFFFC7",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                18,
+                22
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wQ3mT",
+                  "name": "Valor",
+                  "fill": "$plum",
+                  "content": "5",
+                  "fontFamily": "$font-editorial",
+                  "fontSize": 32,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "hqXmH",
+                  "name": "Descripción",
+                  "fill": "$mist-ink",
+                  "content": "Tabs estables",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "u8vsp",
+              "name": "Fortaleza Sistema Amanecer",
+              "width": "fill_container",
+              "fill": "#FFFFFF8F",
+              "cornerRadius": 18,
+              "stroke": "#FFFFFFC7",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                18,
+                22
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "A6FvL",
+                  "name": "Valor",
+                  "fill": "$plum",
+                  "content": "1",
+                  "fontFamily": "$font-editorial",
+                  "fontSize": 32,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "NugIm",
+                  "name": "Descripción",
+                  "fill": "$mist-ink",
+                  "content": "Sistema Amanecer",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "xkv8j",
+              "name": "Fortaleza Flujos a priorizar",
+              "width": "fill_container",
+              "fill": "#FFFFFF8F",
+              "cornerRadius": 18,
+              "stroke": "#FFFFFFC7",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                18,
+                22
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "m91Ba",
+                  "name": "Valor",
+                  "fill": "$plum",
+                  "content": "3",
+                  "fontFamily": "$font-editorial",
+                  "fontSize": 32,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "n3XAx",
+                  "name": "Descripción",
+                  "fill": "$mist-ink",
+                  "content": "Flujos a priorizar",
+                  "fontFamily": "$font-ui",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "k73w4",
+          "name": "Prioridades",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "OM1rS",
+              "name": "Título prioridades",
+              "fill": "$plum",
+              "content": "Prioridades de producto y experiencia",
+              "fontFamily": "$font-editorial",
+              "fontSize": 34,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "B9OW3",
+              "name": "Columnas de prioridad",
+              "width": "fill_container",
+              "gap": 18,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pZJo3",
+                  "name": "P0 · AHORA",
+                  "width": "fill_container",
+                  "fill": "#FFFFFFB8",
+                  "cornerRadius": 22,
+                  "stroke": "#FFFFFFC2",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 18,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "jZ9T6",
+                      "name": "Nivel",
+                      "fill": "$ember-ink",
+                      "content": "P0 · AHORA",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.5
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QnPZH",
+                      "name": "Hoy como journey",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xjwwJ",
+                          "name": "Número",
+                          "fill": "$ember-ink",
+                          "content": "01",
+                          "fontFamily": "$font-editorial",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                          "fontStyle": "italic"
+                        },
+                        {
+                          "type": "text",
+                          "id": "lNSBm",
+                          "name": "Nombre",
+                          "fill": "$plum",
+                          "content": "Hoy como journey",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 19,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "azNd8",
+                          "name": "Detalle",
+                          "fill": "$mist-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Versículo → reflexión → oración → confirmación. CTA principal siempre evidente.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "$font-ui",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LChyt",
+                      "name": "Honestidad funcional",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "DgnlV",
+                          "name": "Número",
+                          "fill": "$ember-ink",
+                          "content": "02",
+                          "fontFamily": "$font-editorial",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                          "fontStyle": "italic"
+                        },
+                        {
+                          "type": "text",
+                          "id": "B5ip5J",
+                          "name": "Nombre",
+                          "fill": "$plum",
+                          "content": "Honestidad funcional",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 19,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "RmTWR",
+                          "name": "Detalle",
+                          "fill": "$mist-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Recordatorios y Plus no deben prometer acciones que aún no existen.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "$font-ui",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aoMh7",
+                  "name": "P1 · SIGUIENTE",
+                  "width": "fill_container",
+                  "fill": "#FFF1DDBF",
+                  "cornerRadius": 22,
+                  "stroke": "#FFFFFFC2",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 18,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "U2Cklm",
+                      "name": "Nivel",
+                      "fill": "$ember-ink",
+                      "content": "P1 · SIGUIENTE",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.5
+                    },
+                    {
+                      "type": "frame",
+                      "id": "W3jN8",
+                      "name": "Orar con propósito",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "BXuHz",
+                          "name": "Número",
+                          "fill": "$ember-ink",
+                          "content": "03",
+                          "fontFamily": "$font-editorial",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                          "fontStyle": "italic"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xe6a4",
+                          "name": "Nombre",
+                          "fill": "$plum",
+                          "content": "Orar con propósito",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 19,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "cNahu",
+                          "name": "Detalle",
+                          "fill": "$mist-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Cambiar la lista pasiva por progreso claro: pendientes, orados y cierre.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "$font-ui",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "V7QyeT",
+                      "name": "Perfil modular",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "foU8y",
+                          "name": "Número",
+                          "fill": "$ember-ink",
+                          "content": "04",
+                          "fontFamily": "$font-editorial",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                          "fontStyle": "italic"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Wvah2",
+                          "name": "Nombre",
+                          "fill": "$plum",
+                          "content": "Perfil modular",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 19,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "a3vyam",
+                          "name": "Detalle",
+                          "fill": "$mist-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Agrupar cuenta, preferencias, comunidad y soporte; separar zona de peligro.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "$font-ui",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "puTBr",
+                  "name": "P2 · ESCALAR",
+                  "width": "fill_container",
+                  "fill": "#DDE6F6C7",
+                  "cornerRadius": 22,
+                  "stroke": "#FFFFFFC2",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 18,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "B3wMG",
+                      "name": "Nivel",
+                      "fill": "$ember-ink",
+                      "content": "P2 · ESCALAR",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.5
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VSoM0",
+                      "name": "Responsive real",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "KQKVQ",
+                          "name": "Número",
+                          "fill": "$ember-ink",
+                          "content": "05",
+                          "fontFamily": "$font-editorial",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                          "fontStyle": "italic"
+                        },
+                        {
+                          "type": "text",
+                          "id": "RY4Hn",
+                          "name": "Nombre",
+                          "fill": "$plum",
+                          "content": "Responsive real",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 19,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "G2QYio",
+                          "name": "Detalle",
+                          "fill": "$mist-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Móvil en una columna; tablet/web con lectura principal y contexto lateral.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "$font-ui",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HvIdm",
+                      "name": "Protección visual",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "aDVYR",
+                          "name": "Número",
+                          "fill": "$ember-ink",
+                          "content": "06",
+                          "fontFamily": "$font-editorial",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                          "fontStyle": "italic"
+                        },
+                        {
+                          "type": "text",
+                          "id": "f44LVv",
+                          "name": "Nombre",
+                          "fill": "$plum",
+                          "content": "Protección visual",
+                          "fontFamily": "$font-ui",
+                          "fontSize": 19,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "M53DLS",
+                          "name": "Detalle",
+                          "fill": "$mist-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Añadir pruebas de flujos y capturas para evitar regresiones del sistema.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "$font-ui",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "UMpcZ",
+          "name": "Roadmap",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 14,
+          "children": [
+            {
+              "type": "text",
+              "id": "u4od0H",
+              "name": "Título roadmap",
+              "fill": "$plum",
+              "content": "Plan de 6 semanas",
+              "fontFamily": "$font-editorial",
+              "fontSize": 34,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "hthhJ",
+              "name": "Fases",
+              "width": "fill_container",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NR2mf",
+                  "name": "Validar",
+                  "width": "fill_container",
+                  "fill": "$plum-chip",
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "gap": 5,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zYDCd",
+                      "name": "Tiempo",
+                      "fill": "$ember-pale",
+                      "content": "SEM 1",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "YDeLg",
+                      "name": "Fase",
+                      "fill": "#FFFFFF",
+                      "content": "Validar",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 17,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hhZPs",
+                      "name": "Descripción",
+                      "fill": "#FFFFFFCC",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "5 entrevistas + métricas base",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VjC9j",
+                  "name": "Prototipar",
+                  "width": "fill_container",
+                  "fill": "$plum-chip",
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "gap": 5,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SzeyI",
+                      "name": "Tiempo",
+                      "fill": "$ember-pale",
+                      "content": "SEM 2–3",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "EXtrD",
+                      "name": "Fase",
+                      "fill": "#FFFFFF",
+                      "content": "Prototipar",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 17,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "V56yB",
+                      "name": "Descripción",
+                      "fill": "#FFFFFFCC",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Hoy, Orar y Perfil",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xio0N",
+                  "name": "Implementar",
+                  "width": "fill_container",
+                  "fill": "$plum-chip",
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "gap": 5,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tQm31",
+                      "name": "Tiempo",
+                      "fill": "$ember-pale",
+                      "content": "SEM 4–5",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "zep38",
+                      "name": "Fase",
+                      "fill": "#FFFFFF",
+                      "content": "Implementar",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 17,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "QGwHh",
+                      "name": "Descripción",
+                      "fill": "#FFFFFFCC",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Jerarquía y responsive",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "x6ZZW",
+                  "name": "Medir",
+                  "width": "fill_container",
+                  "fill": "$plum-chip",
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "gap": 5,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GRkVv",
+                      "name": "Tiempo",
+                      "fill": "$ember-pale",
+                      "content": "SEM 6",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "z7E0P",
+                      "name": "Fase",
+                      "fill": "#FFFFFF",
+                      "content": "Medir",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 17,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KD6AV",
+                      "name": "Descripción",
+                      "fill": "#FFFFFFCC",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Activación, oración y retorno",
+                      "fontFamily": "$font-ui",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zeFxR",
+      "x": 1520,
+      "y": 0,
+      "name": "Component / Status Bar",
+      "reusable": true,
+      "width": 390,
+      "height": 44,
+      "padding": [
+        0,
+        20
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "WUvYi",
+          "name": "Status Time",
+          "fill": "#413653",
+          "content": "9:41",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "Q3rmX",
+          "name": "Status Icons",
+          "gap": 6,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "cvG73",
+              "name": "Signal",
+              "width": 16,
+              "height": 16,
+              "icon": "signal",
+              "library": "lucide",
+              "fill": "#413653"
+            },
+            {
+              "type": "icon",
+              "id": "V2h9Ml",
+              "name": "Wifi",
+              "width": 16,
+              "height": 16,
+              "icon": "wifi",
+              "library": "lucide",
+              "fill": "#413653"
+            },
+            {
+              "type": "icon",
+              "id": "asV56",
+              "name": "Battery",
+              "width": 20,
+              "height": 20,
+              "icon": "battery-full",
+              "library": "lucide",
+              "fill": "#413653"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ajitK",
+      "x": 1520,
+      "y": 76,
+      "name": "Component / Tab Bar",
+      "reusable": true,
+      "width": 358,
+      "height": 66,
+      "fill": "#FFFFFFC7",
+      "cornerRadius": 33,
+      "stroke": "#FFFFFFE0",
+      "strokeWidth": 1,
+      "effect": [
+        {
+          "type": "background_blur",
+          "radius": 22
+        },
+        {
+          "type": "shadow",
+          "shadowType": "outer",
+          "color": "#41365324",
+          "offset": {
+            "x": 0,
+            "y": 8
+          },
+          "blur": 24
+        }
+      ],
+      "gap": 4,
+      "padding": 6,
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "D3q0q",
+          "name": "Tab Inicio",
+          "width": 64,
+          "height": 54,
+          "fill": "#F9DBBF",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "Uap4b",
+              "name": "Icon Inicio",
+              "width": 20,
+              "height": 20,
+              "icon": "house",
+              "library": "lucide",
+              "fill": "#B24A22"
+            },
+            {
+              "type": "text",
+              "id": "ts2Nf",
+              "name": "Label Inicio",
+              "fill": "#B24A22",
+              "content": "Inicio",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "z2N08",
+          "name": "Tab Biblia",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "oQ2V3",
+              "name": "Icon Biblia",
+              "width": 20,
+              "height": 20,
+              "icon": "book-open",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "f0KfPc",
+              "name": "Label Biblia",
+              "fill": "#6F6879",
+              "content": "Biblia",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "KzmX3",
+          "name": "Tab Orar",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "B0myBN",
+              "name": "Icon Orar",
+              "width": 20,
+              "height": 20,
+              "icon": "sparkles",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "mhbup",
+              "name": "Label Orar",
+              "fill": "#6F6879",
+              "content": "Orar",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YU2nX",
+          "name": "Tab Círculos",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "IsMqf",
+              "name": "Icon Círculos",
+              "width": 20,
+              "height": 20,
+              "icon": "users",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "ymnX9",
+              "name": "Label Círculos",
+              "fill": "#6F6879",
+              "content": "Círculos",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "H34MPa",
+          "name": "Tab Perfil",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "x0o45s",
+              "name": "Icon Perfil",
+              "width": 20,
+              "height": 20,
+              "icon": "user",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "g9ixfl",
+              "name": "Label Perfil",
+              "fill": "#6F6879",
+              "content": "Perfil",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "e4qeXo",
+      "x": 1520,
+      "y": 222,
+      "name": "Propuesta / Hoy",
+      "clip": true,
+      "width": 390,
+      "height": 932,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#C7D6F2",
+            "position": 0
+          },
+          {
+            "color": "#FFF1DD",
+            "position": 0.5
+          },
+          {
+            "color": "#C7D6F2",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "nGJpX",
+          "type": "ref",
+          "ref": "zeFxR",
+          "name": "Status Bar",
+          "width": "fill_container",
+          "height": 44
+        },
+        {
+          "type": "frame",
+          "id": "M1Cax",
+          "name": "Contenido Hoy",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 15,
+          "padding": [
+            12,
+            20,
+            14,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Yzo3s",
+              "name": "Header Hoy",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aBOrt",
+                  "name": "Saludo",
+                  "fill": "#413653",
+                  "content": "Buenos días, Jaime",
+                  "fontFamily": "Cormorant Garamond",
+                  "fontSize": 23,
+                  "fontWeight": "600",
+                  "fontStyle": "italic"
+                },
+                {
+                  "type": "frame",
+                  "id": "HjOQn",
+                  "name": "Acciones header",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "FOXxw",
+                      "name": "Avisos",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 20,
+                      "stroke": "#FFFFFFD9",
+                      "strokeWidth": 1,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "mTa88",
+                          "name": "Campana",
+                          "width": 19,
+                          "height": 19,
+                          "icon": "bell",
+                          "library": "lucide",
+                          "fill": "#413653"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "V6Lhu",
+              "name": "Journey del día",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "C8P0CC",
+                  "name": "Meta del día",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WfZ43",
+                      "name": "Día",
+                      "fill": "#B24A22",
+                      "content": "DÍA 4 DE 14",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.4
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OX5si",
+                      "name": "Racha",
+                      "fill": "#FFFFFF9E",
+                      "cornerRadius": 999,
+                      "gap": 5,
+                      "padding": [
+                        6,
+                        10
+                      ],
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "IU8DW",
+                          "name": "Fuego",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "flame",
+                          "library": "lucide",
+                          "fill": "#B24A22"
+                        },
+                        {
+                          "type": "text",
+                          "id": "h3l6ak",
+                          "name": "Racha texto",
+                          "fill": "#413653",
+                          "content": "7 días",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "OCZlY",
+                  "name": "Tema del día",
+                  "fill": "#413653",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Confiar cuando no tengo todas las respuestas",
+                  "lineHeight": 1.02,
+                  "fontFamily": "Cormorant Garamond",
+                  "fontSize": 34,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "R0RaFB",
+                  "name": "Versículo principal",
+                  "width": "fill_container",
+                  "fill": "#FFFFFFA8",
+                  "cornerRadius": 22,
+                  "stroke": "#FFFFFFDE",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#41365317",
+                    "offset": {
+                      "x": 0,
+                      "y": 8
+                    },
+                    "blur": 22
+                  },
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RV4TA",
+                      "name": "Versículo etiqueta",
+                      "fill": "#B24A22",
+                      "content": "VERSÍCULO DEL DÍA",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 15,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Gomo5",
+                      "name": "Versículo",
+                      "fill": "#413653",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "“Confía en el Señor de todo corazón, y no en tu propia inteligencia.”",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Lora",
+                      "fontSize": 20,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Y6UUo",
+                      "name": "Referencia",
+                      "fill": "#6F6879",
+                      "content": "Proverbios 3:5",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 16,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "splXg",
+                  "name": "Pasos del día",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "m14eM4",
+                      "name": "Reflexiona",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "olQmI",
+                          "name": "Icono Reflexiona",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "sparkles",
+                          "library": "lucide",
+                          "fill": "#6F6879"
+                        },
+                        {
+                          "type": "text",
+                          "id": "AImSN",
+                          "name": "Texto Reflexiona",
+                          "fill": "#6F6879",
+                          "content": "Reflexiona",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ax2rZ",
+                      "name": "Aplica",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "C7yTez",
+                          "name": "Icono Aplica",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "footprints",
+                          "library": "lucide",
+                          "fill": "#6F6879"
+                        },
+                        {
+                          "type": "text",
+                          "id": "t8mIRG",
+                          "name": "Texto Aplica",
+                          "fill": "#6F6879",
+                          "content": "Aplica",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mrWoX",
+                      "name": "Ora",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#4D405CEB",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "hZL6F",
+                          "name": "Icono Ora",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "odIUG",
+                          "name": "Texto Ora",
+                          "fill": "#FFFFFF",
+                          "content": "Ora",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "lywci",
+                  "name": "Oración breve",
+                  "width": "fill_container",
+                  "fill": "#FFF1DDB8",
+                  "cornerRadius": 18,
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": [
+                    14,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PdgKh",
+                      "name": "Oración título",
+                      "fill": "#B24A22",
+                      "content": "Tu oración",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    },
+                    {
+                      "type": "text",
+                      "id": "RcSOC",
+                      "name": "Oración texto",
+                      "fill": "#413653",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Señor, enséñame a descansar en ti incluso cuando el camino todavía no está claro…",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Lora",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Xshru",
+              "name": "CTA Oré hoy",
+              "width": "fill_container",
+              "height": 58,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 90,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#F2A578",
+                    "position": 0
+                  },
+                  {
+                    "color": "#FBDFC2",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 18,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#B24A2230",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 20
+              },
+              "gap": 12,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "lCMPh",
+                  "name": "Orbe",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "radial",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "width": 1,
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#D4D0EF",
+                        "position": 0
+                      },
+                      {
+                        "color": "#CFECF9",
+                        "position": 0.55
+                      },
+                      {
+                        "color": "#F8E2D1",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "width": 28,
+                  "height": 28
+                },
+                {
+                  "type": "text",
+                  "id": "EMWlb",
+                  "name": "CTA texto",
+                  "fill": "#413653",
+                  "content": "Oré hoy",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XlGEw",
+              "name": "Resumen social",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NmdwC",
+                  "name": "Social texto",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "x5LRP",
+                      "name": "Social título",
+                      "fill": "#413653",
+                      "content": "3 personas oraron por ti",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Ilq2b",
+                      "name": "Social detalle",
+                      "fill": "#6F6879",
+                      "content": "Puedes agradecerles al terminar",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "F6yrO",
+                  "name": "Social flecha",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "chevron-right",
+                  "library": "lucide",
+                  "fill": "#6F6879"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "K9smdS",
+          "name": "Tab Bar Wrapper",
+          "width": "fill_container",
+          "padding": [
+            0,
+            16,
+            12,
+            16
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "id": "MA35b",
+              "type": "ref",
+              "ref": "ajitK",
+              "name": "Tab Bar",
+              "width": 358,
+              "height": 66
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "TS1E4",
+      "x": 1958,
+      "y": 76,
+      "name": "Component / Tab Bar Orar",
+      "reusable": true,
+      "width": 358,
+      "height": 66,
+      "fill": "#FFFFFFC7",
+      "cornerRadius": 33,
+      "stroke": "#FFFFFFE0",
+      "strokeWidth": 1,
+      "effect": [
+        {
+          "type": "background_blur",
+          "radius": 22
+        },
+        {
+          "type": "shadow",
+          "shadowType": "outer",
+          "color": "#41365324",
+          "offset": {
+            "x": 0,
+            "y": 8
+          },
+          "blur": 24
+        }
+      ],
+      "gap": 4,
+      "padding": 6,
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "gpBuS",
+          "name": "Tab Inicio",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "H9u9kv",
+              "name": "Icon Inicio",
+              "width": 20,
+              "height": 20,
+              "icon": "house",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "MQekY",
+              "name": "Label Inicio",
+              "fill": "#6F6879",
+              "content": "Inicio",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "SBZO9",
+          "name": "Tab Biblia",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "B2fEC7",
+              "name": "Icon Biblia",
+              "width": 20,
+              "height": 20,
+              "icon": "book-open",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "t781x",
+              "name": "Label Biblia",
+              "fill": "#6F6879",
+              "content": "Biblia",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "nq3bY",
+          "name": "Tab Orar",
+          "width": 64,
+          "height": 54,
+          "fill": "#F9DBBF",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "u1J7r",
+              "name": "Icon Orar",
+              "width": 20,
+              "height": 20,
+              "icon": "sparkles",
+              "library": "lucide",
+              "fill": "#B24A22"
+            },
+            {
+              "type": "text",
+              "id": "BfZms",
+              "name": "Label Orar",
+              "fill": "#B24A22",
+              "content": "Orar",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "p818VP",
+          "name": "Tab Círculos",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "E4q6oV",
+              "name": "Icon Círculos",
+              "width": 20,
+              "height": 20,
+              "icon": "users",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "l3rej",
+              "name": "Label Círculos",
+              "fill": "#6F6879",
+              "content": "Círculos",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Q5xMVl",
+          "name": "Tab Perfil",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "NjLIL",
+              "name": "Icon Perfil",
+              "width": 20,
+              "height": 20,
+              "icon": "user",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "O3TsZR",
+              "name": "Label Perfil",
+              "fill": "#6F6879",
+              "content": "Perfil",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zV3rv",
+      "x": 1990,
+      "y": 222,
+      "name": "Propuesta / Orar",
+      "clip": true,
+      "width": 390,
+      "height": 932,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#C7D6F2",
+            "position": 0
+          },
+          {
+            "color": "#FFF1DD",
+            "position": 0.5
+          },
+          {
+            "color": "#C7D6F2",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "e1iQS",
+          "type": "ref",
+          "ref": "zeFxR",
+          "name": "Status Bar",
+          "width": "fill_container",
+          "height": 44
+        },
+        {
+          "type": "frame",
+          "id": "VqHgM",
+          "name": "Contenido Hoy",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 15,
+          "padding": [
+            12,
+            20,
+            14,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "hEefv",
+              "name": "Header Hoy",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "UaRdP",
+                  "name": "Saludo",
+                  "fill": "#413653",
+                  "content": "Orar por otros",
+                  "fontFamily": "Cormorant Garamond",
+                  "fontSize": 26,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "qsiyX",
+                  "name": "Acciones header",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "pTyiX",
+                      "name": "Avisos",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 20,
+                      "stroke": "#FFFFFFD9",
+                      "strokeWidth": 1,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "GuOw0",
+                          "name": "Campana",
+                          "width": 19,
+                          "height": 19,
+                          "icon": "bell",
+                          "library": "lucide",
+                          "fill": "#413653"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Xjs8e",
+              "name": "Journey del día",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "s9rNri",
+                  "name": "Meta del día",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZNHDf",
+                      "name": "Día",
+                      "fill": "#B24A22",
+                      "content": "2 DE 5 PERSONAS",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.4
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v2VrpD",
+                      "name": "Racha",
+                      "fill": "#FFFFFF9E",
+                      "cornerRadius": 999,
+                      "gap": 5,
+                      "padding": [
+                        6,
+                        10
+                      ],
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "F2Za1p",
+                          "name": "Fuego",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "flame",
+                          "library": "lucide",
+                          "fill": "#B24A22"
+                        },
+                        {
+                          "type": "text",
+                          "id": "YBa1P",
+                          "name": "Racha texto",
+                          "fill": "#413653",
+                          "content": "3 pendientes",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "MQhKG",
+                  "name": "Tema del día",
+                  "fill": "#413653",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "María Elena necesita oración",
+                  "lineHeight": 1.02,
+                  "fontFamily": "Cormorant Garamond",
+                  "fontSize": 34,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "y9jCx",
+                  "name": "Versículo principal",
+                  "width": "fill_container",
+                  "fill": "#FFFFFFA8",
+                  "cornerRadius": 22,
+                  "stroke": "#FFFFFFDE",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#41365317",
+                    "offset": {
+                      "x": 0,
+                      "y": 8
+                    },
+                    "blur": 22
+                  },
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Tods2",
+                      "name": "Versículo etiqueta",
+                      "fill": "#B24A22",
+                      "content": "PETICIÓN DE ORACIÓN",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 15,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    },
+                    {
+                      "type": "text",
+                      "id": "V2idxF",
+                      "name": "Versículo",
+                      "fill": "#413653",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "“Que Dios nos dé paciencia y unidad para atravesar esta temporada en familia.”",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Lora",
+                      "fontSize": 19,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "X8N7X",
+                      "name": "Referencia",
+                      "fill": "#6F6879",
+                      "content": "Círculo Familia · hace 2 h",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 16,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DSuZq",
+                  "name": "Pasos del día",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Hms8y",
+                      "name": "Reflexiona",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "R7cMy9",
+                          "name": "Icono Reflexiona",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "sparkles",
+                          "library": "lucide",
+                          "fill": "#6F6879"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xGGsj",
+                          "name": "Texto Reflexiona",
+                          "fill": "#6F6879",
+                          "content": "Escucha",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r5JjDf",
+                      "name": "Aplica",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "mfhn3",
+                          "name": "Icono Aplica",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "footprints",
+                          "library": "lucide",
+                          "fill": "#6F6879"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ayasy",
+                          "name": "Texto Aplica",
+                          "fill": "#6F6879",
+                          "content": "Ora",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "t4Lh5q",
+                      "name": "Ora",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#4D405CEB",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "N3p02f",
+                          "name": "Icono Ora",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "z1SD6",
+                          "name": "Texto Ora",
+                          "fill": "#FFFFFF",
+                          "content": "Envía",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "e6cUDB",
+                  "name": "Oración breve",
+                  "width": "fill_container",
+                  "fill": "#FFF1DDB8",
+                  "cornerRadius": 18,
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": [
+                    14,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Pz8UX",
+                      "name": "Oración título",
+                      "fill": "#B24A22",
+                      "content": "Oración sugerida",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KhKmp",
+                      "name": "Oración texto",
+                      "fill": "#413653",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Padre, acompaña a la familia de María. Dales escucha paciente, ternura al hablar y esperanza para seguir juntos.",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Lora",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "B4rWR9",
+              "name": "CTA Oré hoy",
+              "width": "fill_container",
+              "height": 58,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 90,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#F2A578",
+                    "position": 0
+                  },
+                  {
+                    "color": "#FBDFC2",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 18,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#B24A2230",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 20
+              },
+              "gap": 12,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "um2O6",
+                  "name": "Orbe",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "radial",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "width": 1,
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#D4D0EF",
+                        "position": 0
+                      },
+                      {
+                        "color": "#CFECF9",
+                        "position": 0.55
+                      },
+                      {
+                        "color": "#F8E2D1",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "width": 28,
+                  "height": 28
+                },
+                {
+                  "type": "text",
+                  "id": "pr2O7",
+                  "name": "CTA texto",
+                  "fill": "#413653",
+                  "content": "Terminé de orar",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fndxo",
+              "name": "Resumen social",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "psjia",
+                  "name": "Social texto",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "x2BxWJ",
+                      "name": "Social título",
+                      "fill": "#413653",
+                      "content": "Mensaje: “Oré por ti”",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Dy1B2",
+                      "name": "Social detalle",
+                      "fill": "#6F6879",
+                      "content": "Se enviará al confirmar",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "ODnc2",
+                  "name": "Social flecha",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "chevron-right",
+                  "library": "lucide",
+                  "fill": "#6F6879"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "KPov4",
+          "name": "Tab Bar Wrapper",
+          "width": "fill_container",
+          "padding": [
+            0,
+            16,
+            12,
+            16
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "id": "T6xWHx",
+              "type": "ref",
+              "ref": "TS1E4",
+              "name": "Tab Bar",
+              "width": 358,
+              "height": 66
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "y4YM2",
+      "x": 2396,
+      "y": 76,
+      "name": "Component / Tab Bar Perfil",
+      "reusable": true,
+      "width": 358,
+      "height": 66,
+      "fill": "#FFFFFFC7",
+      "cornerRadius": 33,
+      "stroke": "#FFFFFFE0",
+      "strokeWidth": 1,
+      "effect": [
+        {
+          "type": "background_blur",
+          "radius": 22
+        },
+        {
+          "type": "shadow",
+          "shadowType": "outer",
+          "color": "#41365324",
+          "offset": {
+            "x": 0,
+            "y": 8
+          },
+          "blur": 24
+        }
+      ],
+      "gap": 4,
+      "padding": 6,
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "n7z11",
+          "name": "Tab Inicio",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "ylXw8",
+              "name": "Icon Inicio",
+              "width": 20,
+              "height": 20,
+              "icon": "house",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "hmQD6",
+              "name": "Label Inicio",
+              "fill": "#6F6879",
+              "content": "Inicio",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gMbVO",
+          "name": "Tab Biblia",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "GjoVw",
+              "name": "Icon Biblia",
+              "width": 20,
+              "height": 20,
+              "icon": "book-open",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "mcq6Q",
+              "name": "Label Biblia",
+              "fill": "#6F6879",
+              "content": "Biblia",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "dhgiL",
+          "name": "Tab Orar",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "FuZjp",
+              "name": "Icon Orar",
+              "width": 20,
+              "height": 20,
+              "icon": "sparkles",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "gjmOs",
+              "name": "Label Orar",
+              "fill": "#6F6879",
+              "content": "Orar",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sqIdy",
+          "name": "Tab Círculos",
+          "width": 64,
+          "height": 54,
+          "fill": "#FFFFFF00",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "C5HHu",
+              "name": "Icon Círculos",
+              "width": 20,
+              "height": 20,
+              "icon": "users",
+              "library": "lucide",
+              "fill": "#6F6879"
+            },
+            {
+              "type": "text",
+              "id": "OZ6TS",
+              "name": "Label Círculos",
+              "fill": "#6F6879",
+              "content": "Círculos",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "S51mj",
+          "name": "Tab Perfil",
+          "width": 64,
+          "height": 54,
+          "fill": "#F9DBBF",
+          "cornerRadius": 27,
+          "layout": "vertical",
+          "gap": 2,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "sXbqb",
+              "name": "Icon Perfil",
+              "width": 20,
+              "height": 20,
+              "icon": "user",
+              "library": "lucide",
+              "fill": "#B24A22"
+            },
+            {
+              "type": "text",
+              "id": "aU1gH",
+              "name": "Label Perfil",
+              "fill": "#B24A22",
+              "content": "Perfil",
+              "fontFamily": "Inter",
+              "fontSize": 9,
+              "fontWeight": "700"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "mciY9",
+      "x": 2460,
+      "y": 222,
+      "name": "Propuesta / Perfil",
+      "clip": true,
+      "width": 390,
+      "height": 932,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#C7D6F2",
+            "position": 0
+          },
+          {
+            "color": "#FFF1DD",
+            "position": 0.5
+          },
+          {
+            "color": "#C7D6F2",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "JoeAU",
+          "type": "ref",
+          "ref": "zeFxR",
+          "name": "Status Bar",
+          "width": "fill_container",
+          "height": 44
+        },
+        {
+          "type": "frame",
+          "id": "vZfcH",
+          "name": "Contenido Hoy",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 15,
+          "padding": [
+            12,
+            20,
+            14,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "DwLDF",
+              "name": "Header Hoy",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "h2UIN",
+                  "name": "Saludo",
+                  "fill": "#413653",
+                  "content": "Tu perfil",
+                  "fontFamily": "Cormorant Garamond",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "p4U5lq",
+                  "name": "Acciones header",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "F932NT",
+                      "name": "Avisos",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 20,
+                      "stroke": "#FFFFFFD9",
+                      "strokeWidth": 1,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "usXWO",
+                          "name": "Campana",
+                          "width": 19,
+                          "height": 19,
+                          "icon": "bell",
+                          "library": "lucide",
+                          "fill": "#413653"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "L8YaC",
+              "name": "Journey del día",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "h1ndVm",
+                  "name": "Meta del día",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "s3Fjd3",
+                      "name": "Día",
+                      "fill": "#B24A22",
+                      "content": "CUENTA Y MEMBRESÍA",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.4
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SQd0c",
+                      "name": "Racha",
+                      "fill": "#FFFFFF9E",
+                      "cornerRadius": 999,
+                      "gap": 5,
+                      "padding": [
+                        6,
+                        10
+                      ],
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "I9qDg",
+                          "name": "Fuego",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "flame",
+                          "library": "lucide",
+                          "fill": "#B24A22"
+                        },
+                        {
+                          "type": "text",
+                          "id": "qskYG",
+                          "name": "Racha texto",
+                          "fill": "#413653",
+                          "content": "Editar",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "dXFeV",
+                  "name": "Tema del día",
+                  "fill": "#413653",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Jaime López",
+                  "lineHeight": 1.02,
+                  "fontFamily": "Cormorant Garamond",
+                  "fontSize": 34,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "C5uLFY",
+                  "name": "Versículo principal",
+                  "width": "fill_container",
+                  "fill": "#FFFFFFA8",
+                  "cornerRadius": 22,
+                  "stroke": "#FFFFFFDE",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#41365317",
+                    "offset": {
+                      "x": 0,
+                      "y": 8
+                    },
+                    "blur": 22
+                  },
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Jlghn",
+                      "name": "Versículo etiqueta",
+                      "fill": "#B24A22",
+                      "content": "PRUEBA@AMMEN.LOCAL",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 15,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HfNph",
+                      "name": "Versículo",
+                      "fill": "#413653",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Plan gratuito · 2 de 3 planes creados",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KAZol",
+                      "name": "Referencia",
+                      "fill": "#6F6879",
+                      "content": "Ammen Plus · próximamente",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 16,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nB01O",
+                  "name": "Pasos del día",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "q5HWW1",
+                      "name": "Reflexiona",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ZNHjZ",
+                          "name": "Icono Reflexiona",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "sparkles",
+                          "library": "lucide",
+                          "fill": "#6F6879"
+                        },
+                        {
+                          "type": "text",
+                          "id": "G4KKw",
+                          "name": "Texto Reflexiona",
+                          "fill": "#6F6879",
+                          "content": "Cuenta",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BiSGb",
+                      "name": "Aplica",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#FFFFFF8F",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Yx3Rb",
+                          "name": "Icono Aplica",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "footprints",
+                          "library": "lucide",
+                          "fill": "#6F6879"
+                        },
+                        {
+                          "type": "text",
+                          "id": "skfsC",
+                          "name": "Texto Aplica",
+                          "fill": "#6F6879",
+                          "content": "Prefer.",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fP4RE",
+                      "name": "Ora",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#4D405CEB",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFFC9",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "f0vPwX",
+                          "name": "Icono Ora",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "H4rkLc",
+                          "name": "Texto Ora",
+                          "fill": "#FFFFFF",
+                          "content": "Social",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fQamq",
+                  "name": "Oración breve",
+                  "width": "fill_container",
+                  "fill": "#FFF1DDB8",
+                  "cornerRadius": 18,
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": [
+                    14,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fnkTF",
+                      "name": "Oración título",
+                      "fill": "#B24A22",
+                      "content": "Preferencias de oración",
+                      "fontFamily": "Cormorant Garamond",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    },
+                    {
+                      "type": "text",
+                      "id": "xwBZG",
+                      "name": "Oración texto",
+                      "fill": "#413653",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Recordatorios: 7:00 a. m.\nZona horaria: automática\nDisponible cuando activemos notificaciones.",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Lora",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "d8xLZF",
+              "name": "CTA Oré hoy",
+              "width": "fill_container",
+              "height": 58,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 90,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#F2A578",
+                    "position": 0
+                  },
+                  {
+                    "color": "#FBDFC2",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 18,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#B24A2230",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 20
+              },
+              "gap": 12,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "i2Wat",
+                  "name": "Orbe",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "radial",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "width": 1,
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#D4D0EF",
+                        "position": 0
+                      },
+                      {
+                        "color": "#CFECF9",
+                        "position": 0.55
+                      },
+                      {
+                        "color": "#F8E2D1",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "width": 28,
+                  "height": 28
+                },
+                {
+                  "type": "text",
+                  "id": "ri4jS",
+                  "name": "CTA texto",
+                  "fill": "#413653",
+                  "content": "Invitar a alguien",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PWCxN",
+              "name": "Resumen social",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JtoZR",
+                  "name": "Social texto",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "x1r65J",
+                      "name": "Social título",
+                      "fill": "#413653",
+                      "content": "Configuración y soporte",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HtvaZ",
+                      "name": "Social detalle",
+                      "fill": "#6F6879",
+                      "content": "Idioma, privacidad, bloqueados y acerca de Ammen",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "LwShh",
+                  "name": "Social flecha",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "chevron-right",
+                  "library": "lucide",
+                  "fill": "#6F6879"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Elw3r",
+          "name": "Tab Bar Wrapper",
+          "width": "fill_container",
+          "padding": [
+            0,
+            16,
+            12,
+            16
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "id": "DYGrE",
+              "type": "ref",
+              "ref": "y4YM2",
+              "name": "Tab Bar",
+              "width": 358,
+              "height": 66
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "dawn-sky": {
+      "type": "color",
+      "value": "#C7D6F2"
+    },
+    "dawn-cream": {
+      "type": "color",
+      "value": "#FFF1DD"
+    },
+    "cream-bg": {
+      "type": "color",
+      "value": "#FFF6EA"
+    },
+    "ember": {
+      "type": "color",
+      "value": "#F2A578"
+    },
+    "ember-pale": {
+      "type": "color",
+      "value": "#FBDFC2"
+    },
+    "ember-ink": {
+      "type": "color",
+      "value": "#B24A22"
+    },
+    "plum": {
+      "type": "color",
+      "value": "#413653"
+    },
+    "plum-chip": {
+      "type": "color",
+      "value": "#4D405C"
+    },
+    "mist-ink": {
+      "type": "color",
+      "value": "#6F6879"
+    },
+    "surface": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "font-ui": {
+      "type": "string",
+      "value": "Inter"
+    },
+    "font-editorial": {
+      "type": "string",
+      "value": "Cormorant Garamond"
+    }
+  },
+  "fileToken": "4b514f91-dbfc-40c1-be04-675d8e75c859"
+}

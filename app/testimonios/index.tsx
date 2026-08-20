@@ -1,12 +1,13 @@
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { LoadMore } from "@/components/LoadMore";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
@@ -18,6 +19,8 @@ import {
   useVisibleTestimonies,
 } from "@/core/testimonies/queries";
 
+import { Tap } from "@/components/ui/Tap";
+
 /**
  * What was answered — yours, and your circles'.
  *
@@ -27,6 +30,7 @@ import {
  */
 export default function Testimonies() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -103,7 +107,10 @@ export default function Testimonies() {
         options={{ title: t("testimony.title"), headerShown: true }}
       />
       <DawnBackground>
-        <ScrollView contentContainerClassName="flex-grow gap-5 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <Text className="font-sans text-base text-mist-ink">
             {t("testimony.subtitle")}
           </Text>
@@ -141,7 +148,7 @@ export default function Testimonies() {
           {(testimonies ?? []).map((entry) => (
             <View
               key={entry.id}
-              className="gap-2 rounded-2xl border border-white/60 p-5"
+              className="gap-2 rounded-card border border-glassedge/60 p-5"
             >
               <View className="flex-row items-center gap-2">
                 <Avatar
@@ -176,17 +183,17 @@ export default function Testimonies() {
                       pasó esto»— y solo se podía leer aquí dentro. Un testimonio
                       que no sale de la app es una historia que no le llega a
                       nadie que aún no esté. */}
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       onPress={() => void handleShare(entry.body)}
                     >
                       <Text className="font-sans text-sm text-ember-ink underline">
                         {t("testimony.share")}
                       </Text>
-                    </Pressable>
+                    </Tap>
 
                     {entry.visibility !== "private" ? (
-                      <Pressable
+                      <Tap
                         accessibilityRole="button"
                         onPress={() =>
                           void run(
@@ -202,10 +209,10 @@ export default function Testimonies() {
                         <Text className="font-sans text-sm text-mist-ink underline">
                           {t("testimony.makePrivate")}
                         </Text>
-                      </Pressable>
+                      </Tap>
                     ) : null}
 
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       onPress={() => {
                         if (confirmingDelete !== entry.id) {
@@ -234,11 +241,11 @@ export default function Testimonies() {
                           ? t("testimony.deleteConfirm")
                           : t("testimony.delete")}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   </>
                 ) : (
                   <>
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       onPress={() =>
                         void run(
@@ -250,9 +257,9 @@ export default function Testimonies() {
                       <Text className="font-sans text-sm text-mist-ink underline">
                         {t("moderation.report")}
                       </Text>
-                    </Pressable>
+                    </Tap>
 
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       accessibilityLabel={`${t("moderation.block")} ${entry.author_name}`}
                       onPress={() =>
@@ -265,7 +272,7 @@ export default function Testimonies() {
                       <Text className="font-sans text-sm text-mist-ink underline">
                         {t("moderation.block")}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   </>
                 )}
               </View>

@@ -1,5 +1,7 @@
 import type { Session } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
+import i18n from "i18next";
 import {
   createContext,
   useCallback,
@@ -19,6 +21,9 @@ import {
   usePushRegistration,
   useNotificationResponseHandler,
 } from "@/core/notifications/push";
+import { syncLocalReminders } from "@/core/notifications/localReminders";
+import { useFlushPrayedQueue } from "@/core/plans/offline";
+import { useProfile } from "@/core/profile/queries";
 
 type SessionState = {
   session: Session | null;
@@ -104,6 +109,13 @@ export const SessionProvider = ({
       // never refetches on focus, so it would say so until it was killed.
       void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
       void queryClient.invalidateQueries({ queryKey: ["circles"] });
+
+      // Un share canjeado al entrar debe abrir el día que toca orar, no Hoy:
+      // aterrizar en la pestaña de Hoy dejaba el plan a un tab de distancia y
+      // sin pista de que acababa de llegar. Solo se navega cuando hay planId —
+      // el invite code sigue devolviendo null y no navega. El effect ya depende
+      // de `userId`, así que esto no se dispara en cada render.
+      router.replace({ pathname: "/orar/[planId]", params: { planId } });
     });
 
     return () => {
@@ -173,6 +185,26 @@ export const SessionProvider = ({
     Boolean(userId) && hasOnboarded === true && termsAccepted === true,
   );
 
+  // Las horas de recordatorio se programan como notificaciones locales al
+  // entrar con una cuenta que ya las eligió: no dependen de que la persona
+  // vuelva a pasar por el perfil, igual que el push se pide aquí y no en una
+  // pantalla concreta.
+  const { data: profile } = useProfile(userId ?? undefined);
+
+  const syncRemindersEnabled =
+    Boolean(userId) && hasOnboarded === true && termsAccepted === true;
+
+  useEffect(() => {
+    if (!syncRemindersEnabled || !profile) return;
+
+    void syncLocalReminders(profile.reminder_hours ?? [], {
+      // `i18next` también exporta un `t` suelto (sin `this`); el singleton por
+      // defecto es el que `core/i18n/init` dejó inicializado.
+      // eslint-disable-next-line import/no-named-as-default-member
+      title: i18n.t("notifications.reminder"),
+    });
+  }, [syncRemindersEnabled, profile]);
+
   // El listener del tap no pide permiso ni depende de onboarding: solo
   // escucha. Si nunca llega una notificación, no hace nada; si llega,
   // `resolve_push_notification()` decide, nunca el payload por sí solo.
@@ -180,6 +212,11 @@ export const SessionProvider = ({
     isSessionLoading: isLoading,
     userId,
   });
+
+  // Un "Ya oré" marcado sin red se queda en cola. Se drena al entrar y
+  // cada vez que la app vuelve a primer plano: si no, la marca local y
+  // el servidor se desalinean hasta el próximo arranque en frío.
+  useFlushPrayedQueue(userId);
 
   const refreshOnboarding = useCallback(async () => {
     await refetch();

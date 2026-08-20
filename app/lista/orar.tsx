@@ -1,7 +1,7 @@
 import { router, Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
@@ -10,6 +10,8 @@ import { Orb } from "@/components/Orb";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { usePrayerList } from "@/core/list/queries";
+
+import { Tap } from "@/components/ui/Tap";
 
 /** Los tres tiempos que la gente tiene de verdad, no una rueda de minutos. */
 const LENGTHS = [2, 5, 10];
@@ -151,7 +153,7 @@ export default function PrayThrough() {
           />
         )}
 
-        <Pressable
+        <Tap
           accessibilityRole="button"
           onPress={() => router.back()}
           className="items-center"
@@ -159,7 +161,7 @@ export default function PrayThrough() {
           <Text className="font-sans text-sm text-mist-ink underline">
             {t("list.stop")}
           </Text>
-        </Pressable>
+        </Tap>
       </DawnBackground>
     </>
   );

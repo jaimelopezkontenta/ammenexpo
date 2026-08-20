@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { Platform, StyleSheet, View, ViewProps, ViewStyle } from "react-native";
 
 import { useDawnBlurTarget } from "@/components/DawnBackground";
+import { useIsDark, useThemeColors, withAlpha } from "@/theme";
 
 // `BlurView` viene de fuera de React Native, así que NativeWind no sabe que su
 // `className` se traduce a `style`. Sin esta línea las clases de la tab bar y
@@ -42,11 +43,10 @@ type Props = ViewProps & {
   intensity?: number;
 };
 
-const LIGHT_TINT = "rgba(255, 255, 255, 0.42)";
-const LIGHT_TINT_READABLE = "rgba(255, 255, 255, 0.58)";
+// El vidrio "oscuro" (pills, burbuja propia) es plum en los dos temas; el
+// vidrio claro y sus cantos salen de la paleta activa: blanco de día, violeta
+// profundo de noche.
 const DARK_TINT = "rgba(77, 64, 92, 0.60)";
-
-const LIGHT_BORDER = "rgba(255, 255, 255, 0.65)";
 const DARK_BORDER = "rgba(255, 255, 255, 0.28)";
 
 /**
@@ -64,13 +64,18 @@ export const Glass = ({
   className,
   ...viewProps
 }: Props) => {
-  const tint = dark ? DARK_TINT : readable ? LIGHT_TINT_READABLE : LIGHT_TINT;
+  const palette = useThemeColors();
+  const isDark = useIsDark();
+
+  const tint = dark
+    ? DARK_TINT
+    : withAlpha(palette.glass, readable ? 0.58 : 0.42);
 
   const blurTarget = useDawnBlurTarget();
 
   const base: ViewStyle = {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: dark ? DARK_BORDER : LIGHT_BORDER,
+    borderColor: dark ? DARK_BORDER : withAlpha(palette.glassedge, 0.65),
     overflow: "hidden",
   };
 
@@ -82,7 +87,11 @@ export const Glass = ({
       pointerEvents="none"
       style={[
         styles.specular,
-        { backgroundColor: dark ? DARK_BORDER : "rgba(255,255,255,0.78)" },
+        {
+          backgroundColor: dark
+            ? DARK_BORDER
+            : withAlpha(palette.glassedge, 0.78),
+        },
       ]}
     />
   );
@@ -110,7 +119,9 @@ export const Glass = ({
       {...viewProps}
       className={className}
       intensity={intensity ?? (dark ? 14 : 22)}
-      tint={dark ? "dark" : "light"}
+      // De noche el desenfoque también es oscuro: un blur "light" sobre el
+      // anochecer lo lavaría a gris.
+      tint={dark || isDark ? "dark" : "light"}
       // `dimezisBlurViewSdk31Plus` y no `dimezisBlurView`, que es el que se
       // suele copiar. La diferencia está medida por Expo: el desenfoque solo
       // es barato con la API RenderNode, que llegó en Android 12 (SDK 31). Por

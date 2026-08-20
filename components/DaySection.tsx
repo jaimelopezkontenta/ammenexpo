@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
 import { Card } from "@/components/Card";
+import { gradients, useIsDark } from "@/theme";
 
 type Tone = "plain" | "scripture" | "action";
 
@@ -30,6 +31,7 @@ export const DaySection = ({
   tone = "plain",
   children,
 }: DaySectionProps) => {
+  const isDark = useIsDark();
   // La acción es la única parte del día que sale del teléfono, así que es la
   // única que se calienta. Un degradado en diagonal, como en el montaje, y no
   // un color plano: con lo pálido que es el sistema, un relleno liso más no se
@@ -38,7 +40,7 @@ export const DaySection = ({
     return (
       <View className="overflow-hidden rounded-card shadow-card">
         <LinearGradient
-          colors={["rgba(255,246,233,0.92)", "rgba(252,235,216,0.92)"]}
+          colors={isDark ? gradients.dayActionDark : gradients.dayAction}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.warm}

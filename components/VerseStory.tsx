@@ -5,6 +5,8 @@ import { Text, View } from "react-native";
 import { Orb } from "@/components/Orb";
 import { Wordmark } from "@/components/Wordmark";
 
+import { gradients } from "@/theme";
+
 /**
  * El versículo en vertical, para un estado de WhatsApp o una historia.
  *
@@ -38,7 +40,7 @@ export const VerseStory = forwardRef<
   return (
     <View ref={ref} collapsable={false} style={{ width, height }}>
       <LinearGradient
-        colors={["#FFF1DD", "#FCEBD8", "#F9DBBF"]}
+        colors={gradients.story}
         locations={[0, 0.6, 1]}
         style={{
           width,

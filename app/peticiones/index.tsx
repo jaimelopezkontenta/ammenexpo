@@ -1,5 +1,4 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
@@ -7,6 +6,7 @@ import { Button } from "@/components/Button";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
 import { LoadMore } from "@/components/LoadMore";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleMembers } from "@/core/circles/queries";
@@ -20,6 +20,9 @@ import {
   useTogglePostPrayer,
 } from "@/core/posts/queries";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { useToast } from "@/core/toast/ToastProvider";
+
 /**
  * Prayer requests: the open wall, or one circle's.
  *
@@ -29,6 +32,7 @@ import {
  */
 export default function PrayerRequests() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
   const { circulo } = useLocalSearchParams<{ circulo?: string }>();
@@ -51,22 +55,19 @@ export default function PrayerRequests() {
   const markAnswered = useMarkAnswered();
   const remove = useDeletePrayerRequest();
 
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Resultados de acción por el toast del sistema, como en el resto de la app.
+  const toast = useToast();
 
   const isAdmin =
     Boolean(circulo) &&
     (members ?? []).some((m) => m.user_id === userId && m.role !== "member");
 
   const run = async (action: () => Promise<unknown>, done?: string) => {
-    setError(null);
-    setNotice(null);
-
     try {
       await action();
-      if (done) setNotice(done);
+      if (done) toast.success(done);
     } catch {
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
@@ -94,7 +95,10 @@ export default function PrayerRequests() {
     <>
       <Stack.Screen options={{ title, headerShown: true }} />
       <DawnBackground>
-        <ScrollView contentContainerClassName="flex-grow gap-5 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <Text className="font-sans text-base leading-6 text-mist-ink">
             {t("feed.subtitle")}
           </Text>
@@ -108,34 +112,11 @@ export default function PrayerRequests() {
             </Text>
           ) : null}
 
-          {notice ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite"
-            >
-              {notice}
-            </Text>
-          ) : null}
-
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
-          ) : null}
-
           {(requests ?? []).length === 0 ? (
-            <View className="gap-2 py-6">
-              <Text className="font-sans-semibold text-lg text-mist-ink">
-                {circulo ? t("feed.emptyCircle") : t("feed.empty")}
-              </Text>
-              <Text className="font-sans text-base leading-6 text-mist-ink">
-                {t("feed.emptyBody")}
-              </Text>
-            </View>
+            <EmptyState
+              title={circulo ? t("feed.emptyCircle") : t("feed.empty")}
+              body={t("feed.emptyBody")}
+            />
           ) : null}
 
           {(requests ?? []).map((request) => (
@@ -185,23 +166,30 @@ export default function PrayerRequests() {
             />
           ))}
 
-          <View className="mt-auto pt-6">
-            <Button
-              title={t("feed.newPost")}
-              onPress={() =>
-                router.push({
-                  pathname: "/peticiones/nueva",
-                  params: circulo ? { circulo } : {},
-                })
-              }
-            />
-          </View>
           <LoadMore
             hasMore={hasNextPage}
             loading={isFetchingNextPage}
             onPress={() => void fetchNextPage()}
           />
         </ScrollView>
+
+        {/* Fuera del scroll: pedir oración es a lo que se viene, y estaba al
+          final del muro entero — había que recorrer todas las peticiones de
+          otros para poder escribir la tuya. */}
+        <View
+          className="px-7 pt-3 md:w-full md:max-w-read md:self-center"
+          style={{ paddingBottom: scrollBottom }}
+        >
+          <Button
+            title={t("feed.newPost")}
+            onPress={() =>
+              router.push({
+                pathname: "/peticiones/nueva",
+                params: circulo ? { circulo } : {},
+              })
+            }
+          />
+        </View>
       </DawnBackground>
     </>
   );

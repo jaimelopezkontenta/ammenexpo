@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { rememberInviteCode, rememberSource } from "@/core/auth/pendingToken";
@@ -25,6 +26,7 @@ import { useInvitePreview } from "@/core/social/invites";
  */
 export default function InviteLanding() {
   const { t } = useTranslation();
+  const { top, scrollBottom } = useScreenPadding();
   const { code, de } = useLocalSearchParams<{
     code: string;
     /** Por dónde llegó: lo pone `buildShareUrl` al repartir el enlace. */
@@ -52,7 +54,10 @@ export default function InviteLanding() {
   }
 
   return (
-    <DawnBackground className="items-center justify-center gap-3 px-8">
+    <DawnBackground
+      className="items-center justify-center gap-3 px-8"
+      style={{ paddingTop: top, paddingBottom: scrollBottom }}
+    >
       <Text className="text-center font-serif-bold text-2xl text-plum">
         {/* Un código que ya no existe no es un error: se dice lo que hay, que
             es una invitación a la app, sin nombre. */}

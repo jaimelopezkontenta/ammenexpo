@@ -161,11 +161,42 @@ const errorOutput = (caught: unknown): string => {
 const checkSupabaseIsRunning = () => {
   try {
     run("npx supabase status");
+    return;
+  } catch (caught) {
+    // En este host Windows el binario del CLI a veces lo bloquea Application
+    // Control (`spawnSync UNKNOWN`) aunque los contenedores estén sanos. El
+    // healthcheck real es el contenedor de Postgres y la puerta de Auth.
+    const cliBlocked =
+      errorOutput(caught).includes("UNKNOWN") ||
+      errorOutput(caught).includes("spawnSync");
+
+    if (!cliBlocked) {
+      throw new Error(
+        "[globalSetup] Supabase local no está arrancado (o no responde).\n" +
+          "  Corre `npx supabase start` (o `npm run db:start`) antes de `npx playwright test`.\n" +
+          `  Detalle: ${errorOutput(caught)}`,
+      );
+    }
+  }
+
+  let health: string;
+  try {
+    health = run(
+      `docker inspect -f "{{.State.Health.Status}}" ${DB_CONTAINER}`,
+    ).trim();
   } catch (caught) {
     throw new Error(
-      "[globalSetup] Supabase local no está arrancado (o no responde).\n" +
+      "[globalSetup] El CLI de Supabase no arranca y el contenedor " +
+        `${DB_CONTAINER} no responde.\n` +
         "  Corre `npx supabase start` (o `npm run db:start`) antes de `npx playwright test`.\n" +
         `  Detalle: ${errorOutput(caught)}`,
+    );
+  }
+
+  if (health !== "healthy") {
+    throw new Error(
+      `[globalSetup] ${DB_CONTAINER} está ${health || "sin healthcheck"}, no healthy.\n` +
+        "  Corre `npx supabase start` (o `npm run db:start`) antes de `npx playwright test`.",
     );
   }
 };
@@ -213,6 +244,33 @@ const verifySeedAccountExists = () => {
   }
 };
 
+const AUTH_HEALTH = "http://127.0.0.1:54421/auth/v1/health";
+const AUTH_WAIT_MS = 90_000;
+const AUTH_POLL_MS = 2_000;
+
+/**
+ * `db reset` recrea contenedores. Auth tarda en volver a escuchar y los
+ * primeros logins pintan "Algo salió mal" aunque el seed ya esté. Esperar
+ * al health de GoTrue evita esa carrera.
+ */
+const waitForAuth = async () => {
+  const deadline = Date.now() + AUTH_WAIT_MS;
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(AUTH_HEALTH);
+      if (response.ok) return;
+    } catch {
+      // Todavía levantando.
+    }
+    await new Promise((resolve) => setTimeout(resolve, AUTH_POLL_MS));
+  }
+
+  throw new Error(
+    `[globalSetup] Auth no respondió en ${AUTH_WAIT_MS / 1000}s tras el reset (${AUTH_HEALTH}).`,
+  );
+};
+
 export default async function globalSetup() {
   const lockHolder = await startLockHolder();
 
@@ -220,6 +278,7 @@ export default async function globalSetup() {
     checkSupabaseIsRunning();
     resetDatabase();
     verifySeedAccountExists();
+    await waitForAuth();
   } catch (caught) {
     // El lock no puede sobrevivir a un setup que falló: la próxima corrida
     // — de Playwright o de `npm run db:test` — tiene que poder intentarlo

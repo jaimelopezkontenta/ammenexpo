@@ -1,7 +1,10 @@
 import {
+  destinationForTap,
+  isLocalReminderIdentifier,
   navigationTargetFor,
   outboxIdFromPayload,
   responseIdentifier,
+  type NotificationNavigationTarget,
   type NotificationPayload,
   type ResolvedNotification,
 } from "./resolveTarget";
@@ -28,8 +31,11 @@ export type PushResolutionResult =
 
 type ResponseSource = "listener" | "cold-start";
 
+type PendingKind = "intercession" | "local-reminder";
+
 type PendingResponse = {
   outboxId: string;
+  kind: PendingKind;
   identifiers: Set<string>;
   hasColdStartCopy: boolean;
   attempts: number;
@@ -41,7 +47,7 @@ type CancelRetry = () => void;
 
 type CoordinatorDependencies = {
   resolve: (outboxId: string) => Promise<PushResolutionResult>;
-  navigate: (target: "/avisos") => void | Promise<void>;
+  navigate: (target: NotificationNavigationTarget) => void | Promise<void>;
   clearLastResponse: () => void | Promise<void>;
   reportError?: (error: unknown) => void;
   retryDelaysMs?: readonly number[];
@@ -61,11 +67,16 @@ const payloadFor = (
 ): NotificationPayload | null | undefined =>
   response.notification?.request?.content?.data;
 
+/** Clave del mapa de pending cuando no hay outbox: el identifier ya es estable. */
+const localReminderPendingKey = (identifier: string): string =>
+  `local:${identifier}`;
+
 /**
- * Coordina las dos fuentes de taps sin depender de React Native. Una respuesta
- * entra primero en memoria y solo se resuelve cuando Supabase Auth ya terminó
- * de restaurar una sesión y hay un usuario. El outbox es además el alias de
- * dedupe estable cuando Expo no proporciona `identifier`.
+ * Coordina las dos fuentes de taps sin depender de React Native. Una
+ * intercesión entra primero en memoria y solo se resuelve cuando Supabase
+ * Auth ya restauró una sesión. Un recordatorio local no espera: no hay RPC
+ * que hacer. El outbox (o `local:<identifier>`) es el alias de dedupe
+ * estable cuando Expo no proporciona `identifier`.
  */
 export const createPushResponseCoordinator = (
   dependencies: CoordinatorDependencies,
@@ -137,12 +148,17 @@ export const createPushResponseCoordinator = (
   };
 
   const processEntry = async (entry: PendingResponse) => {
+    // Un recordatorio local abre Hoy sin pedirle nada al servidor, así
+    // que no espera a que Auth restaure la sesión. La intercesión sí:
+    // resolve_push_notification exige un usuario.
     if (
-      !session.resolved ||
-      !session.userId ||
-      entry.retryScheduled ||
-      !entry.attemptReady
+      entry.kind !== "local-reminder" &&
+      (!session.resolved || !session.userId)
     ) {
+      return;
+    }
+
+    if (entry.retryScheduled || !entry.attemptReady) {
       return;
     }
 
@@ -150,6 +166,31 @@ export const createPushResponseCoordinator = (
     const generationAtStart = generation;
     entry.attemptReady = false;
     entry.attempts += 1;
+
+    if (entry.kind === "local-reminder") {
+      const identifier = [...entry.identifiers][0] ?? null;
+      const target = destinationForTap(identifier, null);
+      if (!target) {
+        finish(entry);
+        return;
+      }
+
+      try {
+        await dependencies.navigate(target);
+        if (
+          disposed ||
+          generation !== generationAtStart ||
+          pendingByOutbox.get(entry.outboxId) !== entry
+        ) {
+          return;
+        }
+        finish(entry);
+      } catch (error) {
+        reportError(error);
+        scheduleNextAttempt(entry);
+      }
+      return;
+    }
 
     let result: PushResolutionResult;
     try {
@@ -201,7 +242,10 @@ export const createPushResponseCoordinator = (
     drainPromise = (async () => {
       while (redrainRequested) {
         redrainRequested = false;
-        if (disposed || !session.resolved || !session.userId) return;
+        // La sesión ya no corta el drain entero: un recordatorio local
+        // tiene que poder abrir Hoy aunque Auth aún no haya resuelto.
+        // La intercesión sigue esperando dentro de `processEntry`.
+        if (disposed) return;
 
         for (const entry of pendingByOutbox.values()) {
           await processEntry(entry);
@@ -221,7 +265,14 @@ export const createPushResponseCoordinator = (
     if (!response || disposed) return;
 
     const identifier = responseIdentifier(response);
-    const outboxId = outboxIdFromPayload(payloadFor(response));
+    // Un recordatorio diario no trae outboxId. Sin este atajo, capture
+    // exigía uno y el tap se tragaba en silencio — o peor, si alguien
+    // metía data de intercesión, acabaría en /avisos.
+    const isLocalReminder =
+      identifier !== null && isLocalReminderIdentifier(identifier);
+    const outboxId = isLocalReminder
+      ? localReminderPendingKey(identifier)
+      : outboxIdFromPayload(payloadFor(response));
 
     if (!outboxId) {
       // No existe una RPC segura que se pueda hacer sin el id opaco. Para el
@@ -265,6 +316,7 @@ export const createPushResponseCoordinator = (
 
     const entry: PendingResponse = {
       outboxId,
+      kind: isLocalReminder ? "local-reminder" : "intercession",
       identifiers: new Set(identifier ? [identifier] : []),
       hasColdStartCopy: source === "cold-start",
       attempts: 0,

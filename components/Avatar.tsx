@@ -1,6 +1,8 @@
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 
+import { colors } from "@/theme";
+
 /**
  * Seis tonos sacados del orbe, no un arcoíris aleatorio: la inicial de alguien
  * no debería gritar más que su nombre, y una lista de caras es lo que más se
@@ -11,7 +13,7 @@ import { Text, View } from "react-native";
  * arriba; una tinta distinta por tono sería una decisión de color que no
  * aporta nada y seis pares que mantener medidos.
  */
-const TONE_INK = "#413653";
+const TONE_INK = colors.plum.DEFAULT;
 
 const TONES = [
   "#F8E2D1", // durazno del orbe

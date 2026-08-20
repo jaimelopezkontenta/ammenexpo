@@ -1,10 +1,12 @@
 import { Link } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import type { Intercession } from "@/core/intercessions/queries";
+
+import { Tap } from "@/components/ui/Tap";
 
 type Props = {
   people: Intercession[];
@@ -50,7 +52,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
               }}
               asChild
             >
-              <Pressable
+              <Tap
                 accessibilityRole="link"
                 className="flex-row items-center gap-3"
               >
@@ -65,7 +67,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                     name: person.intercessor_name,
                   })}
                 </Text>
-              </Pressable>
+              </Tap>
             </Link>
 
             {/* A reported message stops coming back from the server, so there
@@ -85,7 +87,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                 than a circle unblockable anywhere in the app. */}
             <View className="flex-row gap-4">
               {person.message ? (
-                <Pressable
+                <Tap
                   accessibilityRole="button"
                   accessibilityState={{ expanded: isConfirming }}
                   aria-expanded={isConfirming}
@@ -113,10 +115,10 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                       ? t("intercession.reportConfirm")
                       : t("intercession.report")}
                   </Text>
-                </Pressable>
+                </Tap>
               ) : null}
 
-              <Pressable
+              <Tap
                 accessibilityRole="button"
                 accessibilityLabel={`${t("moderation.block")} ${person.intercessor_name}`}
                 onPress={() => onBlock(person.intercessor_id)}
@@ -124,7 +126,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                 <Text className="font-sans text-sm text-mist-ink underline">
                   {t("moderation.block")}
                 </Text>
-              </Pressable>
+              </Tap>
             </View>
           </View>
         );

@@ -6,6 +6,7 @@ import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useMyCircles } from "@/core/circles/queries";
@@ -20,8 +21,12 @@ import {
 } from "@/core/plans/sharing";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
 
+import { useThemeColors } from "@/theme";
+
 export default function SharePlan() {
   const { t } = useTranslation();
+  const colors = useThemeColors();
+  const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
   const userId = session?.user.id;
@@ -157,7 +162,10 @@ export default function SharePlan() {
     <>
       <Stack.Screen options={{ title: t("share.title"), headerShown: true }} />
       <DawnBackground>
-        <ScrollView contentContainerClassName="gap-8 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <View className="gap-1">
             <Text className="font-sans-semibold text-lg text-plum">
               {plan.title}
@@ -225,12 +233,12 @@ export default function SharePlan() {
 
             {linkLoading ? (
               <ActivityIndicator
-                color="#413653"
+                color={colors.plum.DEFAULT}
                 accessibilityLabel={t("common.loading")}
               />
             ) : linkUrl ? (
               <>
-                <View className="gap-2 rounded-2xl bg-white/60 p-5">
+                <View className="gap-2 rounded-card bg-glass/60 p-5">
                   <Text className="font-sans text-sm text-mist-ink" selectable>
                     {linkUrl}
                   </Text>

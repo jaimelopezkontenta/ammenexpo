@@ -2,6 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef } from "react";
 
 import {
+  cacheTodayDay,
+  enqueuePrayed,
+  isNetworkError,
+  readCachedTodayDay,
+  readPrayedQueue,
+} from "@/core/plans/offline";
+import {
   classifyContinueReject,
   CreateAttemptKey,
   functionErrorStatus,
@@ -180,16 +187,37 @@ export const useTodayDay = (planId: string | undefined, isGenerating = false) =>
     refetchInterval: (query) =>
       isGenerating && !query.state.data ? 3000 : false,
     queryFn: async (): Promise<PlanDay | null> => {
-      // Through a function rather than the table: prayer_body and daily_action
-      // are no longer in the caller's column grant, because a plan you shared
-      // used to let the recipient read your own first-person prayer.
-      const { data, error } = await supabase.rpc("get_my_day", {
-        p_plan_id: planId!,
-      });
+      try {
+        // Through a function rather than the table: prayer_body and
+        // daily_action are no longer in the caller's column grant, because a
+        // plan you shared used to let the recipient read your own first-person
+        // prayer.
+        const { data, error } = await supabase.rpc("get_my_day", {
+          p_plan_id: planId!,
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      return ((data ?? []) as PlanDay[])[0] ?? null;
+        const day = ((data ?? []) as PlanDay[])[0] ?? null;
+
+        // Cachear cada lectura exitosa es lo que permite releer el día sin
+        // red: la próxima vez que `get_my_day` falle por red, se sirve esto.
+        if (day) {
+          await cacheTodayDay(planId!, day);
+        }
+
+        return day;
+      } catch (e) {
+        // Solo se tira de caché cuando el fallo es de red. Un error de RLS o
+        // un 23505 no es "no hay conexión", y debe seguir propagándose para
+        // que la UI muestre el error real en vez de un día viejo.
+        if (isNetworkError(e)) {
+          const cached = await readCachedTodayDay(planId!);
+          if (cached) return cached;
+        }
+
+        throw e;
+      }
     },
   });
 
@@ -198,14 +226,25 @@ export const usePrayedToday = (dayId: string | undefined) =>
     queryKey: ["prayedToday", dayId],
     enabled: Boolean(dayId),
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from("prayer_logs")
-        .select("id", { count: "exact", head: true })
-        .eq("plan_day_id", dayId!);
+      try {
+        const { count, error } = await supabase
+          .from("prayer_logs")
+          .select("id", { count: "exact", head: true })
+          .eq("plan_day_id", dayId!);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      return (count ?? 0) > 0;
+        return (count ?? 0) > 0;
+      } catch (e) {
+        // Sin red, un "oré" encolado tiene que seguir leyéndose como orado:
+        // si no, al refetch o al reabrir Hoy el orbe desaparece.
+        if (isNetworkError(e) && dayId) {
+          const queue = await readPrayedQueue();
+          if (queue.some((entry) => entry.dayId === dayId)) return true;
+        }
+
+        throw e;
+      }
     },
   });
 
@@ -404,7 +443,33 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
       // reporting "Algo salió mal" for it made the app look broken at the exact
       // moment it had worked. `usePrayForSomeone` has treated this code as a
       // success since the start; this one did not.
-      if (error && error.code !== "23505") throw error;
+      if (!error || error.code === "23505") return;
+
+      // Sin red: se encola en vez de fallar. La UI igual marca "Oraste hoy"
+      // (onSuccess invalida) y el flush lo manda a la base al volver la red.
+      if (isNetworkError(error)) {
+        await enqueuePrayed({ dayId: dayId!, userId: userId! });
+        return;
+      }
+
+      throw error;
+    },
+    onMutate: async () => {
+      // Fijar "orado" antes de que vuelva la red: invalidar prayedToday
+      // dispara un refetch que sin red conserva el false anterior y el
+      // orbe nunca aparece.
+      await queryClient.cancelQueries({ queryKey: ["prayedToday", dayId] });
+      const previous = queryClient.getQueryData<boolean>([
+        "prayedToday",
+        dayId,
+      ]);
+      queryClient.setQueryData(["prayedToday", dayId], true);
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context) {
+        queryClient.setQueryData(["prayedToday", dayId], context.previous);
+      }
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["prayedToday", dayId] });

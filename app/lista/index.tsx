@@ -1,11 +1,12 @@
-import { Link, Stack } from "expo-router";
+import { Link, router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   ITEM_MAX,
@@ -14,6 +15,12 @@ import {
   usePrayerList,
   useSetItemAnswered,
 } from "@/core/list/queries";
+
+import { useThemeColors } from "@/theme";
+
+import { EmptyState } from "@/components/ui/EmptyState";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * Tu lista de oración.
@@ -28,6 +35,7 @@ import {
  */
 export default function PrayerList() {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -40,6 +48,8 @@ export default function PrayerList() {
   const [error, setError] = useState<string | null>(null);
   // Borrar pide dos toques y el segundo va en rojo: aquí hay nombres de gente.
   const [confirming, setConfirming] = useState<string | null>(null);
+
+  const { scrollBottom } = useScreenPadding();
 
   const items = data ?? [];
   const pending = items.filter((item) => !item.answered_at);
@@ -63,10 +73,39 @@ export default function PrayerList() {
     await run(() => add.mutateAsync({ body }));
   };
 
+  // El volver por defecto de la pila apunta a la tab inicial (Hoy); quien
+  // entró desde Orar espera volver a Orar. Si hay historia, se respeta; si
+  // no (arranque en frío o entrada directa a la lista), se cae en Orar.
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/orar");
+    }
+  };
+
+  const screenOptions = {
+    title: t("list.title"),
+    headerShown: true,
+    headerLeft: () => (
+      <Tap
+        accessibilityRole="button"
+        accessibilityLabel={t("common.back")}
+        onPress={goBack}
+        hitSlop={8}
+        className="min-h-11 min-w-11 items-center justify-center px-2"
+      >
+        <Text className="font-sans-semibold text-base text-plum">
+          {t("common.back")}
+        </Text>
+      </Tap>
+    ),
+  };
+
   if (isLoading) {
     return (
       <>
-        <Stack.Screen options={{ title: t("list.title"), headerShown: true }} />
+        <Stack.Screen options={screenOptions} />
         <LoadingState />
       </>
     );
@@ -75,7 +114,7 @@ export default function PrayerList() {
   if (isError) {
     return (
       <>
-        <Stack.Screen options={{ title: t("list.title"), headerShown: true }} />
+        <Stack.Screen options={screenOptions} />
         <ErrorState onRetry={() => void refetch()} />
       </>
     );
@@ -83,24 +122,26 @@ export default function PrayerList() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t("list.title"), headerShown: true }} />
+      <Stack.Screen options={screenOptions} />
 
       <DawnBackground>
         <ScrollView
-          contentContainerClassName="gap-5 px-7 py-8"
+          contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           <View className="gap-2">
             <TextInput
-              className="w-full rounded-2xl border border-white/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base text-plum"
+              // `min-h-12` + leading: siendo multiline, el alto por contenido
+              // recortaba el placeholder de dos líneas a media letra.
+              className="min-h-12 w-full rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base leading-5 text-plum"
               accessibilityLabel={t("list.placeholder")}
               value={draft}
               onChangeText={setDraft}
               placeholder={t("list.placeholder")}
-              placeholderTextColor="#6F6879"
+              placeholderTextColor={colors.mist.ink}
               maxLength={ITEM_MAX}
               multiline
-              numberOfLines={1}
               onSubmitEditing={() => void handleAdd()}
             />
 
@@ -131,23 +172,19 @@ export default function PrayerList() {
             </Link>
           ) : null}
 
-          {items.length === 0 ? (
-            <Text className="font-sans text-base leading-6 text-mist-ink">
-              {t("list.empty")}
-            </Text>
-          ) : null}
+          {items.length === 0 ? <EmptyState title={t("list.empty")} /> : null}
 
           {pending.map((item) => (
             <View
               key={item.id}
-              className="gap-2 rounded-2xl border border-white/60 p-5"
+              className="gap-2 rounded-card border border-glassedge/60 p-5"
             >
               <Text className="font-serif text-base leading-reading text-plum">
                 {item.body}
               </Text>
 
               <View className="flex-row flex-wrap gap-4">
-                <Pressable
+                <Tap
                   accessibilityRole="button"
                   onPress={() =>
                     void run(() =>
@@ -158,9 +195,9 @@ export default function PrayerList() {
                   <Text className="font-sans text-sm text-ember-ink underline">
                     {t("list.markAnswered")}
                   </Text>
-                </Pressable>
+                </Tap>
 
-                <Pressable
+                <Tap
                   accessibilityRole="button"
                   accessibilityState={{ expanded: confirming === item.id }}
                   onPress={() => {
@@ -186,7 +223,7 @@ export default function PrayerList() {
                       ? t("list.removeConfirm")
                       : t("list.remove")}
                   </Text>
-                </Pressable>
+                </Tap>
               </View>
             </View>
           ))}
@@ -200,7 +237,7 @@ export default function PrayerList() {
               {answered.map((item) => (
                 <View
                   key={item.id}
-                  className="gap-2 rounded-2xl bg-white/60 p-5"
+                  className="gap-2 rounded-card bg-glass/60 p-5"
                 >
                   <Text className="font-serif text-base leading-reading text-mist-ink">
                     {item.body}
@@ -218,14 +255,14 @@ export default function PrayerList() {
                       }}
                       asChild
                     >
-                      <Pressable accessibilityRole="link">
+                      <Tap accessibilityRole="link">
                         <Text className="font-sans text-sm text-ember-ink underline">
                           {t("list.tellIt")}
                         </Text>
-                      </Pressable>
+                      </Tap>
                     </Link>
 
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       onPress={() =>
                         void run(() =>
@@ -239,7 +276,7 @@ export default function PrayerList() {
                       <Text className="font-sans text-sm text-mist-ink underline">
                         {t("list.undoAnswered")}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   </View>
                 </View>
               ))}

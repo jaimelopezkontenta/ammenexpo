@@ -1,14 +1,18 @@
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 import { Glass } from "../../components/Glass";
 import { TabBarIcon } from "../../components/TabBarIcon";
+import { triggerHaptic } from "@/components/ui/Tap";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useUnreadCounts } from "@/core/circles/queries";
 
+import { useThemeColors, withAlpha } from "@/theme";
+
 export default function TabLayout() {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const { session } = useSession();
   const { data: unreadByCircle } = useUnreadCounts(session?.user.id);
 
@@ -19,6 +23,9 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      // El cambio de pestaña responde al dedo como todo lo demás. En web el
+      // disparador es un no-op.
+      screenListeners={{ tabPress: () => triggerHaptic("selection") }}
       screenOptions={{
         // Los mismos valores que el tema, escritos a mano porque las opciones
         // de navegación no pasan por NativeWind.
@@ -26,8 +33,8 @@ export default function TabLayout() {
         // activa son once píxeles y medio, y el acento da 3,17:1 sobre el
         // vidrio de la barra. El naranja pleno se queda donde no lleva texto:
         // la barrita de encima del icono.
-        tabBarActiveTintColor: "#B24A22",
-        tabBarInactiveTintColor: "#413653",
+        tabBarActiveTintColor: colors.ember.ink,
+        tabBarInactiveTintColor: colors.plum.DEFAULT,
         // Transparente para que se vea el vidrio de `tabBarBackground`, que va
         // detrás. La barra **no** es absoluta: en el diseño ocupa su sitio y no
         // flota sobre el contenido, así que ninguna pantalla necesita reservar
@@ -40,6 +47,10 @@ export default function TabLayout() {
           backgroundColor: "transparent",
           borderTopWidth: 0,
           elevation: 0,
+          // Solo web: con el alto por defecto las descendentes de "Círculos"
+          // y "Perfil" salían recortadas. En nativo el alto lo decide la
+          // plataforma (incluye el safe-area) y no se toca.
+          ...(Platform.OS === "web" ? { height: 62, paddingBottom: 6 } : null),
         },
         tabBarBackground: () => (
           <Glass
@@ -48,7 +59,7 @@ export default function TabLayout() {
               {
                 borderWidth: 0,
                 borderTopWidth: StyleSheet.hairlineWidth,
-                borderTopColor: "rgba(255,255,255,0.65)",
+                borderTopColor: withAlpha(colors.glassedge, 0.65),
               },
             ]}
             intensity={28}
@@ -106,7 +117,7 @@ export default function TabLayout() {
           // El punto de mensajes sin leer se pintaba **dentro** de la pantalla,
           // así que había que entrar para saber que había algo que ver.
           tabBarBadge: unreadTotal || undefined,
-          tabBarBadgeStyle: { backgroundColor: "#E2703F" },
+          tabBarBadgeStyle: { backgroundColor: colors.ember.accent },
         }}
       />
       <Tabs.Screen

@@ -1,13 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 import { TabHeader } from "@/components/TabHeader";
 import { Card } from "@/components/Card";
@@ -26,6 +20,10 @@ import {
 import { splitHighlights } from "@/core/bible/highlight";
 import { bookName, type BibleBook } from "@/core/bible/navigation";
 
+import { useThemeColors } from "@/theme";
+
+import { Tap } from "@/components/ui/Tap";
+
 const openChapter = (bookId: number, chapter: number, verse?: number) =>
   router.push({
     pathname: "/libro/[book]/[chapter]",
@@ -40,7 +38,7 @@ const BookRow = ({ book }: { book: BibleBook }) => {
   const { t } = useTranslation();
 
   return (
-    <Pressable
+    <Tap
       accessibilityRole="button"
       className="flex-row items-center justify-between py-3.5"
       onPress={() =>
@@ -54,7 +52,7 @@ const BookRow = ({ book }: { book: BibleBook }) => {
       <Text className="font-sans text-sm text-mist-ink">
         {t("bible.chapters", { count: book.chapter_count })}
       </Text>
-    </Pressable>
+    </Tap>
   );
 };
 
@@ -64,6 +62,7 @@ export default function Bible() {
   const userId = session?.user.id;
 
   const [query, setQuery] = useState("");
+  const colors = useThemeColors();
 
   const { data: books, isLoading, isError, refetch } = useBibleBooks();
   const { data: position } = useReadingPosition(userId);
@@ -71,7 +70,7 @@ export default function Bible() {
   const { data: jump } = useReferenceJump(query);
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState skeleton="list" />;
   }
 
   if (isError) {
@@ -95,17 +94,14 @@ export default function Bible() {
     <DawnBackground>
       <TabHeader title={t("tabs.bible")} />
       <ScrollView
-        contentContainerClassName="gap-6 px-7 py-8"
+        contentContainerClassName="gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="gap-1">
-          <Text className="font-sans-bold text-2xl text-plum">
-            {t("bible.title")}
-          </Text>
-          <Text className="font-sans text-base text-mist-ink">
-            {t("bible.subtitle")}
-          </Text>
-        </View>
+        {/* El título ya lo dice TabHeader; repetirlo aquí eran dos "Biblia"
+          apiladas empujando el buscador hacia abajo. Queda la edición. */}
+        <Text className="font-sans text-base text-mist-ink">
+          {t("bible.subtitle")}
+        </Text>
 
         <TextField
           label={t("bible.searchLabel")}
@@ -117,7 +113,7 @@ export default function Bible() {
 
         {/* A reference beats a word search: typing "Juan 3" means go there. */}
         {jump ? (
-          <Pressable
+          <Tap
             accessibilityRole="button"
             className="rounded-card bg-plum-chip px-5 py-4 shadow-card"
             onPress={() => openChapter(jump.book_id, jump.chapter, jump.verse)}
@@ -127,7 +123,7 @@ export default function Bible() {
                 reference: `${bookName(all, jump.book_id)} ${jump.chapter}`,
               })}
             </Text>
-          </Pressable>
+          </Tap>
         ) : null}
 
         {/* Solo cuando no se está buscando: quien escribió algo en la caja quiere
@@ -142,7 +138,7 @@ export default function Bible() {
             </Text>
           ) : isFetching && !results ? (
             <ActivityIndicator
-              color="#413653"
+              color={colors.plum.DEFAULT}
               accessibilityLabel={t("common.loading")}
             />
           ) : (results ?? []).length === 0 ? (
@@ -165,7 +161,7 @@ export default function Bible() {
               </Text>
 
               {results!.map((hit) => (
-                <Pressable
+                <Tap
                   key={`${hit.book_id}-${hit.chapter}-${hit.verse}`}
                   accessibilityRole="button"
                   className="gap-1"
@@ -188,14 +184,14 @@ export default function Bible() {
                       </Text>
                     ))}
                   </Text>
-                </Pressable>
+                </Tap>
               ))}
             </View>
           )
         ) : (
           <>
             {resume ? (
-              <Pressable
+              <Tap
                 accessibilityRole="button"
                 onPress={() =>
                   openChapter(resume.bookId, resume.chapter, resume.verse)
@@ -206,7 +202,7 @@ export default function Bible() {
                     {bookName(all, resume.bookId)} {resume.chapter}
                   </Text>
                 </Card>
-              </Pressable>
+              </Tap>
             ) : null}
 
             {[false, true].map((testament) => (

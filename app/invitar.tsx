@@ -5,6 +5,7 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
@@ -24,6 +25,7 @@ import { useCreateInviteCode, useMyInviteCode } from "@/core/social/invites";
  */
 export default function Invite() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -81,7 +83,10 @@ export default function Invite() {
       <Stack.Screen options={{ title: t("invite.title"), headerShown: true }} />
 
       <DawnBackground>
-        <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <Text className="font-serif text-lg leading-reading text-plum">
             {t("invite.body")}
           </Text>

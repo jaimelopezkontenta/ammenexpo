@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { LoadingState } from "@/components/ScreenState";
 import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
@@ -16,6 +17,7 @@ import { supabase } from "@/utils/supabase";
 
 export default function SharedPlanPreviewScreen() {
   const { t } = useTranslation();
+  const { top, scrollBottom } = useScreenPadding();
   const { token, de } = useLocalSearchParams<{
     token: string;
     /** Por dónde llegó: lo pone `buildShareUrl` al repartir el enlace. */
@@ -58,7 +60,11 @@ export default function SharedPlanPreviewScreen() {
 
     setIsRedeeming(false);
 
-    const result = outcome as { ok?: boolean; reason?: string } | null;
+    const result = outcome as {
+      ok?: boolean;
+      reason?: string;
+      plan_id?: string;
+    } | null;
 
     // The RPC answers `{ok:false, reason}` for a revoked or expired token
     // *without* raising, so ignoring both the error and the payload made a dead
@@ -84,6 +90,18 @@ export default function SharedPlanPreviewScreen() {
       queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] }),
       queryClient.invalidateQueries({ queryKey: ["circles"] }),
     ]);
+
+    // Con `plan_id` el canje abre el día que toca orar, no Hoy: aterrizar en la
+    // pestaña de Hoy dejaba el plan a un tab de distancia y sin ninguna pista
+    // de que acababa de pasar algo. Sin `plan_id` (enlace de grupo) sigue
+    // cayendo a la raíz, como antes.
+    if (result.plan_id) {
+      router.replace({
+        pathname: "/orar/[planId]",
+        params: { planId: result.plan_id },
+      });
+      return;
+    }
 
     router.replace("/");
   };
@@ -153,7 +171,11 @@ export default function SharedPlanPreviewScreen() {
   return (
     <ScrollView
       className="flex-1 bg-dawn-cream-bg"
-      contentContainerClassName="flex-grow px-7 py-14"
+      contentContainerClassName="flex-grow px-7 py-14 md:w-full md:max-w-read md:self-center"
+      contentContainerStyle={{
+        paddingTop: top,
+        paddingBottom: scrollBottom,
+      }}
     >
       <Text className="font-sans-medium text-sm text-mist-ink">
         {t("common.day", { number: data.day_number })}
@@ -176,7 +198,7 @@ export default function SharedPlanPreviewScreen() {
         </View>
 
         {data.scripture_text ? (
-          <View className="gap-2 rounded-2xl bg-white/60 p-5">
+          <View className="gap-2 rounded-card bg-glass/60 p-5">
             <Text className="font-sans-medium text-sm text-mist-ink">
               {t("plan.scripture")}
             </Text>
@@ -195,7 +217,7 @@ export default function SharedPlanPreviewScreen() {
             open the link could read about the person but not actually pray for
             them without signing up first. */}
         {data.intercessor_prayer ? (
-          <View className="gap-2 rounded-2xl bg-white/60 p-5">
+          <View className="gap-2 rounded-card bg-glass/60 p-5">
             <Text className="font-sans-medium text-sm text-mist-ink">
               {t("intercession.prayerFor", { name: data.owner_name })}
             </Text>

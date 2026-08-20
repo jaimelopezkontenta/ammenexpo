@@ -4,6 +4,7 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 
 /**
  * B1b — recursos inmediatos, no moderación.
@@ -21,6 +22,7 @@ import { DawnBackground } from "@/components/DawnBackground";
  */
 export default function CrisisResources() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
 
   return (
     <>
@@ -34,7 +36,10 @@ export default function CrisisResources() {
         }}
       />
       <DawnBackground>
-        <ScrollView contentContainerClassName="flex-grow gap-6 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <Text className="font-serif-bold text-2xl leading-8 text-plum">
             {t("crisis.title")}
           </Text>
@@ -50,7 +55,7 @@ export default function CrisisResources() {
             {t("crisis.notDiagnosis")}
           </Text>
 
-          <View className="gap-4 rounded-2xl bg-white/70 p-5">
+          <View className="gap-4 rounded-card bg-glass/70 p-5">
             <Text className="font-sans-semibold text-lg text-plum">
               {t("crisis.resourcesTitle")}
             </Text>

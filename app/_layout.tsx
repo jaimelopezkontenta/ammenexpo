@@ -12,11 +12,14 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AuthGate } from "@/core/auth/AuthGate";
 import { SessionProvider } from "@/core/auth/SessionProvider";
+import { ToastProvider } from "@/core/toast/ToastProvider";
 import {
   devConsoleReporter,
   observability,
   track,
 } from "@/core/observability/track";
+
+import { useThemeColors } from "@/theme";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -39,6 +42,7 @@ if (__DEV__) {
 track("open", { context: "cold_start" });
 
 export default function RootLayout() {
+  const colors = useThemeColors();
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -83,34 +87,41 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <SessionProvider>
-          <AuthGate>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                // Periwinkle, que es **exactamente** el color del fondo en la
-                // franja de arriba: el halo crema del degradado empieza al 7 %
-                // de la altura, así que por encima solo hay `dawn.sky` puro.
-                //
-                // Las pestañas se quitaron la barra de navegación porque
-                // pintaba una franja sólida sobre el degradado; las sesenta y
-                // cuatro pantallas interiores no pueden hacer lo mismo sin
-                // renunciar al botón de volver, así que la barra se queda y lo
-                // que se hace es que no se vea: mismo color arriba, y sin
-                // sombra, la costura desaparece.
-                //
-                // A mano y no con clases porque las opciones de navegación no
-                // pasan por NativeWind.
-                contentStyle: { backgroundColor: "#C7D6F2" },
-                headerStyle: { backgroundColor: "#C7D6F2" },
-                headerShadowVisible: false,
-                headerTintColor: "#413653",
-              }}
-            >
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(onboarding)" />
-            </Stack>
-          </AuthGate>
+          {/* Encima del navigator: los avisos flotan sobre cualquier pantalla
+            sin empujar su layout. Dentro de SafeAreaProvider por los insets. */}
+          <ToastProvider>
+            <AuthGate>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  // Periwinkle, que es **exactamente** el color del fondo en la
+                  // franja de arriba: el halo crema del degradado empieza al 7 %
+                  // de la altura, así que por encima solo hay `dawn.sky` puro.
+                  //
+                  // Las pestañas se quitaron la barra de navegación porque
+                  // pintaba una franja sólida sobre el degradado; las sesenta y
+                  // cuatro pantallas interiores no pueden hacer lo mismo sin
+                  // renunciar al botón de volver, así que la barra se queda y lo
+                  // que se hace es que no se vea: mismo color arriba, y sin
+                  // sombra, la costura desaparece.
+                  //
+                  // A mano y no con clases porque las opciones de navegación no
+                  // pasan por NativeWind.
+                  contentStyle: { backgroundColor: colors.dawn.sky },
+                  headerStyle: { backgroundColor: colors.dawn.sky },
+                  headerShadowVisible: false,
+                  headerTintColor: colors.plum.DEFAULT,
+                  // El empuje lateral nativo. En web el stack de expo-router
+                  // hace su fade y no hay nada que configurar.
+                  animation: "slide_from_right",
+                }}
+              >
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(onboarding)" />
+              </Stack>
+            </AuthGate>
+          </ToastProvider>
         </SessionProvider>
       </SafeAreaProvider>
     </QueryClientProvider>

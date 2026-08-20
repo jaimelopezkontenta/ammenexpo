@@ -1,9 +1,11 @@
 import { Link } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Card } from "@/components/Card";
 import { useVerseOfTheDay } from "@/core/bible/queries";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * El versículo del día.
@@ -43,11 +45,11 @@ export const VerseOfTheDay = () => {
           }}
           asChild
         >
-          <Pressable accessibilityRole="link">
+          <Tap accessibilityRole="link">
             <Text className="font-editorial text-base text-ember-ink">
               {data.reference}
             </Text>
-          </Pressable>
+          </Tap>
         </Link>
 
         <Link
@@ -61,11 +63,11 @@ export const VerseOfTheDay = () => {
           }}
           asChild
         >
-          <Pressable accessibilityRole="link">
+          <Tap accessibilityRole="link">
             <Text className="font-sans-medium text-sm text-plum underline">
               {t("bible.shareVerse")}
             </Text>
-          </Pressable>
+          </Tap>
         </Link>
       </View>
     </Card>

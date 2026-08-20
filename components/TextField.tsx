@@ -1,6 +1,8 @@
 import { forwardRef, useId } from "react";
 import { Text, TextInput, TextInputProps, View } from "react-native";
 
+import { useThemeColors } from "@/theme";
+
 interface TextFieldProps extends TextInputProps {
   label: string;
   error?: string | null;
@@ -8,6 +10,7 @@ interface TextFieldProps extends TextInputProps {
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(
   ({ label, error, ...inputProps }, ref) => {
+    const colors = useThemeColors();
     const errorId = useId();
 
     return (
@@ -28,15 +31,15 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
           accessibilityHint={error ?? undefined}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          placeholderTextColor="#6F6879"
+          placeholderTextColor={colors.mist.ink}
           {...inputProps}
           // Vidrio, como en el prototipo, pero sin desenfoque: un campo de
           // texto está dentro de un formulario con teclado abierto, y meter un
           // BlurView en cada uno cuesta más de lo que se ve. El blanco al 70 %
           // se parece bastante al 58 % con desenfoque de encima, y plum sobre
           // ese fondo sigue muy por encima de AA.
-          className={`w-full rounded-input border bg-white/70 px-4 py-4 font-sans text-base text-plum shadow-soft ${
-            error ? "border-danger" : "border-white/70"
+          className={`w-full rounded-input border bg-glass/70 px-4 py-4 font-sans text-base text-plum shadow-soft ${
+            error ? "border-danger" : "border-glassedge/70"
           } ${inputProps.className ?? ""}`}
         />
         {error ? (

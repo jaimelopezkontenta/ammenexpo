@@ -7,6 +7,7 @@ import { Platform } from "react-native";
 import { supabase } from "@/utils/supabase";
 import { track } from "@/core/observability/track";
 
+import { canRegisterRemotePush } from "./pushConfig";
 import { type ResolvedNotification } from "./resolveTarget";
 import {
   createPushResponseCoordinator,
@@ -51,6 +52,10 @@ export const usePushRegistration = (
 ) => {
   useEffect(() => {
     if (!enabled || !userId || Platform.OS === "web") return;
+    // Sin projectId de EAS, getExpoPushTokenAsync lanza y el nativo de
+    // FCM escribe un error a pantalla completa. No hay token que pedir:
+    // el registro remoto es un no-op, no un fallo.
+    if (!canRegisterRemotePush(projectId)) return;
 
     let active = true;
 
@@ -68,15 +73,12 @@ export const usePushRegistration = (
         // hacer, y no se vuelve a pedir en este mismo montaje.
         if (status !== "granted" || !active) return;
 
-        // `getExpoPushTokenAsync` lanza de verdad cuando falta el
-        // `projectId` de un build real de EAS (ver `app.config.js`) o
-        // cuando el módulo nativo no está disponible — sin este `try`, ese
-        // rechazo no lo capturaba nadie y subía como una promesa rechazada
-        // sin manejar, en un `useEffect` donde nada más podía hacer nada
-        // con ella.
-        const { data: token } = await Notifications.getExpoPushTokenAsync(
-          projectId ? { projectId } : undefined,
-        );
+        // `getExpoPushTokenAsync` aún puede lanzar si el módulo nativo no
+        // está (simulador, build incompleto). El caso sin projectId ya
+        // se cortó arriba: aquí siempre hay uno.
+        const { data: token } = await Notifications.getExpoPushTokenAsync({
+          projectId,
+        });
 
         if (!active) return;
 
@@ -95,10 +97,9 @@ export const usePushRegistration = (
         // que un evento de analítica deba llevar.
         track("push_registered", { platform: platformFor() });
       } catch (caught) {
-        // Nunca deja una promesa rechazada sin dueño: pedir permiso o token
-        // puede fallar por completo en un simulador, un dispositivo sin
-        // Google Play Services, o un build sin `projectId` — nada de eso
-        // puede tirar abajo el montaje de la app entera.
+        // Nunca deja una promesa rechazada sin dueño: pedir permiso o
+        // token puede fallar en un simulador o un dispositivo sin Play
+        // Services. Nada de eso puede tirar abajo el montaje de la app.
         console.error("push registration failed", caught);
       }
     };
@@ -118,11 +119,12 @@ export const usePushRegistration = (
  */
 export const revokeThisDevicePush = async () => {
   if (Platform.OS === "web") return;
+  if (!canRegisterRemotePush(projectId)) return;
 
   try {
-    const { data: token } = await Notifications.getExpoPushTokenAsync(
-      projectId ? { projectId } : undefined,
-    );
+    const { data: token } = await Notifications.getExpoPushTokenAsync({
+      projectId,
+    });
 
     const { error } = await supabase.rpc("revoke_push_device", {
       p_token: token,
@@ -161,10 +163,11 @@ export const revokeThisDevicePush = async () => {
  * `resolve_push_notification()` dos veces, aunque Expo omita ese identifier.
  *
  * Nunca decide "abrir el plan X" a partir de lo que trae la notificación:
- * pide primero `resolve_push_notification()`, que es quien de verdad sabe
- * si esto sigue autorizado (dueño correcto, sin bloqueo de por medio), y
- * solo entonces navega a un destino fijo y seguro (`/avisos` — nunca a una
- * ruta con un id de plan tomado del payload).
+ * un recordatorio local (`ammen-reminder-*`) abre Hoy sin RPC; un push de
+ * intercesión pide primero `resolve_push_notification()`, que es quien de
+ * verdad sabe si esto sigue autorizado (dueño correcto, sin bloqueo de por
+ * medio), y solo entonces navega a `/avisos` — nunca a una ruta con un id
+ * de plan tomado del payload.
  */
 const createNativeResponseCoordinator = () =>
   createPushResponseCoordinator({

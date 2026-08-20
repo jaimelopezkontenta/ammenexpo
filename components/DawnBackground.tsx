@@ -5,6 +5,8 @@ import { createContext, ReactNode, RefObject, useContext, useRef } from "react";
 import { StyleSheet, View, ViewProps } from "react-native";
 import Svg, { Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 
+import { gradients, useThemeColors, useIsDark } from "@/theme";
+
 // `LinearGradient` es un componente de fuera de React Native, así que sin esto
 // NativeWind no sabe que su `className` se traduce a estilo.
 cssInterop(LinearGradient, { className: "style" });
@@ -25,9 +27,6 @@ cssInterop(LinearGradient, { className: "style" });
  * Un componente sin prop no se puede usar mal. Si algún día hace falta otro
  * fondo, la conversación es esa y no un parámetro más.
  */
-
-/** El periwinkle de base, que se abre un poco por el centro. */
-const BASE = ["#C7D6F2", "#D2DEF4", "#C7D6F2"] as const;
 
 // El `Glass` que va encima del fondo necesita en Android un `blurTarget`: un ref
 // a la vista que se desenfoca (expo-blur 56). El fondo y los `Glass` no se
@@ -50,6 +49,13 @@ export const DawnBackground = ({
   // Si el target incluyera al propio Glass habría un ciclo visual.
   const targetRef = useRef<View | null>(null);
 
+  // El amanecer o el anochecer: mismo dibujo, otra hora. En oscuro el halo es
+  // el crema nocturno (violeta cálido) — un resplandor, no un foco.
+  const isDark = useIsDark();
+  const colors = useThemeColors();
+  const base = isDark ? gradients.dawnDark : gradients.dawn;
+  const glow = colors.dawn.cream;
+
   // `className` se desestructura y se escribe a mano abajo, en vez de viajar
   // dentro del `...viewProps`: NativeWind compila la clase donde ve el atributo
   // escrito en el JSX, y si llega por un spread la cadena se pasa tal cual. En
@@ -59,7 +65,7 @@ export const DawnBackground = ({
       <DawnBlurTargetContext.Provider value={targetRef}>
         <BlurTargetView ref={targetRef} style={StyleSheet.absoluteFill}>
           <LinearGradient
-            colors={BASE}
+            colors={base}
             locations={[0, 0.5, 1]}
             style={StyleSheet.absoluteFill}
           />
@@ -84,9 +90,9 @@ export const DawnBackground = ({
           >
             <Defs>
               <RadialGradient id="dawnGlow" cx="50%" cy="50%" r="50%">
-                <Stop offset="0" stopColor="#FFF1DD" stopOpacity="1" />
-                <Stop offset="0.45" stopColor="#FFF1DD" stopOpacity="0.55" />
-                <Stop offset="0.72" stopColor="#FFF1DD" stopOpacity="0" />
+                <Stop offset="0" stopColor={glow} stopOpacity="1" />
+                <Stop offset="0.45" stopColor={glow} stopOpacity="0.55" />
+                <Stop offset="0.72" stopColor={glow} stopOpacity="0" />
               </RadialGradient>
             </Defs>
             <Ellipse cx="50" cy="47" rx="90" ry="55" fill="url(#dawnGlow)" />

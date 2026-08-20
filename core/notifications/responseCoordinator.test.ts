@@ -335,6 +335,59 @@ describe("push response coordinator", () => {
     expect(harness.navigate).not.toHaveBeenCalled();
   });
 
+  it("opens Hoy for a local reminder tap and never calls resolve", async () => {
+    const harness = createHarness();
+
+    await harness.coordinator.capture(
+      {
+        notification: {
+          request: {
+            identifier: "ammen-reminder-8",
+            content: { data: null },
+          },
+        },
+      },
+      "listener",
+    );
+
+    expect(harness.resolve).not.toHaveBeenCalled();
+    expect(harness.navigate).toHaveBeenCalledWith("/");
+    expect(harness.navigate).not.toHaveBeenCalledWith("/avisos");
+  });
+
+  it("still opens /avisos for an authorized intercession with outboxId", async () => {
+    const harness = createHarness();
+    await harness.coordinator.updateSession({
+      resolved: true,
+      userId: "user-a",
+    });
+
+    await harness.coordinator.capture(response(), "listener");
+
+    expect(harness.resolve).toHaveBeenCalledWith(OUTBOX_ID);
+    expect(harness.navigate).toHaveBeenCalledWith("/avisos");
+  });
+
+  it("dedupes a local reminder across listener and cold-start without resolving", async () => {
+    const harness = createHarness();
+    const localReminder: NotificationResponseLike = {
+      notification: {
+        request: {
+          identifier: "ammen-reminder-8",
+          content: { data: null },
+        },
+      },
+    };
+
+    await harness.coordinator.capture(localReminder, "listener");
+    await harness.coordinator.capture(localReminder, "cold-start");
+
+    expect(harness.resolve).not.toHaveBeenCalled();
+    expect(harness.navigate).toHaveBeenCalledOnce();
+    expect(harness.navigate).toHaveBeenCalledWith("/");
+    expect(harness.clearLastResponse).toHaveBeenCalledOnce();
+  });
+
   it("dispose prevents navigation when an in-flight resolution finishes", async () => {
     let finishResolution: ((result: PushResolutionResult) => void) | undefined;
     const resolve = vi.fn(

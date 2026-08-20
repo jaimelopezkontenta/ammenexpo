@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { useSession } from "@/core/auth/SessionProvider";
 import { useUpdateLocale } from "@/core/profile/queries";
 import { supportedLanguages, type LanguageCode } from "@/translation";
+
+import { Tap } from "@/components/ui/Tap";
 
 const LABELS: Record<LanguageCode, string> = {
   es: "Español",
@@ -28,7 +30,7 @@ export const LanguageSwitcher = () => {
         {supportedLanguages.map((code) => {
           const isActive = code === current;
           return (
-            <Pressable
+            <Tap
               key={code}
               // A radio, not a button: these are a choice with a current value.
               // And both state props are needed — react-native-web 0.21 stopped
@@ -53,7 +55,7 @@ export const LanguageSwitcher = () => {
                 updateLocale.mutate(code);
               }}
               className={`rounded-full px-4 py-2 ${
-                isActive ? "bg-plum-chip" : "bg-white/60"
+                isActive ? "bg-plum-chip" : "bg-glass/60"
               }`}
             >
               <Text
@@ -63,7 +65,7 @@ export const LanguageSwitcher = () => {
               >
                 {LABELS[code]}
               </Text>
-            </Pressable>
+            </Tap>
           );
         })}
       </View>

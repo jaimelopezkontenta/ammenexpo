@@ -6,6 +6,7 @@ import { ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { VerseCard } from "@/components/VerseCard";
 import { VerseStory } from "@/components/VerseStory";
@@ -27,6 +28,7 @@ import { useShareVerseImage } from "@/core/bible/image";
  */
 export default function VerseImage() {
   const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { book, chapter, verse } = useLocalSearchParams<{
     book: string;
     chapter: string;
@@ -101,7 +103,10 @@ export default function VerseImage() {
       <Stack.Screen options={{ title: t("bible.share"), headerShown: true }} />
 
       <DawnBackground>
-        <ScrollView contentContainerClassName="gap-5 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <View className="items-center gap-1">
             <Text className="font-editorial text-lg text-ember-ink">
               {t("bible.formatLabel")}

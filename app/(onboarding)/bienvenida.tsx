@@ -2,10 +2,12 @@ import * as Localization from "expo-localization";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
+import Animated, { FadeInRight } from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips, type ChoiceOption } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { TextField } from "@/components/TextField";
 import { WizardHeader } from "@/components/WizardHeader";
 import { Wordmark } from "@/components/Wordmark";
@@ -21,11 +23,13 @@ import {
   toggleWithLimit,
 } from "@/core/onboarding/options";
 import { supabase } from "@/utils/supabase";
+import { DURATION, EASE } from "@/theme/motion";
 
 const TOTAL_STEPS = 4;
 
 export default function Onboarding() {
   const { t, i18n } = useTranslation();
+  const { top, scrollBottom } = useScreenPadding();
   const { refreshOnboarding } = useSession();
 
   const [step, setStep] = useState(1);
@@ -125,7 +129,11 @@ export default function Onboarding() {
     // acceso pero al reves — se nota que se ha cruzado una puerta.
     <DawnBackground>
       <ScrollView
-        contentContainerClassName="flex-grow px-7 pb-10 pt-6"
+        contentContainerClassName="flex-grow px-7 pb-10 pt-6 md:w-full md:max-w-read md:self-center"
+        contentContainerStyle={{
+          paddingTop: top,
+          paddingBottom: scrollBottom,
+        }}
         keyboardShouldPersistTaps="handled"
       >
         <WizardHeader
@@ -136,143 +144,152 @@ export default function Onboarding() {
           }
         />
 
-        {step === 1 ? (
-          <View className="mt-4 gap-6">
-            <View className="gap-2">
-              <Text className="text-center font-sans-bold text-3xl leading-9 text-plum">
-                {t("onboarding.welcomeTitle")}
-              </Text>
-              <Text className="text-center font-sans text-base text-mist-ink">
-                {t("onboarding.welcomeBody")}
-              </Text>
-            </View>
-            <TextField
-              label={t("onboarding.nameQuestion")}
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder={t("onboarding.namePlaceholder")}
-              autoCapitalize="words"
-              autoComplete="name"
-            />
+        {/* El `key` fuerza el remonte al cambiar de paso, y con él la entrada
+          lateral: la respuesta visual de "esto avanza" que el asistente no
+          tenía. Solo entrada, sin `exiting`: una salida animada mantiene el
+          paso anterior en el layout unos frames y el CTA daría un salto. */}
+        <Animated.View
+          key={step}
+          entering={FadeInRight.duration(DURATION.enter).easing(EASE)}
+        >
+          {step === 1 ? (
+            <View className="mt-4 gap-6">
+              <View className="gap-2">
+                <Text className="text-center font-sans-bold text-3xl leading-9 text-plum">
+                  {t("onboarding.welcomeTitle")}
+                </Text>
+                <Text className="text-center font-sans text-base text-mist-ink">
+                  {t("onboarding.welcomeBody")}
+                </Text>
+              </View>
+              <TextField
+                label={t("onboarding.nameQuestion")}
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder={t("onboarding.namePlaceholder")}
+                autoCapitalize="words"
+                autoComplete="name"
+              />
 
-            {/* El nombre y el género van juntos y no en dos pantallas como el
+              {/* El nombre y el género van juntos y no en dos pantallas como el
               montaje. Son la misma pregunta —quién eres— y separarlos cuesta
               un toque más a cambio de nada. */}
-            <View className="gap-2">
-              <Text className="font-sans-medium text-sm text-plum">
-                {t("onboarding.genderQuestion")}
-              </Text>
-              <Text className="font-sans text-sm text-mist-ink">
-                {t("onboarding.genderHint")}
-              </Text>
+              <View className="gap-2">
+                <Text className="font-sans-medium text-sm text-plum">
+                  {t("onboarding.genderQuestion")}
+                </Text>
+                <Text className="font-sans text-sm text-mist-ink">
+                  {t("onboarding.genderHint")}
+                </Text>
+                <ChoiceChips
+                  options={GENDER_KEYS.map((key) => ({
+                    value: key,
+                    label: t(`onboarding.gender.${key}`),
+                  }))}
+                  selected={gender ? [gender] : []}
+                  onToggle={setGender}
+                />
+              </View>
+            </View>
+          ) : null}
+
+          {step === 2 ? (
+            <View className="mt-4 gap-6">
+              <View className="gap-2">
+                <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                  {t("onboarding.seasonQuestion")}
+                </Text>
+                <Text className="text-center font-sans text-base text-mist-ink">
+                  {t("onboarding.seasonHint", { count: SEASON_MAX })}
+                </Text>
+              </View>
               <ChoiceChips
-                options={GENDER_KEYS.map((key) => ({
-                  value: key,
-                  label: t(`onboarding.gender.${key}`),
-                }))}
-                selected={gender ? [gender] : []}
-                onToggle={setGender}
+                options={seasonOptions}
+                selected={seasons}
+                onToggle={(value) =>
+                  setSeasons((current) =>
+                    toggleWithLimit(current, value, SEASON_MAX),
+                  )
+                }
+                max={SEASON_MAX}
+                multiple
               />
-            </View>
-          </View>
-        ) : null}
-
-        {step === 2 ? (
-          <View className="mt-4 gap-6">
-            <View className="gap-2">
-              <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
-                {t("onboarding.seasonQuestion")}
-              </Text>
-              <Text className="text-center font-sans text-base text-mist-ink">
-                {t("onboarding.seasonHint", { count: SEASON_MAX })}
-              </Text>
-            </View>
-            <ChoiceChips
-              options={seasonOptions}
-              selected={seasons}
-              onToggle={(value) =>
-                setSeasons((current) =>
-                  toggleWithLimit(current, value, SEASON_MAX),
-                )
-              }
-              max={SEASON_MAX}
-              multiple
-            />
-            {/* Said out loud, because a chip that stops responding with no
+              {/* Said out loud, because a chip that stops responding with no
               explanation reads as a broken chip. */}
-            {seasons.length >= SEASON_MAX ? (
-              <Text
-                className="text-center font-sans text-sm text-mist-ink"
-                accessibilityLiveRegion="polite"
-              >
-                {t("onboarding.seasonMax", { count: SEASON_MAX })}
-              </Text>
-            ) : null}
-          </View>
-        ) : null}
-
-        {step === 3 ? (
-          <View className="mt-4 gap-6">
-            <View className="gap-2">
-              <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
-                {t("onboarding.topicsQuestion")}
-              </Text>
-              <Text className="text-center font-sans text-base text-mist-ink">
-                {t("onboarding.topicsHint")}
-              </Text>
+              {seasons.length >= SEASON_MAX ? (
+                <Text
+                  className="text-center font-sans text-sm text-mist-ink"
+                  accessibilityLiveRegion="polite"
+                >
+                  {t("onboarding.seasonMax", { count: SEASON_MAX })}
+                </Text>
+              ) : null}
             </View>
-            <ChoiceChips
-              options={topicOptions}
-              selected={topics}
-              onToggle={(value) =>
-                setTopics((current) => toggleWithLimit(current, value))
-              }
-              multiple
-            />
+          ) : null}
 
-            {/* Folded in here rather than given a fifth step: it is the same
+          {step === 3 ? (
+            <View className="mt-4 gap-6">
+              <View className="gap-2">
+                <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                  {t("onboarding.topicsQuestion")}
+                </Text>
+                <Text className="text-center font-sans text-base text-mist-ink">
+                  {t("onboarding.topicsHint")}
+                </Text>
+              </View>
+              <ChoiceChips
+                options={topicOptions}
+                selected={topics}
+                onToggle={(value) =>
+                  setTopics((current) => toggleWithLimit(current, value))
+                }
+                multiple
+              />
+
+              {/* Folded in here rather than given a fifth step: it is the same
               question, with a way out for somebody who does not see themselves
               in any of the sixteen. It also becomes the starting point of the
               identical field on the plan form, so it is asked once. */}
-            <View className="gap-2">
-              <TextField
-                label={t("onboarding.customLabel")}
-                value={customTopic}
-                onChangeText={setCustomTopic}
-                placeholder={t("onboarding.customPlaceholder")}
-                maxLength={CUSTOM_TOPIC_MAX}
-                multiline
-              />
-              <Text className="font-sans text-sm text-mist-ink">
-                {t("onboarding.customHint")}
-              </Text>
+              <View className="gap-2">
+                <TextField
+                  label={t("onboarding.customLabel")}
+                  value={customTopic}
+                  onChangeText={setCustomTopic}
+                  placeholder={t("onboarding.customPlaceholder")}
+                  maxLength={CUSTOM_TOPIC_MAX}
+                  multiline
+                />
+                <Text className="font-sans text-sm text-mist-ink">
+                  {t("onboarding.customHint")}
+                </Text>
+              </View>
             </View>
-          </View>
-        ) : null}
+          ) : null}
 
-        {step === 4 ? (
-          <View className="mt-4 gap-6">
-            <View className="gap-2">
-              <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
-                {t("onboarding.timeQuestion")}
-              </Text>
-              <Text className="text-center font-sans text-base text-mist-ink">
-                {t("onboarding.timeHint", { count: REMINDER_MAX })}
-              </Text>
+          {step === 4 ? (
+            <View className="mt-4 gap-6">
+              <View className="gap-2">
+                <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                  {t("onboarding.timeQuestion")}
+                </Text>
+                <Text className="text-center font-sans text-base text-mist-ink">
+                  {t("onboarding.timeHint", { count: REMINDER_MAX })}
+                </Text>
+              </View>
+              <ChoiceChips
+                options={hourOptions}
+                selected={reminderKeys}
+                onToggle={(value) =>
+                  setReminderKeys((current) =>
+                    toggleWithLimit(current, value, REMINDER_MAX),
+                  )
+                }
+                max={REMINDER_MAX}
+                multiple
+              />
             </View>
-            <ChoiceChips
-              options={hourOptions}
-              selected={reminderKeys}
-              onToggle={(value) =>
-                setReminderKeys((current) =>
-                  toggleWithLimit(current, value, REMINDER_MAX),
-                )
-              }
-              max={REMINDER_MAX}
-              multiple
-            />
-          </View>
-        ) : null}
+          ) : null}
+        </Animated.View>
 
         {error ? (
           <Text

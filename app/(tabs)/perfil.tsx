@@ -2,7 +2,7 @@ import * as Localization from "expo-localization";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Platform, ScrollView, Text, View } from "react-native";
 
 import { TabHeader } from "@/components/TabHeader";
 import { Avatar } from "@/components/Avatar";
@@ -26,12 +26,16 @@ import {
   toggleWithLimit,
 } from "@/core/onboarding/options";
 import { useOpenReportCount } from "@/core/moderation/queue";
+import { useToast } from "@/core/toast/ToastProvider";
 import {
   useDeleteAccount,
   useProfile,
   useUpdateProfile,
   useUpdateTimezone,
 } from "@/core/profile/queries";
+
+import { NavRow } from "@/components/ui/NavRow";
+import { Tap } from "@/components/ui/Tap";
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -51,13 +55,14 @@ export default function Profile() {
   // control of the text somebody is in the middle of typing.
   const [draftName, setDraftName] = useState<string | null>(null);
   const [draftHours, setDraftHours] = useState<number[] | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Resultados de acción por el toast del sistema: caducan solos y no
+  // empujan el layout justo cuando la app dice "guardado".
+  const toast = useToast();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState skeleton="profile" />;
   }
 
   if (isError || !profile) {
@@ -87,30 +92,24 @@ export default function Profile() {
   const handleTimezone = async () => {
     if (!deviceZone) return;
 
-    setNotice(null);
-    setError(null);
-
     try {
       await updateTimezone.mutateAsync(deviceZone);
-      setNotice(t("profile.saved"));
+      toast.success(t("profile.saved"));
     } catch {
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
   const handlePickPhoto = async () => {
-    setNotice(null);
-    setError(null);
-
     try {
       const url = await uploadAvatar.mutateAsync();
       // `null` significa que cerró el selector sin elegir nada, que no es un
       // fallo y tampoco merece un "guardado".
-      if (url) setNotice(t("profile.saved"));
+      if (url) toast.success(t("profile.saved"));
     } catch (caught) {
       // Los dos motivos que la persona puede arreglar se dicen por su nombre;
       // el resto cae en el genérico.
-      setError(
+      toast.error(
         caught instanceof AvatarTooLarge
           ? t("profile.photoTooLarge")
           : (caught as Error)?.message === "avatar_permission_denied"
@@ -121,20 +120,14 @@ export default function Profile() {
   };
 
   const handleRemovePhoto = async () => {
-    setNotice(null);
-    setError(null);
-
     try {
       await removeAvatar.mutateAsync();
     } catch {
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
   const handleSave = async () => {
-    setNotice(null);
-    setError(null);
-
     try {
       await update.mutateAsync({
         displayName: name.trim() !== profile.display_name ? name : undefined,
@@ -143,9 +136,9 @@ export default function Profile() {
 
       setDraftName(null);
       setDraftHours(null);
-      setNotice(t("profile.saved"));
+      toast.success(t("profile.saved"));
     } catch {
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
@@ -162,20 +155,16 @@ export default function Profile() {
     // Two taps, and the second one is red: this takes the plans, the circles
     // and everything anyone ever prayed, and none of it comes back.
     if (!confirmingDelete) {
-      setNotice(null);
-      setError(null);
       setConfirmingDelete(true);
       return;
     }
-
-    setError(null);
 
     try {
       await deleteAccount.mutateAsync();
       router.replace("/entrar");
     } catch {
       setConfirmingDelete(false);
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
@@ -209,28 +198,32 @@ export default function Profile() {
                 ) : null}
 
                 <View className="flex-row flex-wrap gap-4 pt-1">
-                  <Pressable
+                  <Tap
                     accessibilityRole="button"
                     disabled={uploadAvatar.isPending}
                     onPress={() => void handlePickPhoto()}
+                    // Enlaces de 14px: sin esto la zona táctil quedaba por
+                    // debajo de los 44px mínimos.
+                    hitSlop={12}
                   >
                     <Text className="font-sans text-sm text-mist-ink underline">
                       {profile.avatar_url
                         ? t("profile.changePhoto")
                         : t("profile.addPhoto")}
                     </Text>
-                  </Pressable>
+                  </Tap>
 
                   {profile.avatar_url ? (
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       disabled={removeAvatar.isPending}
                       onPress={() => void handleRemovePhoto()}
+                      hitSlop={12}
                     >
                       <Text className="font-sans text-sm text-mist-ink underline">
                         {t("profile.removePhoto")}
                       </Text>
-                    </Pressable>
+                    </Tap>
                   ) : null}
                 </View>
               </View>
@@ -254,24 +247,6 @@ export default function Profile() {
                 onPress={() => void handleSave()}
               />
             </View>
-          ) : null}
-
-          {notice ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
-              accessibilityRole="alert"
-            >
-              {notice}
-            </Text>
-          ) : null}
-
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
           ) : null}
 
           <View className="gap-6 md:flex-row md:items-start">
@@ -301,10 +276,14 @@ export default function Profile() {
                   max={REMINDER_MAX}
                   multiple
                 />
-                {/* La preferencia se guarda, pero ninguna infraestructura de
-                  avisos la lee todavía. El copy lo dice sin prometer un envío. */}
+                {/* En nativo estas horas se programan como notificaciones
+                  locales diarias al guardar (ver localReminders.ts); en web no
+                  se puede programar nada, y el copy lo dice sin fingir que va
+                  a sonar. */}
                 <Text className="font-sans text-sm leading-5 text-mist-ink">
-                  {t("profile.reminderHint")}
+                  {Platform.OS === "web"
+                    ? t("profile.reminderHintWeb")
+                    : t("profile.reminderHintNative")}
                 </Text>
               </View>
 
@@ -338,43 +317,42 @@ export default function Profile() {
             </Card>
 
             <View className="gap-6 md:min-w-0 md:flex-1">
-              <Card label={t("profile.communitySupport")} className="gap-2">
+              {/* Filas con chevron, no seis Button ghost idénticos: son
+                enlaces a otra pantalla, no seis llamadas a la acción del
+                mismo peso. */}
+              <Card label={t("profile.communitySupport")} className="gap-0">
                 <Link href="/testimonios" asChild>
-                  <Button title={t("testimony.title")} variant="ghost" />
+                  <NavRow label={t("testimony.title")} />
                 </Link>
 
                 {/* Plus es una página informativa: el nombre deja claro aquí,
                   antes de abrirla, que todavía no existe una compra. */}
                 <Link href="/plus" asChild>
-                  <Button title={t("profile.plusComingSoon")} variant="ghost" />
+                  <NavRow label={t("profile.plusComingSoon")} />
                 </Link>
 
                 <Link href="/bloqueados" asChild>
-                  <Button
-                    title={t("moderation.blockedTitle")}
-                    variant="ghost"
-                  />
+                  <NavRow label={t("moderation.blockedTitle")} />
                 </Link>
 
                 {profile.is_staff ? (
                   <Link href="/moderacion" asChild>
-                    <Button
-                      title={
+                    <NavRow
+                      label={
                         openReports
                           ? `${t("moderation.queueTitle")} · ${openReports}`
                           : t("moderation.queueTitle")
                       }
-                      variant="ghost"
                     />
                   </Link>
                 ) : null}
 
                 <Link href="/invitar" asChild>
-                  <Button title={t("invite.title")} variant="ghost" />
+                  <NavRow label={t("invite.title")} />
                 </Link>
 
                 <Link href="/acerca" asChild>
-                  <Button title={t("profile.about")} variant="ghost" />
+                  <NavRow label={t("profile.about")} />
                 </Link>
               </Card>
 

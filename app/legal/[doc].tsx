@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { LegalText } from "@/components/LegalText";
 import { legalDocument } from "@/core/legal/documents";
 
@@ -18,6 +19,7 @@ import { legalDocument } from "@/core/legal/documents";
  */
 export default function LegalDocument() {
   const { i18n } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { doc } = useLocalSearchParams<{ doc: string }>();
 
   const document = legalDocument(
@@ -30,7 +32,10 @@ export default function LegalDocument() {
       <Stack.Screen options={{ title: document.title, headerShown: true }} />
 
       <DawnBackground>
-        <ScrollView contentContainerClassName="gap-5 px-7 py-8">
+        <ScrollView
+          contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
+        >
           <View className="gap-1">
             <Text className="font-serif-bold text-2xl text-plum">
               {document.title}

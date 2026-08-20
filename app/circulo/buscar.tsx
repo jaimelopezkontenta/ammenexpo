@@ -1,15 +1,20 @@
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   useJoinPublicCircle,
   useSearchPublicCircles,
 } from "@/core/circles/queries";
+
+import { useThemeColors } from "@/theme";
+
+import { Tap } from "@/components/ui/Tap";
 
 /**
  * The directory that makes "aparecerá en las búsquedas" true.
@@ -22,6 +27,8 @@ import {
  */
 export default function FindCircles() {
   const { t } = useTranslation();
+  const colors = useThemeColors();
+  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -60,16 +67,17 @@ export default function FindCircles() {
       <Stack.Screen options={{ title: t("circles.find"), headerShown: true }} />
       <DawnBackground>
         <ScrollView
-          contentContainerClassName="gap-5 px-7 py-8"
+          contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           <TextInput
-            className="w-full rounded-2xl border border-white/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base text-plum"
+            className="w-full rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base text-plum"
             accessibilityLabel={t("circles.findPlaceholder")}
             value={query}
             onChangeText={setQuery}
             placeholder={t("circles.findPlaceholder")}
-            placeholderTextColor="#6F6879"
+            placeholderTextColor={colors.mist.ink}
             autoCorrect={false}
           />
 
@@ -98,7 +106,7 @@ export default function FindCircles() {
           {(circles ?? []).map((circle) => (
             <View
               key={circle.id}
-              className="gap-2 rounded-2xl border border-white/60 p-5"
+              className="gap-2 rounded-card border border-glassedge/60 p-5"
             >
               <Text className="font-sans-semibold text-lg text-plum">
                 {circle.name}
@@ -115,7 +123,7 @@ export default function FindCircles() {
               </Text>
 
               {circle.is_member ? (
-                <Pressable
+                <Tap
                   accessibilityRole="link"
                   onPress={() =>
                     router.push({
@@ -127,9 +135,9 @@ export default function FindCircles() {
                   <Text className="font-sans-medium text-base text-plum">
                     {t("circles.alreadyIn")}
                   </Text>
-                </Pressable>
+                </Tap>
               ) : (
-                <Pressable
+                <Tap
                   accessibilityRole="button"
                   accessibilityState={{ busy: joining === circle.id }}
                   aria-busy={joining === circle.id}
@@ -145,7 +153,7 @@ export default function FindCircles() {
                       ? t("circles.joining")
                       : t("circles.join")}
                   </Text>
-                </Pressable>
+                </Tap>
               )}
             </View>
           ))}

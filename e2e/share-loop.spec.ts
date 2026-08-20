@@ -174,27 +174,37 @@ test.describe("share-loop — del enlace a la intercesión, idempotente", () => 
 
       // --- B se autentica y canjea ---
       // El token se quedó guardado al abrir el preview (`rememberShareToken`);
-      // al entrar, `redeemPendingTokens` lo canjea y B aterriza en Hoy con el
-      // plan ya compartido con él.
+      // al entrar, `redeemPendingTokens` lo canjea y B aterriza directo en el
+      // día recién canjeado (`/orar/[planId]`), no en Hoy.
       await guestPage.getByRole("link", { name: "Ya tengo cuenta" }).click();
       await expect(guestPage.getByLabel("Correo electrónico")).toBeVisible();
       await guestPage.getByLabel("Correo electrónico").fill(SEED_B.email);
       await guestPage.getByLabel("Contraseña").fill(SEED_B.password);
       await guestPage.getByRole("button", { name: "Entrar" }).click();
-      await expect(
-        guestPage.getByRole("tab", { name: "Hoy" }).first(),
-      ).toBeVisible({ timeout: 15_000 });
 
-      // --- B entra en Orar y abre el plan recién canjeado ---
-      await guestPage.getByRole("tab", { name: "Orar" }).first().click();
-      await expect(guestPage.getByText(DAY_TITLE)).toBeVisible({
-        timeout: 10_000,
-      });
-      await guestPage.getByText(DAY_TITLE).click();
-
+      // --- B ora en el plan recién canjeado ---
+      // El canje navega a `/orar/[planId]` (sin tabs). Por si una carrera con
+      // el redirect de AuthGate lo deja en tabs, se espera «Oré por ti» con
+      // timeout largo y, si no aparece, se intenta el camino viejo: tab Orar →
+      // título del día. No se exige «Hoy» como señal: ya no es donde aterriza
+      // un canje.
       const prayButton = guestPage.getByRole("button", {
         name: "Oré por ti",
       });
+
+      const landedOnDay = await prayButton
+        .waitFor({ state: "visible", timeout: 15_000 })
+        .then(() => true)
+        .catch(() => false);
+
+      if (!landedOnDay) {
+        await guestPage.getByRole("tab", { name: "Orar" }).first().click();
+        await expect(guestPage.getByText(DAY_TITLE)).toBeVisible({
+          timeout: 10_000,
+        });
+        await guestPage.getByText(DAY_TITLE).click();
+      }
+
       await expect(prayButton).toBeVisible({ timeout: 10_000 });
 
       // --- B pulsa «Oré por ti» dos veces ---

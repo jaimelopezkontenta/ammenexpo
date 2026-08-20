@@ -5,6 +5,7 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useAcceptTerms } from "@/core/legal/queries";
 
@@ -22,6 +23,7 @@ import { useAcceptTerms } from "@/core/legal/queries";
  */
 export default function AcceptTerms() {
   const { t } = useTranslation();
+  const { top, scrollBottom } = useScreenPadding();
   const { signOut } = useSession();
   const accept = useAcceptTerms();
 
@@ -39,7 +41,13 @@ export default function AcceptTerms() {
 
   return (
     <DawnBackground>
-      <ScrollView contentContainerClassName="flex-grow justify-center gap-6 px-7 py-12">
+      <ScrollView
+        contentContainerClassName="flex-grow justify-center gap-6 px-7 py-12 md:w-full md:max-w-read md:self-center"
+        contentContainerStyle={{
+          paddingTop: top,
+          paddingBottom: scrollBottom,
+        }}
+      >
         <Text className="font-serif-bold text-2xl text-plum">
           {t("legal.gateTitle")}
         </Text>
