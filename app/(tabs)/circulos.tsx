@@ -5,6 +5,7 @@ import { ScrollView, Text, View } from "react-native";
 
 import { TabHeader } from "@/components/TabHeader";
 import { DawnBackground } from "@/components/DawnBackground";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -72,6 +73,7 @@ export default function Circles() {
 
   if (isCreating) {
     return (
+      <KeyboardScreen>
       <DawnBackground>
         <TabHeader title={t("tabs.circles")} />
         <ScrollView
@@ -143,6 +145,7 @@ export default function Circles() {
           </View>
         </ScrollView>
       </DawnBackground>
+      </KeyboardScreen>
     );
   }
 

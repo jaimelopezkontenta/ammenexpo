@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -98,9 +99,11 @@ export default function FindCircles() {
             always means something real: either nobody has opened a public
             circle yet, or this search found none. */}
           {!isLoading && !isError && (circles ?? []).length === 0 ? (
-            <Text className="font-sans text-base leading-6 text-mist-ink">
-              {query.trim() ? t("circles.findEmpty") : t("circles.findNone")}
-            </Text>
+            <EmptyState
+              title={
+                query.trim() ? t("circles.findEmpty") : t("circles.findNone")
+              }
+            />
           ) : null}
 
           {(circles ?? []).map((circle) => (

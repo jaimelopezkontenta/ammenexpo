@@ -63,7 +63,7 @@ export default function TabLayout() {
               },
             ]}
             intensity={28}
-            readable
+            fill={0.55}
           />
         ),
         // Sin barra de navegación: pintaba una franja sólida encima del

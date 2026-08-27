@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { DayView } from "@/components/DayView";
+import { Txt } from "@/components/ui/Text";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -75,9 +76,7 @@ export default function PlanDayDetail() {
           contentContainerStyle={{ paddingBottom: scrollBottom }}
         >
           <View className="gap-1">
-            <Text className="font-serif-bold text-3xl leading-10 text-plum">
-              {day.title}
-            </Text>
+            <Txt variant="title">{day.title}</Txt>
             {/* Read-only on purpose. Marking a past day prayed belongs on Hoy,
               where "today" is what the streak is actually counting. */}
             {prayed ? (

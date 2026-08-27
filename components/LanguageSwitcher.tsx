@@ -5,7 +5,7 @@ import { useSession } from "@/core/auth/SessionProvider";
 import { useUpdateLocale } from "@/core/profile/queries";
 import { supportedLanguages, type LanguageCode } from "@/translation";
 
-import { Tap } from "@/components/ui/Tap";
+import { Pill } from "@/components/ui/Pill";
 
 const LABELS: Record<LanguageCode, string> = {
   es: "Español",
@@ -30,20 +30,14 @@ export const LanguageSwitcher = () => {
         {supportedLanguages.map((code) => {
           const isActive = code === current;
           return (
-            <Tap
+            <Pill
               key={code}
-              // A radio, not a button: these are a choice with a current value.
-              // And both state props are needed — react-native-web 0.21 stopped
-              // mapping accessibilityState, so on web the active language was
-              // announced exactly like the inactive one.
-              accessibilityRole="radio"
-              accessibilityState={{ selected: isActive, checked: isActive }}
-              aria-checked={isActive}
-              // The endonym alone announces as a noun; these say what tapping
-              // does. Both keys have existed, unused, since the beginning.
+              label={LABELS[code]}
               accessibilityLabel={t(
                 code === "es" ? "button.spanish" : "button.english",
               )}
+              selected={isActive}
+              role="radio"
               onPress={() => {
                 void i18n.changeLanguage(code);
                 // Y en el servidor, que es lo que nunca se hacía:
@@ -54,18 +48,7 @@ export const LanguageSwitcher = () => {
                 // para quien cambió de idioma hace meses.
                 updateLocale.mutate(code);
               }}
-              className={`rounded-full px-4 py-2 ${
-                isActive ? "bg-plum-chip" : "bg-glass/60"
-              }`}
-            >
-              <Text
-                className={
-                  isActive ? "font-sans-semibold text-white" : "text-mist-ink"
-                }
-              >
-                {LABELS[code]}
-              </Text>
-            </Tap>
+            />
           );
         })}
       </View>

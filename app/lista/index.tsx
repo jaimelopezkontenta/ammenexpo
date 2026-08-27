@@ -1,13 +1,16 @@
-import { Link, router, Stack } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
+import { goBackOr } from "@/core/nav/safeBack";
 import {
   ITEM_MAX,
   useAddListItem,
@@ -19,6 +22,7 @@ import {
 import { useThemeColors } from "@/theme";
 
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Txt } from "@/components/ui/Text";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -76,13 +80,7 @@ export default function PrayerList() {
   // El volver por defecto de la pila apunta a la tab inicial (Hoy); quien
   // entró desde Orar espera volver a Orar. Si hay historia, se respeta; si
   // no (arranque en frío o entrada directa a la lista), se cae en Orar.
-  const goBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace("/orar");
-    }
-  };
+  const goBack = () => goBackOr("/orar");
 
   const screenOptions = {
     title: t("list.title"),
@@ -124,6 +122,7 @@ export default function PrayerList() {
     <>
       <Stack.Screen options={screenOptions} />
 
+      <KeyboardScreen>
       <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
@@ -175,13 +174,12 @@ export default function PrayerList() {
           {items.length === 0 ? <EmptyState title={t("list.empty")} /> : null}
 
           {pending.map((item) => (
-            <View
+            <Card
               key={item.id}
-              className="gap-2 rounded-card border border-glassedge/60 p-5"
+              flat
+              className="gap-2"
             >
-              <Text className="font-serif text-base leading-reading text-plum">
-                {item.body}
-              </Text>
+              <Txt variant="bodySerifReading">{item.body}</Txt>
 
               <View className="flex-row flex-wrap gap-4">
                 <Tap
@@ -225,7 +223,7 @@ export default function PrayerList() {
                   </Text>
                 </Tap>
               </View>
-            </View>
+            </Card>
           ))}
 
           {answered.length > 0 ? (
@@ -235,13 +233,14 @@ export default function PrayerList() {
               </Text>
 
               {answered.map((item) => (
-                <View
+                <Card
                   key={item.id}
-                  className="gap-2 rounded-card bg-glass/60 p-5"
+                  flat
+                  className="gap-2"
                 >
-                  <Text className="font-serif text-base leading-reading text-mist-ink">
+                  <Txt variant="bodySerifReading" tone="secondary">
                     {item.body}
-                  </Text>
+                  </Txt>
 
                   <View className="flex-row flex-wrap gap-4">
                     {/* El cuarto bucle del producto —terminas algo y cuentas qué
@@ -278,12 +277,13 @@ export default function PrayerList() {
                       </Text>
                     </Tap>
                   </View>
-                </View>
+                </Card>
               ))}
             </View>
           ) : null}
         </ScrollView>
       </DawnBackground>
+      </KeyboardScreen>
     </>
   );
 }

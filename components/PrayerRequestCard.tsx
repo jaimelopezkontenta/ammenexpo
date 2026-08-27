@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { Card } from "@/components/Card";
+import { Txt } from "@/components/ui/Text";
 import type { PrayerRequest } from "@/core/posts/queries";
 
 import { Tap } from "@/components/ui/Tap";
@@ -35,7 +37,7 @@ export const PrayerRequestCard = ({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
-    <View className="gap-3 rounded-card border border-glassedge/60 bg-glass/60 p-5 shadow-card">
+    <Card flat className="gap-3">
       <View className="flex-row items-center justify-between gap-3">
         <View className="flex-1 flex-row items-center gap-2">
           <Avatar
@@ -81,9 +83,7 @@ export const PrayerRequestCard = ({
         </View>
       ) : null}
 
-      <Text className="font-serif text-base leading-reading text-plum">
-        {request.body}
-      </Text>
+      <Txt variant="bodySerifReading">{request.body}</Txt>
 
       {request.prayer_count > 0 ? (
         <Text className="font-sans text-sm text-mist-ink">
@@ -186,6 +186,6 @@ export const PrayerRequestCard = ({
           </>
         )}
       </View>
-    </View>
+    </Card>
   );
 };

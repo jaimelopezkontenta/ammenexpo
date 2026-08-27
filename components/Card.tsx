@@ -41,17 +41,3 @@ export const Card = ({
     {children}
   </Glass>
 );
-
-/** La variante oscura: el día de hoy en la portada, y poco más. */
-export const CardDark = ({
-  children,
-  className,
-  ...viewProps
-}: ViewProps & { children: ReactNode }) => (
-  <View
-    className={`rounded-card bg-plum-chip p-5 shadow-card ${className ?? ""}`}
-    {...viewProps}
-  >
-    {children}
-  </View>
-);

@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { planIdToOpenAfterRedeem } from "@/core/plans/redeemOutcome";
 import { supabase } from "@/utils/supabase";
 
 const SHARE_KEY = "ammen.pendingShareToken";
@@ -133,10 +134,9 @@ export const redeemPendingTokens = async () => {
     if (!error) {
       await AsyncStorage.removeItem(SHARE_KEY).catch(() => {});
 
-      const outcome = data as { ok?: boolean; plan_id?: string } | null;
-      if (outcome?.ok && outcome.plan_id) {
-        planId = outcome.plan_id;
-      }
+      planId = planIdToOpenAfterRedeem(
+        data as { ok?: boolean; plan_id?: string; self?: boolean } | null,
+      );
     }
   }
 

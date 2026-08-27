@@ -1,8 +1,9 @@
 import { router, Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { Linking, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
 
@@ -20,6 +21,10 @@ import { useScreenPadding } from "@/components/useScreenPadding";
  * no hay ningún dato de esta pantalla en telemetría — ver
  * `docs/runbooks/crisis-es-en.md`.
  */
+const call = (number: string) => {
+  void Linking.openURL(`tel:${number}`);
+};
+
 export default function CrisisResources() {
   const { t } = useTranslation();
   const { scrollBottom } = useScreenPadding();
@@ -30,9 +35,12 @@ export default function CrisisResources() {
         options={{
           title: t("crisis.title"),
           headerShown: true,
-          // Nadie sale de aquí por accidente con un gesto: la salida es un
-          // botón explícito, no un swipe.
+          // Nadie sale de aquí por accidente: ni gesto, ni el back del
+          // stack. Volver a `/peticiones/nueva` reabriría el borrador con
+          // la frase de crisis todavía escrita. La salida es "Volver a Hoy".
           gestureEnabled: false,
+          headerBackVisible: false,
+          headerLeft: () => null,
         }}
       />
       <DawnBackground>
@@ -55,33 +63,51 @@ export default function CrisisResources() {
             {t("crisis.notDiagnosis")}
           </Text>
 
-          <View className="gap-4 rounded-card bg-glass/70 p-5">
+          <Text
+            className="font-sans text-sm leading-6 text-mist-ink"
+            accessibilityRole="alert"
+          >
+            {t("crisis.draftPrivate")}
+          </Text>
+
+          <Card className="gap-4">
             <Text className="font-sans-semibold text-lg text-plum">
               {t("crisis.resourcesTitle")}
             </Text>
 
-            <View className="gap-1">
+            <View className="gap-2">
               <Text className="font-sans-medium text-base text-plum">
                 {t("crisis.resourceEsTitle")}
               </Text>
               <Text className="font-sans text-sm leading-5 text-mist-ink">
                 {t("crisis.resourceEsBody")}
               </Text>
+              <Button
+                title={t("crisis.call024")}
+                accessibilityRole="link"
+                onPress={() => call("024")}
+              />
             </View>
 
-            <View className="gap-1">
+            <View className="gap-2">
               <Text className="font-sans-medium text-base text-plum">
                 {t("crisis.resourceIntlTitle")}
               </Text>
               <Text className="font-sans text-sm leading-5 text-mist-ink">
                 {t("crisis.resourceIntlBody")}
               </Text>
+              <Button
+                title={t("crisis.call112")}
+                variant="secondary"
+                accessibilityRole="link"
+                onPress={() => call("112")}
+              />
             </View>
 
             <Text className="font-sans-medium text-sm leading-5 text-danger">
               {t("crisis.resourceEmergency")}
             </Text>
-          </View>
+          </Card>
 
           <Text className="font-sans text-sm leading-6 text-mist-ink">
             {t("crisis.staying")}

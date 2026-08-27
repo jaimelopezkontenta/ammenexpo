@@ -1,4 +1,5 @@
 import { Link, Stack, useLocalSearchParams } from "expo-router";
+import { MoreHorizontal } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
@@ -7,13 +8,20 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { ActionMenu } from "@/components/ui/ActionMenu";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Txt } from "@/components/ui/Text";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
+import { useReportProfile } from "@/core/moderation/queue";
 import { usePublicProfile } from "@/core/profile/queries";
+import { buildShareUrl, shareOrCopy } from "@/core/share";
 import { usePersonPlans, usePersonPosts } from "@/core/social/feed";
 import { useFollowUser, useUnfollowUser } from "@/core/social/follows";
 import { useVisibleTestimonies } from "@/core/testimonies/queries";
+import { icon, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -39,6 +47,7 @@ const Stat = ({ value, label }: { value: number; label: string }) => (
  */
 export default function PersonProfile() {
   const { t, i18n } = useTranslation();
+  const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
@@ -49,11 +58,13 @@ export default function PersonProfile() {
   const { data: posts } = usePersonPosts(id);
   const { data: plans } = usePersonPlans(id);
   const block = useBlockUser(userId);
+  const report = useReportProfile(userId);
   const follow = useFollowUser();
   const unfollow = useUnfollowUser();
 
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const theirs = (testimonies ?? []).filter((entry) => entry.author_id === id);
 
@@ -89,6 +100,31 @@ export default function PersonProfile() {
     }
   };
 
+  const handleReport = async () => {
+    setError(null);
+
+    try {
+      await report.mutateAsync(id);
+      setNotice(t("moderation.reportDone"));
+    } catch {
+      setError(t("common.errorGeneric"));
+    }
+  };
+
+  const handleShare = async () => {
+    if (!person) return;
+
+    setError(null);
+
+    const outcome = await shareOrCopy(
+      t("profile.shareMessage", { name: person.display_name }),
+      buildShareUrl(`/persona/${id}`, "invitacion"),
+    );
+
+    if (outcome === "copied") setNotice(t("share.linkCopied"));
+    if (outcome === "failed") setError(t("share.shareFailed"));
+  };
+
   if (isLoading) {
     return (
       <>
@@ -116,13 +152,11 @@ export default function PersonProfile() {
     return (
       <>
         <Stack.Screen options={{ title: "", headerShown: true }} />
-        <DawnBackground className="items-center justify-center gap-3 px-8">
-          <Text className="text-center font-sans-medium text-lg text-plum">
-            {t("profile.unavailable")}
-          </Text>
-          <Text className="text-center font-sans text-base leading-6 text-mist-ink">
-            {t("profile.unavailableBody")}
-          </Text>
+        <DawnBackground className="justify-center">
+          <EmptyState
+            title={t("profile.unavailable")}
+            body={t("profile.unavailableBody")}
+          />
         </DawnBackground>
       </>
     );
@@ -131,7 +165,28 @@ export default function PersonProfile() {
   return (
     <>
       <Stack.Screen
-        options={{ title: person.display_name, headerShown: true }}
+        options={{
+          title: person.display_name,
+          headerShown: true,
+          headerRight: person.is_me
+            ? undefined
+            : () => (
+                <Tap
+                  accessibilityRole="button"
+                  accessibilityLabel={t("profile.moreActions")}
+                  onPress={() => {
+                    setMenuOpen(true);
+                  }}
+                  className="h-11 w-11 items-center justify-center"
+                >
+                  <MoreHorizontal
+                    size={icon.md}
+                    color={colors.plum.DEFAULT}
+                    strokeWidth={icon.strokeWidth}
+                  />
+                </Tap>
+              ),
+        }}
       />
 
       <DawnBackground>
@@ -228,14 +283,16 @@ export default function PersonProfile() {
                 >
                   <Tap
                     accessibilityRole="link"
-                    className="gap-1 rounded-card border border-glassedge/60 p-5"
+                    className="rounded-card"
                   >
-                    <Text className="font-serif-bold text-base text-plum">
-                      {plan.title}
-                    </Text>
-                    <Text className="font-sans text-sm text-mist-ink">
-                      {t("newPlan.days", { count: plan.duration_days })}
-                    </Text>
+                    <Card flat className="gap-1">
+                      <Text className="font-serif-bold text-base text-plum">
+                        {plan.title}
+                      </Text>
+                      <Text className="font-sans text-sm text-mist-ink">
+                        {t("newPlan.days", { count: plan.duration_days })}
+                      </Text>
+                    </Card>
                   </Tap>
                 </Link>
               ))}
@@ -252,17 +309,16 @@ export default function PersonProfile() {
                 —el servidor lo excluye— porque una lista por persona es justo
                 la forma de deshacer un anonimato. */}
               {(posts ?? []).map((post) => (
-                <View
+                <Card
                   key={post.id}
-                  className="gap-2 rounded-card border border-glassedge/60 p-5"
+                  flat
+                  className="gap-2"
                 >
-                  <Text className="font-serif text-base leading-reading text-plum">
-                    {post.body}
-                  </Text>
+                  <Txt variant="bodySerifReading">{post.body}</Txt>
                   <Text className="font-sans text-sm text-mist-ink">
                     {t("feed.prayCount", { count: post.prayer_count })}
                   </Text>
-                </View>
+                </Card>
               ))}
             </View>
           ) : null}
@@ -274,19 +330,18 @@ export default function PersonProfile() {
               </Text>
 
               {theirs.map((entry) => (
-                <View
+                <Card
                   key={entry.id}
-                  className="gap-2 rounded-card bg-glass/60 p-5"
+                  flat
+                  className="gap-2"
                 >
                   {entry.plan_title ? (
                     <Text className="font-sans text-sm text-mist-ink">
                       {entry.plan_title}
                     </Text>
                   ) : null}
-                  <Text className="font-serif text-base leading-reading text-plum">
-                    {entry.body}
-                  </Text>
-                </View>
+                  <Txt variant="bodySerifReading">{entry.body}</Txt>
+                </Card>
               ))}
             </View>
           ) : null}
@@ -308,21 +363,42 @@ export default function PersonProfile() {
               {error}
             </Text>
           ) : null}
-
-          {/* En tu propio perfil no, obviamente. Y aquí abajo, no arriba: alguien
-            que abre esto viene a ver quién oró por él, no a moderar. */}
-          {!person.is_me && !notice ? (
-            <View className="mt-auto pt-6">
-              <Button
-                title={t("moderation.block")}
-                variant="ghost"
-                loading={block.isPending}
-                onPress={() => void handleBlock()}
-              />
-            </View>
-          ) : null}
         </ScrollView>
       </DawnBackground>
+
+      {!person.is_me ? (
+        <ActionMenu
+          visible={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          title={t("profile.moreActions")}
+          actions={[
+            {
+              key: "share",
+              label: t("common.share"),
+              onPress: () => {
+                void handleShare();
+              },
+            },
+            {
+              key: "report",
+              label: t("moderation.report"),
+              disabled: report.isPending,
+              onPress: () => {
+                void handleReport();
+              },
+            },
+            {
+              key: "block",
+              label: t("moderation.block"),
+              danger: true,
+              disabled: block.isPending,
+              onPress: () => {
+                void handleBlock();
+              },
+            },
+          ]}
+        />
+      ) : null}
     </>
   );
 }

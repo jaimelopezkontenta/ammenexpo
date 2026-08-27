@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveRedeemOutcome } from "./redeemOutcome";
+import { planIdToOpenAfterRedeem, resolveRedeemOutcome } from "./redeemOutcome";
 
 describe("resolveRedeemOutcome", () => {
   it("is ok for a successful redemption", () => {
@@ -47,5 +47,32 @@ describe("resolveRedeemOutcome", () => {
     expect(resolveRedeemOutcome({ hadError: false, reason: "" })).toBe(
       "unknown",
     );
+  });
+});
+
+describe("planIdToOpenAfterRedeem", () => {
+  it("opens the intercession day for a recipient", () => {
+    expect(
+      planIdToOpenAfterRedeem({
+        ok: true,
+        plan_id: "plan-1",
+      }),
+    ).toBe("plan-1");
+  });
+
+  it("does not send the owner to pray for their own plan", () => {
+    expect(
+      planIdToOpenAfterRedeem({
+        ok: true,
+        plan_id: "plan-1",
+        self: true,
+      }),
+    ).toBeNull();
+  });
+
+  it("is null when the RPC declined or returned a circle-only join", () => {
+    expect(planIdToOpenAfterRedeem({ ok: false, plan_id: "plan-1" })).toBeNull();
+    expect(planIdToOpenAfterRedeem({ ok: true })).toBeNull();
+    expect(planIdToOpenAfterRedeem(null)).toBeNull();
   });
 });

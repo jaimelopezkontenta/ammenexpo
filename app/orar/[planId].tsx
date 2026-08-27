@@ -20,7 +20,7 @@ import {
   usePrayForSomeone,
 } from "@/core/intercessions/queries";
 
-import { Tap } from "@/components/ui/Tap";
+import { Pill } from "@/components/ui/Pill";
 
 /**
  * Someone else's day, and a prayer written for you to pray over them.
@@ -151,35 +151,22 @@ export default function PrayForSomeone() {
                 tapping it again clears it. Before, nothing on screen said a
                 chip was chosen and there was no way to undo one except
                 selecting the text and deleting it. */}
-              <View className="flex-row flex-wrap gap-2">
+              <View
+                className="flex-row flex-wrap gap-2"
+                accessibilityRole="radiogroup"
+              >
                 {QUICK_MESSAGE_KEYS.map((key) => {
                   const label = t(`intercession.quick.${key}`);
                   const chosen = message.trim() === label;
 
                   return (
-                    <Tap
+                    <Pill
                       key={key}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: chosen }}
-                      aria-checked={chosen}
-                      accessibilityLabel={label}
+                      label={label}
+                      selected={chosen}
+                      role="radio"
                       onPress={() => setMessage(chosen ? "" : label)}
-                      className={`rounded-full border px-4 py-2.5 ${
-                        chosen
-                          ? "border-plum bg-plum-chip"
-                          : "border-glassedge/60 bg-dawn-cream-bg"
-                      }`}
-                    >
-                      <Text
-                        className={
-                          chosen
-                            ? "font-sans-semibold text-white"
-                            : "text-mist-ink"
-                        }
-                      >
-                        {label}
-                      </Text>
-                    </Tap>
+                    />
                   );
                 })}
               </View>

@@ -17,6 +17,7 @@
     "notFoundLink": "Volver al inicio",
     "errorTitle": "Algo no ha ido bien",
     "errorBody": "No hemos podido cargar esto. Vuelve a intentarlo.",
+    "errorNetwork": "Sin conexión. Comprueba la red y vuelve a intentarlo.",
     "loadMore": "Ver más",
     "greetingMorning": "Buenos días",
     "greetingAfternoon": "Buenas tardes",
@@ -91,7 +92,9 @@
     "preferences": "Preferencias",
     "communitySupport": "Comunidad y ayuda",
     "dangerZone": "Zona de peligro",
-    "plusComingSoon": "Ammen Plus · todavía no se puede pagar"
+    "plusComingSoon": "Ammen Plus · todavía no se puede pagar",
+    "moreActions": "Más acciones",
+    "shareMessage": "El perfil de {{name}} en Ammen"
   },
   "auth": {
     "signInTitle": "Bienvenido de vuelta",
@@ -612,8 +615,11 @@
     "resourceEsBody": "024, gratuita y todo el día. Atención a la conducta suicida.",
     "resourceIntlTitle": "Internacional",
     "resourceIntlBody": "Si no estás en España, busca \"línea de crisis\" o \"línea de prevención del suicidio\" junto con tu país, o llama al número de emergencias local.",
-    "resourceEmergency": "Si hay un riesgo inmediato para tu vida, llama a emergencias (112 en España, 911 en EE. UU., o el número de tu país) ahora mismo.",
-    "staying": "Puedes quedarte en la app. Esto no borra lo que escribiste ni te expulsa de ninguna parte.",
+    "resourceEmergency": "Si hay un riesgo inmediato para tu vida, llama a emergencias ahora mismo.",
+    "call024": "Llamar al 024",
+    "call112": "Llamar al 112",
+    "draftPrivate": "Lo que escribiste no se publicó: quedó en privado. Nadie más lo ha visto.",
+    "staying": "Puedes quedarte en la app. Esto no borra el borrador ni te expulsa de ninguna parte.",
     "goHome": "Volver a Hoy"
   },
   "social": {
@@ -662,6 +668,7 @@
     "title": "Mi lista de oración",
     "placeholder": "Mi madre, el trabajo de Luis, una decisión…",
     "add": "Añadir",
+    "addItems": "Añadir peticiones",
     "empty": "Tu lista está vacía. Escribe por quién o por qué quieres orar estos días.",
     "markAnswered": "Se respondió",
     "undoAnswered": "Todavía no",
@@ -679,6 +686,8 @@
     "position": "{{current}} de {{total}}",
     "next": "Siguiente",
     "finish": "Terminar",
+    "finished": "Has orado por tu petición.",
+    "finished_plural": "Has orado por tus {{count}} peticiones.",
     "stop": "Dejarlo por hoy"
   }
 }

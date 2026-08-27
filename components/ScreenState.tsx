@@ -108,6 +108,8 @@ type ErrorStateProps = {
 
 export const ErrorState = ({ onRetry, message }: ErrorStateProps) => {
   const { t } = useTranslation();
+  const offline =
+    typeof navigator !== "undefined" && navigator.onLine === false;
 
   return (
     <DawnBackground className="items-center justify-center gap-3 px-8">
@@ -118,7 +120,8 @@ export const ErrorState = ({ onRetry, message }: ErrorStateProps) => {
         {t("common.errorTitle")}
       </Text>
       <Text className="text-center font-sans text-base leading-6 text-mist-ink">
-        {message ?? t("common.errorBody")}
+        {message ??
+          (offline ? t("common.errorNetwork") : t("common.errorBody"))}
       </Text>
       {onRetry ? (
         <View className="mt-4 w-full">

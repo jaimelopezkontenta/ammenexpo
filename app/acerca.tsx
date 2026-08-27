@@ -6,6 +6,7 @@ import { Linking, ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useExportMyData } from "@/core/legal/export";
 
@@ -61,9 +62,7 @@ export default function About() {
           contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
           contentContainerStyle={{ paddingBottom: scrollBottom }}
         >
-          <Text className="font-serif text-base leading-reading text-plum">
-            {t("profile.aboutBody")}
-          </Text>
+          <Txt variant="bodySerifReading">{t("profile.aboutBody")}</Txt>
 
           {/* Dicho aquí y no escondido: el plan lo escribe un modelo, y en materia
             religiosa eso hay que decirlo en voz alta. */}

@@ -16,6 +16,8 @@ import Svg, {
   Stop,
 } from "react-native-svg";
 
+import { useThemeColors } from "@/theme";
+
 /**
  * El isotipo. **Este fichero es el único sitio de la app donde viven sus
  * colores**, igual que `.orb` es el único del prototipo.
@@ -61,6 +63,7 @@ export const Orb = ({
   animated = true,
   children,
 }: Props) => {
+  const palette = useThemeColors();
   const phase = useSharedValue(0);
   // Quien ha pedido menos movimiento en el sistema no quiere una esfera
   // latiendo en cada pantalla. Se queda quieta y no pasa nada: el isotipo se
@@ -119,8 +122,16 @@ export const Orb = ({
           <Svg width={haloSize} height={haloSize} viewBox="0 0 100 100">
             <Defs>
               <RadialGradient id="orbHalo" cx="50%" cy="50%" r="50%">
-                <Stop offset="0.3" stopColor="#FFE7C3" stopOpacity="0.45" />
-                <Stop offset="0.7" stopColor="#FFE7C3" stopOpacity="0" />
+                <Stop
+                  offset="0.3"
+                  stopColor={palette.dawn.cream}
+                  stopOpacity="0.45"
+                />
+                <Stop
+                  offset="0.7"
+                  stopColor={palette.dawn.cream}
+                  stopOpacity="0"
+                />
               </RadialGradient>
             </Defs>
             <Circle cx="50" cy="50" r="50" fill="url(#orbHalo)" />

@@ -3,7 +3,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
+import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
@@ -128,6 +130,7 @@ export default function NewPlan() {
       <Stack.Screen
         options={{ title: t("newPlan.title"), headerShown: true }}
       />
+      <KeyboardScreen>
       <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
@@ -245,10 +248,7 @@ export default function NewPlan() {
           ) : null}
 
           {atLimit ? (
-            <View
-              className="gap-2 rounded-card bg-glass/60 p-5"
-              accessibilityRole="alert"
-            >
+            <Card className="gap-2" accessibilityRole="alert">
               <Text className="font-sans-semibold text-base text-plum">
                 {t("plan.limitTitle")}
               </Text>
@@ -264,7 +264,7 @@ export default function NewPlan() {
                   variant="secondary"
                 />
               </Link>
-            </View>
+            </Card>
           ) : null}
 
           <View className="pb-4">
@@ -276,6 +276,7 @@ export default function NewPlan() {
           </View>
         </ScrollView>
       </DawnBackground>
+      </KeyboardScreen>
     </>
   );
 }

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import type { Circle, CirclePlan } from "@/core/circles/queries";
 
 interface CirclePlanCardProps {
@@ -39,7 +40,7 @@ export const CirclePlanCard = ({
     }
 
     return (
-      <View className="gap-2 rounded-card border border-glassedge/60 bg-glass/60 p-5 shadow-card">
+      <Card flat className="gap-2">
         <Text className="font-sans-semibold text-base text-plum">
           {t("circles.planEmpty")}
         </Text>
@@ -52,12 +53,12 @@ export const CirclePlanCard = ({
         >
           <Button title={t("circles.planCreate")} variant="secondary" />
         </Link>
-      </View>
+      </Card>
     );
   }
 
   return (
-    <View className="gap-3 rounded-card border border-glassedge/60 bg-glass/60 p-5 shadow-card">
+    <Card flat className="gap-3">
       <View className="gap-1">
         <Text className="font-sans-medium text-sm text-mist-ink">
           {t("circles.planLabel")}
@@ -114,6 +115,6 @@ export const CirclePlanCard = ({
           )}
         </>
       ) : null}
-    </View>
+    </Card>
   );
 };

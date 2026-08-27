@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { Txt } from "@/components/ui/Text";
 import { Button } from "@/components/Button";
 import { LoadMore } from "@/components/LoadMore";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
@@ -414,9 +415,7 @@ const StoryCard = ({
       ) : null}
 
       {entry.body ? (
-        <Text className="font-serif text-base leading-reading text-plum">
-          {entry.body}
-        </Text>
+        <Txt variant="bodySerifReading">{entry.body}</Txt>
       ) : null}
 
       <View className="flex-row flex-wrap gap-4">

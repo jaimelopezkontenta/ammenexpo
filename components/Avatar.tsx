@@ -16,12 +16,11 @@ import { colors } from "@/theme";
 const TONE_INK = colors.plum.DEFAULT;
 
 const TONES = [
-  "#F8E2D1", // durazno del orbe
-  "#D4D0EF", // lavanda
-  "#CFECF9", // celeste
-  "#D3CEF0", // lila
-  "#FBDFC2", // melocotón pálido
-  "#D8E1F1", // periwinkle pálido
+  "#F8E2D1", // orbPeach
+  "#D4D0EF", // orbLavender
+  "#CFECF9", // orbBlue
+  "#D3CEF0", // orbLilac
+  "#EDE6F6", // orbBase
 ];
 
 /** Estable para la misma persona, sin guardar nada: siempre el mismo tono. */

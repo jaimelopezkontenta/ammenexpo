@@ -41,6 +41,8 @@ type Props = ViewProps & {
   /** Sin desenfoque, solo translucidez. Obligatorio dentro de listas largas. */
   flat?: boolean;
   intensity?: number;
+  /** Relleno del vidrio (0–1). La barra usa 0.55 según `prototipo/TOKENS.md`. */
+  fill?: number;
 };
 
 // El vidrio "oscuro" (pills, burbuja propia) es plum en los dos temas; el
@@ -60,6 +62,7 @@ export const Glass = ({
   dark = false,
   flat = false,
   intensity,
+  fill,
   style,
   className,
   ...viewProps
@@ -69,7 +72,7 @@ export const Glass = ({
 
   const tint = dark
     ? DARK_TINT
-    : withAlpha(palette.glass, readable ? 0.58 : 0.42);
+    : withAlpha(palette.glass, fill ?? (readable ? 0.58 : 0.42));
 
   const blurTarget = useDawnBlurTarget();
 

@@ -17,6 +17,7 @@
     "notFoundLink": "Back to home",
     "errorTitle": "Something went wrong",
     "errorBody": "We could not load this. Please try again.",
+    "errorNetwork": "You're offline. Check the connection and try again.",
     "loadMore": "See more",
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
@@ -91,7 +92,9 @@
     "preferences": "Preferences",
     "communitySupport": "Community and support",
     "dangerZone": "Danger zone",
-    "plusComingSoon": "Ammen Plus · can't be paid for yet"
+    "plusComingSoon": "Ammen Plus · can't be paid for yet",
+    "moreActions": "More actions",
+    "shareMessage": "{{name}} on Ammen"
   },
   "auth": {
     "signInTitle": "Welcome back",
@@ -612,8 +615,11 @@
     "resourceEsBody": "024, free and available all day. Suicide prevention support.",
     "resourceIntlTitle": "International",
     "resourceIntlBody": "If you are not in Spain, search for \"crisis line\" or \"suicide prevention line\" together with your country, or call your local emergency number.",
-    "resourceEmergency": "If there is immediate danger to your life, call emergency services now (112 in Spain, 911 in the US, or your country's number).",
-    "staying": "You can stay in the app. This does not delete what you wrote or remove you from anything.",
+    "resourceEmergency": "If there is immediate danger to your life, call emergency services now.",
+    "call024": "Call 024",
+    "call112": "Call 112",
+    "draftPrivate": "What you wrote was not published — it stays private. Nobody else has seen it.",
+    "staying": "You can stay in the app. This does not delete the draft or remove you from anything.",
     "goHome": "Back to Today"
   },
   "social": {
@@ -662,6 +668,7 @@
     "title": "My prayer list",
     "placeholder": "My mother, Luis's job, a decision…",
     "add": "Add",
+    "addItems": "Add prayer items",
     "empty": "Your list is empty. Write down who or what you want to pray for these days.",
     "markAnswered": "It was answered",
     "undoAnswered": "Not yet",
@@ -679,6 +686,8 @@
     "position": "{{current}} of {{total}}",
     "next": "Next",
     "finish": "Finish",
+    "finished": "You prayed for your request.",
+    "finished_plural": "You prayed for your {{count}} requests.",
     "stop": "Leave it for today"
   }
 }

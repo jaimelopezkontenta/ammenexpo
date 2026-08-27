@@ -9,6 +9,8 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { TextField } from "@/components/TextField";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { VerseOfTheDay } from "@/components/VerseOfTheDay";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Glass } from "@/components/Glass";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   MIN_SEARCH_LENGTH,
@@ -115,14 +117,16 @@ export default function Bible() {
         {jump ? (
           <Tap
             accessibilityRole="button"
-            className="rounded-card bg-plum-chip px-5 py-4 shadow-card"
+            className="rounded-card"
             onPress={() => openChapter(jump.book_id, jump.chapter, jump.verse)}
           >
-            <Text className="font-sans-semibold text-base text-white">
-              {t("bible.goTo", {
-                reference: `${bookName(all, jump.book_id)} ${jump.chapter}`,
-              })}
-            </Text>
+            <Glass dark className="rounded-card px-5 py-4">
+              <Text className="font-sans-semibold text-base text-white">
+                {t("bible.goTo", {
+                  reference: `${bookName(all, jump.book_id)} ${jump.chapter}`,
+                })}
+              </Text>
+            </Glass>
           </Tap>
         ) : null}
 
@@ -145,14 +149,10 @@ export default function Bible() {
             // Saying "nothing found" underneath "Go to Juan 3" is noise: the
             // reference is what they were asking for.
             jump ? null : (
-              <View className="gap-1">
-                <Text className="font-sans text-base text-plum">
-                  {t("bible.noResults")}
-                </Text>
-                <Text className="font-sans text-sm text-mist-ink">
-                  {t("bible.noResultsHint")}
-                </Text>
-              </View>
+              <EmptyState
+                title={t("bible.noResults")}
+                body={t("bible.noResultsHint")}
+              />
             )
           ) : (
             <View className="gap-4">

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
@@ -68,6 +69,7 @@ export default function NewTestimony() {
       <Stack.Screen
         options={{ title: t("testimony.title"), headerShown: true }}
       />
+      <KeyboardScreen>
       <DawnBackground>
         <ScrollView
           contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
@@ -126,6 +128,7 @@ export default function NewTestimony() {
           </View>
         </ScrollView>
       </DawnBackground>
+      </KeyboardScreen>
     </>
   );
 }

@@ -38,6 +38,11 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
           // BlurView en cada uno cuesta más de lo que se ve. El blanco al 70 %
           // se parece bastante al 58 % con desenfoque de encima, y plum sobre
           // ese fondo sigue muy por encima de AA.
+          //
+          // Tres pieles, a propósito: este componente es el de formularios con
+          // etiqueta; búsqueda y alta rápida sobre el amanecer usan
+          // `bg-dawn-cream-bg`; el compositor del chat y del lector, sentado
+          // en cromo, usa `bg-surface`.
           className={`w-full rounded-input border bg-glass/70 px-4 py-4 font-sans text-base text-plum shadow-soft ${
             error ? "border-danger" : "border-glassedge/70"
           } ${inputProps.className ?? ""}`}

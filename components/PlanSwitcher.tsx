@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text } from "react-native";
+import { ScrollView } from "react-native";
 
 import type { OwnPlan } from "@/core/plans/queries";
 
-import { Tap } from "@/components/ui/Tap";
+import { Pill } from "@/components/ui/Pill";
 
 interface PlanSwitcherProps {
   plans: OwnPlan[];
@@ -41,41 +41,16 @@ export const PlanSwitcher = ({
       accessibilityRole="radiogroup"
       accessibilityLabel={t("plan.switcherLabel")}
     >
-      {plans.map((plan) => {
-        const isActive = plan.id === activeId;
-
-        return (
-          <Tap
-            key={plan.id}
-            // Both, deliberately: accessibilityState is what iOS and Android
-            // read, and react-native-web 0.21 no longer maps it, so the web DOM
-            // would announce "radio" and never say which one is chosen.
-            accessibilityRole="radio"
-            accessibilityState={{ checked: isActive }}
-            aria-checked={isActive}
-            accessibilityLabel={plan.title}
-            onPress={() => onSelect(plan.id)}
-            // Elegido: pill de vidrio oscuro. Sin elegir: vidrio claro, que
-            // sobre el degradado se lee como una pastilla y no como un hueco.
-            className={`rounded-full border px-4 py-2 ${
-              isActive
-                ? "border-white/30 bg-plum-chip"
-                : "border-glassedge/60 bg-glass/60"
-            }`}
-          >
-            <Text
-              numberOfLines={1}
-              className={`max-w-48 text-sm ${
-                isActive
-                  ? "font-sans-semibold text-white"
-                  : "font-sans text-plum"
-              }`}
-            >
-              {plan.title}
-            </Text>
-          </Tap>
-        );
-      })}
+      {plans.map((plan) => (
+        <Pill
+          key={plan.id}
+          label={plan.title}
+          selected={plan.id === activeId}
+          role="radio"
+          numberOfLines={1}
+          onPress={() => onSelect(plan.id)}
+        />
+      ))}
     </ScrollView>
   );
 };

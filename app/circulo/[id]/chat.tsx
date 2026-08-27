@@ -271,7 +271,7 @@ export default function CircleChat() {
                         {/* La hora dentro de la burbuja, como en cualquier chat:
                       pequeña, al filo, sin robarle línea al mensaje. */}
                         <Text
-                          className={`self-end pt-0.5 font-sans text-[11px] ${
+                          className={`self-end pt-0.5 font-sans text-xs ${
                             item.is_mine ? "text-white/70" : "text-mist-ink"
                           }`}
                         >
@@ -293,7 +293,7 @@ export default function CircleChat() {
                               )
                             }
                           >
-                            <Text className="font-sans text-sm text-mist-ink">
+                            <Text className="font-sans text-sm text-mist-ink underline">
                               {t("moderation.report")}
                             </Text>
                           </Tap>
@@ -307,7 +307,7 @@ export default function CircleChat() {
                               )
                             }
                           >
-                            <Text className="font-sans text-sm text-mist-ink">
+                            <Text className="font-sans text-sm text-mist-ink underline">
                               {t("moderation.block")}
                             </Text>
                           </Tap>
@@ -322,9 +322,9 @@ export default function CircleChat() {
                                 )
                               }
                             >
-                              <Text className="font-sans text-sm text-mist-ink">
-                                {t("moderation.hide")}
-                              </Text>
+                            <Text className="font-sans text-sm text-mist-ink underline">
+                              {t("moderation.hide")}
+                            </Text>
                             </Tap>
                           ) : null}
                         </View>

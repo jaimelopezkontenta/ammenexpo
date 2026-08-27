@@ -3,7 +3,7 @@ import { ColorValue, View } from "react-native";
 
 import { Orb } from "@/components/Orb";
 
-import { useThemeColors } from "@/theme";
+import { icon, useThemeColors } from "@/theme";
 
 /**
  * Los iconos de la barra, en Lucide.
@@ -51,9 +51,9 @@ export const TabBarIcon = ({
       />
       {Icon ? (
         <Icon
-          size={24}
+          size={icon.md}
           color={typeof color === "string" ? color : colors.plum.DEFAULT}
-          strokeWidth={1.7}
+          strokeWidth={icon.strokeWidth}
         />
       ) : (
         <Orb size={26} />

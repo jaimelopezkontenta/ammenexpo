@@ -99,6 +99,7 @@ export const Tap = forwardRef<View, TapProps>(
       onPressOut,
       style,
       disabled,
+      hitSlop = 12,
       ...pressableProps
     },
     ref,
@@ -135,6 +136,7 @@ export const Tap = forwardRef<View, TapProps>(
         ref={ref}
         {...pressableProps}
         disabled={disabled}
+        hitSlop={hitSlop}
         onPressIn={disabled ? onPressIn : handlePressIn}
         onPressOut={disabled ? onPressOut : handlePressOut}
         // El feedback va después para que la escala no se pise.

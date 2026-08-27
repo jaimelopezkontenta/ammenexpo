@@ -21,6 +21,7 @@ export type TxtVariant =
   | "subheading" // el peso semibold de las filas y tarjetas
   | "body" // el párrafo por defecto
   | "bodySerif" // el párrafo que se lee despacio, sin la medida de lectura
+  | "bodySerifReading" // el cuerpo serif con leading de lectura (peticiones, testimonios)
   | "reading" // la escritura y la oración: Lora con leading generoso
   | "caption" // la letra pequeña
   | "label" // el rótulo de un campo
@@ -40,6 +41,7 @@ const VARIANT: Record<TxtVariant, string> = {
   subheading: "font-sans-semibold text-base",
   body: "font-sans text-base leading-6",
   bodySerif: "font-serif text-base leading-6",
+  bodySerifReading: "font-serif text-base leading-reading",
   reading: "font-serif text-lg leading-reading",
   caption: "font-sans text-sm",
   label: "font-sans-medium text-sm",
@@ -62,6 +64,7 @@ const DEFAULT_TONE: Record<TxtVariant, TxtTone> = {
   subheading: "primary",
   body: "primary",
   bodySerif: "primary",
+  bodySerifReading: "primary",
   reading: "primary",
   caption: "secondary",
   label: "primary",

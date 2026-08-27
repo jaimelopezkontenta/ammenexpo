@@ -9,6 +9,7 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
+import { Txt } from "@/components/ui/Text";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useBlockUser } from "@/core/moderation/blocks";
 import {
@@ -182,9 +183,9 @@ function ReportsQueue() {
 
               {/* Lo reportado, literal. Sin esto habría que creerse el
                 reporte, que es exactamente lo que no se puede hacer. */}
-              <Text className="font-serif text-base leading-reading text-plum">
+              <Txt variant="bodySerifReading">
                 {report.content ?? t("moderation.contentGone")}
-              </Text>
+              </Txt>
 
               <Text className="font-sans text-sm text-mist-ink">
                 {t("moderation.reportedBy", { name: report.reporter_name })}
@@ -351,9 +352,9 @@ function HeldQueue() {
         </Text>
       </View>
 
-      <Text className="font-serif text-base leading-reading text-plum">
+      <Txt variant="bodySerifReading">
         {hold.body ?? t("moderation.contentGone")}
-      </Text>
+      </Txt>
 
       <Text className="font-sans text-sm text-mist-ink">
         {t("moderation.writtenBy", { name: hold.author_name })}
@@ -554,9 +555,9 @@ function CrisisQueue() {
               {new Date(escalation.created_at).toLocaleString()}
             </Text>
 
-            <Text className="font-serif text-base leading-reading text-plum">
+            <Txt variant="bodySerifReading">
               {escalation.body ?? t("moderation.contentGone")}
-            </Text>
+            </Txt>
 
             <Text className="font-sans text-sm text-mist-ink">
               {t("moderation.writtenBy", { name: escalation.author_name })}

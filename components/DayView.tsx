@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Text } from "react-native";
 
 import { DaySection } from "@/components/DaySection";
+import { Txt } from "@/components/ui/Text";
 import type { BibleBook } from "@/core/bible/navigation";
 import { parseCanonicalRef } from "@/core/bible/reference";
 import type { PlanDay } from "@/core/plans/queries";
@@ -48,9 +49,9 @@ export const ScriptureSection = ({
       </Text>
 
       {scriptureRef ? (
-        <Text className="font-sans-medium text-sm text-mist-ink">
+        <Txt variant="editorial" className="text-base">
           {scriptureRef}
-        </Text>
+        </Txt>
       ) : null}
 
       {/* If the reference cannot be parsed there is no link at all — guessing

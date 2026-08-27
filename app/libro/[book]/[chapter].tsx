@@ -1,7 +1,7 @@
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -247,14 +247,14 @@ export default function ChapterReader() {
                     {/* El versículo entero es el control. Un icono al margen sería
                   más pequeño que el dedo que lo busca, y aquí el gesto natural
                   es tocar la frase que te ha parado. */}
-                    <Pressable
+                    <Tap
                       accessibilityRole="button"
                       accessibilityLabel={t("bible.markVerse", {
                         verse: row.verse,
                       })}
                       accessibilityState={{ expanded: isOpen }}
                       onPress={() => openMarks(row.verse)}
-                      className={`flex-row gap-3 rounded-xl px-2 py-1 ${
+                      className={`flex-row gap-3 rounded-input px-2 py-1 ${
                         linked
                           ? "bg-ember-pale"
                           : isHighlighted
@@ -278,7 +278,7 @@ export default function ChapterReader() {
                       <Text className="flex-1 font-serif text-lg leading-reading text-plum">
                         {row.text}
                       </Text>
-                    </Pressable>
+                    </Tap>
 
                     {/* La nota se ve sin abrir nada: escribir algo al margen y que
                   luego haya que ir a buscarlo es la forma de no volver a
@@ -291,7 +291,7 @@ export default function ChapterReader() {
 
                     {isOpen ? (
                       <View className="gap-3 rounded-input bg-dawn-cream p-4">
-                        <Pressable
+                        <Tap
                           accessibilityRole="button"
                           onPress={() =>
                             void runMark(() =>
@@ -307,7 +307,7 @@ export default function ChapterReader() {
                               ? t("bible.unhighlight")
                               : t("bible.highlight")}
                           </Text>
-                        </Pressable>
+                        </Tap>
 
                         <TextInput
                           className="w-full rounded-input border border-glassedge/70 bg-surface px-3 py-2.5 font-sans text-base text-plum"
@@ -321,7 +321,7 @@ export default function ChapterReader() {
                         />
 
                         <View className="flex-row gap-4">
-                          <Pressable
+                          <Tap
                             accessibilityRole="button"
                             onPress={() =>
                               void runMark(() =>
@@ -341,16 +341,16 @@ export default function ChapterReader() {
                                 ? t("bible.noteDelete")
                                 : t("common.save")}
                             </Text>
-                          </Pressable>
+                          </Tap>
 
-                          <Pressable
+                          <Tap
                             accessibilityRole="button"
                             onPress={() => setOpenVerse(null)}
                           >
                             <Text className="font-sans text-sm text-mist-ink underline">
                               {t("common.cancel")}
                             </Text>
-                          </Pressable>
+                          </Tap>
                         </View>
 
                         {/* Compartirlo como imagen vive aquí y no en un icono aparte:
@@ -368,11 +368,11 @@ export default function ChapterReader() {
                           }}
                           asChild
                         >
-                          <Pressable accessibilityRole="link">
+                          <Tap accessibilityRole="link">
                             <Text className="font-sans-medium text-sm text-ember-ink underline">
                               {t("bible.shareVerse")}
                             </Text>
-                          </Pressable>
+                          </Tap>
                         </Link>
 
                         {markError ? (

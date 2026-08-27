@@ -149,6 +149,25 @@ values
    'Padre, doy un paso sin ver el final. Ve tú delante. Amén.',
    current_date);
 
+-- Los diez días que faltan van escritos y cerrados a futuro. Sin ellos
+-- `plan_progress.days_written` queda en 4 de 14, el detector de generación
+-- atascada se dispara (el heartbeat del seed es viejo) y Hoy enseña
+-- «se quedó a medias» en la cuenta de prueba, que es un plan sano del día 4.
+insert into public.prayer_plan_days
+  (plan_id, day_number, title, scripture_ref, scripture_text,
+   interpretation, daily_action, prayer_body, unlock_date)
+select
+  '5eed0000-0000-0000-0000-0000000000a1',
+  n,
+  'Confiar el día ' || n,
+  'Proverbios 3:5',
+  'Fíate de Jehová de todo tu corazón, y no te apoyes en tu propia prudencia.',
+  'La confianza también es esperar el día que todavía no ha llegado.',
+  'Descansa en lo que ya oraste. Mañana habrá otro paso.',
+  'Padre, me fío de Ti también en lo que todavía no veo. Amén.',
+  current_date + (n - 4)
+from generate_series(5, 14) as n;
+
 -- Alguien ha orado por el día de hoy: es la mitad del producto y la razón de
 -- volver mañana, así que tiene que verse en Hoy desde el primer arranque.
 insert into public.intercessions (plan_day_id, plan_owner_id, intercessor_id, message)

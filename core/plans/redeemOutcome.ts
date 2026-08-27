@@ -19,6 +19,25 @@ const KNOWN_OUTCOMES = new Set(["ok", "invalid_or_expired", "plan_missing"]);
 export type RedeemOutcome =
   "ok" | "invalid_or_expired" | "plan_missing" | "error" | "unknown";
 
+/**
+ * The RPC returns `{ok:true, plan_id, self:true}` when the owner opens their
+ * own link. That is success, but it is not a plan to pray *for* — sending them
+ * to `/orar/[planId]` produces "Ya no tienes acceso a este plan."
+ */
+export type RedeemShareResult = {
+  ok?: boolean;
+  plan_id?: string;
+  self?: boolean;
+  reason?: string;
+};
+
+export const planIdToOpenAfterRedeem = (
+  outcome: RedeemShareResult | null | undefined,
+): string | null => {
+  if (!outcome?.ok || outcome.self || !outcome.plan_id) return null;
+  return outcome.plan_id;
+};
+
 export const resolveRedeemOutcome = (input: {
   hadError: boolean;
   reason: string | null | undefined;

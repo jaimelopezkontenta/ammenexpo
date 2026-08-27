@@ -1,6 +1,6 @@
 import { Link, router } from "expo-router";
 import { Check, MoreHorizontal } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
@@ -15,6 +15,7 @@ import { PlanSwitcher } from "@/components/PlanSwitcher";
 import { Orb } from "@/components/Orb";
 import { ResponsiveTabContent } from "@/components/ResponsiveTabContent";
 import { VerseOfTheDay } from "@/components/VerseOfTheDay";
+import { Txt } from "@/components/ui/Text";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { WhoPrayed } from "@/components/WhoPrayed";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -42,9 +43,10 @@ import {
   useTodayDay,
 } from "@/core/plans/queries";
 
+import { Pill } from "@/components/ui/Pill";
 import { Tap, triggerHaptic } from "@/components/ui/Tap";
 import { useToast } from "@/core/toast/ToastProvider";
-import { useThemeColors } from "@/theme";
+import { icon, useThemeColors } from "@/theme";
 import { enterFade } from "@/theme/motion";
 
 // Los tres pasos del journey diario. La Palabra no está aquí: no es un paso,
@@ -81,7 +83,11 @@ export default function Today() {
   // Days appear one stretch at a time, so today's day is readable long before
   // the whole plan is written. Waiting for 'active' would hide a plan the user
   // could already be praying.
-  const { data: day, refetch: refetchDay } = useTodayDay(
+  const {
+    data: day,
+    refetch: refetchDay,
+    isPending: dayPending,
+  } = useTodayDay(
     plan && plan.status !== "failed" ? plan.id : undefined,
     plan?.status === "generating",
   );
@@ -113,6 +119,7 @@ export default function Today() {
   // entender el texto va antes de hacer algo con él y de rezarlo.
   const [step, setStep] = useState<JourneyStep>("meaning");
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const afterClose = useRef<(() => void) | null>(null);
 
   // Al cerrar el cajón se desarma lo efímero: ni el archivar queda a un toque
   // de dispararse ni el rename abierto, para que la próxima apertura empiece
@@ -263,6 +270,14 @@ export default function Today() {
     return <ErrorState onRetry={() => void refetchPlan()} />;
   }
 
+  // Plans and progress can settle before today's day. `stuck && !day` used to
+  // mean "generation died before the first day", but with the seed (active,
+  // 4/14 days, stale heartbeat) it was also true for a few frames while
+  // `get_my_day` was still in flight — a flash of the stalled empty screen.
+  if (plan && !day && dayPending) {
+    return <LoadingState skeleton="day" />;
+  }
+
   // Only block while there is nothing to pray yet. Generation runs in the
   // background, so this state survives closing the app.
   if (plan?.status === "generating" && !day && !stuck) {
@@ -370,10 +385,8 @@ export default function Today() {
     );
   }
 
-  // The plan is active but no day has come back. This used to render the word
-  // "Cargando…" and stop — no spinner, no retry, no way to tell whether it was
-  // working. useTodayDay now polls while generating, so reaching here means
-  // something is genuinely wrong.
+  // The plan is active but no day has come back after the query settled.
+  // Pending is handled above: reaching here means get_my_day finished empty.
   if (!day) {
     return <ErrorState onRetry={() => void refetchDay()} />;
   }
@@ -544,9 +557,9 @@ export default function Today() {
                 className="h-11 w-11 items-center justify-center rounded-full border border-glassedge/60 bg-glass/60"
               >
                 <MoreHorizontal
-                  size={22}
+                  size={icon.md}
                   color={colors.plum.DEFAULT}
-                  strokeWidth={1.7}
+                  strokeWidth={icon.strokeWidth}
                 />
               </Tap>
             </View>
@@ -586,9 +599,7 @@ export default function Today() {
 
             {/* El título es el del día y no el del plan con lápiz: hoy se ora
               esto. Renombrar el plan vive en el cajón, fuera del journey. */}
-            <Text className="font-serif-bold text-3xl leading-10 text-plum">
-              {day.title}
-            </Text>
+            <Txt variant="title">{day.title}</Txt>
 
             {/* Los tres pasos del journey, con la misma píldora que usa el
               switcher: la elegida oscura, las otras de vidrio. */}
@@ -597,33 +608,13 @@ export default function Today() {
                 const selected = step === journeyStep.key;
 
                 return (
-                  <Tap
+                  <Pill
                     key={journeyStep.key}
-                    // Como en PlanSwitcher: accessibilityState es lo que leen
-                    // iOS y Android, y react-native-web 0.21 no lo mapea, así
-                    // que aria-selected va aparte o la web nunca dice cuál de
-                    // los pasos está elegido.
-                    accessibilityRole="tab"
-                    accessibilityState={{ selected }}
-                    aria-selected={selected}
-                    accessibilityLabel={t(journeyStep.labelKey)}
+                    label={t(journeyStep.labelKey)}
+                    selected={selected}
+                    role="tab"
                     onPress={() => setStep(journeyStep.key)}
-                    className={`min-h-11 items-center justify-center rounded-full border px-4 py-2 ${
-                      selected
-                        ? "border-white/30 bg-plum-chip"
-                        : "border-glassedge/60 bg-glass/60"
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm ${
-                        selected
-                          ? "font-sans-semibold text-white"
-                          : "font-sans text-plum"
-                      }`}
-                    >
-                      {t(journeyStep.labelKey)}
-                    </Text>
-                  </Tap>
+                  />
                 );
               })}
             </View>
@@ -648,9 +639,9 @@ export default function Today() {
                 >
                   <Orb size={92} halo>
                     <Check
-                      size={30}
+                      size={icon.lg}
                       color={colors.plum.DEFAULT}
-                      strokeWidth={2}
+                      strokeWidth={icon.strokeWidth}
                     />
                   </Orb>
                   <Text className="text-center font-sans-medium text-base text-plum">
@@ -753,24 +744,31 @@ export default function Today() {
         renamePending={rename.isPending}
         showSeeDays={day.day_number > 1}
         onSeeDays={() => {
+          afterClose.current = () =>
+            router.push({
+              pathname: "/plan/[id]/dias",
+              params: { id: plan.id },
+            });
           setOptionsOpen(false);
-          router.push({
-            pathname: "/plan/[id]/dias",
-            params: { id: plan.id },
-          });
         }}
         onShare={() => {
+          afterClose.current = () =>
+            router.push({
+              pathname: "/plan/[id]/compartir",
+              params: { id: plan.id },
+            });
           setOptionsOpen(false);
-          router.push({
-            pathname: "/plan/[id]/compartir",
-            params: { id: plan.id },
-          });
         }}
         canArchive={plan.status === "active" || plan.status === "completed"}
         confirmingArchive={confirmingArchiveId === plan.id}
         archivePending={archivePlan.isPending}
         onArchive={() => void archiveCurrentPlan()}
         error={actionError}
+        onClosed={() => {
+          const next = afterClose.current;
+          afterClose.current = null;
+          next?.();
+        }}
       />
     </DawnBackground>
   );

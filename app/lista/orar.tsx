@@ -2,16 +2,19 @@ import { router, Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { Orb } from "@/components/Orb";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Tap, triggerHaptic } from "@/components/ui/Tap";
 import { useSession } from "@/core/auth/SessionProvider";
 import { usePrayerList } from "@/core/list/queries";
-
-import { Tap } from "@/components/ui/Tap";
+import { goBackOr } from "@/core/nav/safeBack";
 
 /** Los tres tiempos que la gente tiene de verdad, no una rueda de minutos. */
 const LENGTHS = [2, 5, 10];
@@ -38,6 +41,8 @@ export default function PrayThrough() {
   const [minutes, setMinutes] = useState<number | null>(null);
   const [index, setIndex] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [done, setDone] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   const items = useMemo(
     () => (data ?? []).filter((item) => !item.answered_at),
@@ -53,6 +58,16 @@ export default function PrayThrough() {
 
     return () => clearInterval(timer);
   }, [minutes]);
+
+  useEffect(() => {
+    if (!done) return;
+    const delay = reduceMotion ? 400 : 2000;
+    // El cierre promete la lista, no "donde hubiera historia". `goBackOr`
+    // respeta `canGoBack()` y, si se abrió `/lista/orar` en frío o tras un
+    // remount, el back cae en Hoy.
+    const timer = setTimeout(() => router.replace("/lista"), delay);
+    return () => clearTimeout(timer);
+  }, [done, reduceMotion]);
 
   const start = (chosen: number) => {
     setMinutes(chosen);
@@ -82,11 +97,16 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
-        <DawnBackground className="items-center justify-center gap-3 px-8">
-          <Text className="text-center font-sans text-base leading-6 text-mist-ink">
-            {t("list.empty")}
-          </Text>
+        <KeyboardScreen>
+        <DawnBackground className="justify-center">
+          <EmptyState title={t("list.empty")}>
+            <Button
+              title={t("list.addItems")}
+              onPress={() => goBackOr("/lista")}
+            />
+          </EmptyState>
         </DawnBackground>
+        </KeyboardScreen>
       </>
     );
   }
@@ -97,6 +117,7 @@ export default function PrayThrough() {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
+        <KeyboardScreen>
         <DawnBackground className="justify-center gap-6 px-8">
           <Text className="font-serif-bold text-2xl text-plum">
             {t("list.howLong")}
@@ -114,6 +135,7 @@ export default function PrayThrough() {
             onToggle={(value) => start(Number(value))}
           />
         </DawnBackground>
+        </KeyboardScreen>
       </>
     );
   }
@@ -127,25 +149,41 @@ export default function PrayThrough() {
     <>
       <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
 
+      <KeyboardScreen>
       <DawnBackground className="justify-center gap-8 px-8">
         <View className="items-center gap-3">
           <Orb size={72} />
-          <Text className="font-sans text-sm text-mist-ink">
-            {t("list.position", { current: index + 1, total: items.length })}
-          </Text>
-          {/* El reloj dice cuánto queda y no manda: no pasa de petición solo,
-              no suena y no interrumpe. */}
-          <Text className="font-sans text-sm tabular-nums text-mist-ink">
-            {minutesLeft}:{String(seconds).padStart(2, "0")}
-          </Text>
+          {done ? null : (
+            <>
+              <Text className="font-sans text-sm text-mist-ink">
+                {t("list.position", {
+                  current: index + 1,
+                  total: items.length,
+                })}
+              </Text>
+              <Text className="font-sans text-sm tabular-nums text-mist-ink">
+                {minutesLeft}:{String(seconds).padStart(2, "0")}
+              </Text>
+            </>
+          )}
         </View>
 
-        <Text className="text-center font-serif text-2xl leading-reading text-plum">
-          {item.body}
+        <Text
+          className="text-center font-serif text-2xl leading-reading text-plum"
+          accessibilityRole={done ? "alert" : undefined}
+          accessibilityLiveRegion={done ? "polite" : undefined}
+        >
+          {done ? t("list.finished", { count: items.length }) : item.body}
         </Text>
 
-        {isLast ? (
-          <Button title={t("list.finish")} onPress={() => router.back()} />
+        {done ? null : isLast ? (
+          <Button
+            title={t("list.finish")}
+            onPress={() => {
+              triggerHaptic("success");
+              setDone(true);
+            }}
+          />
         ) : (
           <Button
             title={t("list.next")}
@@ -153,16 +191,19 @@ export default function PrayThrough() {
           />
         )}
 
+        {done ? null : (
         <Tap
           accessibilityRole="button"
-          onPress={() => router.back()}
+          onPress={() => goBackOr("/orar")}
           className="items-center"
         >
           <Text className="font-sans text-sm text-mist-ink underline">
             {t("list.stop")}
           </Text>
         </Tap>
+        )}
       </DawnBackground>
+      </KeyboardScreen>
     </>
   );
 }

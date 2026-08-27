@@ -30,6 +30,10 @@ const SCREENS: { name: string; path: string }[] = [
   { name: "circulos", path: "/circulos" },
   { name: "perfil", path: "/perfil" },
   { name: "capitulo", path: "/libro/43/3" },
+  { name: "crisis", path: "/crisis" },
+  { name: "lista", path: "/lista" },
+  { name: "plus", path: "/plus" },
+  { name: "notfound", path: "/ruta-inexistente" },
 ];
 
 const SNAPSHOT_OPTS = { maxDiffPixelRatio: 0.02, fullPage: false } as const;

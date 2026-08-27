@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,11 +11,13 @@ import {
 } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { TextField } from "@/components/TextField";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
+import { goBackOr } from "@/core/nav/safeBack";
 import {
   useJoinWaitlist,
   useMyWaitlistEntry,
@@ -96,6 +98,7 @@ export default function Plus() {
       <Stack.Screen
         options={{ title: t("paywall.title"), headerShown: true }}
       />
+      <KeyboardScreen>
       <DawnBackground>
         <ScrollView
           contentContainerClassName="flex-grow gap-8 px-7 py-10 md:w-full md:max-w-read md:self-center"
@@ -120,7 +123,7 @@ export default function Plus() {
                 <Check
                   size={icon.sm}
                   color={colors.ember.ink}
-                  strokeWidth={2}
+                  strokeWidth={icon.strokeWidth}
                   style={styles.checkAlign}
                 />
                 <Text className="flex-1 font-sans text-base leading-6 text-plum">
@@ -135,7 +138,7 @@ export default function Plus() {
               <Check
                 size={icon.sm}
                 color={colors.ember.ink}
-                strokeWidth={2}
+                strokeWidth={icon.strokeWidth}
                 style={styles.checkAlign}
               />
               <Text className="flex-1 font-sans text-base leading-6 text-plum">
@@ -237,11 +240,12 @@ export default function Plus() {
             <Button
               title={t("paywall.back")}
               variant="secondary"
-              onPress={() => router.back()}
+              onPress={() => goBackOr("/")}
             />
           </View>
         </ScrollView>
       </DawnBackground>
+      </KeyboardScreen>
     </>
   );
 }

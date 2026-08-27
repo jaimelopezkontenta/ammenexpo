@@ -19,6 +19,8 @@ import {
   track,
 } from "@/core/observability/track";
 
+import { useTranslation } from "react-i18next";
+
 import { useThemeColors } from "@/theme";
 
 export const unstable_settings = {
@@ -42,6 +44,7 @@ if (__DEV__) {
 track("open", { context: "cold_start" });
 
 export default function RootLayout() {
+  const { t } = useTranslation();
   const colors = useThemeColors();
   const [queryClient] = useState(
     () =>
@@ -111,6 +114,11 @@ export default function RootLayout() {
                   headerStyle: { backgroundColor: colors.dawn.sky },
                   headerShadowVisible: false,
                   headerTintColor: colors.plum.DEFAULT,
+                  // Sin esto el back de las pantallas interiores se anunciaba
+                  // "(tabs), back": el grupo anterior no tiene título de
+                  // producto, y el lector de pantalla leía el nombre del
+                  // directorio.
+                  headerBackTitle: t("common.back"),
                   // El empuje lateral nativo. En web el stack de expo-router
                   // hace su fade y no hay nada que configurar.
                   animation: "slide_from_right",

@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { Card } from "@/components/Card";
 import type { SharedPlan } from "@/core/intercessions/queries";
 
 import { Tap } from "@/components/ui/Tap";
@@ -26,9 +27,9 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
     <Tap
       accessibilityRole="link"
       accessibilityLabel={`${plan.owner_name}. ${plan.day_title}`}
-      className="gap-3 rounded-card border border-glassedge/60 bg-glass/60 p-5 shadow-card"
       onPress={onOpen}
     >
+      <Card flat className="gap-3">
       <View className="flex-row items-center gap-3">
         <Avatar
           name={plan.owner_name}
@@ -66,6 +67,7 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
           ? t("intercession.prayedFor", { name: plan.owner_name })
           : t("intercession.openToPray")}
       </Text>
+      </Card>
     </Tap>
   );
 };

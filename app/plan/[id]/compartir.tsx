@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
@@ -238,11 +239,11 @@ export default function SharePlan() {
               />
             ) : linkUrl ? (
               <>
-                <View className="gap-2 rounded-card bg-glass/60 p-5">
+                <Card className="gap-2">
                   <Text className="font-sans text-sm text-mist-ink" selectable>
                     {linkUrl}
                   </Text>
-                </View>
+                </Card>
 
                 <Text className="font-sans text-sm text-mist-ink">
                   {t("share.linkWarning")}

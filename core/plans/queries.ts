@@ -319,7 +319,6 @@ export const useGeneratePlan = (userId: string | undefined) => {
       );
 
       if (error) {
-        // 402 is the paywall, not a failure: surface it as its own state.
         const status = (error as { context?: { status?: number } }).context
           ?.status;
 
@@ -327,8 +326,6 @@ export const useGeneratePlan = (userId: string | undefined) => {
           throw new PlanLimitReached();
         }
 
-        // 503 means the provider is off or misconfigured, not that the user
-        // did anything wrong.
         if (status === 503) {
           throw new GenerationUnavailable();
         }

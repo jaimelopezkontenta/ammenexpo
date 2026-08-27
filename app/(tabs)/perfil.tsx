@@ -11,6 +11,7 @@ import { Card } from "@/components/Card";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { DawnBackground } from "@/components/DawnBackground";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { ResponsiveTabContent } from "@/components/ResponsiveTabContent";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
@@ -169,6 +170,7 @@ export default function Profile() {
   };
 
   return (
+    <KeyboardScreen>
     <DawnBackground>
       <TabHeader title={t("tabs.profile")} />
       <ScrollView
@@ -390,5 +392,6 @@ export default function Profile() {
         </ResponsiveTabContent>
       </ScrollView>
     </DawnBackground>
+    </KeyboardScreen>
   );
 }

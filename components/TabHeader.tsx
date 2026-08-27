@@ -8,7 +8,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useUnreadNotifications } from "@/core/notifications/queries";
 
-import { useThemeColors } from "@/theme";
+import { icon, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -89,14 +89,18 @@ export const TabHeader = ({
             }
             className="relative h-11 w-11 items-center justify-center"
           >
-            <Bell size={21} color={colors.plum.DEFAULT} strokeWidth={1.7} />
+            <Bell
+              size={icon.sm}
+              color={colors.plum.DEFAULT}
+              strokeWidth={icon.strokeWidth}
+            />
             {unread ? (
               <View className="absolute -right-1 top-0 h-2.5 w-2.5 rounded-full bg-ember-accent" />
             ) : null}
           </Tap>
         </Link>
 
-        <Wordmark size={23} />
+        <Wordmark size={icon.md} />
       </View>
     </View>
   );

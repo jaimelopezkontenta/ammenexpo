@@ -5,6 +5,8 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Txt } from "@/components/ui/Text";
 import { LoadMore } from "@/components/LoadMore";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
@@ -135,14 +137,10 @@ export default function Testimonies() {
           ) : null}
 
           {(testimonies ?? []).length === 0 ? (
-            <View className="gap-2 py-6">
-              <Text className="font-sans-semibold text-lg text-mist-ink">
-                {t("testimony.empty")}
-              </Text>
-              <Text className="font-sans text-base leading-6 text-mist-ink">
-                {t("testimony.emptyBody")}
-              </Text>
-            </View>
+            <EmptyState
+              title={t("testimony.empty")}
+              body={t("testimony.emptyBody")}
+            />
           ) : null}
 
           {(testimonies ?? []).map((entry) => (
@@ -162,9 +160,7 @@ export default function Testimonies() {
                 </Text>
               </View>
 
-              <Text className="font-serif text-base leading-reading text-plum">
-                {entry.body}
-              </Text>
+              <Txt variant="bodySerifReading">{entry.body}</Txt>
 
               {entry.plan_title ? (
                 <Text className="font-sans text-sm text-mist-ink">

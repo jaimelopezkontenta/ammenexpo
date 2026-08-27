@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
-import { gradients, useThemeColors } from "@/theme";
+import { gradients, icon, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -41,7 +41,11 @@ export const WizardHeader = ({
           onPress={onBack}
           className="h-11 w-11 items-center justify-center rounded-input border border-glassedge/60 bg-glass/60 shadow-soft"
         >
-          <ChevronLeft size={20} color={colors.plum.DEFAULT} strokeWidth={2} />
+          <ChevronLeft
+            size={icon.sm}
+            color={colors.plum.DEFAULT}
+            strokeWidth={icon.strokeWidth}
+          />
         </Tap>
       ) : (
         // Hueco del mismo tamaño en el primer paso: sin él, la barra salta de

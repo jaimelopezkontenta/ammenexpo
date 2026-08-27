@@ -242,3 +242,16 @@ export const useAcknowledgeCrisis = () => {
     },
   });
 };
+
+export const useReportProfile = (userId: string | undefined) =>
+  useMutation({
+    mutationFn: async (profileId: string) => {
+      const { error } = await supabase.from("reports").insert({
+        reporter_id: userId!,
+        target_type: "profile",
+        target_id: profileId,
+      });
+
+      if (error) throw error;
+    },
+  });

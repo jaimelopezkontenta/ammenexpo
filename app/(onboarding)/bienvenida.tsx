@@ -7,11 +7,13 @@ import Animated, { FadeInRight } from "react-native-reanimated";
 import { Button } from "@/components/Button";
 import { ChoiceChips, type ChoiceOption } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { TextField } from "@/components/TextField";
 import { WizardHeader } from "@/components/WizardHeader";
 import { Wordmark } from "@/components/Wordmark";
 import { useSession } from "@/core/auth/SessionProvider";
+import { useGeneratePlan } from "@/core/plans/queries";
 import {
   CUSTOM_TOPIC_MAX,
   GENDER_KEYS,
@@ -30,7 +32,8 @@ const TOTAL_STEPS = 4;
 export default function Onboarding() {
   const { t, i18n } = useTranslation();
   const { top, scrollBottom } = useScreenPadding();
-  const { refreshOnboarding } = useSession();
+  const { session, refreshOnboarding } = useSession();
+  const generate = useGeneratePlan(session?.user.id);
 
   const [step, setStep] = useState(1);
   const [displayName, setDisplayName] = useState("");
@@ -112,6 +115,19 @@ export default function Onboarding() {
         throw new Error("onboarding_not_saved");
       }
 
+      // El plan sale de las mismas respuestas: si la generación falla, el alta
+      // ya está hecha y Hoy mostrará el vacío con salida, no un error aquí.
+      try {
+        await generate.mutateAsync({
+          duration_days: 7,
+          topics,
+          custom_topic: customTopic.trim() || undefined,
+          visibility: "private",
+        });
+      } catch {
+        // El alta no se revierte: Hoy enseña el vacío con CTA.
+      }
+
       await refreshOnboarding();
     } catch {
       // And without a catch, anything that *threw* rather than returning
@@ -124,9 +140,7 @@ export default function Onboarding() {
   };
 
   return (
-    // El degradado cálido del diseño para el asistente: entra por arriba en
-    // crema y sale en periwinkle, que es el mismo aire de las pantallas de
-    // acceso pero al reves — se nota que se ha cruzado una puerta.
+    <KeyboardScreen>
     <DawnBackground>
       <ScrollView
         contentContainerClassName="flex-grow px-7 pb-10 pt-6 md:w-full md:max-w-read md:self-center"
@@ -327,5 +341,6 @@ export default function Onboarding() {
         <Wordmark />
       </View>
     </DawnBackground>
+    </KeyboardScreen>
   );
 }

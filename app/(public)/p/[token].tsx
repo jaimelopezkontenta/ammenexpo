@@ -4,14 +4,19 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
-import { Button } from "@/components/Button";
 import { LoadingState } from "@/components/ScreenState";
+import { Txt } from "@/components/ui/Text";
 import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import { track } from "@/core/observability/track";
-import { resolveRedeemOutcome } from "@/core/plans/redeemOutcome";
+import {
+  planIdToOpenAfterRedeem,
+  resolveRedeemOutcome,
+} from "@/core/plans/redeemOutcome";
 import { useSharedPlanPreview } from "@/core/plans/sharePreview";
 import { supabase } from "@/utils/supabase";
 
@@ -64,6 +69,7 @@ export default function SharedPlanPreviewScreen() {
       ok?: boolean;
       reason?: string;
       plan_id?: string;
+      self?: boolean;
     } | null;
 
     // The RPC answers `{ok:false, reason}` for a revoked or expired token
@@ -93,12 +99,14 @@ export default function SharedPlanPreviewScreen() {
 
     // Con `plan_id` el canje abre el día que toca orar, no Hoy: aterrizar en la
     // pestaña de Hoy dejaba el plan a un tab de distancia y sin ninguna pista
-    // de que acababa de pasar algo. Sin `plan_id` (enlace de grupo) sigue
-    // cayendo a la raíz, como antes.
-    if (result.plan_id) {
+    // de que acababa de pasar algo. Sin `plan_id` (enlace de grupo) o si quien
+    // abre el enlace es el dueño, cae a la raíz: `/orar/[planId]` es el día de
+    // *otra* persona, y el dueño ve "Ya no tienes acceso".
+    const planId = planIdToOpenAfterRedeem(result);
+    if (planId) {
       router.replace({
         pathname: "/orar/[planId]",
-        params: { planId: result.plan_id },
+        params: { planId },
       });
       return;
     }
@@ -198,33 +206,30 @@ export default function SharedPlanPreviewScreen() {
         </View>
 
         {data.scripture_text ? (
-          <View className="gap-2 rounded-card bg-glass/60 p-5">
-            <Text className="font-sans-medium text-sm text-mist-ink">
-              {t("plan.scripture")}
-            </Text>
-            <Text className="font-sans text-base leading-6 text-plum">
+          <Card label={t("plan.scripture")} className="gap-2">
+            <Text className="font-serif text-lg leading-reading text-plum">
               {data.scripture_text}
             </Text>
             {data.scripture_ref ? (
-              <Text className="font-sans text-sm text-mist-ink">
+              <Txt variant="editorial" className="text-base">
                 {data.scripture_ref}
-              </Text>
+              </Txt>
             ) : null}
-          </View>
+          </Card>
         ) : null}
 
         {/* Without this the page was a shop window: someone who cared enough to
             open the link could read about the person but not actually pray for
             them without signing up first. */}
         {data.intercessor_prayer ? (
-          <View className="gap-2 rounded-card bg-glass/60 p-5">
-            <Text className="font-sans-medium text-sm text-mist-ink">
-              {t("intercession.prayerFor", { name: data.owner_name })}
-            </Text>
+          <Card
+            label={t("intercession.prayerFor", { name: data.owner_name })}
+            className="gap-2"
+          >
             <Text className="font-serif text-lg leading-reading text-plum">
               {data.intercessor_prayer}
             </Text>
-          </View>
+          </Card>
         ) : null}
       </View>
 

@@ -4,7 +4,7 @@ import { runSql } from "./helpers/sql";
 
 /**
  * RDY-00 / RDY-08 — cuenta fresca, de verdad, por la UI: alta → términos →
- * onboarding → Hoy.
+ * onboarding → Hoy con plan (generando o día 1).
  *
  * El seed solo cubre cuentas con onboarding hecho y términos aceptados; este
  * spec cubre la mitad que falta del Gate 0: una cuenta que nace ahora, con la
@@ -56,20 +56,29 @@ test.describe("cuenta fresca — alta, términos, onboarding, a Hoy", () => {
       await page.getByRole("button", { name: "Siguiente" }).click();
 
       // Paso 4: la hora ya viene con «por la mañana» elegida; terminar.
+      // `complete_onboarding` y `generate-prayer-plan` corren en este tap:
+      // la pantalla no se mueve hasta que la mutación responde.
       await page.getByRole("button", { name: "Crear mi plan" }).click();
 
       // Aterriza en Hoy, dentro de la app: la barra de pestañas existe y la
-      // pantalla de login no. Sin plan todavía, Hoy enseña su estado vacío.
+      // pantalla de login no. El onboarding pide un plan de 7 días con los
+      // mismos temas; el aterrizaje correcto es generando o el día 1 — el
+      // vacío con CTA es el fallback si las funciones están caídas, no el
+      // happy path, y no puede esconder un 503.
       await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
-        timeout: 15_000,
+        timeout: 90_000,
       });
       await expect(
         page.getByRole("tab", { name: "Orar" }).first(),
       ).toBeVisible();
-      await expect(page.getByText("Aún no tienes un plan")).toBeVisible({
-        timeout: 10_000,
-      });
       await expect(page.getByLabel("Correo electrónico")).toHaveCount(0);
+      await expect(
+        page
+          .getByText("Preparando tu plan…")
+          .or(page.getByText("Día 1 de 7"))
+          .or(page.getByRole("button", { name: "Ya oré hoy" })),
+      ).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText("Aún no tienes un plan")).toHaveCount(0);
     } finally {
       // Limpieza por SQL directo, sin service role: `profiles` referencia
       // `auth.users(id)` con `on delete cascade`, así que perfil, ajustes y

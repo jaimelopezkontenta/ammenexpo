@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadMore } from "@/components/LoadMore";
 import { DawnBackground } from "@/components/DawnBackground";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -86,9 +87,7 @@ export default function Notifications() {
           contentContainerStyle={{ paddingBottom: scrollBottom }}
         >
           {(data ?? []).length === 0 ? (
-            <Text className="font-sans text-base leading-6 text-mist-ink">
-              {t("notifications.empty")}
-            </Text>
+            <EmptyState title={t("notifications.empty")} />
           ) : (
             (data ?? []).map((entry) => {
               const name = entry.payload.intercessor_name ?? "";

@@ -1,4 +1,5 @@
 import { X } from "lucide-react-native";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   KeyboardAvoidingView,
@@ -19,9 +20,10 @@ import { PlanSwitcher } from "@/components/PlanSwitcher";
 import { TextField } from "@/components/TextField";
 import type { OwnPlan } from "@/core/plans/queries";
 
-import { useThemeColors } from "@/theme";
+import { icon, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
+import { DURATION } from "@/theme/motion";
 
 type Props = {
   visible: boolean;
@@ -48,6 +50,8 @@ type Props = {
   onArchive: () => void;
   /** Lo que falla dentro del sheet se enseña dentro del sheet. */
   error: string | null;
+  /** Tras cerrar del todo (el Modal ya no está): para navegar sin el overlay. */
+  onClosed?: () => void;
 };
 
 /**
@@ -83,10 +87,34 @@ export const PlanOptionsSheet = ({
   archivePending,
   onArchive,
   error,
+  onClosed,
 }: Props) => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
+  const closedOnce = useRef(false);
+  const onClosedRef = useRef(onClosed);
+  onClosedRef.current = onClosed;
+
+  useEffect(() => {
+    if (visible) {
+      closedOnce.current = false;
+      return;
+    }
+    if (Platform.OS !== "web") return;
+    const timer = setTimeout(() => {
+      if (closedOnce.current) return;
+      closedOnce.current = true;
+      onClosedRef.current?.();
+    }, DURATION.exit);
+    return () => clearTimeout(timer);
+  }, [visible]);
+
+  const handleClosed = () => {
+    if (closedOnce.current) return;
+    closedOnce.current = true;
+    onClosedRef.current?.();
+  };
 
   return (
     <Modal
@@ -95,6 +123,7 @@ export const PlanOptionsSheet = ({
       animationType="fade"
       // El botón físico de atrás de Android cierra el sheet, no la pantalla.
       onRequestClose={onClose}
+      onDismiss={handleClosed}
       statusBarTranslucent
     >
       <KeyboardAvoidingView
@@ -103,8 +132,12 @@ export const PlanOptionsSheet = ({
       >
         {/* El scrim cierra al tocar fuera, como cualquier hoja nativa. */}
         <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("common.close")}
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          {...(Platform.OS === "web"
+            ? { "aria-hidden": true, tabIndex: -1 }
+            : null)}
           onPress={onClose}
           style={[StyleSheet.absoluteFill, styles.scrim]}
         />
@@ -149,7 +182,11 @@ export const PlanOptionsSheet = ({
                   // óptico de la tarjeta en vez de con el del área clicable.
                   className="-mr-2 h-11 w-11 items-center justify-center"
                 >
-                  <X size={20} color={colors.plum.DEFAULT} strokeWidth={1.7} />
+                  <X
+                    size={icon.sm}
+                    color={colors.plum.DEFAULT}
+                    strokeWidth={icon.strokeWidth}
+                  />
                 </Tap>
               </View>
 

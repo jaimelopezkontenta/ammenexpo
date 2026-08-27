@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -69,9 +70,7 @@ export default function BlockedPeople() {
             ) : null}
 
             {(blocks ?? []).length === 0 ? (
-              <Text className="font-sans text-base text-mist-ink">
-                {t("moderation.blockedEmpty")}
-              </Text>
+              <EmptyState title={t("moderation.blockedEmpty")} />
             ) : null}
 
             {(blocks ?? []).map((entry) => (

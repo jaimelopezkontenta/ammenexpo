@@ -20,7 +20,9 @@ import {
   useRemoveMember,
 } from "@/core/circles/queries";
 import { Avatar } from "@/components/Avatar";
+import { Card } from "@/components/Card";
 import { CirclePlanCard } from "@/components/CirclePlanCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
 import { useToast } from "@/core/toast/ToastProvider";
@@ -285,9 +287,7 @@ export default function CircleDetail() {
             </Text>
 
             {(sharedPlans ?? []).length === 0 ? (
-              <Text className="font-sans text-base text-mist-ink">
-                {t("circles.sharedEmpty")}
-              </Text>
+              <EmptyState title={t("circles.sharedEmpty")} />
             ) : null}
 
             {(sharedPlans ?? []).map((shared) => (
@@ -330,14 +330,14 @@ export default function CircleDetail() {
           </Link>
 
           {inviteUrl ? (
-            <View className="gap-2 rounded-card bg-glass/60 p-5">
+            <Card className="gap-2">
               <Text className="font-sans-medium text-sm text-mist-ink">
                 {t("circles.inviteLink")}
               </Text>
               <Text className="font-sans text-sm text-mist-ink" selectable>
                 {inviteUrl}
               </Text>
-            </View>
+            </Card>
           ) : null}
 
           {confirmingLeave ? (
