@@ -36,7 +36,9 @@ module.exports = ({ config }) => {
     platforms: ["ios", "android", "web"],
     web: {
       bundler: "metro",
-      output: "static",
+      // `single` en e2e de CI: no prerenderiza cada ruta en Node (supabase-js
+      // pide WebSocket nativo de 22+). Staging/producción siguen en `static`.
+      output: process.env.E2E_WEB_OUTPUT === "single" ? "single" : "static",
       favicon: "./assets/favicon.png",
     },
     plugins: [

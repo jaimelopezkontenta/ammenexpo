@@ -35,7 +35,10 @@ const MIME = {
 const exported = spawnSync(
   NPX,
   ["expo", "export", "--platform", "web", "--output-dir", "dist-e2e"],
-  { stdio: "inherit", env: process.env },
+  {
+    stdio: "inherit",
+    env: { ...process.env, E2E_WEB_OUTPUT: "single" },
+  },
 );
 
 if (exported.status !== 0) {
