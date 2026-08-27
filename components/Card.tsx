@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Text, View, ViewProps } from "react-native";
+import { Text, ViewProps } from "react-native";
 
 import { Glass } from "@/components/Glass";
 

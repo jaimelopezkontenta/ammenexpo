@@ -1,6 +1,6 @@
 import { Link, router } from "expo-router";
 import { Check, MoreHorizontal } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";

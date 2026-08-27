@@ -94,7 +94,10 @@ export const PlanOptionsSheet = ({
   const insets = useSafeAreaInsets();
   const closedOnce = useRef(false);
   const onClosedRef = useRef(onClosed);
-  onClosedRef.current = onClosed;
+
+  useEffect(() => {
+    onClosedRef.current = onClosed;
+  }, [onClosed]);
 
   useEffect(() => {
     if (visible) {
