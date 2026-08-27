@@ -216,6 +216,18 @@ const resetDatabase = () => {
   }
 };
 
+const EDGE_CONTAINER = "supabase_edge_runtime_ammen";
+
+const ensureEdgeRuntime = () => {
+  try {
+    run(`docker start ${EDGE_CONTAINER}`);
+  } catch (caught) {
+    console.warn(
+      `[globalSetup] no se pudo arrancar ${EDGE_CONTAINER}: ${errorOutput(caught)}`,
+    );
+  }
+};
+
 const verifySeedAccountExists = () => {
   let output: string;
 
@@ -277,6 +289,7 @@ export default async function globalSetup() {
   try {
     checkSupabaseIsRunning();
     resetDatabase();
+    ensureEdgeRuntime();
     verifySeedAccountExists();
     await waitForAuth();
   } catch (caught) {

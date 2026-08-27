@@ -40,6 +40,9 @@ jobs:
       - name: Instalar Chromium y dependencias del sistema
         run: npx playwright install --with-deps chromium
 
+      - name: Proveedor de planes local para e2e
+        run: printf 'AI_PROVIDER=fixture\n' >> supabase/functions/.env
+
       - name: Arrancar Supabase local
         run: npx supabase start
 

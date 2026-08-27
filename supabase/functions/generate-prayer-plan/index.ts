@@ -7,6 +7,7 @@ import { buildRepairPrompt, buildUserPrompt, SYSTEM_PROMPT } from "./prompt.ts";
 import { checkDuration, MAX_DAYS, MIN_DAYS } from "./bounds.ts";
 import { deriveChunkRequestId } from "./chunkRequestId.ts";
 import { createAnthropicProvider } from "./providers/anthropic.ts";
+import { createFixtureProvider } from "./providers/fixture.ts";
 import { createOllamaProvider } from "./providers/ollama.ts";
 import {
   type PlanProvider,
@@ -59,6 +60,10 @@ const runInBackground = (promise: Promise<unknown>) => {
 
 const selectProvider = (): PlanProvider => {
   const provider = Deno.env.get("AI_PROVIDER") ?? "anthropic";
+
+  if (provider === "fixture") {
+    return createFixtureProvider();
+  }
 
   if (provider === "ollama") {
     return createOllamaProvider(
