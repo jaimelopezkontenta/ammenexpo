@@ -71,7 +71,9 @@ describe("planIdToOpenAfterRedeem", () => {
   });
 
   it("is null when the RPC declined or returned a circle-only join", () => {
-    expect(planIdToOpenAfterRedeem({ ok: false, plan_id: "plan-1" })).toBeNull();
+    expect(
+      planIdToOpenAfterRedeem({ ok: false, plan_id: "plan-1" }),
+    ).toBeNull();
     expect(planIdToOpenAfterRedeem({ ok: true })).toBeNull();
     expect(planIdToOpenAfterRedeem(null)).toBeNull();
   });

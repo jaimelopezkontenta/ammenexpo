@@ -131,151 +131,153 @@ export default function NewPlan() {
         options={{ title: t("newPlan.title"), headerShown: true }}
       />
       <KeyboardScreen>
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="gap-3">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {t("newPlan.topicQuestion")}
-            </Text>
-            <Text className="font-sans text-sm text-mist-ink">
-              {t("newPlan.topicHint")}
-            </Text>
-            <ChoiceChips
-              options={TOPIC_KEYS.map((key) => ({
-                value: key,
-                label: t(`onboarding.topics.${key}`),
-              }))}
-              selected={topics}
-              onToggle={(value) => setTopics(toggleWithLimit(topics, value))}
-              multiple
-            />
-          </View>
-
-          <View className="gap-2">
-            <TextField
-              label={t("newPlan.customLabel")}
-              value={customTopic}
-              onChangeText={setDraftCustom}
-              placeholder={t("newPlan.customPlaceholder")}
-              maxLength={CUSTOM_TOPIC_MAX}
-              multiline
-            />
-            <Text className="font-sans text-sm text-mist-ink">
-              {t("newPlan.customHint")}
-            </Text>
-          </View>
-
-          <View className="gap-3">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {t("newPlan.durationQuestion")}
-            </Text>
-            <ChoiceChips
-              options={DURATIONS.map((days) => ({
-                value: String(days),
-                label: t("newPlan.days", { count: days }),
-              }))}
-              selected={[String(duration)]}
-              onToggle={(value) => setDuration(Number(value))}
-            />
-          </View>
-
-          {/* A circle's plan has one audience — the circle — so offering "Solo
-            yo" here would be offering a contradiction. */}
-          {circulo ? null : (
+        <DawnBackground>
+          <ScrollView
+            contentContainerClassName="gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
+            contentContainerStyle={{ paddingBottom: scrollBottom }}
+            keyboardShouldPersistTaps="handled"
+          >
             <View className="gap-3">
               <Text className="font-sans-semibold text-lg text-plum">
-                {t("newPlan.visibilityQuestion")}
+                {t("newPlan.topicQuestion")}
+              </Text>
+              <Text className="font-sans text-sm text-mist-ink">
+                {t("newPlan.topicHint")}
               </Text>
               <ChoiceChips
-                options={[
-                  { value: "private", label: t("newPlan.visPrivate") },
-                  { value: "circles", label: t("newPlan.visCircles") },
-                  { value: "link", label: t("newPlan.visLink") },
-                  // El último a propósito: es el más expuesto de los cuatro, y
-                  // el orden de una lista de opciones es una recomendación
-                  // aunque nadie la escriba.
-                  { value: "public", label: t("newPlan.visPublic") },
-                ]}
-                selected={[visibility]}
-                onToggle={(value) => setVisibility(value as PlanVisibility)}
+                options={TOPIC_KEYS.map((key) => ({
+                  value: key,
+                  label: t(`onboarding.topics.${key}`),
+                }))}
+                selected={topics}
+                onToggle={(value) => setTopics(toggleWithLimit(topics, value))}
+                multiple
+              />
+            </View>
+
+            <View className="gap-2">
+              <TextField
+                label={t("newPlan.customLabel")}
+                value={customTopic}
+                onChangeText={setDraftCustom}
+                placeholder={t("newPlan.customPlaceholder")}
+                maxLength={CUSTOM_TOPIC_MAX}
+                multiline
               />
               <Text className="font-sans text-sm text-mist-ink">
-                {visibilityHint}
+                {t("newPlan.customHint")}
               </Text>
-
-              {visibility === "circles" ? (
-                hasCircles ? (
-                  <ChoiceChips
-                    options={(circles ?? []).map((circle) => ({
-                      value: circle.id,
-                      label: circle.name,
-                    }))}
-                    selected={selectedCircles}
-                    onToggle={(value) =>
-                      setSelectedCircles((list) => toggleWithLimit(list, value))
-                    }
-                    multiple
-                  />
-                ) : (
-                  // Without a way out this option is a dead end: nothing to pick,
-                  // and creating the plan is blocked on picking something.
-                  <View className="gap-3">
-                    <Text className="font-sans text-sm text-mist-ink">
-                      {t("newPlan.noCircles")}
-                    </Text>
-                    <Button
-                      title={t("circles.create")}
-                      variant="secondary"
-                      onPress={() => router.push("/circulos")}
-                    />
-                  </View>
-                )
-              ) : null}
             </View>
-          )}
 
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
-          ) : null}
+            <View className="gap-3">
+              <Text className="font-sans-semibold text-lg text-plum">
+                {t("newPlan.durationQuestion")}
+              </Text>
+              <ChoiceChips
+                options={DURATIONS.map((days) => ({
+                  value: String(days),
+                  label: t("newPlan.days", { count: days }),
+                }))}
+                selected={[String(duration)]}
+                onToggle={(value) => setDuration(Number(value))}
+              />
+            </View>
 
-          {atLimit ? (
-            <Card className="gap-2" accessibilityRole="alert">
-              <Text className="font-sans-semibold text-base text-plum">
-                {t("plan.limitTitle")}
+            {/* A circle's plan has one audience — the circle — so offering "Solo
+            yo" here would be offering a contradiction. */}
+            {circulo ? null : (
+              <View className="gap-3">
+                <Text className="font-sans-semibold text-lg text-plum">
+                  {t("newPlan.visibilityQuestion")}
+                </Text>
+                <ChoiceChips
+                  options={[
+                    { value: "private", label: t("newPlan.visPrivate") },
+                    { value: "circles", label: t("newPlan.visCircles") },
+                    { value: "link", label: t("newPlan.visLink") },
+                    // El último a propósito: es el más expuesto de los cuatro, y
+                    // el orden de una lista de opciones es una recomendación
+                    // aunque nadie la escriba.
+                    { value: "public", label: t("newPlan.visPublic") },
+                  ]}
+                  selected={[visibility]}
+                  onToggle={(value) => setVisibility(value as PlanVisibility)}
+                />
+                <Text className="font-sans text-sm text-mist-ink">
+                  {visibilityHint}
+                </Text>
+
+                {visibility === "circles" ? (
+                  hasCircles ? (
+                    <ChoiceChips
+                      options={(circles ?? []).map((circle) => ({
+                        value: circle.id,
+                        label: circle.name,
+                      }))}
+                      selected={selectedCircles}
+                      onToggle={(value) =>
+                        setSelectedCircles((list) =>
+                          toggleWithLimit(list, value),
+                        )
+                      }
+                      multiple
+                    />
+                  ) : (
+                    // Without a way out this option is a dead end: nothing to pick,
+                    // and creating the plan is blocked on picking something.
+                    <View className="gap-3">
+                      <Text className="font-sans text-sm text-mist-ink">
+                        {t("newPlan.noCircles")}
+                      </Text>
+                      <Button
+                        title={t("circles.create")}
+                        variant="secondary"
+                        onPress={() => router.push("/circulos")}
+                      />
+                    </View>
+                  )
+                ) : null}
+              </View>
+            )}
+
+            {error ? (
+              <Text
+                className="font-sans text-sm text-danger"
+                accessibilityRole="alert"
+              >
+                {error}
               </Text>
-              <Text className="font-sans text-base leading-6 text-mist-ink">
-                {t("plan.limitBody")}
-              </Text>
-              {/* Al techo la salida es la lista de espera, no una suscripción:
+            ) : null}
+
+            {atLimit ? (
+              <Card className="gap-2" accessibilityRole="alert">
+                <Text className="font-sans-semibold text-base text-plum">
+                  {t("plan.limitTitle")}
+                </Text>
+                <Text className="font-sans text-base leading-6 text-mist-ink">
+                  {t("plan.limitBody")}
+                </Text>
+                {/* Al techo la salida es la lista de espera, no una suscripción:
                 el botón dice «apuntarme a la lista» y no el nombre de Plus,
                 porque lo que se ofrece aquí es dejar nombre y correo. */}
-              <Link href="/plus" asChild>
-                <Button
-                  title={t("plan.limitWaitlistCta")}
-                  variant="secondary"
-                />
-              </Link>
-            </Card>
-          ) : null}
+                <Link href="/plus" asChild>
+                  <Button
+                    title={t("plan.limitWaitlistCta")}
+                    variant="secondary"
+                  />
+                </Link>
+              </Card>
+            ) : null}
 
-          <View className="pb-4">
-            <Button
-              title={t("newPlan.create")}
-              loading={generate.isPending}
-              onPress={() => void handleCreate()}
-            />
-          </View>
-        </ScrollView>
-      </DawnBackground>
+            <View className="pb-4">
+              <Button
+                title={t("newPlan.create")}
+                loading={generate.isPending}
+                onPress={() => void handleCreate()}
+              />
+            </View>
+          </ScrollView>
+        </DawnBackground>
       </KeyboardScreen>
     </>
   );

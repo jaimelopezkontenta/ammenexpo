@@ -322,9 +322,9 @@ export default function CircleChat() {
                                 )
                               }
                             >
-                            <Text className="font-sans text-sm text-mist-ink underline">
-                              {t("moderation.hide")}
-                            </Text>
+                              <Text className="font-sans text-sm text-mist-ink underline">
+                                {t("moderation.hide")}
+                              </Text>
                             </Tap>
                           ) : null}
                         </View>

@@ -74,77 +74,77 @@ export default function Circles() {
   if (isCreating) {
     return (
       <KeyboardScreen>
-      <DawnBackground>
-        <TabHeader title={t("tabs.circles")} />
-        <ScrollView
-          contentContainerClassName="gap-6 px-7 py-10 md:w-full md:max-w-read md:self-center"
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text className="font-sans-bold text-2xl text-plum">
-            {t("circles.createTitle")}
-          </Text>
-
-          <TextField
-            label={t("circles.name")}
-            value={name}
-            onChangeText={setName}
-            placeholder={t("circles.namePlaceholder")}
-            maxLength={80}
-          />
-
-          <TextField
-            label={t("circles.description")}
-            value={description}
-            onChangeText={setDescription}
-            placeholder={t("circles.descriptionPlaceholder")}
-            maxLength={500}
-            multiline
-          />
-
-          <View className="gap-3">
-            <Text className="font-sans-medium text-sm text-mist-ink">
-              {t("circles.visibility")}
+        <DawnBackground>
+          <TabHeader title={t("tabs.circles")} />
+          <ScrollView
+            contentContainerClassName="gap-6 px-7 py-10 md:w-full md:max-w-read md:self-center"
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text className="font-sans-bold text-2xl text-plum">
+              {t("circles.createTitle")}
             </Text>
-            <ChoiceChips
-              options={[
-                { value: "private", label: t("circles.visibilityPrivate") },
-                { value: "public", label: t("circles.visibilityPublic") },
-              ]}
-              selected={[visibility]}
-              onToggle={(value) => setVisibility(value as CircleVisibility)}
-            />
-            {/* Public circles carry a moderation duty, so say so before creating. */}
-            <Text className="font-sans text-sm text-mist-ink">
-              {visibility === "private"
-                ? t("circles.visibilityPrivateHint")
-                : t("circles.visibilityPublicHint")}
-            </Text>
-          </View>
 
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
-          ) : null}
+            <TextField
+              label={t("circles.name")}
+              value={name}
+              onChangeText={setName}
+              placeholder={t("circles.namePlaceholder")}
+              maxLength={80}
+            />
 
-          <View className="gap-3 pt-2">
-            <Button
-              title={t("circles.create")}
-              disabled={name.trim().length === 0}
-              loading={createCircle.isPending}
-              onPress={() => void handleCreate()}
+            <TextField
+              label={t("circles.description")}
+              value={description}
+              onChangeText={setDescription}
+              placeholder={t("circles.descriptionPlaceholder")}
+              maxLength={500}
+              multiline
             />
-            <Button
-              title={t("common.cancel")}
-              variant="ghost"
-              onPress={() => setIsCreating(false)}
-            />
-          </View>
-        </ScrollView>
-      </DawnBackground>
+
+            <View className="gap-3">
+              <Text className="font-sans-medium text-sm text-mist-ink">
+                {t("circles.visibility")}
+              </Text>
+              <ChoiceChips
+                options={[
+                  { value: "private", label: t("circles.visibilityPrivate") },
+                  { value: "public", label: t("circles.visibilityPublic") },
+                ]}
+                selected={[visibility]}
+                onToggle={(value) => setVisibility(value as CircleVisibility)}
+              />
+              {/* Public circles carry a moderation duty, so say so before creating. */}
+              <Text className="font-sans text-sm text-mist-ink">
+                {visibility === "private"
+                  ? t("circles.visibilityPrivateHint")
+                  : t("circles.visibilityPublicHint")}
+              </Text>
+            </View>
+
+            {error ? (
+              <Text
+                className="font-sans text-sm text-danger"
+                accessibilityRole="alert"
+              >
+                {error}
+              </Text>
+            ) : null}
+
+            <View className="gap-3 pt-2">
+              <Button
+                title={t("circles.create")}
+                disabled={name.trim().length === 0}
+                loading={createCircle.isPending}
+                onPress={() => void handleCreate()}
+              />
+              <Button
+                title={t("common.cancel")}
+                variant="ghost"
+                onPress={() => setIsCreating(false)}
+              />
+            </View>
+          </ScrollView>
+        </DawnBackground>
       </KeyboardScreen>
     );
   }

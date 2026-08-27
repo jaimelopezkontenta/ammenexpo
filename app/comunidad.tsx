@@ -414,9 +414,7 @@ const StoryCard = ({
         </Text>
       ) : null}
 
-      {entry.body ? (
-        <Txt variant="bodySerifReading">{entry.body}</Txt>
-      ) : null}
+      {entry.body ? <Txt variant="bodySerifReading">{entry.body}</Txt> : null}
 
       <View className="flex-row flex-wrap gap-4">
         {entry.kind === "plan" ? (

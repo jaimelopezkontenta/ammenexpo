@@ -99,17 +99,17 @@ export default function Plus() {
         options={{ title: t("paywall.title"), headerShown: true }}
       />
       <KeyboardScreen>
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="flex-grow gap-8 px-7 py-10 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text className="font-sans text-base leading-6 text-mist-ink">
-            {t("paywall.subtitle")}
-          </Text>
+        <DawnBackground>
+          <ScrollView
+            contentContainerClassName="flex-grow gap-8 px-7 py-10 md:w-full md:max-w-read md:self-center"
+            contentContainerStyle={{ paddingBottom: scrollBottom }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text className="font-sans text-base leading-6 text-mist-ink">
+              {t("paywall.subtitle")}
+            </Text>
 
-          {/* Free first, and it is the longer list. Everything that makes this a
+            {/* Free first, and it is the longer list. Everything that makes this a
             place to be with other people stays free; what costs money is asking
             a model to write more plans, which is the part that actually costs
             money. Leading with the paid list would misrepresent the deal.
@@ -117,9 +117,24 @@ export default function Plus() {
             En tarjetas y con checks, no texto plano apilado: la pantalla que
             explica el trato es la que menos se podía permitir parecer un
             borrador. */}
-          <Card label={t("paywall.free")} className="gap-3">
-            {FREE.map((key) => (
-              <View key={key} className="flex-row items-start gap-3">
+            <Card label={t("paywall.free")} className="gap-3">
+              {FREE.map((key) => (
+                <View key={key} className="flex-row items-start gap-3">
+                  <Check
+                    size={icon.sm}
+                    color={colors.ember.ink}
+                    strokeWidth={icon.strokeWidth}
+                    style={styles.checkAlign}
+                  />
+                  <Text className="flex-1 font-sans text-base leading-6 text-plum">
+                    {t(key)}
+                  </Text>
+                </View>
+              ))}
+            </Card>
+
+            <Card label={t("paywall.paid")} className="gap-3">
+              <View className="flex-row items-start gap-3">
                 <Check
                   size={icon.sm}
                   color={colors.ember.ink}
@@ -127,124 +142,111 @@ export default function Plus() {
                   style={styles.checkAlign}
                 />
                 <Text className="flex-1 font-sans text-base leading-6 text-plum">
-                  {t(key)}
+                  {t("paywall.paidPlans")}
                 </Text>
               </View>
-            ))}
-          </Card>
+            </Card>
 
-          <Card label={t("paywall.paid")} className="gap-3">
-            <View className="flex-row items-start gap-3">
-              <Check
-                size={icon.sm}
-                color={colors.ember.ink}
-                strokeWidth={icon.strokeWidth}
-                style={styles.checkAlign}
-              />
-              <Text className="flex-1 font-sans text-base leading-6 text-plum">
-                {t("paywall.paidPlans")}
-              </Text>
-            </View>
-          </Card>
+            <Text
+              className="text-center font-sans text-base leading-6 text-mist-ink"
+              accessibilityRole="alert"
+            >
+              {t("paywall.notYet")}
+            </Text>
 
-          <Text
-            className="text-center font-sans text-base leading-6 text-mist-ink"
-            accessibilityRole="alert"
-          >
-            {t("paywall.notYet")}
-          </Text>
-
-          {/* La lista de espera es la única salida real de esta pantalla:
+            {/* La lista de espera es la única salida real de esta pantalla:
             recoger interés sin prometer un pago. */}
-          <Card className="gap-4">
-            <Text className="font-sans-semibold text-base text-plum">
-              {t("paywall.waitlistTitle")}
-            </Text>
-            <Text className="font-sans text-base leading-6 text-mist-ink">
-              {t("paywall.waitlistBody")}
-            </Text>
-
-            {entryLoading ? (
-              <ActivityIndicator color={colors.plum.DEFAULT} />
-            ) : entryError ? (
-              <View className="gap-3">
-                <Text
-                  className="font-sans text-sm text-danger"
-                  accessibilityRole="alert"
-                >
-                  {t("common.errorBody")}
-                </Text>
-                <Button
-                  title={t("common.retry")}
-                  variant="secondary"
-                  onPress={() => void refetchEntry()}
-                />
-              </View>
-            ) : justJoined ? (
-              <Text
-                className="font-sans text-base text-plum"
-                accessibilityRole="alert"
-              >
-                {t("paywall.waitlistDone")}
+            <Card className="gap-4">
+              <Text className="font-sans-semibold text-base text-plum">
+                {t("paywall.waitlistTitle")}
               </Text>
-            ) : entry ? (
-              <Text
-                className="font-sans text-base text-plum"
-                accessibilityRole="alert"
-              >
-                {t("paywall.waitlistAlready")}
+              <Text className="font-sans text-base leading-6 text-mist-ink">
+                {t("paywall.waitlistBody")}
               </Text>
-            ) : (
-              <View className="gap-4">
-                <TextField
-                  label={t("paywall.waitlistName")}
-                  value={name}
-                  onChangeText={setDraftName}
-                  maxLength={80}
-                />
-                <TextField
-                  label={t("paywall.waitlistEmail")}
-                  value={email}
-                  onChangeText={setDraftEmail}
-                  // Para el correo existe la clave de siempre; para el nombre
-                  // no hay «el nombre es obligatorio» en ningún idioma, así que
-                  // un nombre vacío desactiva el botón en vez de inventar un
-                  // texto que no está traducido.
-                  error={fieldError === "email" ? t("auth.emailInvalid") : null}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  textContentType="emailAddress"
-                />
 
-                {error ? (
+              {entryLoading ? (
+                <ActivityIndicator color={colors.plum.DEFAULT} />
+              ) : entryError ? (
+                <View className="gap-3">
                   <Text
                     className="font-sans text-sm text-danger"
                     accessibilityRole="alert"
                   >
-                    {error}
+                    {t("common.errorBody")}
                   </Text>
-                ) : null}
+                  <Button
+                    title={t("common.retry")}
+                    variant="secondary"
+                    onPress={() => void refetchEntry()}
+                  />
+                </View>
+              ) : justJoined ? (
+                <Text
+                  className="font-sans text-base text-plum"
+                  accessibilityRole="alert"
+                >
+                  {t("paywall.waitlistDone")}
+                </Text>
+              ) : entry ? (
+                <Text
+                  className="font-sans text-base text-plum"
+                  accessibilityRole="alert"
+                >
+                  {t("paywall.waitlistAlready")}
+                </Text>
+              ) : (
+                <View className="gap-4">
+                  <TextField
+                    label={t("paywall.waitlistName")}
+                    value={name}
+                    onChangeText={setDraftName}
+                    maxLength={80}
+                  />
+                  <TextField
+                    label={t("paywall.waitlistEmail")}
+                    value={email}
+                    onChangeText={setDraftEmail}
+                    // Para el correo existe la clave de siempre; para el nombre
+                    // no hay «el nombre es obligatorio» en ningún idioma, así que
+                    // un nombre vacío desactiva el botón en vez de inventar un
+                    // texto que no está traducido.
+                    error={
+                      fieldError === "email" ? t("auth.emailInvalid") : null
+                    }
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                  />
 
-                <Button
-                  title={t("paywall.waitlistCta")}
-                  loading={join.isPending}
-                  disabled={fieldError !== null}
-                  onPress={() => void handleJoin()}
-                />
-              </View>
-            )}
-          </Card>
+                  {error ? (
+                    <Text
+                      className="font-sans text-sm text-danger"
+                      accessibilityRole="alert"
+                    >
+                      {error}
+                    </Text>
+                  ) : null}
 
-          <View className="mt-auto gap-3 pt-6">
-            <Button
-              title={t("paywall.back")}
-              variant="secondary"
-              onPress={() => goBackOr("/")}
-            />
-          </View>
-        </ScrollView>
-      </DawnBackground>
+                  <Button
+                    title={t("paywall.waitlistCta")}
+                    loading={join.isPending}
+                    disabled={fieldError !== null}
+                    onPress={() => void handleJoin()}
+                  />
+                </View>
+              )}
+            </Card>
+
+            <View className="mt-auto gap-3 pt-6">
+              <Button
+                title={t("paywall.back")}
+                variant="secondary"
+                onPress={() => goBackOr("/")}
+              />
+            </View>
+          </ScrollView>
+        </DawnBackground>
       </KeyboardScreen>
     </>
   );

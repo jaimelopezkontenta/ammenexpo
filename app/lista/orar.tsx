@@ -98,14 +98,14 @@ export default function PrayThrough() {
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
         <KeyboardScreen>
-        <DawnBackground className="justify-center">
-          <EmptyState title={t("list.empty")}>
-            <Button
-              title={t("list.addItems")}
-              onPress={() => goBackOr("/lista")}
-            />
-          </EmptyState>
-        </DawnBackground>
+          <DawnBackground className="justify-center">
+            <EmptyState title={t("list.empty")}>
+              <Button
+                title={t("list.addItems")}
+                onPress={() => goBackOr("/lista")}
+              />
+            </EmptyState>
+          </DawnBackground>
         </KeyboardScreen>
       </>
     );
@@ -118,23 +118,23 @@ export default function PrayThrough() {
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
         <KeyboardScreen>
-        <DawnBackground className="justify-center gap-6 px-8">
-          <Text className="font-serif-bold text-2xl text-plum">
-            {t("list.howLong")}
-          </Text>
-          <Text className="font-sans text-base leading-6 text-mist-ink">
-            {t("list.howLongHint", { count: items.length })}
-          </Text>
+          <DawnBackground className="justify-center gap-6 px-8">
+            <Text className="font-serif-bold text-2xl text-plum">
+              {t("list.howLong")}
+            </Text>
+            <Text className="font-sans text-base leading-6 text-mist-ink">
+              {t("list.howLongHint", { count: items.length })}
+            </Text>
 
-          <ChoiceChips
-            options={LENGTHS.map((value) => ({
-              value: String(value),
-              label: t("list.minutes", { count: value }),
-            }))}
-            selected={[]}
-            onToggle={(value) => start(Number(value))}
-          />
-        </DawnBackground>
+            <ChoiceChips
+              options={LENGTHS.map((value) => ({
+                value: String(value),
+                label: t("list.minutes", { count: value }),
+              }))}
+              selected={[]}
+              onToggle={(value) => start(Number(value))}
+            />
+          </DawnBackground>
         </KeyboardScreen>
       </>
     );
@@ -150,59 +150,59 @@ export default function PrayThrough() {
       <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
 
       <KeyboardScreen>
-      <DawnBackground className="justify-center gap-8 px-8">
-        <View className="items-center gap-3">
-          <Orb size={72} />
-          {done ? null : (
-            <>
-              <Text className="font-sans text-sm text-mist-ink">
-                {t("list.position", {
-                  current: index + 1,
-                  total: items.length,
-                })}
-              </Text>
-              <Text className="font-sans text-sm tabular-nums text-mist-ink">
-                {minutesLeft}:{String(seconds).padStart(2, "0")}
-              </Text>
-            </>
-          )}
-        </View>
+        <DawnBackground className="justify-center gap-8 px-8">
+          <View className="items-center gap-3">
+            <Orb size={72} />
+            {done ? null : (
+              <>
+                <Text className="font-sans text-sm text-mist-ink">
+                  {t("list.position", {
+                    current: index + 1,
+                    total: items.length,
+                  })}
+                </Text>
+                <Text className="font-sans text-sm tabular-nums text-mist-ink">
+                  {minutesLeft}:{String(seconds).padStart(2, "0")}
+                </Text>
+              </>
+            )}
+          </View>
 
-        <Text
-          className="text-center font-serif text-2xl leading-reading text-plum"
-          accessibilityRole={done ? "alert" : undefined}
-          accessibilityLiveRegion={done ? "polite" : undefined}
-        >
-          {done ? t("list.finished", { count: items.length }) : item.body}
-        </Text>
-
-        {done ? null : isLast ? (
-          <Button
-            title={t("list.finish")}
-            onPress={() => {
-              triggerHaptic("success");
-              setDone(true);
-            }}
-          />
-        ) : (
-          <Button
-            title={t("list.next")}
-            onPress={() => setIndex((current) => current + 1)}
-          />
-        )}
-
-        {done ? null : (
-        <Tap
-          accessibilityRole="button"
-          onPress={() => goBackOr("/orar")}
-          className="items-center"
-        >
-          <Text className="font-sans text-sm text-mist-ink underline">
-            {t("list.stop")}
+          <Text
+            className="text-center font-serif text-2xl leading-reading text-plum"
+            accessibilityRole={done ? "alert" : undefined}
+            accessibilityLiveRegion={done ? "polite" : undefined}
+          >
+            {done ? t("list.finished", { count: items.length }) : item.body}
           </Text>
-        </Tap>
-        )}
-      </DawnBackground>
+
+          {done ? null : isLast ? (
+            <Button
+              title={t("list.finish")}
+              onPress={() => {
+                triggerHaptic("success");
+                setDone(true);
+              }}
+            />
+          ) : (
+            <Button
+              title={t("list.next")}
+              onPress={() => setIndex((current) => current + 1)}
+            />
+          )}
+
+          {done ? null : (
+            <Tap
+              accessibilityRole="button"
+              onPress={() => goBackOr("/orar")}
+              className="items-center"
+            >
+              <Text className="font-sans text-sm text-mist-ink underline">
+                {t("list.stop")}
+              </Text>
+            </Tap>
+          )}
+        </DawnBackground>
       </KeyboardScreen>
     </>
   );

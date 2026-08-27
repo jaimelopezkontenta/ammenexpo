@@ -70,64 +70,66 @@ export default function NewTestimony() {
         options={{ title: t("testimony.title"), headerShown: true }}
       />
       <KeyboardScreen>
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {plan ? (
-            <Text className="font-sans text-sm text-mist-ink">
-              {t("testimony.duringPlan", { title: plan.title })}
-            </Text>
-          ) : null}
+        <DawnBackground>
+          <ScrollView
+            contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
+            contentContainerStyle={{ paddingBottom: scrollBottom }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {plan ? (
+              <Text className="font-sans text-sm text-mist-ink">
+                {t("testimony.duringPlan", { title: plan.title })}
+              </Text>
+            ) : null}
 
-          <View className="gap-2">
-            <TextField
-              label={t("testimony.body")}
-              value={body}
-              onChangeText={setBody}
-              placeholder={t("testimony.placeholder")}
-              maxLength={TESTIMONY_MAX}
-              multiline
-            />
-          </View>
+            <View className="gap-2">
+              <TextField
+                label={t("testimony.body")}
+                value={body}
+                onChangeText={setBody}
+                placeholder={t("testimony.placeholder")}
+                maxLength={TESTIMONY_MAX}
+                multiline
+              />
+            </View>
 
-          <View className="gap-3">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {t("testimony.whoSees")}
-            </Text>
-            <ChoiceChips
-              options={[
-                { value: "private", label: t("testimony.visPrivate") },
-                { value: "circles", label: t("testimony.visCircles") },
-                { value: "public", label: t("testimony.visPublic") },
-              ]}
-              selected={[visibility]}
-              onToggle={(value) => setVisibility(value as TestimonyVisibility)}
-            />
-            <Text className="font-sans text-sm text-mist-ink">{hint}</Text>
-          </View>
+            <View className="gap-3">
+              <Text className="font-sans-semibold text-lg text-plum">
+                {t("testimony.whoSees")}
+              </Text>
+              <ChoiceChips
+                options={[
+                  { value: "private", label: t("testimony.visPrivate") },
+                  { value: "circles", label: t("testimony.visCircles") },
+                  { value: "public", label: t("testimony.visPublic") },
+                ]}
+                selected={[visibility]}
+                onToggle={(value) =>
+                  setVisibility(value as TestimonyVisibility)
+                }
+              />
+              <Text className="font-sans text-sm text-mist-ink">{hint}</Text>
+            </View>
 
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
-          ) : null}
+            {error ? (
+              <Text
+                className="font-sans text-sm text-danger"
+                accessibilityRole="alert"
+              >
+                {error}
+              </Text>
+            ) : null}
 
-          <View className="mt-auto pt-6">
-            <Button
-              title={t("testimony.save")}
-              disabled={body.trim().length === 0}
-              loading={write.isPending}
-              onPress={() => void handleSave()}
-            />
-          </View>
-        </ScrollView>
-      </DawnBackground>
+            <View className="mt-auto pt-6">
+              <Button
+                title={t("testimony.save")}
+                disabled={body.trim().length === 0}
+                loading={write.isPending}
+                onPress={() => void handleSave()}
+              />
+            </View>
+          </ScrollView>
+        </DawnBackground>
       </KeyboardScreen>
     </>
   );

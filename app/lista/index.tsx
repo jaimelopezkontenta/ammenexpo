@@ -123,166 +123,161 @@ export default function PrayerList() {
       <Stack.Screen options={screenOptions} />
 
       <KeyboardScreen>
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="gap-2">
-            <TextInput
-              // `min-h-12` + leading: siendo multiline, el alto por contenido
-              // recortaba el placeholder de dos líneas a media letra.
-              className="min-h-12 w-full rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base leading-5 text-plum"
-              accessibilityLabel={t("list.placeholder")}
-              value={draft}
-              onChangeText={setDraft}
-              placeholder={t("list.placeholder")}
-              placeholderTextColor={colors.mist.ink}
-              maxLength={ITEM_MAX}
-              multiline
-              onSubmitEditing={() => void handleAdd()}
-            />
+        <DawnBackground>
+          <ScrollView
+            contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+            contentContainerStyle={{ paddingBottom: scrollBottom }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="gap-2">
+              <TextInput
+                // `min-h-12` + leading: siendo multiline, el alto por contenido
+                // recortaba el placeholder de dos líneas a media letra.
+                className="min-h-12 w-full rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base leading-5 text-plum"
+                accessibilityLabel={t("list.placeholder")}
+                value={draft}
+                onChangeText={setDraft}
+                placeholder={t("list.placeholder")}
+                placeholderTextColor={colors.mist.ink}
+                maxLength={ITEM_MAX}
+                multiline
+                onSubmitEditing={() => void handleAdd()}
+              />
 
-            <Button
-              title={t("list.add")}
-              variant="secondary"
-              loading={add.isPending}
-              disabled={draft.trim().length === 0}
-              onPress={() => void handleAdd()}
-            />
-          </View>
+              <Button
+                title={t("list.add")}
+                variant="secondary"
+                loading={add.isPending}
+                disabled={draft.trim().length === 0}
+                onPress={() => void handleAdd()}
+              />
+            </View>
 
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
-          ) : null}
+            {error ? (
+              <Text
+                className="font-sans text-sm text-danger"
+                accessibilityRole="alert"
+              >
+                {error}
+              </Text>
+            ) : null}
 
-          {/* El temporizador es lo que convierte una lista en una práctica, así
+            {/* El temporizador es lo que convierte una lista en una práctica, así
             que va arriba y no escondido al final. Sin peticiones no se pinta:
             un botón que abre una pantalla vacía es peor que ningún botón. */}
-          {pending.length > 0 ? (
-            <Link href="/lista/orar" asChild>
-              <Button title={t("list.prayThrough")} />
-            </Link>
-          ) : null}
+            {pending.length > 0 ? (
+              <Link href="/lista/orar" asChild>
+                <Button title={t("list.prayThrough")} />
+              </Link>
+            ) : null}
 
-          {items.length === 0 ? <EmptyState title={t("list.empty")} /> : null}
+            {items.length === 0 ? <EmptyState title={t("list.empty")} /> : null}
 
-          {pending.map((item) => (
-            <Card
-              key={item.id}
-              flat
-              className="gap-2"
-            >
-              <Txt variant="bodySerifReading">{item.body}</Txt>
+            {pending.map((item) => (
+              <Card key={item.id} flat className="gap-2">
+                <Txt variant="bodySerifReading">{item.body}</Txt>
 
-              <View className="flex-row flex-wrap gap-4">
-                <Tap
-                  accessibilityRole="button"
-                  onPress={() =>
-                    void run(() =>
-                      setAnswered.mutateAsync({ id: item.id, answered: true }),
-                    )
-                  }
-                >
-                  <Text className="font-sans text-sm text-ember-ink underline">
-                    {t("list.markAnswered")}
-                  </Text>
-                </Tap>
-
-                <Tap
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: confirming === item.id }}
-                  onPress={() => {
-                    if (confirming === item.id) {
-                      setConfirming(null);
-                      void run(() => remove.mutateAsync(item.id));
-                    } else {
-                      setConfirming(item.id);
-                    }
-                  }}
-                >
-                  <Text
-                    className={
-                      confirming === item.id
-                        ? "font-sans-semibold text-sm text-danger"
-                        : "text-sm text-mist-ink underline"
-                    }
-                    accessibilityLiveRegion={
-                      confirming === item.id ? "polite" : "none"
+                <View className="flex-row flex-wrap gap-4">
+                  <Tap
+                    accessibilityRole="button"
+                    onPress={() =>
+                      void run(() =>
+                        setAnswered.mutateAsync({
+                          id: item.id,
+                          answered: true,
+                        }),
+                      )
                     }
                   >
-                    {confirming === item.id
-                      ? t("list.removeConfirm")
-                      : t("list.remove")}
-                  </Text>
-                </Tap>
-              </View>
-            </Card>
-          ))}
+                    <Text className="font-sans text-sm text-ember-ink underline">
+                      {t("list.markAnswered")}
+                    </Text>
+                  </Tap>
 
-          {answered.length > 0 ? (
-            <View className="gap-4 pt-4">
-              <Text className="font-sans-medium text-sm text-mist-ink">
-                {t("list.answeredTitle")}
-              </Text>
+                  <Tap
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded: confirming === item.id }}
+                    onPress={() => {
+                      if (confirming === item.id) {
+                        setConfirming(null);
+                        void run(() => remove.mutateAsync(item.id));
+                      } else {
+                        setConfirming(item.id);
+                      }
+                    }}
+                  >
+                    <Text
+                      className={
+                        confirming === item.id
+                          ? "font-sans-semibold text-sm text-danger"
+                          : "text-sm text-mist-ink underline"
+                      }
+                      accessibilityLiveRegion={
+                        confirming === item.id ? "polite" : "none"
+                      }
+                    >
+                      {confirming === item.id
+                        ? t("list.removeConfirm")
+                        : t("list.remove")}
+                    </Text>
+                  </Tap>
+                </View>
+              </Card>
+            ))}
 
-              {answered.map((item) => (
-                <Card
-                  key={item.id}
-                  flat
-                  className="gap-2"
-                >
-                  <Txt variant="bodySerifReading" tone="secondary">
-                    {item.body}
-                  </Txt>
+            {answered.length > 0 ? (
+              <View className="gap-4 pt-4">
+                <Text className="font-sans-medium text-sm text-mist-ink">
+                  {t("list.answeredTitle")}
+                </Text>
 
-                  <View className="flex-row flex-wrap gap-4">
-                    {/* El cuarto bucle del producto —terminas algo y cuentas qué
+                {answered.map((item) => (
+                  <Card key={item.id} flat className="gap-2">
+                    <Txt variant="bodySerifReading" tone="secondary">
+                      {item.body}
+                    </Txt>
+
+                    <View className="flex-row flex-wrap gap-4">
+                      {/* El cuarto bucle del producto —terminas algo y cuentas qué
                       pasó— vale igual para una petición de la lista que para un
                       plan de treinta días. Sin esto, marcar respondida sería un
                       tachón y nada más. */}
-                    <Link
-                      href={{
-                        pathname: "/testimonios/nuevo",
-                        params: { listItem: item.id },
-                      }}
-                      asChild
-                    >
-                      <Tap accessibilityRole="link">
-                        <Text className="font-sans text-sm text-ember-ink underline">
-                          {t("list.tellIt")}
+                      <Link
+                        href={{
+                          pathname: "/testimonios/nuevo",
+                          params: { listItem: item.id },
+                        }}
+                        asChild
+                      >
+                        <Tap accessibilityRole="link">
+                          <Text className="font-sans text-sm text-ember-ink underline">
+                            {t("list.tellIt")}
+                          </Text>
+                        </Tap>
+                      </Link>
+
+                      <Tap
+                        accessibilityRole="button"
+                        onPress={() =>
+                          void run(() =>
+                            setAnswered.mutateAsync({
+                              id: item.id,
+                              answered: false,
+                            }),
+                          )
+                        }
+                      >
+                        <Text className="font-sans text-sm text-mist-ink underline">
+                          {t("list.undoAnswered")}
                         </Text>
                       </Tap>
-                    </Link>
-
-                    <Tap
-                      accessibilityRole="button"
-                      onPress={() =>
-                        void run(() =>
-                          setAnswered.mutateAsync({
-                            id: item.id,
-                            answered: false,
-                          }),
-                        )
-                      }
-                    >
-                      <Text className="font-sans text-sm text-mist-ink underline">
-                        {t("list.undoAnswered")}
-                      </Text>
-                    </Tap>
-                  </View>
-                </Card>
-              ))}
-            </View>
-          ) : null}
-        </ScrollView>
-      </DawnBackground>
+                    </View>
+                  </Card>
+                ))}
+              </View>
+            ) : null}
+          </ScrollView>
+        </DawnBackground>
       </KeyboardScreen>
     </>
   );

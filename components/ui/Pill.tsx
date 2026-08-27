@@ -57,7 +57,11 @@ export const Pill = ({
       [0, 1],
       [bgOff, chipColor],
     ),
-    borderColor: interpolateColor(progress.value, [0, 1], [borderOff, BORDER_ON]),
+    borderColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [borderOff, BORDER_ON],
+    ),
   }));
 
   const a11yRole = role === "tab" ? "tab" : role;

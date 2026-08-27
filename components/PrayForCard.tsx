@@ -30,43 +30,43 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
       onPress={onOpen}
     >
       <Card flat className="gap-3">
-      <View className="flex-row items-center gap-3">
-        <Avatar
-          name={plan.owner_name}
-          url={plan.owner_avatar_url}
-          seed={plan.owner_id}
-          size={36}
-        />
-        <View className="flex-1 gap-1">
-          <Text className="font-sans-semibold text-lg text-plum">
-            {plan.owner_name}
+        <View className="flex-row items-center gap-3">
+          <Avatar
+            name={plan.owner_name}
+            url={plan.owner_avatar_url}
+            seed={plan.owner_id}
+            size={36}
+          />
+          <View className="flex-1 gap-1">
+            <Text className="font-sans-semibold text-lg text-plum">
+              {plan.owner_name}
+            </Text>
+            <Text className="font-sans text-sm text-mist-ink">
+              {plan.plan_title}
+            </Text>
+          </View>
+        </View>
+
+        <View className="gap-1">
+          <Text className="font-editorial text-base text-ember-ink">
+            {t("common.day", { number: plan.day_number })}
           </Text>
-          <Text className="font-sans text-sm text-mist-ink">
-            {plan.plan_title}
+          <Text className="font-sans text-base leading-6 text-plum">
+            {plan.day_title}
           </Text>
         </View>
-      </View>
 
-      <View className="gap-1">
-        <Text className="font-editorial text-base text-ember-ink">
-          {t("common.day", { number: plan.day_number })}
+        <Text
+          className={
+            plan.already_prayed
+              ? "font-sans-medium text-sm text-mist-ink"
+              : "font-sans-semibold text-sm text-plum"
+          }
+        >
+          {plan.already_prayed
+            ? t("intercession.prayedFor", { name: plan.owner_name })
+            : t("intercession.openToPray")}
         </Text>
-        <Text className="font-sans text-base leading-6 text-plum">
-          {plan.day_title}
-        </Text>
-      </View>
-
-      <Text
-        className={
-          plan.already_prayed
-            ? "font-sans-medium text-sm text-mist-ink"
-            : "font-sans-semibold text-sm text-plum"
-        }
-      >
-        {plan.already_prayed
-          ? t("intercession.prayedFor", { name: plan.owner_name })
-          : t("intercession.openToPray")}
-      </Text>
       </Card>
     </Tap>
   );

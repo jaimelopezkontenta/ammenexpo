@@ -57,74 +57,74 @@ export default function NewPrayerRequest() {
     <>
       <Stack.Screen options={{ title: t("feed.newPost"), headerShown: true }} />
       <KeyboardScreen>
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <TextField
-            label={t("feed.body")}
-            value={body}
-            onChangeText={setBody}
-            placeholder={t("feed.placeholder")}
-            maxLength={POST_MAX}
-            multiline
-          />
+        <DawnBackground>
+          <ScrollView
+            contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
+            contentContainerStyle={{ paddingBottom: scrollBottom }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TextField
+              label={t("feed.body")}
+              value={body}
+              onChangeText={setBody}
+              placeholder={t("feed.placeholder")}
+              maxLength={POST_MAX}
+              multiline
+            />
 
-          <View className="gap-2">
-            <Tap
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: isAnonymous }}
-              aria-checked={isAnonymous}
-              accessibilityLabel={t("feed.anonymous")}
-              onPress={() => setIsAnonymous((current) => !current)}
-              className={`rounded-input border px-4 py-3.5 ${
-                isAnonymous
-                  ? "border-plum bg-plum-chip"
-                  : "border-glassedge/60 bg-dawn-cream-bg"
-              }`}
-            >
-              <Text
-                className={
+            <View className="gap-2">
+              <Tap
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: isAnonymous }}
+                aria-checked={isAnonymous}
+                accessibilityLabel={t("feed.anonymous")}
+                onPress={() => setIsAnonymous((current) => !current)}
+                className={`rounded-input border px-4 py-3.5 ${
                   isAnonymous
-                    ? "font-sans-semibold text-base text-white"
-                    : "text-base text-mist-ink"
-                }
+                    ? "border-plum bg-plum-chip"
+                    : "border-glassedge/60 bg-dawn-cream-bg"
+                }`}
               >
-                {t("feed.anonymous")}
-              </Text>
-            </Tap>
+                <Text
+                  className={
+                    isAnonymous
+                      ? "font-sans-semibold text-base text-white"
+                      : "text-base text-mist-ink"
+                  }
+                >
+                  {t("feed.anonymous")}
+                </Text>
+              </Tap>
 
-            {/* The cost is stated before the choice, not after: without a name
+              {/* The cost is stated before the choice, not after: without a name
               there is no id to block either, and somebody deciding to post
               anonymously deserves to know that cuts both ways. */}
-            {isAnonymous ? (
-              <Text className="font-sans text-sm leading-5 text-mist-ink">
-                {t("feed.anonymousHint")}
+              {isAnonymous ? (
+                <Text className="font-sans text-sm leading-5 text-mist-ink">
+                  {t("feed.anonymousHint")}
+                </Text>
+              ) : null}
+            </View>
+
+            {error ? (
+              <Text
+                className="font-sans text-sm text-danger"
+                accessibilityRole="alert"
+              >
+                {error}
               </Text>
             ) : null}
-          </View>
 
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
-          ) : null}
-
-          <View className="mt-auto pt-6">
-            <Button
-              title={t("feed.publish")}
-              disabled={body.trim().length === 0}
-              loading={write.isPending}
-              onPress={() => void handlePublish()}
-            />
-          </View>
-        </ScrollView>
-      </DawnBackground>
+            <View className="mt-auto pt-6">
+              <Button
+                title={t("feed.publish")}
+                disabled={body.trim().length === 0}
+                loading={write.isPending}
+                onPress={() => void handlePublish()}
+              />
+            </View>
+          </ScrollView>
+        </DawnBackground>
       </KeyboardScreen>
     </>
   );

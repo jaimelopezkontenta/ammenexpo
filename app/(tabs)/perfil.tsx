@@ -171,227 +171,229 @@ export default function Profile() {
 
   return (
     <KeyboardScreen>
-    <DawnBackground>
-      <TabHeader title={t("tabs.profile")} />
-      <ScrollView
-        contentContainerClassName="flex-grow py-10"
-        keyboardShouldPersistTaps="handled"
-      >
-        <ResponsiveTabContent className="gap-6">
-          <Card label={t("profile.identity")} className="gap-6">
-            {/* La cara primero: `avatar_url` viajaba en trece RPC desde la Fase
+      <DawnBackground>
+        <TabHeader title={t("tabs.profile")} />
+        <ScrollView
+          contentContainerClassName="flex-grow py-10"
+          keyboardShouldPersistTaps="handled"
+        >
+          <ResponsiveTabContent className="gap-6">
+            <Card label={t("profile.identity")} className="gap-6">
+              {/* La cara primero: `avatar_url` viajaba en trece RPC desde la Fase
               1 y no se pintaba en ningún sitio. */}
-            <View className="flex-row items-center gap-4">
-              <Avatar
-                name={profile.display_name}
-                url={profile.avatar_url}
-                seed={userId}
-                size={72}
-              />
+              <View className="flex-row items-center gap-4">
+                <Avatar
+                  name={profile.display_name}
+                  url={profile.avatar_url}
+                  seed={userId}
+                  size={72}
+                />
 
-              <View className="min-w-0 flex-1 gap-1">
-                <Text className="font-sans-bold text-2xl text-plum">
-                  {profile.display_name}
-                </Text>
-                {session?.user.email ? (
-                  <Text className="font-sans text-sm text-mist-ink">
-                    {session.user.email}
+                <View className="min-w-0 flex-1 gap-1">
+                  <Text className="font-sans-bold text-2xl text-plum">
+                    {profile.display_name}
                   </Text>
-                ) : null}
-
-                <View className="flex-row flex-wrap gap-4 pt-1">
-                  <Tap
-                    accessibilityRole="button"
-                    disabled={uploadAvatar.isPending}
-                    onPress={() => void handlePickPhoto()}
-                    // Enlaces de 14px: sin esto la zona táctil quedaba por
-                    // debajo de los 44px mínimos.
-                    hitSlop={12}
-                  >
-                    <Text className="font-sans text-sm text-mist-ink underline">
-                      {profile.avatar_url
-                        ? t("profile.changePhoto")
-                        : t("profile.addPhoto")}
+                  {session?.user.email ? (
+                    <Text className="font-sans text-sm text-mist-ink">
+                      {session.user.email}
                     </Text>
-                  </Tap>
+                  ) : null}
 
-                  {profile.avatar_url ? (
+                  <View className="flex-row flex-wrap gap-4 pt-1">
                     <Tap
                       accessibilityRole="button"
-                      disabled={removeAvatar.isPending}
-                      onPress={() => void handleRemovePhoto()}
+                      disabled={uploadAvatar.isPending}
+                      onPress={() => void handlePickPhoto()}
+                      // Enlaces de 14px: sin esto la zona táctil quedaba por
+                      // debajo de los 44px mínimos.
                       hitSlop={12}
                     >
                       <Text className="font-sans text-sm text-mist-ink underline">
-                        {t("profile.removePhoto")}
+                        {profile.avatar_url
+                          ? t("profile.changePhoto")
+                          : t("profile.addPhoto")}
                       </Text>
                     </Tap>
-                  ) : null}
+
+                    {profile.avatar_url ? (
+                      <Tap
+                        accessibilityRole="button"
+                        disabled={removeAvatar.isPending}
+                        onPress={() => void handleRemovePhoto()}
+                        hitSlop={12}
+                      >
+                        <Text className="font-sans text-sm text-mist-ink underline">
+                          {t("profile.removePhoto")}
+                        </Text>
+                      </Tap>
+                    ) : null}
+                  </View>
                 </View>
               </View>
-            </View>
 
-            <TextField
-              label={t("profile.name")}
-              value={name}
-              onChangeText={setDraftName}
-              maxLength={80}
-            />
-          </Card>
-
-          {/* Un único guardado para nombre y recordatorios. Aquí queda junto al
-            campo de nombre, en vez de aparecer al final de Preferencias. */}
-          {dirty ? (
-            <View className="w-full md:max-w-sm">
-              <Button
-                title={t("common.save")}
-                loading={update.isPending}
-                onPress={() => void handleSave()}
+              <TextField
+                label={t("profile.name")}
+                value={name}
+                onChangeText={setDraftName}
+                maxLength={80}
               />
-            </View>
-          ) : null}
+            </Card>
 
-          <View className="gap-6 md:flex-row md:items-start">
-            <Card
-              label={t("profile.preferences")}
-              className="gap-6 md:min-w-0 md:flex-1"
-            >
-              <View className="gap-3">
-                <Text className="font-sans-medium text-sm text-mist-ink">
-                  {t("profile.reminder")}
-                </Text>
-                <ChoiceChips
-                  options={REMINDER_HOURS.map((slot) => ({
-                    value: String(slot.hour),
-                    label: t(`onboarding.hours.${slot.key}`),
-                  }))}
-                  selected={hours.map(String)}
-                  onToggle={(value) =>
-                    setDraftHours(
-                      toggleWithLimit(
-                        hours.map(String),
-                        value,
-                        REMINDER_MAX,
-                      ).map(Number),
-                    )
-                  }
-                  max={REMINDER_MAX}
-                  multiple
+            {/* Un único guardado para nombre y recordatorios. Aquí queda junto al
+            campo de nombre, en vez de aparecer al final de Preferencias. */}
+            {dirty ? (
+              <View className="w-full md:max-w-sm">
+                <Button
+                  title={t("common.save")}
+                  loading={update.isPending}
+                  onPress={() => void handleSave()}
                 />
-                {/* En nativo estas horas se programan como notificaciones
+              </View>
+            ) : null}
+
+            <View className="gap-6 md:flex-row md:items-start">
+              <Card
+                label={t("profile.preferences")}
+                className="gap-6 md:min-w-0 md:flex-1"
+              >
+                <View className="gap-3">
+                  <Text className="font-sans-medium text-sm text-mist-ink">
+                    {t("profile.reminder")}
+                  </Text>
+                  <ChoiceChips
+                    options={REMINDER_HOURS.map((slot) => ({
+                      value: String(slot.hour),
+                      label: t(`onboarding.hours.${slot.key}`),
+                    }))}
+                    selected={hours.map(String)}
+                    onToggle={(value) =>
+                      setDraftHours(
+                        toggleWithLimit(
+                          hours.map(String),
+                          value,
+                          REMINDER_MAX,
+                        ).map(Number),
+                      )
+                    }
+                    max={REMINDER_MAX}
+                    multiple
+                  />
+                  {/* En nativo estas horas se programan como notificaciones
                   locales diarias al guardar (ver localReminders.ts); en web no
                   se puede programar nada, y el copy lo dice sin fingir que va
                   a sonar. */}
-                <Text className="font-sans text-sm leading-5 text-mist-ink">
-                  {Platform.OS === "web"
-                    ? t("profile.reminderHintWeb")
-                    : t("profile.reminderHintNative")}
-                </Text>
-              </View>
+                  <Text className="font-sans text-sm leading-5 text-mist-ink">
+                    {Platform.OS === "web"
+                      ? t("profile.reminderHintWeb")
+                      : t("profile.reminderHintNative")}
+                  </Text>
+                </View>
 
-              <View className="gap-2">
-                <Text className="font-sans-medium text-sm text-mist-ink">
-                  {t("profile.timezone")}
-                </Text>
-                <Text className="font-sans text-base text-plum">
-                  {profile.timezone}
-                </Text>
-                <Text className="font-sans text-sm text-mist-ink">
-                  {t("profile.timezoneHint")}
-                </Text>
+                <View className="gap-2">
+                  <Text className="font-sans-medium text-sm text-mist-ink">
+                    {t("profile.timezone")}
+                  </Text>
+                  <Text className="font-sans text-base text-plum">
+                    {profile.timezone}
+                  </Text>
+                  <Text className="font-sans text-sm text-mist-ink">
+                    {t("profile.timezoneHint")}
+                  </Text>
 
-                {zoneMoved ? (
-                  <View className="gap-2 pt-1">
-                    <Text className="font-sans text-sm text-mist-ink">
-                      {t("profile.timezoneMoved", { zone: deviceZone })}
-                    </Text>
-                    <Button
-                      title={t("profile.timezoneUpdate", { zone: deviceZone })}
-                      variant="secondary"
-                      loading={updateTimezone.isPending}
-                      onPress={() => void handleTimezone()}
-                    />
-                  </View>
-                ) : null}
-              </View>
+                  {zoneMoved ? (
+                    <View className="gap-2 pt-1">
+                      <Text className="font-sans text-sm text-mist-ink">
+                        {t("profile.timezoneMoved", { zone: deviceZone })}
+                      </Text>
+                      <Button
+                        title={t("profile.timezoneUpdate", {
+                          zone: deviceZone,
+                        })}
+                        variant="secondary"
+                        loading={updateTimezone.isPending}
+                        onPress={() => void handleTimezone()}
+                      />
+                    </View>
+                  ) : null}
+                </View>
 
-              <LanguageSwitcher />
-            </Card>
+                <LanguageSwitcher />
+              </Card>
 
-            <View className="gap-6 md:min-w-0 md:flex-1">
-              {/* Filas con chevron, no seis Button ghost idénticos: son
+              <View className="gap-6 md:min-w-0 md:flex-1">
+                {/* Filas con chevron, no seis Button ghost idénticos: son
                 enlaces a otra pantalla, no seis llamadas a la acción del
                 mismo peso. */}
-              <Card label={t("profile.communitySupport")} className="gap-0">
-                <Link href="/testimonios" asChild>
-                  <NavRow label={t("testimony.title")} />
-                </Link>
-
-                {/* Plus es una página informativa: el nombre deja claro aquí,
-                  antes de abrirla, que todavía no existe una compra. */}
-                <Link href="/plus" asChild>
-                  <NavRow label={t("profile.plusComingSoon")} />
-                </Link>
-
-                <Link href="/bloqueados" asChild>
-                  <NavRow label={t("moderation.blockedTitle")} />
-                </Link>
-
-                {profile.is_staff ? (
-                  <Link href="/moderacion" asChild>
-                    <NavRow
-                      label={
-                        openReports
-                          ? `${t("moderation.queueTitle")} · ${openReports}`
-                          : t("moderation.queueTitle")
-                      }
-                    />
+                <Card label={t("profile.communitySupport")} className="gap-0">
+                  <Link href="/testimonios" asChild>
+                    <NavRow label={t("testimony.title")} />
                   </Link>
-                ) : null}
 
-                <Link href="/invitar" asChild>
-                  <NavRow label={t("invite.title")} />
-                </Link>
+                  {/* Plus es una página informativa: el nombre deja claro aquí,
+                  antes de abrirla, que todavía no existe una compra. */}
+                  <Link href="/plus" asChild>
+                    <NavRow label={t("profile.plusComingSoon")} />
+                  </Link>
 
-                <Link href="/acerca" asChild>
-                  <NavRow label={t("profile.about")} />
-                </Link>
-              </Card>
+                  <Link href="/bloqueados" asChild>
+                    <NavRow label={t("moderation.blockedTitle")} />
+                  </Link>
 
-              <Card label={t("profile.dangerZone")} className="gap-3">
-                <Button
-                  title={t("auth.signOut")}
-                  variant="secondary"
-                  loading={signingOut}
-                  onPress={() => void handleSignOut()}
-                />
+                  {profile.is_staff ? (
+                    <Link href="/moderacion" asChild>
+                      <NavRow
+                        label={
+                          openReports
+                            ? `${t("moderation.queueTitle")} · ${openReports}`
+                            : t("moderation.queueTitle")
+                        }
+                      />
+                    </Link>
+                  ) : null}
 
-                {confirmingDelete ? (
-                  <Text
-                    className="text-center font-sans text-sm text-danger"
-                    accessibilityRole="alert"
-                    accessibilityLiveRegion="polite"
-                  >
-                    {t("profile.deleteWarning")}
-                  </Text>
-                ) : null}
+                  <Link href="/invitar" asChild>
+                    <NavRow label={t("invite.title")} />
+                  </Link>
 
-                <Button
-                  title={
-                    confirmingDelete
-                      ? t("profile.deleteConfirm")
-                      : t("profile.delete")
-                  }
-                  variant="ghost"
-                  loading={deleteAccount.isPending}
-                  onPress={() => void handleDelete()}
-                />
-              </Card>
+                  <Link href="/acerca" asChild>
+                    <NavRow label={t("profile.about")} />
+                  </Link>
+                </Card>
+
+                <Card label={t("profile.dangerZone")} className="gap-3">
+                  <Button
+                    title={t("auth.signOut")}
+                    variant="secondary"
+                    loading={signingOut}
+                    onPress={() => void handleSignOut()}
+                  />
+
+                  {confirmingDelete ? (
+                    <Text
+                      className="text-center font-sans text-sm text-danger"
+                      accessibilityRole="alert"
+                      accessibilityLiveRegion="polite"
+                    >
+                      {t("profile.deleteWarning")}
+                    </Text>
+                  ) : null}
+
+                  <Button
+                    title={
+                      confirmingDelete
+                        ? t("profile.deleteConfirm")
+                        : t("profile.delete")
+                    }
+                    variant="ghost"
+                    loading={deleteAccount.isPending}
+                    onPress={() => void handleDelete()}
+                  />
+                </Card>
+              </View>
             </View>
-          </View>
-        </ResponsiveTabContent>
-      </ScrollView>
-    </DawnBackground>
+          </ResponsiveTabContent>
+        </ScrollView>
+      </DawnBackground>
     </KeyboardScreen>
   );
 }

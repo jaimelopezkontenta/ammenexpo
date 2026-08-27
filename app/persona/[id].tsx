@@ -281,10 +281,7 @@ export default function PersonProfile() {
                   }}
                   asChild
                 >
-                  <Tap
-                    accessibilityRole="link"
-                    className="rounded-card"
-                  >
+                  <Tap accessibilityRole="link" className="rounded-card">
                     <Card flat className="gap-1">
                       <Text className="font-serif-bold text-base text-plum">
                         {plan.title}
@@ -309,11 +306,7 @@ export default function PersonProfile() {
                 —el servidor lo excluye— porque una lista por persona es justo
                 la forma de deshacer un anonimato. */}
               {(posts ?? []).map((post) => (
-                <Card
-                  key={post.id}
-                  flat
-                  className="gap-2"
-                >
+                <Card key={post.id} flat className="gap-2">
                   <Txt variant="bodySerifReading">{post.body}</Txt>
                   <Text className="font-sans text-sm text-mist-ink">
                     {t("feed.prayCount", { count: post.prayer_count })}
@@ -330,11 +323,7 @@ export default function PersonProfile() {
               </Text>
 
               {theirs.map((entry) => (
-                <Card
-                  key={entry.id}
-                  flat
-                  className="gap-2"
-                >
+                <Card key={entry.id} flat className="gap-2">
                   {entry.plan_title ? (
                     <Text className="font-sans text-sm text-mist-ink">
                       {entry.plan_title}
