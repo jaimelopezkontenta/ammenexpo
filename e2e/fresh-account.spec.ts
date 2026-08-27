@@ -76,7 +76,8 @@ test.describe("cuenta fresca — alta, términos, onboarding, a Hoy", () => {
         page
           .getByText("Preparando tu plan…")
           .or(page.getByText("Día 1 de 7"))
-          .or(page.getByRole("button", { name: "Ya oré hoy" })),
+          .or(page.getByRole("button", { name: "Ya oré hoy" }))
+          .first(),
       ).toBeVisible({ timeout: 20_000 });
       await expect(page.getByText("Aún no tienes un plan")).toHaveCount(0);
     } finally {
