@@ -1,4 +1,4 @@
-import { Redirect, useSegments } from "expo-router";
+import { Redirect, usePathname, useSegments } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
@@ -58,6 +58,7 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
     signOut,
   } = useSession();
   const segments = useSegments();
+  const pathname = usePathname();
   const group = segments[0];
 
   if (group === "(public)") {
@@ -68,7 +69,11 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   // you in and then asks for the new password. Sending it to "/" like the rest
   // of the group meant the password was never actually changed, so the next
   // sign-out locked the person out all over again.
-  if (segments[1] === "nueva-contrasena") {
+  //
+  // `useSegments()` is a typed tuple of the current tree; on this route it is
+  // length 1, so `segments[1]` does not type-check (and would be undefined if
+  // the group name is omitted from the URL). The path is the stable signal.
+  if (pathname === "/nueva-contrasena") {
     return <>{children}</>;
   }
 
