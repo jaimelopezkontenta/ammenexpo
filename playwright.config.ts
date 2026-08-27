@@ -58,8 +58,8 @@ export default defineConfig({
   webServer: {
     command: "npm run web",
     url: "http://127.0.0.1:8081",
-    reuseExistingServer: true,
-    timeout: 120_000,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
     // `.env.local` puede apuntar Supabase a `10.0.2.2` (el alias del emulador
     // Android), que desde un navegador de escritorio no existe: si Playwright
     // levantaba el server con ese valor, TODOS los tests morían en el login
@@ -67,6 +67,19 @@ export default defineConfig({
     // así que aquí se fija la URL que los e2e siempre usan: el Kong local.
     env: {
       EXPO_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54421",
+      // El runner de GitHub tiene ~7 GB; el heap por defecto de Node (~2 GB)
+      // no alcanza para Metro/Expo web y el proceso muere antes de abrir 8081.
+      ...(process.env.CI
+        ? {
+            NODE_OPTIONS: [
+              process.env.NODE_OPTIONS,
+              "--max-old-space-size=4096",
+            ]
+              .filter(Boolean)
+              .join(" "),
+            METRO_MAX_WORKERS: "2",
+          }
+        : {}),
     },
   },
 });

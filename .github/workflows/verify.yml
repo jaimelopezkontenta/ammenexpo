@@ -51,6 +51,8 @@ jobs:
 
       - name: Playwright Chromium serial sobre el mismo Supabase
         run: npx playwright test --project=chromium --workers=1
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Publicar artefactos de Playwright al fallar
         if: failure()
