@@ -3,10 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * RDY-07: harness web con dos contexts, contra Supabase local.
  *
- * `npm run web` (Metro/Expo web), nunca `npm run dev`, que no existe — la
- * misma regla que el resto del plan. `webServer` lo arranca y espera al
- * puerto antes de correr nada, y lo reutiliza si ya estaba arriba (`npm run
- * web` puede quedarse abierto en una terminal mientras se itera).
+ * En local, `npm run web` (Metro/Expo web) — nunca `npm run dev`. En CI el
+ * runner no aguanta Metro a tiempo; `scripts/e2eWebServer.mjs` exporta y
+ * sirve el estático en 127.0.0.1:8081.
  *
  * Solo Chromium por ahora (regla del plan: "Playwright Chromium viable").
  * Webkit/Firefox no se han probado contra este stack y añadirlos sin
@@ -55,31 +54,29 @@ export default defineConfig({
       grep: /@visual/,
     },
   ],
-  webServer: {
-    command: "npm run web",
-    url: "http://127.0.0.1:8081",
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-    // `.env.local` puede apuntar Supabase a `10.0.2.2` (el alias del emulador
-    // Android), que desde un navegador de escritorio no existe: si Playwright
-    // levantaba el server con ese valor, TODOS los tests morían en el login
-    // sin decir por qué. Las variables de proceso ganan a los .env de Expo,
-    // así que aquí se fija la URL que los e2e siempre usan: el Kong local.
-    env: {
-      EXPO_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54421",
-      // El runner de GitHub tiene ~7 GB; el heap por defecto de Node (~2 GB)
-      // no alcanza para Metro/Expo web y el proceso muere antes de abrir 8081.
-      ...(process.env.CI
-        ? {
-            NODE_OPTIONS: [
-              process.env.NODE_OPTIONS,
-              "--max-old-space-size=4096",
-            ]
-              .filter(Boolean)
-              .join(" "),
-            METRO_MAX_WORKERS: "2",
-          }
-        : {}),
-    },
-  },
+  webServer: process.env.CI
+    ? {
+        command: "node scripts/e2eWebServer.mjs",
+        url: "http://127.0.0.1:8081",
+        reuseExistingServer: false,
+        timeout: 360_000,
+        env: {
+          EXPO_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54421",
+          NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=4096"]
+            .filter(Boolean)
+            .join(" "),
+        },
+      }
+    : {
+        command: "npm run web",
+        url: "http://127.0.0.1:8081",
+        reuseExistingServer: true,
+        timeout: 180_000,
+        // `.env.local` puede apuntar Supabase a `10.0.2.2` (el alias del
+        // emulador Android), que desde un navegador de escritorio no existe.
+        // Las variables de proceso ganan a los .env de Expo.
+        env: {
+          EXPO_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54421",
+        },
+      },
 });
