@@ -27,11 +27,9 @@ const RAW_TEXT = /<Text[\s/>]/g;
 
 /** Censo al arrancar la adopción. Solo se borra o se reduce, nunca crece. */
 const ALLOWLIST: Record<string, number> = {
-  "app/(onboarding)/bienvenida.tsx": 13,
   "app/(public)/c/[token].tsx": 5,
   "app/(public)/i/[code].tsx": 2,
   "app/(public)/p/[token].tsx": 13,
-  "app/aceptar.tsx": 5,
   "app/acerca.tsx": 9,
   "app/bloqueados.tsx": 4,
   "app/circulo/[id]/index.tsx": 14,
@@ -52,6 +50,7 @@ const ALLOWLIST: Record<string, number> = {
   "app/versiculo.tsx": 3,
   // Ola 1 (2026-08-28): components/** y core/** migrados enteros a Txt.
   // Ola 2 (2026-08-28): las 14 pantallas con red visual, a cero.
+  // Ola 3 (2026-08-28): el onboarding (bienvenida + aceptar), a cero.
 };
 
 const tsxFiles = (dir: string): string[] =>

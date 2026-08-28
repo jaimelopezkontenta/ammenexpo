@@ -1,10 +1,11 @@
 import * as Localization from "expo-localization";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Animated, { FadeInRight } from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
+import { Txt } from "@/components/ui/Text";
 import { ChoiceChips, type ChoiceOption } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
@@ -169,12 +170,12 @@ export default function Onboarding() {
             {step === 1 ? (
               <View className="mt-4 gap-6">
                 <View className="gap-2">
-                  <Text className="text-center font-sans-bold text-3xl leading-9 text-plum">
+                  <Txt variant="display" className="text-center">
                     {t("onboarding.welcomeTitle")}
-                  </Text>
-                  <Text className="text-center font-sans text-base text-mist-ink">
+                  </Txt>
+                  <Txt variant="body" tone="secondary" className="text-center">
                     {t("onboarding.welcomeBody")}
-                  </Text>
+                  </Txt>
                 </View>
                 <TextField
                   label={t("onboarding.nameQuestion")}
@@ -189,12 +190,8 @@ export default function Onboarding() {
               montaje. Son la misma pregunta —quién eres— y separarlos cuesta
               un toque más a cambio de nada. */}
                 <View className="gap-2">
-                  <Text className="font-sans-medium text-sm text-plum">
-                    {t("onboarding.genderQuestion")}
-                  </Text>
-                  <Text className="font-sans text-sm text-mist-ink">
-                    {t("onboarding.genderHint")}
-                  </Text>
+                  <Txt variant="label">{t("onboarding.genderQuestion")}</Txt>
+                  <Txt variant="caption">{t("onboarding.genderHint")}</Txt>
                   <ChoiceChips
                     options={GENDER_KEYS.map((key) => ({
                       value: key,
@@ -210,12 +207,12 @@ export default function Onboarding() {
             {step === 2 ? (
               <View className="mt-4 gap-6">
                 <View className="gap-2">
-                  <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                  <Txt variant="headingLg" className="text-center">
                     {t("onboarding.seasonQuestion")}
-                  </Text>
-                  <Text className="text-center font-sans text-base text-mist-ink">
+                  </Txt>
+                  <Txt variant="body" tone="secondary" className="text-center">
                     {t("onboarding.seasonHint", { count: SEASON_MAX })}
-                  </Text>
+                  </Txt>
                 </View>
                 <ChoiceChips
                   options={seasonOptions}
@@ -231,12 +228,13 @@ export default function Onboarding() {
                 {/* Said out loud, because a chip that stops responding with no
               explanation reads as a broken chip. */}
                 {seasons.length >= SEASON_MAX ? (
-                  <Text
-                    className="text-center font-sans text-sm text-mist-ink"
+                  <Txt
+                    variant="caption"
+                    className="text-center"
                     accessibilityLiveRegion="polite"
                   >
                     {t("onboarding.seasonMax", { count: SEASON_MAX })}
-                  </Text>
+                  </Txt>
                 ) : null}
               </View>
             ) : null}
@@ -244,12 +242,12 @@ export default function Onboarding() {
             {step === 3 ? (
               <View className="mt-4 gap-6">
                 <View className="gap-2">
-                  <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                  <Txt variant="headingLg" className="text-center">
                     {t("onboarding.topicsQuestion")}
-                  </Text>
-                  <Text className="text-center font-sans text-base text-mist-ink">
+                  </Txt>
+                  <Txt variant="body" tone="secondary" className="text-center">
                     {t("onboarding.topicsHint")}
-                  </Text>
+                  </Txt>
                 </View>
                 <ChoiceChips
                   options={topicOptions}
@@ -273,9 +271,7 @@ export default function Onboarding() {
                     maxLength={CUSTOM_TOPIC_MAX}
                     multiline
                   />
-                  <Text className="font-sans text-sm text-mist-ink">
-                    {t("onboarding.customHint")}
-                  </Text>
+                  <Txt variant="caption">{t("onboarding.customHint")}</Txt>
                 </View>
               </View>
             ) : null}
@@ -283,12 +279,12 @@ export default function Onboarding() {
             {step === 4 ? (
               <View className="mt-4 gap-6">
                 <View className="gap-2">
-                  <Text className="text-center font-sans-bold text-2xl leading-8 text-plum">
+                  <Txt variant="headingLg" className="text-center">
                     {t("onboarding.timeQuestion")}
-                  </Text>
-                  <Text className="text-center font-sans text-base text-mist-ink">
+                  </Txt>
+                  <Txt variant="body" tone="secondary" className="text-center">
                     {t("onboarding.timeHint", { count: REMINDER_MAX })}
-                  </Text>
+                  </Txt>
                 </View>
                 <ChoiceChips
                   options={hourOptions}
@@ -306,12 +302,14 @@ export default function Onboarding() {
           </Animated.View>
 
           {error ? (
-            <Text
-              className="mt-6 text-center font-sans text-sm text-danger"
+            <Txt
+              variant="caption"
+              tone="danger"
+              className="mt-6 text-center"
               accessibilityRole="alert"
             >
               {error}
-            </Text>
+            </Txt>
           ) : null}
 
           {/* Volver vive arriba, en la cabecera, como en el diseño: abajo solo

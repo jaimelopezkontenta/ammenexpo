@@ -1,10 +1,11 @@
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useAcceptTerms } from "@/core/legal/queries";
@@ -50,13 +51,11 @@ export default function AcceptTerms() {
           paddingBottom: scrollBottom,
         }}
       >
-        <Text className="font-serif-bold text-2xl text-plum">
-          {t("legal.gateTitle")}
-        </Text>
+        <Txt variant="title">{t("legal.gateTitle")}</Txt>
 
-        <Text className="font-sans text-base leading-6 text-mist-ink">
+        <Txt variant="body" tone="secondary">
           {t("legal.gateBody")}
-        </Text>
+        </Txt>
 
         {/* Los dos documentos, para leerlos antes de aceptarlos. Sin esto, "acepto"
           sería un botón sobre algo que no se puede ver. */}
@@ -64,17 +63,17 @@ export default function AcceptTerms() {
           <Link
             href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}
           >
-            <Text className="font-sans-medium text-base text-ember-ink underline">
+            <Txt variant="bodyMedium" tone="accent" className="underline">
               {t("legal.terms")}
-            </Text>
+            </Txt>
           </Link>
 
           <Link
             href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
           >
-            <Text className="font-sans-medium text-base text-ember-ink underline">
+            <Txt variant="bodyMedium" tone="accent" className="underline">
               {t("legal.privacy")}
-            </Text>
+            </Txt>
           </Link>
         </View>
 
@@ -85,12 +84,9 @@ export default function AcceptTerms() {
         />
 
         {error ? (
-          <Text
-            className="font-sans text-sm text-danger"
-            accessibilityRole="alert"
-          >
+          <Txt variant="caption" tone="danger" accessibilityRole="alert">
             {error}
-          </Text>
+          </Txt>
         ) : null}
 
         {/* No aceptar tiene que llevar a algún sitio. Sin esta salida, quien no
