@@ -36,8 +36,10 @@
     "db:test:generation": "node scripts/supabaseDbReset.mjs && docker exec -i supabase_db_ammen psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f - < supabase/tests/generation.sql",
     "test:generation:concurrency": "bash supabase/tests/generation-concurrency.sh",
     "e2e": "playwright test --project=chromium",
-    "e2e:visual": "playwright test --project=visual",
-    "e2e:visual:update": "playwright test --project=visual --update-snapshots",
+    "e2e:static": "node scripts/e2eStatic.mjs",
+    "e2e:visual": "playwright test --project=visual --project=visual-dark",
+    "e2e:visual:update": "playwright test --project=visual --project=visual-dark --update-snapshots",
+    "doctor": "node scripts/doctor.mjs",
     "push:drain": "node scripts/pushDrain.mjs"
   },
   "dependencies": {

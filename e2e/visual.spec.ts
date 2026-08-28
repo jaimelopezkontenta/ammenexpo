@@ -53,6 +53,38 @@ const SCREENS: { name: string; path: string }[] = [
 
 const SNAPSHOT_OPTS = { maxDiffPixelRatio: 0.02, fullPage: false } as const;
 
+/**
+ * Las dos fuentes de caducidad que mataban baselines solas:
+ *
+ * - El saludo de Hoy depende de `getHours()`: una referencia capturada por la
+ *   mañana moría por la tarde. Hora fija a las 10:00 del día REAL — la fecha
+ *   no se congela para no descuadrar los datos del seed, que nacen en el
+ *   reset de esta misma corrida. `setFixedTime` y no `install()`: congelar
+ *   también los timers colgaría React Query y los `waitForTimeout`.
+ * - El Versículo del día lo decide el SERVIDOR por fecha (`local_today()`),
+ *   así que rota cada día y arrastraba las capturas de Hoy y Biblia: payload
+ *   fijo por intercepción. Juan 3:16, como manda la tradición.
+ */
+const FIXED_VERSE = [
+  {
+    book_id: 43,
+    book_name: "Juan",
+    chapter: 3,
+    verse: 16,
+    reference: "Juan 3:16",
+    text: "Porque de tal manera amó Dios al mundo, que ha dado á su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.",
+  },
+];
+
+const stabilize = async (page: Page) => {
+  const fixed = new Date();
+  fixed.setHours(10, 0, 0, 0);
+  await page.clock.setFixedTime(fixed);
+  await page.route("**/rest/v1/rpc/verse_of_the_day", (route) =>
+    route.fulfill({ json: FIXED_VERSE }),
+  );
+};
+
 const login = async (page: Page) => {
   await page.goto("/entrar");
   await page.getByLabel("Correo electrónico").fill(SEED.email);
@@ -70,6 +102,7 @@ for (const viewport of VIEWPORTS) {
     test(`entrar se ve como la referencia (${viewport.name})`, async ({
       page,
     }) => {
+      await stabilize(page);
       await page.goto("/entrar");
       await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
       // Las fuentes remotas de Google llegan un frame después que el layout.
@@ -83,6 +116,7 @@ for (const viewport of VIEWPORTS) {
     test(`crear cuenta se ve como la referencia (${viewport.name})`, async ({
       page,
     }) => {
+      await stabilize(page);
       await page.goto("/crear-cuenta");
       await expect(
         page.getByRole("button", { name: "Crear cuenta" }),
@@ -102,6 +136,7 @@ for (const viewport of VIEWPORTS) {
       // quedaron justos en cuanto cada goto ronda los 20 s con la máquina
       // cargada (medido 2026-08-28): presupuesto con margen, no al filo.
       test.setTimeout(600_000);
+      await stabilize(page);
       await login(page);
       for (const screen of SCREENS) {
         await page.goto(screen.path);

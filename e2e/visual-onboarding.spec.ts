@@ -37,8 +37,16 @@ for (const viewport of VIEWPORTS) {
     }) => {
       // Alta + 5 capturas con sus esperas: el timeout global de 120 s va justo.
       test.setTimeout(180_000);
+      // El email único se calcula ANTES de fijar el reloj: con la hora
+      // congelada, `Date.now()` devolvería lo mismo en cada corrida y dos
+      // corridas seguidas chocarían en el alta.
       const email = `e2e-visual-${Date.now()}-${viewport.name}@ammen.local`;
       const password = "ammen1234";
+      // Hora fija del día real, como en visual.spec: aquí no hay saludo,
+      // pero deja el spec inmune a cualquier copy dependiente de la hora.
+      const fixed = new Date();
+      fixed.setHours(10, 0, 0, 0);
+      await page.clock.setFixedTime(fixed);
 
       try {
         await page.goto("/crear-cuenta");
