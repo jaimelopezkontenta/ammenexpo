@@ -269,7 +269,30 @@ export default function NewPlan() {
               </Card>
             ) : null}
 
-            <View className="pb-4">
+            <View className="gap-2 pb-4">
+              {/* Lo elegido, en una línea junto al botón: el CTA anclado al
+                final de un formulario largo no debería ser un acto de fe. */}
+              <Text className="text-center font-sans text-sm text-mist-ink">
+                {[
+                  t("newPlan.days", { count: duration }),
+                  topics.length > 0
+                    ? topics
+                        .map((key) => t(`onboarding.topics.${key}`))
+                        .join(", ")
+                    : null,
+                  circulo
+                    ? null
+                    : visibility === "private"
+                      ? t("newPlan.visPrivate")
+                      : visibility === "circles"
+                        ? t("newPlan.visCircles")
+                        : visibility === "link"
+                          ? t("newPlan.visLink")
+                          : t("newPlan.visPublic"),
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </Text>
               <Button
                 title={t("newPlan.create")}
                 loading={generate.isPending}

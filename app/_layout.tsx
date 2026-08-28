@@ -8,6 +8,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AuthGate } from "@/core/auth/AuthGate";
@@ -28,6 +29,11 @@ export const unstable_settings = {
 };
 
 void SplashScreen.preventAutoHideAsync();
+// El splash nativo no se corta: se funde sobre la pantalla de arranque, que
+// pinta el mismo amanecer (el fondo del splash es `dawn.cream-bg`, el centro
+// del degradado radial). La animación de verdad vive en `AuthGate.Loading` —
+// el splash nativo es estático a propósito.
+SplashScreen.setOptions({ fade: true, duration: 220 });
 
 // RDY-09 — el único sitio que decide el reporter. Sustituir esta línea
 // cuando exista un proveedor real; ningún sitio de llamada de `track()`
@@ -87,51 +93,55 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <SessionProvider>
-          {/* Encima del navigator: los avisos flotan sobre cualquier pantalla
+    // La raíz de los gestos (swipe para cerrar una hoja, y los que vengan):
+    // sin este View por encima, ningún `GestureDetector` de la app funciona.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <SessionProvider>
+            {/* Encima del navigator: los avisos flotan sobre cualquier pantalla
             sin empujar su layout. Dentro de SafeAreaProvider por los insets. */}
-          <ToastProvider>
-            <AuthGate>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  // Periwinkle, que es **exactamente** el color del fondo en la
-                  // franja de arriba: el halo crema del degradado empieza al 7 %
-                  // de la altura, así que por encima solo hay `dawn.sky` puro.
-                  //
-                  // Las pestañas se quitaron la barra de navegación porque
-                  // pintaba una franja sólida sobre el degradado; las sesenta y
-                  // cuatro pantallas interiores no pueden hacer lo mismo sin
-                  // renunciar al botón de volver, así que la barra se queda y lo
-                  // que se hace es que no se vea: mismo color arriba, y sin
-                  // sombra, la costura desaparece.
-                  //
-                  // A mano y no con clases porque las opciones de navegación no
-                  // pasan por NativeWind.
-                  contentStyle: { backgroundColor: colors.dawn.sky },
-                  headerStyle: { backgroundColor: colors.dawn.sky },
-                  headerShadowVisible: false,
-                  headerTintColor: colors.plum.DEFAULT,
-                  // Sin esto el back de las pantallas interiores se anunciaba
-                  // "(tabs), back": el grupo anterior no tiene título de
-                  // producto, y el lector de pantalla leía el nombre del
-                  // directorio.
-                  headerBackTitle: t("common.back"),
-                  // El empuje lateral nativo. En web el stack de expo-router
-                  // hace su fade y no hay nada que configurar.
-                  animation: "slide_from_right",
-                }}
-              >
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(onboarding)" />
-              </Stack>
-            </AuthGate>
-          </ToastProvider>
-        </SessionProvider>
-      </SafeAreaProvider>
-    </QueryClientProvider>
+            <ToastProvider>
+              <AuthGate>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    // Periwinkle, que es **exactamente** el color del fondo en la
+                    // franja de arriba: el halo crema del degradado empieza al 7 %
+                    // de la altura, así que por encima solo hay `dawn.sky` puro.
+                    //
+                    // Las pestañas se quitaron la barra de navegación porque
+                    // pintaba una franja sólida sobre el degradado; las sesenta y
+                    // cuatro pantallas interiores no pueden hacer lo mismo sin
+                    // renunciar al botón de volver, así que la barra se queda y lo
+                    // que se hace es que no se vea: mismo color arriba, y sin
+                    // sombra, la costura desaparece.
+                    //
+                    // A mano y no con clases porque las opciones de navegación no
+                    // pasan por NativeWind.
+                    contentStyle: { backgroundColor: colors.dawn.sky },
+                    headerStyle: { backgroundColor: colors.dawn.sky },
+                    headerShadowVisible: false,
+                    headerTintColor: colors.plum.DEFAULT,
+                    // Sin esto el back de las pantallas interiores se anunciaba
+                    // "(tabs), back": el grupo anterior no tiene título de
+                    // producto, y el lector de pantalla leía el nombre del
+                    // directorio.
+                    headerBackTitle: t("common.back"),
+                    // El empuje lateral nativo. En web el stack de expo-router
+                    // hace su fade y no hay nada que configurar.
+                    animation: "slide_from_right",
+                  }}
+                >
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(onboarding)" />
+                </Stack>
+              </AuthGate>
+            </ToastProvider>
+          </SessionProvider>
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

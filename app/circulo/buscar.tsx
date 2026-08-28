@@ -1,19 +1,18 @@
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   useJoinPublicCircle,
   useSearchPublicCircles,
 } from "@/core/circles/queries";
-
-import { useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -28,7 +27,6 @@ import { Tap } from "@/components/ui/Tap";
  */
 export default function FindCircles() {
   const { t } = useTranslation();
-  const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
@@ -72,13 +70,14 @@ export default function FindCircles() {
           contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
-          <TextInput
-            className="w-full rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base text-plum"
-            accessibilityLabel={t("circles.findPlaceholder")}
+          <TextField
+            skin="dawn"
+            hideLabel
+            label={t("circles.findPlaceholder")}
+            className="py-3.5"
             value={query}
             onChangeText={setQuery}
             placeholder={t("circles.findPlaceholder")}
-            placeholderTextColor={colors.mist.ink}
             autoCorrect={false}
           />
 
@@ -109,7 +108,7 @@ export default function FindCircles() {
           {(circles ?? []).map((circle) => (
             <View
               key={circle.id}
-              className="gap-2 rounded-card border border-glassedge/60 p-5"
+              className="gap-2 rounded-card border border-glassedge/65 bg-glass/60 p-5 shadow-soft"
             >
               <Text className="font-sans-semibold text-lg text-plum">
                 {circle.name}

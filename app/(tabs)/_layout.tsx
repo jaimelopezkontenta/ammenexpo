@@ -1,8 +1,9 @@
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, useWindowDimensions } from "react-native";
 
 import { Glass } from "../../components/Glass";
+import { NavRail, RAIL_WIDTH } from "../../components/NavRail";
 import { TabBarIcon } from "../../components/TabBarIcon";
 import { triggerHaptic } from "@/components/ui/Tap";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -15,6 +16,9 @@ export default function TabLayout() {
   const colors = useThemeColors();
   const { session } = useSession();
   const { data: unreadByCircle } = useUnreadCounts(session?.user.id);
+  // El mismo umbral que `md:` de NativeWind: en escritorio la navegación es
+  // un raíl lateral; en el teléfono, la barra de abajo de siempre.
+  const isDesktop = useWindowDimensions().width >= 768;
 
   const unreadTotal = Object.values(unreadByCircle ?? {}).reduce(
     (sum, n) => sum + n,
@@ -26,7 +30,18 @@ export default function TabLayout() {
       // El cambio de pestaña responde al dedo como todo lo demás. En web el
       // disparador es un no-op.
       screenListeners={{ tabPress: () => triggerHaptic("selection") }}
+      // Con el raíl, el navigator no pinta barra inferior; las escenas le
+      // hacen sitio con `paddingLeft` (el raíl va absoluto a la izquierda).
+      tabBar={isDesktop ? (props) => <NavRail {...props} /> : undefined}
       screenOptions={{
+        // Cambiar de pestaña funde el contenido en vez de cortarlo. Es el
+        // bottom-tabs v7 (Animated JS): idéntico en web y nativo, y por
+        // debajo de los 300 ms del contrato de motion.
+        animation: "fade",
+        transitionSpec: {
+          animation: "timing",
+          config: { duration: 180 },
+        },
         // Los mismos valores que el tema, escritos a mano porque las opciones
         // de navegación no pasan por NativeWind.
         // `ember.ink` y no el acento decorativo: la etiqueta de la pestaña
@@ -73,7 +88,10 @@ export default function TabLayout() {
         headerShown: false,
         // Transparente: cada pantalla pone su propio degradado, y un color
         // sólido aquí se vería como una costura en el borde.
-        sceneStyle: { backgroundColor: "transparent" },
+        sceneStyle: {
+          backgroundColor: "transparent",
+          ...(isDesktop ? { paddingLeft: RAIL_WIDTH } : null),
+        },
       }}
     >
       <Tabs.Screen
@@ -110,7 +128,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="circulos"
         options={{
-          title: t("tabs.circles"),
+          title: t("tabs.together"),
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name="users" color={color} focused={focused} />
           ),

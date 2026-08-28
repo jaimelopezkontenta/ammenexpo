@@ -8,6 +8,7 @@ import {
 } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { Orb } from "@/components/Orb";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -52,6 +53,11 @@ export const AuthScreen = ({
           keyboardShouldPersistTaps="handled"
         >
           <View className="items-center gap-2">
+            {/* La marca en la puerta, como en el montaje: el orbe respirando
+                sobre el título. El wordmark sigue firmando abajo. */}
+            <View className="pb-4">
+              <Orb size={84} halo />
+            </View>
             <Text
               className="text-center font-sans-bold text-3xl leading-9 text-plum"
               accessibilityRole="header"

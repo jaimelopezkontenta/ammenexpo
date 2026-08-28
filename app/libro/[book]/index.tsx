@@ -5,7 +5,8 @@ import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
-import { useBibleBooks } from "@/core/bible/queries";
+import { useBibleBooks, useReadingPosition } from "@/core/bible/queries";
+import { useSession } from "@/core/auth/SessionProvider";
 
 import { useThemeColors } from "@/theme";
 
@@ -17,6 +18,14 @@ export default function BookChapters() {
   const { scrollBottom } = useScreenPadding();
   const { book } = useLocalSearchParams<{ book: string }>();
   const bookId = Number(book);
+  const { session } = useSession();
+  // Por dónde vas: el capítulo de la posición guardada se marca en la
+  // rejilla, para que «continuar» no dependa de recordar un número.
+  const { data: position } = useReadingPosition(session?.user.id);
+  const currentChapter =
+    position?.last_read_book_id === bookId
+      ? (position?.last_read_chapter ?? null)
+      : null;
 
   // No query of its own: chapter_count travels with the books list, which is
   // already cached from the Biblia tab.
@@ -80,27 +89,44 @@ export default function BookChapters() {
           </Text>
 
           <View className="flex-row flex-wrap gap-2">
-            {chapters.map((chapter) => (
-              <Tap
-                key={chapter}
-                accessibilityRole="button"
-                accessibilityLabel={t("bible.chapter", { number: chapter })}
-                className="h-14 w-14 items-center justify-center rounded-input border border-glassedge/60 bg-glass/60 shadow-soft"
-                onPress={() =>
-                  router.push({
-                    pathname: "/libro/[book]/[chapter]",
-                    params: {
-                      book: String(entry.id),
-                      chapter: String(chapter),
-                    },
-                  })
-                }
-              >
-                <Text className="font-sans-medium text-base text-plum">
-                  {chapter}
-                </Text>
-              </Tap>
-            ))}
+            {chapters.map((chapter) => {
+              const isCurrent = chapter === currentChapter;
+              return (
+                <Tap
+                  key={chapter}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    isCurrent
+                      ? `${t("bible.chapter", { number: chapter })}. ${t("bible.continueReading")}`
+                      : t("bible.chapter", { number: chapter })
+                  }
+                  className={`h-14 w-14 items-center justify-center rounded-input border shadow-soft ${
+                    isCurrent
+                      ? "border-ember bg-dawn-peach-mid"
+                      : "border-glassedge/60 bg-glass/60"
+                  }`}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/libro/[book]/[chapter]",
+                      params: {
+                        book: String(entry.id),
+                        chapter: String(chapter),
+                      },
+                    })
+                  }
+                >
+                  <Text
+                    className={
+                      isCurrent
+                        ? "font-sans-semibold text-base text-plum"
+                        : "font-sans-medium text-base text-plum"
+                    }
+                  >
+                    {chapter}
+                  </Text>
+                </Tap>
+              );
+            })}
           </View>
         </ScrollView>
       </DawnBackground>

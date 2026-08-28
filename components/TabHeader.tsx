@@ -52,8 +52,11 @@ export const TabHeader = ({
     // El Provider no aplica padding; sin esto el título y la campana
     // quedan bajo la status bar. NativeWind no conoce el notch: el 8
     // extra va en style, no en una clase pt-*.
+    // En md+ la cabecera se alinea con la columna de lectura, no con el filo
+    // de la ventana: un título pegado arriba-izquierda a 2000 px del contenido
+    // centrado se leía como de otra página.
     <View
-      className="flex-row items-center justify-between gap-3 px-7 pb-2"
+      className="w-full flex-row items-center justify-between gap-3 px-7 pb-2 md:max-w-read md:self-center md:px-10"
       style={{ paddingTop: insets.top + 8 }}
     >
       <View className="min-w-0 flex-1">

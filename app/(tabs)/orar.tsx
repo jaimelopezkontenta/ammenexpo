@@ -7,6 +7,8 @@ import { TabHeader } from "@/components/TabHeader";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { NavRow } from "@/components/ui/NavRow";
 import { PrayForCard } from "@/components/PrayForCard";
 import { ResponsiveTabContent } from "@/components/ResponsiveTabContent";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -72,21 +74,20 @@ export default function Pray() {
           <Animated.View entering={enterStagger(1)}>
             <Card label={t("pray.sectionMyPlans")} className="gap-3">
               {myFirstPlan ? (
-                <>
-                  <Text className="font-sans-semibold text-base text-plum">
-                    {myFirstPlan.title}
-                  </Text>
-                  <Button
-                    title={t("pray.emptyCta")}
-                    variant="secondary"
-                    onPress={() =>
-                      router.push({
-                        pathname: "/plan/[id]/compartir",
-                        params: { id: myFirstPlan.id },
-                      })
-                    }
-                  />
-                </>
+                // El plan como contenido, no como pila de botones: la fila
+                // lleva a compartirlo, con su duración de meta.
+                <NavRow
+                  label={myFirstPlan.title}
+                  meta={t("pray.planDuration", {
+                    count: myFirstPlan.duration_days,
+                  })}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/plan/[id]/compartir",
+                      params: { id: myFirstPlan.id },
+                    })
+                  }
+                />
               ) : null}
               <Button
                 title={t("pray.newPlan")}
@@ -99,10 +100,10 @@ export default function Pray() {
           comparta nada contigo. */}
           <Animated.View entering={enterStagger(2)}>
             <Card label={t("pray.sectionMyList")} className="gap-3">
-              {/* Secundario: el degradado del CTA es de "Nuevo plan". Tres
-                botones melocotón apilados eran tres gritos del mismo volumen. */}
+              {/* Una fila que navega, no otro botón: el único CTA de esta
+                pantalla es "Nuevo plan". */}
               <Link href="/lista" asChild>
-                <Button title={t("pray.openList")} variant="secondary" />
+                <NavRow label={t("pray.openList")} />
               </Link>
             </Card>
           </Animated.View>
@@ -215,22 +216,22 @@ export default function Pray() {
                 ) : null}
               </>
             ) : (
-              <Card className="gap-3">
-                <Text className="font-sans text-base leading-6 text-mist-ink">
-                  {t("pray.forOthersEmpty")}
-                </Text>
-                <Text className="font-sans text-base leading-6 text-mist-ink">
-                  {t("pray.forOthersEmptyHint")}
-                </Text>
-                {/* El copy ya remata en Avisos («si alguien oró por ti, está
-                en Avisos»); el enlace lo hace accionable. Un enlace de texto,
-                no otro botón. */}
-                <Link
-                  href="/avisos"
-                  className="min-h-11 justify-center self-start py-2 font-sans-semibold text-base text-ember-ink underline"
+              <Card className="gap-1">
+                {/* El vacío del sistema, en su tamaño de sección: el orbe
+                  marca que el vacío es de la app, no un fallo de carga. */}
+                <EmptyState
+                  size="inline"
+                  title={t("pray.forOthersEmptyTitle")}
+                  body={t("pray.forOthersEmptyHint")}
                 >
-                  {t("notifications.title")}
-                </Link>
+                  {/* El copy remata en Avisos; el enlace lo hace accionable. */}
+                  <Link
+                    href="/avisos"
+                    className="min-h-11 justify-center self-center py-2 font-sans-semibold text-base text-ember-ink underline"
+                  >
+                    {t("notifications.title")}
+                  </Link>
+                </EmptyState>
               </Card>
             )}
           </Animated.View>

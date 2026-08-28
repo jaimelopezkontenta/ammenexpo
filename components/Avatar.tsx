@@ -1,26 +1,32 @@
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 
+import { ORB_COLORS } from "@/components/Orb";
 import { colors } from "@/theme";
 
 /**
- * Seis tonos sacados del orbe, no un arcoíris aleatorio: la inicial de alguien
- * no debería gritar más que su nombre, y una lista de caras es lo que más se
+ * Los tonos del orbe, no un arcoíris aleatorio: la inicial de alguien no
+ * debería gritar más que su nombre, y una lista de caras es lo que más se
  * repite en la app —el censo de un círculo, quién oró por ti—, así que los
- * colores son los de la marca y no seis colores cualesquiera.
+ * colores son los de la marca, importados de su única fuente (`Orb`), no
+ * copiados.
  *
- * La tinta es plum en los seis. Todos los fondos son pálidos y dan de 8:1 para
- * arriba; una tinta distinta por tono sería una decisión de color que no
- * aporta nada y seis pares que mantener medidos.
+ * La tinta es plum en todos. Los fondos son pálidos y dan de 8:1 para arriba;
+ * una tinta distinta por tono sería una decisión de color que no aporta nada
+ * y cinco pares que mantener medidos.
+ *
+ * El orden es el histórico de esta lista, no el de las capas del orbe: el
+ * tono de cada persona sale de un hash sobre este array, y reordenarlo le
+ * cambiaría la cara a todo el mundo.
  */
 const TONE_INK = colors.plum.DEFAULT;
 
 const TONES = [
-  "#F8E2D1", // orbPeach
-  "#D4D0EF", // orbLavender
-  "#CFECF9", // orbBlue
-  "#D3CEF0", // orbLilac
-  "#EDE6F6", // orbBase
+  ORB_COLORS.orbPeach,
+  ORB_COLORS.orbLavender,
+  ORB_COLORS.orbBlue,
+  ORB_COLORS.orbLilac,
+  ORB_COLORS.orbBase,
 ];
 
 /** Estable para la misma persona, sin guardar nada: siempre el mismo tono. */

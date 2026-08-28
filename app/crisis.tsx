@@ -33,8 +33,14 @@ export default function CrisisResources() {
     <>
       <Stack.Screen
         options={{
+          // `title` se queda para el título del documento en web; el header
+          // visible va mudo (`headerTitle`): el H1 serif de la pantalla ya
+          // dice "Antes de seguir" y salía dos veces.
           title: t("crisis.title"),
+          headerTitle: "",
           headerShown: true,
+          // Una ceremonia entra de frente, no como un paso lateral más.
+          animation: "fade_from_bottom",
           // Nadie sale de aquí por accidente: ni gesto, ni el back del
           // stack. Volver a `/peticiones/nueva` reabriría el borrador con
           // la frase de crisis todavía escrita. La salida es "Volver a Hoy".

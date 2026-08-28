@@ -3,13 +3,14 @@ import { Check, MoreHorizontal } from "lucide-react-native";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
-import Animated, { ZoomIn } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 
 import { TabHeader } from "@/components/TabHeader";
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { DaySection } from "@/components/DaySection";
 import { DayView } from "@/components/DayView";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { PlanOptionsSheet } from "@/components/PlanOptionsSheet";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
 import { Orb } from "@/components/Orb";
@@ -47,7 +48,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Tap, triggerHaptic } from "@/components/ui/Tap";
 import { useToast } from "@/core/toast/ToastProvider";
 import { icon, useThemeColors } from "@/theme";
-import { enterFade } from "@/theme/motion";
+import { enterCelebrate, enterFade } from "@/theme/motion";
 
 // Los tres pasos del journey diario. La Palabra no está aquí: no es un paso,
 // es la puerta, y por eso se queda siempre encima de la parte elegida.
@@ -291,7 +292,7 @@ export default function Today() {
           {/* El orbe y no un indicador de carga: esperar a que se escriba un plan
               de treinta dias es la espera mas larga del producto, y la marca
               respirando dice "esta pasando algo" mejor que una rueda. */}
-          <Orb size={110} halo />
+          <Orb size={110} halo variant="working" />
           <Text className="text-center font-sans-semibold text-xl text-plum">
             {t("plan.generating")}
           </Text>
@@ -330,35 +331,37 @@ export default function Today() {
             />
           ) : null}
 
-          <View className="flex-1 items-center justify-center gap-3">
-            <Text className="text-center font-sans-bold text-2xl text-plum">
-              {stalledWithoutDay
-                ? t("plan.stalledTitle")
-                : failed
-                  ? t("plan.failedTitle")
-                  : t("plan.noPlanTitle")}
-            </Text>
-            <Text className="text-center font-sans text-base leading-6 text-mist-ink">
-              {stalledWithoutDay
-                ? t("plan.stalledBody", {
-                    written: progress?.days_written ?? 0,
-                    total: plan?.duration_days ?? 0,
-                  })
-                : failed
-                  ? t("plan.failedBody")
-                  : t("plan.noPlanBody")}
-            </Text>
+          {/* El vacío del sistema, con el orbe: antes era texto centrado a
+            mano, la única pantalla vacía que no hablaba como las demás. */}
+          <View className="flex-1 items-center justify-center">
+            <EmptyState
+              title={
+                stalledWithoutDay
+                  ? t("plan.stalledTitle")
+                  : failed
+                    ? t("plan.failedTitle")
+                    : t("plan.noPlanTitle")
+              }
+              body={
+                stalledWithoutDay
+                  ? t("plan.stalledBody", {
+                      written: progress?.days_written ?? 0,
+                      total: plan?.duration_days ?? 0,
+                    })
+                  : failed
+                    ? t("plan.failedBody")
+                    : t("plan.noPlanBody")
+              }
+            >
+              {actionError ? (
+                <Text
+                  className="pb-3 text-center font-sans text-sm text-danger"
+                  accessibilityRole="alert"
+                >
+                  {actionError}
+                </Text>
+              ) : null}
 
-            {actionError ? (
-              <Text
-                className="text-center font-sans text-sm text-danger"
-                accessibilityRole="alert"
-              >
-                {actionError}
-              </Text>
-            ) : null}
-
-            <View className="mt-6 w-full">
               {stalledWithoutDay ? (
                 // A crashed first stretch resumes for free: continuing the plan
                 // does not burn another slot.
@@ -373,7 +376,7 @@ export default function Today() {
                   onPress={() => void startGeneration()}
                 />
               )}
-            </View>
+            </EmptyState>
           </View>
 
           {/* Un motivo para volver mañana aunque todavía no haya plan. Esta
@@ -518,213 +521,221 @@ export default function Today() {
         contentContainerClassName="py-8"
         keyboardShouldPersistTaps="handled"
       >
-        <ResponsiveTabContent className="gap-6">
-          {/* El journey es una sola columna de lectura también en tablet. Lo
-            que rodeaba al día —cambiar de plan, renombrar, ver días, compartir,
-            archivar— ya no está en el scroll: vive en el cajón del `···`. */}
-          <View className="w-full gap-6 self-center md:max-w-3xl">
-            {/* La fila meta: dónde estás y cuánto llevas. A la derecha, el
+        <ResponsiveTabContent className="gap-6 lg:max-w-page">
+          {/* El journey es una sola columna de lectura también en tablet; en
+            escritorio ancho gana una columna de contexto al lado. Lo que
+            rodeaba al día vive en el cajón del `···`. */}
+          <View className="w-full gap-6 self-center md:max-w-3xl lg:max-w-none lg:flex-row lg:items-start lg:gap-10">
+            <View className="min-w-0 flex-1 gap-6 lg:max-w-read">
+              {/* La fila meta: dónde estás y cuánto llevas. A la derecha, el
               `···` que abre el cajón del plan. */}
-            <View className="flex-row items-center justify-between gap-3">
-              <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-2 gap-y-1">
-                <Text className="font-sans-medium text-sm text-mist-ink">
-                  {t("plan.dayOf", {
-                    current: day.day_number,
-                    total: plan.duration_days,
-                  })}
-                  {plan.status === "generating" && !stuck
-                    ? ` · ${t("plan.stillPreparing")}`
-                    : ""}
-                </Text>
-                {/* La racha es un chip y no un segmento más de la línea: es la
+              <View className="flex-row items-center justify-between gap-3">
+                <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-2 gap-y-1">
+                  <Text className="font-sans-medium text-sm text-mist-ink">
+                    {t("plan.dayOf", {
+                      current: day.day_number,
+                      total: plan.duration_days,
+                    })}
+                    {plan.status === "generating" && !stuck
+                      ? ` · ${t("plan.stillPreparing")}`
+                      : ""}
+                  </Text>
+                  {/* La racha es un chip y no un segmento más de la línea: es la
                   única pieza de la fila que celebra, y merece forma propia. */}
-                {days > 0 ? (
-                  <View className="rounded-full bg-plum-chip px-3 py-1">
-                    <Text className="font-sans-semibold text-xs text-white">
-                      {t("plan.streak", { count: days })}
-                    </Text>
-                  </View>
-                ) : null}
+                  {days > 0 ? (
+                    <View className="rounded-full bg-plum-chip px-3 py-1">
+                      <Text className="font-sans-semibold text-xs text-white">
+                        {t("plan.streak", { count: days })}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                <Tap
+                  accessibilityRole="button"
+                  accessibilityLabel={t("plan.planOptions")}
+                  onPress={() => setOptionsOpen(true)}
+                  // 44×44, el mínimo táctil, alrededor de un icono de 22. El
+                  // vidrio es el mismo de los chips sin elegir: sin él el icono
+                  // flotaba como una mancha gris sobre el amanecer.
+                  className="h-11 w-11 items-center justify-center rounded-full border border-glassedge/60 bg-glass/60"
+                >
+                  <MoreHorizontal
+                    size={icon.md}
+                    color={colors.plum.DEFAULT}
+                    strokeWidth={icon.strokeWidth}
+                  />
+                </Tap>
               </View>
 
-              <Tap
-                accessibilityRole="button"
-                accessibilityLabel={t("plan.planOptions")}
-                onPress={() => setOptionsOpen(true)}
-                // 44×44, el mínimo táctil, alrededor de un icono de 22. El
-                // vidrio es el mismo de los chips sin elegir: sin él el icono
-                // flotaba como una mancha gris sobre el amanecer.
-                className="h-11 w-11 items-center justify-center rounded-full border border-glassedge/60 bg-glass/60"
-              >
-                <MoreHorizontal
-                  size={icon.md}
-                  color={colors.plum.DEFAULT}
-                  strokeWidth={icon.strokeWidth}
-                />
-              </Tap>
-            </View>
-
-            {/* El aviso de generación a medias es verdad, pero no puede
+              {/* El aviso de generación a medias es verdad, pero no puede
               sentarse entre la Palabra y el amén: vive aquí, debajo de la
               fila meta y antes del título, para que el journey quede libre
               para rezar. Una línea discreta y no un Card: quien ya tiene día
               hoy viene a orar, no a arreglar la generación. */}
-            {stuck ? (
-              <View className="gap-1.5">
-                <Text className="font-sans text-sm leading-5 text-mist-ink">
-                  {t("plan.stalledBody", {
-                    written: progress?.days_written ?? day.day_number,
-                    total: plan.duration_days,
-                  })}
-                </Text>
-                <Tap
-                  accessibilityRole="button"
-                  accessibilityState={{ busy: continuePlan.isPending }}
-                  aria-busy={continuePlan.isPending}
-                  disabled={continuePlan.isPending}
-                  hitSlop={8}
-                  onPress={() => void resumeGeneration()}
-                  className={`self-start py-1 ${
-                    continuePlan.isPending ? "opacity-50" : ""
-                  }`}
-                >
-                  {/* El mismo tono que el label del Button ghost: el naranja
+              {stuck ? (
+                <View className="gap-1.5">
+                  <Text className="font-sans text-sm leading-5 text-mist-ink">
+                    {t("plan.stalledBody", {
+                      written: progress?.days_written ?? day.day_number,
+                      total: plan.duration_days,
+                    })}
+                  </Text>
+                  <Tap
+                    accessibilityRole="button"
+                    accessibilityState={{ busy: continuePlan.isPending }}
+                    aria-busy={continuePlan.isPending}
+                    disabled={continuePlan.isPending}
+                    hitSlop={8}
+                    onPress={() => void resumeGeneration()}
+                    className={`self-start py-1 ${
+                      continuePlan.isPending ? "opacity-50" : ""
+                    }`}
+                  >
+                    {/* El mismo tono que el label del Button ghost: el naranja
                     que sí se lee, reservado para lo que pide acción. */}
-                  <Text className="font-sans-semibold text-sm text-ember-ink">
-                    {t("plan.stalledCta")}
-                  </Text>
-                </Tap>
-              </View>
-            ) : null}
-
-            {/* El título es el del día y no el del plan con lápiz: hoy se ora
-              esto. Renombrar el plan vive en el cajón, fuera del journey. */}
-            <Txt variant="title">{day.title}</Txt>
-
-            {/* Los tres pasos del journey, con la misma píldora que usa el
-              switcher: la elegida oscura, las otras de vidrio. */}
-            <View accessibilityRole="tablist" className="flex-row gap-2">
-              {JOURNEY_STEPS.map((journeyStep) => {
-                const selected = step === journeyStep.key;
-
-                return (
-                  <Pill
-                    key={journeyStep.key}
-                    label={t(journeyStep.labelKey)}
-                    selected={selected}
-                    role="tab"
-                    onPress={() => setStep(journeyStep.key)}
-                  />
-                );
-              })}
-            </View>
-
-            {/* El `key` remonta el contenido al cambiar de chip: el paso
-              elegido entra con un fade en vez de aparecer de golpe. */}
-            <Animated.View key={step} entering={enterFade}>
-              <DayView day={day} books={books ?? []} focus={step} />
-            </Animated.View>
-
-            {/* La única acción primaria del journey. */}
-            <View className="pb-2 pt-2">
-              {prayed ? (
-                // El orbe con la marca, como en el montaje. Es el único momento
-                // del día en que la app dice "hecho", y decirlo con una línea de
-                // texto centrada era desaprovecharlo. Entra con un pequeño
-                // estallido de muelle — la celebración, junto con la háptica de
-                // éxito. Sin confetti: no es el tono de esta app.
-                <Animated.View
-                  entering={ZoomIn.springify().damping(14).stiffness(180)}
-                  className="items-center gap-3"
-                >
-                  <Orb size={92} halo>
-                    <Check
-                      size={icon.lg}
-                      color={colors.plum.DEFAULT}
-                      strokeWidth={icon.strokeWidth}
-                    />
-                  </Orb>
-                  <Text className="text-center font-sans-medium text-base text-plum">
-                    {t("plan.markedDone")}
-                  </Text>
-                </Animated.View>
-              ) : (
-                <Button
-                  title={t("plan.markDone")}
-                  loading={markPrayed.isPending}
-                  onPress={() =>
-                    markPrayed.mutate(undefined, {
-                      onSuccess: () => {
-                        setActionError(null);
-                        // La háptica de resultado, no la del toque: el amén del
-                        // día es el único "hecho" que la app celebra.
-                        triggerHaptic("success");
-                      },
-                      onError: () => setActionError(t("common.errorGeneric")),
-                    })
-                  }
-                />
-              )}
-            </View>
-
-            {actionError ? (
-              <Text
-                className="text-center font-sans text-sm text-danger"
-                accessibilityRole="alert"
-              >
-                {actionError}
-              </Text>
-            ) : null}
-
-            {/* Lo social espera al "hecho": primero lo íntimo, después la
-              comunidad. Antes vivía siempre visible en la columna lateral y le
-              quitaba al CTA su momento. */}
-            {prayed === true ? (
-              <>
-                {/* Seeing who showed up for you is the reason to come back
-                  tomorrow, but it stays visually separate from private prayer. */}
-                <DaySection label={t("intercession.whoPrayed")}>
-                  {prayedForMeFailed ? (
-                    <Text
-                      className="font-sans text-base leading-6 text-mist-ink"
-                      accessibilityRole="alert"
-                    >
-                      {t("common.errorBody")}
+                    <Text className="font-sans-semibold text-sm text-ember-ink">
+                      {t("plan.stalledCta")}
                     </Text>
-                  ) : (
-                    <WhoPrayed
-                      people={prayedForMe ?? []}
-                      onReport={(intercessionId) =>
-                        void runOnIntercessor(
-                          () => report.mutateAsync({ intercessionId }),
-                          t("intercession.reported"),
-                        )
-                      }
-                      onBlock={(blockedId) =>
-                        void runOnIntercessor(
-                          () => block.mutateAsync(blockedId),
-                          t("moderation.blockDone"),
-                        )
-                      }
-                    />
-                  )}
-                </DaySection>
+                  </Tap>
+                </View>
+              ) : null}
 
-                {/* "Pray for their plan" needs a real shared plan to target. */}
-                {prayBackPlanId ? (
+              {/* El título es el del día y no el del plan con lápiz: hoy se ora
+              esto. Renombrar el plan vive en el cajón, fuera del journey. */}
+              <Txt variant="title">{day.title}</Txt>
+
+              {/* Los tres pasos del journey, con la misma píldora que usa el
+              switcher: la elegida oscura, las otras de vidrio. */}
+              <View accessibilityRole="tablist" className="flex-row gap-2">
+                {JOURNEY_STEPS.map((journeyStep) => {
+                  const selected = step === journeyStep.key;
+
+                  return (
+                    <Pill
+                      key={journeyStep.key}
+                      label={t(journeyStep.labelKey)}
+                      selected={selected}
+                      role="tab"
+                      onPress={() => setStep(journeyStep.key)}
+                    />
+                  );
+                })}
+              </View>
+
+              {/* El `key` remonta el contenido al cambiar de chip: el paso
+              elegido entra con un fade en vez de aparecer de golpe. */}
+              <Animated.View key={step} entering={enterFade}>
+                <DayView day={day} books={books ?? []} focus={step} />
+              </Animated.View>
+
+              {/* La única acción primaria del journey. */}
+              <View className="pb-2 pt-2">
+                {prayed ? (
+                  // El orbe con la marca, como en el montaje. Es el único momento
+                  // del día en que la app dice "hecho", y decirlo con una línea de
+                  // texto centrada era desaprovecharlo. Entra con un pequeño
+                  // estallido de muelle — la celebración, junto con la háptica de
+                  // éxito. Sin confetti: no es el tono de esta app.
+                  <Animated.View
+                    entering={enterCelebrate}
+                    className="items-center gap-3"
+                  >
+                    <Orb size={92} halo variant="burst">
+                      <Check
+                        size={icon.lg}
+                        color={colors.plum.DEFAULT}
+                        strokeWidth={icon.strokeWidth}
+                      />
+                    </Orb>
+                    <Text className="text-center font-sans-medium text-base text-plum">
+                      {t("plan.markedDone")}
+                    </Text>
+                  </Animated.View>
+                ) : (
                   <Button
-                    title={t("intercession.prayBack")}
-                    variant="secondary"
+                    title={t("plan.markDone")}
+                    loading={markPrayed.isPending}
                     onPress={() =>
-                      router.push({
-                        pathname: "/orar/[planId]",
-                        params: { planId: prayBackPlanId },
+                      markPrayed.mutate(undefined, {
+                        onSuccess: () => {
+                          setActionError(null);
+                          // La háptica de resultado, no la del toque: el amén del
+                          // día es el único "hecho" que la app celebra.
+                          triggerHaptic("success");
+                        },
+                        onError: () => setActionError(t("common.errorGeneric")),
                       })
                     }
                   />
-                ) : null}
-              </>
-            ) : null}
+                )}
+              </View>
+
+              {actionError ? (
+                <Text
+                  className="text-center font-sans text-sm text-danger"
+                  accessibilityRole="alert"
+                >
+                  {actionError}
+                </Text>
+              ) : null}
+
+              {/* Lo social espera al "hecho": primero lo íntimo, después la
+              comunidad. Antes vivía siempre visible en la columna lateral y le
+              quitaba al CTA su momento. */}
+              {prayed === true ? (
+                <>
+                  {/* Seeing who showed up for you is the reason to come back
+                  tomorrow, but it stays visually separate from private prayer. */}
+                  <DaySection label={t("intercession.whoPrayed")}>
+                    {prayedForMeFailed ? (
+                      <Text
+                        className="font-sans text-base leading-6 text-mist-ink"
+                        accessibilityRole="alert"
+                      >
+                        {t("common.errorBody")}
+                      </Text>
+                    ) : (
+                      <WhoPrayed
+                        people={prayedForMe ?? []}
+                        onReport={(intercessionId) =>
+                          void runOnIntercessor(
+                            () => report.mutateAsync({ intercessionId }),
+                            t("intercession.reported"),
+                          )
+                        }
+                        onBlock={(blockedId) =>
+                          void runOnIntercessor(
+                            () => block.mutateAsync(blockedId),
+                            t("moderation.blockDone"),
+                          )
+                        }
+                      />
+                    )}
+                  </DaySection>
+
+                  {/* "Pray for their plan" needs a real shared plan to target. */}
+                  {prayBackPlanId ? (
+                    <Button
+                      title={t("intercession.prayBack")}
+                      variant="secondary"
+                      onPress={() =>
+                        router.push({
+                          pathname: "/orar/[planId]",
+                          params: { planId: prayBackPlanId },
+                        })
+                      }
+                    />
+                  ) : null}
+                </>
+              ) : null}
+            </View>
+
+            {/* La columna de contexto del escritorio: el versículo del día
+              acompaña al journey sin robarle su medida de lectura. */}
+            <View className="hidden gap-6 lg:flex lg:w-80">
+              <VerseOfTheDay />
+            </View>
           </View>
         </ResponsiveTabContent>
       </ScrollView>

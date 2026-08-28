@@ -1,13 +1,14 @@
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { TextField } from "@/components/TextField";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
 import { goBackOr } from "@/core/nav/safeBack";
@@ -18,8 +19,6 @@ import {
   usePrayerList,
   useSetItemAnswered,
 } from "@/core/list/queries";
-
-import { useThemeColors } from "@/theme";
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
@@ -39,7 +38,6 @@ import { Tap } from "@/components/ui/Tap";
  */
 export default function PrayerList() {
   const { t } = useTranslation();
-  const colors = useThemeColors();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -130,15 +128,16 @@ export default function PrayerList() {
             keyboardShouldPersistTaps="handled"
           >
             <View className="gap-2">
-              <TextInput
+              <TextField
+                skin="dawn"
+                hideLabel
+                label={t("list.placeholder")}
                 // `min-h-12` + leading: siendo multiline, el alto por contenido
                 // recortaba el placeholder de dos líneas a media letra.
-                className="min-h-12 w-full rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3.5 font-sans text-base leading-5 text-plum"
-                accessibilityLabel={t("list.placeholder")}
+                className="min-h-12 py-3.5 leading-5"
                 value={draft}
                 onChangeText={setDraft}
                 placeholder={t("list.placeholder")}
-                placeholderTextColor={colors.mist.ink}
                 maxLength={ITEM_MAX}
                 multiline
                 onSubmitEditing={() => void handleAdd()}
@@ -180,6 +179,7 @@ export default function PrayerList() {
                 <View className="flex-row flex-wrap gap-4">
                   <Tap
                     accessibilityRole="button"
+                    className="min-h-11 justify-center"
                     onPress={() =>
                       void run(() =>
                         setAnswered.mutateAsync({
@@ -189,7 +189,7 @@ export default function PrayerList() {
                       )
                     }
                   >
-                    <Text className="font-sans text-sm text-ember-ink underline">
+                    <Text className="font-sans-semibold text-sm text-ember-ink">
                       {t("list.markAnswered")}
                     </Text>
                   </Tap>
@@ -197,6 +197,7 @@ export default function PrayerList() {
                   <Tap
                     accessibilityRole="button"
                     accessibilityState={{ expanded: confirming === item.id }}
+                    className="min-h-11 justify-center"
                     onPress={() => {
                       if (confirming === item.id) {
                         setConfirming(null);
@@ -210,7 +211,7 @@ export default function PrayerList() {
                       className={
                         confirming === item.id
                           ? "font-sans-semibold text-sm text-danger"
-                          : "text-sm text-mist-ink underline"
+                          : "font-sans text-sm text-mist-ink"
                       }
                       accessibilityLiveRegion={
                         confirming === item.id ? "polite" : "none"
@@ -249,8 +250,11 @@ export default function PrayerList() {
                         }}
                         asChild
                       >
-                        <Tap accessibilityRole="link">
-                          <Text className="font-sans text-sm text-ember-ink underline">
+                        <Tap
+                          accessibilityRole="link"
+                          className="min-h-11 justify-center"
+                        >
+                          <Text className="font-sans-semibold text-sm text-ember-ink">
                             {t("list.tellIt")}
                           </Text>
                         </Tap>
@@ -258,6 +262,7 @@ export default function PrayerList() {
 
                       <Tap
                         accessibilityRole="button"
+                        className="min-h-11 justify-center"
                         onPress={() =>
                           void run(() =>
                             setAnswered.mutateAsync({
@@ -267,7 +272,7 @@ export default function PrayerList() {
                           )
                         }
                       >
-                        <Text className="font-sans text-sm text-mist-ink underline">
+                        <Text className="font-sans text-sm text-mist-ink">
                           {t("list.undoAnswered")}
                         </Text>
                       </Tap>

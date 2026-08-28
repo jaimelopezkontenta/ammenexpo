@@ -120,7 +120,16 @@ export default function NewTestimony() {
               </Text>
             ) : null}
 
-            <View className="mt-auto pt-6">
+            <View className="mt-auto gap-2 pt-6">
+              {/* Quién lo verá, dicho junto al botón: la elección de arriba no
+                debería exigir memoria al llegar abajo. */}
+              <Text className="text-center font-sans text-sm text-mist-ink">
+                {visibility === "private"
+                  ? t("testimony.visPrivate")
+                  : visibility === "circles"
+                    ? t("testimony.visCircles")
+                    : t("testimony.visPublic")}
+              </Text>
               <Button
                 title={t("testimony.save")}
                 disabled={body.trim().length === 0}

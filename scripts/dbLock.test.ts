@@ -6,7 +6,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { hostname } from "node:os";
+import { hostname, tmpdir } from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
@@ -25,12 +25,11 @@ type LockMetadata = {
 const scratchDirectories: string[] = [];
 
 const lockPathForTest = () => {
-  const directory = path.resolve(
-    process.cwd(),
-    ".tmp",
-    "db-lock-tests",
-    randomUUID(),
-  );
+  // En el tmp del sistema y NO bajo el proyecto: el watcher de Metro en
+  // Windows (FallbackWatcher) recorre todos los directorios del root y moría
+  // con ENOENT cuando estos scratch aparecían y desaparecían en mitad de un
+  // run de vitest — el blockList del resolver no protege ese recorrido.
+  const directory = path.resolve(tmpdir(), "ammen-db-lock-tests", randomUUID());
   mkdirSync(directory, { recursive: true });
   scratchDirectories.push(directory);
   return path.join(directory, "db.lock");

@@ -28,6 +28,7 @@
     "profile": "Perfil",
     "pray": "Orar",
     "circles": "Círculos",
+    "together": "Juntos",
     "bible": "Biblia"
   },
   "pray": {
@@ -46,10 +47,12 @@
     "sectionMyPlans": "Mis planes",
     "sectionMyList": "Mi lista",
     "sectionForOthers": "Por otros",
-    "forOthersEmpty": "Aquí aparecen los planes que alguien te ha confiado para orar. Si alguien oró por ti, está en Avisos.",
+    "forOthersEmptyTitle": "Todavía nadie te ha confiado un plan.",
     "forOthersEmptyHint": "Puedes compartir el tuyo desde Mis planes.",
     "newPlan": "Nuevo plan",
-    "openList": "Orar mi lista"
+    "openList": "Orar mi lista",
+    "planDuration": "Plan de {{count}} día",
+    "planDuration_plural": "Plan de {{count}} días"
   },
   "profile": {
     "title": "Tu perfil",
@@ -229,6 +232,7 @@
     "streak": "{{count}} día de racha",
     "streak_plural": "{{count}} días de racha",
     "days": "Días anteriores",
+    "continueDay": "Continuar en el día {{number}}",
     "daysHint": "{{count}} día que ya has recorrido.",
     "daysHint_plural": "{{count}} días que ya has recorrido.",
     "dayPrayed": "Orado",
@@ -383,6 +387,8 @@
     "placeholder": "Mi madre entra al quirófano mañana…",
     "anonymous": "Pedirlo sin mi nombre",
     "anonymousHint": "Nadie verá quién lo escribió, ni siquiera para bloquearte. Sí se podrá reportar.",
+    "summaryNamed": "Se publicará con tu nombre.",
+    "summaryAnonymous": "Se publicará sin tu nombre.",
     "publish": "Pedir oración",
     "comment": "Acompañar con unas palabras",
     "commentPlaceholder": "Estoy orando por ti…",
@@ -461,9 +467,6 @@
   "notifications": {
     "prayedForYou": "{{name}} oró por ti — {{planTitle}}",
     "reminder": "Es tu momento de oración",
-    "intercessorReminder": "Hoy es el día {{day}} del plan de {{name}}",
-    "dailyDigest": "Ayer {{count}} persona oró por ti",
-    "dailyDigest_plural": "Ayer {{count}} personas oraron por ti",
     "title": "Avisos",
     "empty": "Todavía no hay avisos. Cuando alguien ore por ti, te lo diremos aquí."
   },
@@ -497,6 +500,8 @@
   "bible": {
     "title": "Biblia",
     "subtitle": "Reina-Valera 1909",
+    "textSmaller": "Letra más pequeña",
+    "textLarger": "Letra más grande",
     "searchPlaceholder": "Buscar una palabra o una cita",
     "searchHint": "Escribe al menos tres letras. También puedes escribir una cita, como «Juan 3».",
     "oldTestament": "Antiguo Testamento",

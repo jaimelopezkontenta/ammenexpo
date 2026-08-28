@@ -16,29 +16,35 @@ import { icon, useThemeColors } from "@/theme";
  *
  * `forwardRef` para poder vivir dentro de `<Link asChild>`.
  */
-export const NavRow = forwardRef<View, TapProps & { label: string }>(
-  ({ label, ...tapProps }, ref) => {
-    const colors = useThemeColors();
+export const NavRow = forwardRef<
+  View,
+  TapProps & { label: string; meta?: string }
+>(({ label, meta, ...tapProps }, ref) => {
+  const colors = useThemeColors();
 
-    return (
-      <Tap
-        ref={ref}
-        accessibilityRole="link"
-        accessibilityLabel={label}
-        className="min-h-12 flex-row items-center justify-between gap-3 py-2"
-        {...tapProps}
-      >
-        <Txt variant="body" className="flex-1">
-          {label}
-        </Txt>
-        <ChevronRight
-          size={icon.sm}
-          color={colors.mist.ink}
-          strokeWidth={icon.strokeWidth}
-        />
-      </Tap>
-    );
-  },
-);
+  return (
+    <Tap
+      ref={ref}
+      accessibilityRole="link"
+      accessibilityLabel={meta ? `${label}. ${meta}` : label}
+      className="min-h-12 flex-row items-center justify-between gap-3 py-2"
+      {...tapProps}
+    >
+      <View className="flex-1 gap-0.5">
+        <Txt variant="body">{label}</Txt>
+        {meta ? (
+          <Txt variant="caption" tone="secondary">
+            {meta}
+          </Txt>
+        ) : null}
+      </View>
+      <ChevronRight
+        size={icon.sm}
+        color={colors.mist.ink}
+        strokeWidth={icon.strokeWidth}
+      />
+    </Tap>
+  );
+});
 
 NavRow.displayName = "NavRow";

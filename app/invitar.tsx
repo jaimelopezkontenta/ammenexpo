@@ -1,15 +1,13 @@
-import { Stack } from "expo-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { Text } from "react-native";
 
 import { Button } from "@/components/Button";
-import { DawnBackground } from "@/components/DawnBackground";
-import { useScreenPadding } from "@/components/useScreenPadding";
-import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { Card } from "@/components/Card";
+import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { useSession } from "@/core/auth/SessionProvider";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
 import { useCreateInviteCode, useMyInviteCode } from "@/core/social/invites";
+import { useToast } from "@/core/toast/ToastProvider";
 
 /**
  * Invitar a alguien a Ammen.
@@ -25,20 +23,14 @@ import { useCreateInviteCode, useMyInviteCode } from "@/core/social/invites";
  */
 export default function Invite() {
   const { t } = useTranslation();
-  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
+  const toast = useToast();
 
   const { data: code, isLoading, isError, refetch } = useMyInviteCode(userId);
   const create = useCreateInviteCode(userId);
 
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-
   const handleShare = async () => {
-    setError(null);
-    setNotice(null);
-
     try {
       // Se crea al pedirlo, no al abrir: navegar a un sitio no debería
       // escribir nada.
@@ -49,86 +41,52 @@ export default function Invite() {
 
       // El tercer caso importa: en web, "copiado" y "compartido" son cosas
       // distintas y sin decirlo parece que no ha pasado nada.
-      if (outcome === "copied") setNotice(t("share.linkCopied"));
-      if (outcome === "failed") setError(t("share.shareFailed"));
+      if (outcome === "copied") toast.success(t("share.linkCopied"));
+      if (outcome === "failed") toast.error(t("share.shareFailed"));
     } catch {
-      setError(t("common.errorGeneric"));
+      toast.error(t("common.errorGeneric"));
     }
   };
 
   if (isLoading) {
-    return (
-      <>
-        <Stack.Screen
-          options={{ title: t("invite.title"), headerShown: true }}
-        />
-        <LoadingState />
-      </>
-    );
+    return <ScreenScaffold title={t("invite.title")} loading />;
   }
 
   if (isError) {
     return (
-      <>
-        <Stack.Screen
-          options={{ title: t("invite.title"), headerShown: true }}
-        />
-        <ErrorState onRetry={() => void refetch()} />
-      </>
+      <ScreenScaffold
+        title={t("invite.title")}
+        error
+        onRetry={() => void refetch()}
+      />
     );
   }
 
   return (
-    <>
-      <Stack.Screen options={{ title: t("invite.title"), headerShown: true }} />
+    <ScreenScaffold
+      title={t("invite.title")}
+      contentClassName="flex-grow gap-6"
+    >
+      <Text className="font-serif text-lg leading-reading text-plum">
+        {t("invite.body")}
+      </Text>
 
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-        >
-          <Text className="font-serif text-lg leading-reading text-plum">
-            {t("invite.body")}
+      {code ? (
+        /* El enlace en una tarjeta con su rótulo, no una URL cruda flotando.
+           Sigue seleccionable a mano: es lo que salva el día que la hoja del
+           sistema falla o el portapapeles está capado. */
+        <Card label={t("invite.linkLabel")}>
+          <Text selectable className="font-sans text-base text-plum">
+            {buildShareUrl(`/i/${code}`, "invitacion")}
           </Text>
+        </Card>
+      ) : null}
 
-          {code ? (
-            <View className="gap-2">
-              <Text className="font-sans-medium text-sm text-mist-ink">
-                {t("invite.linkLabel")}
-              </Text>
-              {/* Seleccionable a mano: es lo que salva el día que la hoja del
-                sistema falla o el portapapeles está capado. */}
-              <Text selectable className="font-sans text-base text-plum">
-                {buildShareUrl(`/i/${code}`, "invitacion")}
-              </Text>
-            </View>
-          ) : null}
-
-          <Button
-            title={t("invite.cta")}
-            loading={create.isPending}
-            onPress={() => void handleShare()}
-          />
-
-          {notice ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
-              accessibilityRole="alert"
-            >
-              {notice}
-            </Text>
-          ) : null}
-
-          {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
-              {error}
-            </Text>
-          ) : null}
-        </ScrollView>
-      </DawnBackground>
-    </>
+      <Button
+        title={t("invite.cta")}
+        loading={create.isPending}
+        onPress={() => void handleShare()}
+      />
+    </ScreenScaffold>
   );
 }

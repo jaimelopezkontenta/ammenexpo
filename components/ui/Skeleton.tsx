@@ -9,6 +9,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { AMBIENT } from "@/theme/motion";
+
 /**
  * El esqueleto de carga del sistema: la silueta de lo que viene, latiendo.
  *
@@ -22,7 +24,7 @@ import Animated, {
  * no un gris de otra paleta.
  */
 
-const PULSE_MS = 1100;
+const PULSE_MS = AMBIENT.pulse;
 const PULSE_MIN = 0.45;
 const PULSE_MAX = 0.9;
 const STATIC_OPACITY = 0.6;

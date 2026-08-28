@@ -1,13 +1,14 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleMembers } from "@/core/circles/queries";
 import { useBlockUser } from "@/core/moderation/blocks";
@@ -18,8 +19,6 @@ import {
   useReportPost,
   useWriteComment,
 } from "@/core/posts/queries";
-
-import { useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -32,7 +31,6 @@ import { Tap } from "@/components/ui/Tap";
  */
 export default function PrayerRequestComments() {
   const { t } = useTranslation();
-  const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { id, circulo } = useLocalSearchParams<{
     id: string;
@@ -225,17 +223,20 @@ export default function PrayerRequestComments() {
           ))}
 
           <View className="mt-auto flex-row items-end gap-2 pt-6">
-            <TextInput
-              className="max-h-32 min-w-0 flex-1 rounded-input border border-glassedge/60 bg-dawn-cream-bg px-4 py-3 font-sans text-base text-plum"
-              accessibilityLabel={t("feed.comment")}
-              value={draft}
-              onChangeText={setDraft}
-              placeholder={t("feed.commentPlaceholder")}
-              placeholderTextColor={colors.mist.ink}
-              multiline
-              numberOfLines={1}
-              maxLength={COMMENT_MAX}
-            />
+            <View className="min-w-0 flex-1">
+              <TextField
+                skin="dawn"
+                hideLabel
+                label={t("feed.comment")}
+                className="max-h-32 py-3"
+                value={draft}
+                onChangeText={setDraft}
+                placeholder={t("feed.commentPlaceholder")}
+                multiline
+                numberOfLines={1}
+                maxLength={COMMENT_MAX}
+              />
+            </View>
             <Button
               title={t("chat.send")}
               disabled={!canSend}

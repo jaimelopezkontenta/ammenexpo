@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
@@ -41,6 +41,8 @@ export default function AcceptTerms() {
 
   return (
     <DawnBackground>
+      {/* Una puerta entra de frente, no como un paso lateral más. */}
+      <Stack.Screen options={{ animation: "fade_from_bottom" }} />
       <ScrollView
         contentContainerClassName="flex-grow justify-center gap-6 px-7 py-12 md:w-full md:max-w-read md:self-center"
         contentContainerStyle={{

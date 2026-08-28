@@ -18,6 +18,8 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
+import { PRESS, SPRING } from "@/theme/motion";
+
 /**
  * El `Pressable` del sistema. Todo lo tocable de la app pasa por aquí.
  *
@@ -60,8 +62,6 @@ export type TapProps = Omit<PressableProps, "style"> & {
   dimTo?: number;
 };
 
-const SPRING = { damping: 20, stiffness: 350 } as const;
-
 /**
  * Dispara la háptica sin pasar por `Tap` — para los controles que no son
  * nuestros (la tab bar de react-navigation) o para la háptica de resultado
@@ -93,8 +93,8 @@ export const Tap = forwardRef<View, TapProps>(
   (
     {
       haptic = "selection",
-      scaleTo = 0.97,
-      dimTo = 0.92,
+      scaleTo = PRESS.scaleTo,
+      dimTo = PRESS.dimTo,
       onPressIn,
       onPressOut,
       style,
@@ -109,7 +109,7 @@ export const Tap = forwardRef<View, TapProps>(
 
     const handlePressIn = useCallback(
       (event: GestureResponderEvent) => {
-        pressed.value = withSpring(1, SPRING);
+        pressed.value = withSpring(1, SPRING.standard);
         fireHaptic(haptic);
         onPressIn?.(event);
       },
@@ -118,7 +118,7 @@ export const Tap = forwardRef<View, TapProps>(
 
     const handlePressOut = useCallback(
       (event: GestureResponderEvent) => {
-        pressed.value = withSpring(0, SPRING);
+        pressed.value = withSpring(0, SPRING.standard);
         onPressOut?.(event);
       },
       [onPressOut, pressed],

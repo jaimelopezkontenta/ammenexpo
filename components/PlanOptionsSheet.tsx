@@ -11,19 +11,21 @@ import {
   Text,
   View,
 } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { SlideInDown } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
 import { Glass } from "@/components/Glass";
+import { SheetGrabHandle, useSheetDrag } from "@/components/ui/sheetDrag";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
 import { TextField } from "@/components/TextField";
 import type { OwnPlan } from "@/core/plans/queries";
 
-import { icon, useThemeColors } from "@/theme";
+import { icon, scrim, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
-import { DURATION } from "@/theme/motion";
+import { DURATION, enterSheet } from "@/theme/motion";
 
 type Props = {
   visible: boolean;
@@ -94,6 +96,7 @@ export const PlanOptionsSheet = ({
   const insets = useSafeAreaInsets();
   const closedOnce = useRef(false);
   const onClosedRef = useRef(onClosed);
+  const { panGesture, dragStyle } = useSheetDrag(onClose, visible);
 
   useEffect(() => {
     onClosedRef.current = onClosed;
@@ -159,7 +162,8 @@ export const PlanOptionsSheet = ({
           Reanimated silencia `entering` solo cuando el sistema pide menos
           movimiento, así que aquí no hace falta guard. */}
         <Animated.View
-          entering={SlideInDown.springify().damping(18)}
+          entering={enterSheet}
+          style={dragStyle}
           className="max-h-full"
         >
           <Glass
@@ -173,25 +177,30 @@ export const PlanOptionsSheet = ({
               contentContainerClassName="gap-4"
               bounces={false}
             >
-              <View className="flex-row items-center justify-between">
-                <Text className="font-editorial text-lg text-ember-ink">
-                  {t("plan.planOptions")}
-                </Text>
-                <Tap
-                  accessibilityRole="button"
-                  accessibilityLabel={t("common.close")}
-                  onPress={onClose}
-                  // 44×44 de zona táctil; el -mr-2 alinea el icono con el filo
-                  // óptico de la tarjeta en vez de con el del área clicable.
-                  className="-mr-2 h-11 w-11 items-center justify-center"
-                >
-                  <X
-                    size={icon.sm}
-                    color={colors.plum.DEFAULT}
-                    strokeWidth={icon.strokeWidth}
-                  />
-                </Tap>
-              </View>
+              <GestureDetector gesture={panGesture}>
+                <View>
+                  <SheetGrabHandle />
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-editorial text-lg text-ember-ink">
+                      {t("plan.planOptions")}
+                    </Text>
+                    <Tap
+                      accessibilityRole="button"
+                      accessibilityLabel={t("common.close")}
+                      onPress={onClose}
+                      // 44×44 de zona táctil; el -mr-2 alinea el icono con el
+                      // filo óptico de la tarjeta, no con el del área clicable.
+                      className="-mr-2 h-11 w-11 items-center justify-center"
+                    >
+                      <X
+                        size={icon.sm}
+                        color={colors.plum.DEFAULT}
+                        strokeWidth={icon.strokeWidth}
+                      />
+                    </Tap>
+                  </View>
+                </View>
+              </GestureDetector>
 
               {/* Con un solo plan esto no pinta nada: la decisión la lleva el
               propio switcher, igual que antes en la pantalla. */}
@@ -292,7 +301,6 @@ export const PlanOptionsSheet = ({
 };
 
 const styles = StyleSheet.create({
-  // El scrim es plum, no negro: es lo que ya está detrás de todo en el
-  // sistema, y un negro puro apagaría el amanecer en vez de bajarlo.
-  scrim: { backgroundColor: "rgba(65, 54, 83, 0.38)" },
+  // El velo del sistema: un solo valor para todos los overlays, en el tema.
+  scrim: { backgroundColor: scrim },
 });

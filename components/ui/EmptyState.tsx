@@ -12,24 +12,40 @@ import { Txt } from "@/components/ui/Text";
  *
  * El orbe va estático (`animated={false}`): es una marca de lugar, no el
  * protagonista respirando en una pantalla sin contenido.
+ *
+ * `size="inline"` es el mismo gesto dentro de una sección (el chat vacío, el
+ * bloque "Por otros", los comentarios): orbe más chico, menos aire, para que
+ * el vacío local no pese tanto como el de una pantalla entera.
  */
 export const EmptyState = ({
   title,
   body,
+  size = "screen",
   children,
 }: {
   title: string;
   body?: string;
+  size?: "screen" | "inline";
   /** La acción opcional debajo del texto — un Button o un Link ya montado. */
   children?: ReactNode;
 }) => (
-  <View className="items-center gap-3 px-6 py-10">
-    <Orb size={56} animated={false} />
+  <View
+    className={
+      size === "inline"
+        ? "items-center gap-2 px-4 py-5"
+        : "items-center gap-3 px-6 py-10"
+    }
+  >
+    <Orb size={size === "inline" ? 40 : 56} animated={false} />
     <Txt variant="editorial" className="pt-1 text-center">
       {title}
     </Txt>
     {body ? (
-      <Txt tone="secondary" className="text-center">
+      <Txt
+        tone="secondary"
+        className="text-center"
+        variant={size === "inline" ? "caption" : "body"}
+      >
         {body}
       </Txt>
     ) : null}

@@ -1,21 +1,17 @@
-import { Link, Stack } from "expo-router";
+import { Link } from "expo-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ListRow } from "@/components/ui/ListRow";
 import { LoadMore } from "@/components/LoadMore";
-import { DawnBackground } from "@/components/DawnBackground";
-import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { useScreenPadding } from "@/components/useScreenPadding";
+import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   useMarkNotificationsRead,
   useNotifications,
 } from "@/core/notifications/queries";
-
-import { Tap } from "@/components/ui/Tap";
 
 /**
  * Los avisos.
@@ -43,8 +39,6 @@ export default function Notifications() {
   } = useNotifications(userId);
   const markRead = useMarkNotificationsRead(userId);
 
-  const { scrollBottom } = useScreenPadding();
-
   // Al abrir, y una sola vez: entrar aquí es haberlos visto. `mutate` y no
   // `mutateAsync` a propósito — si falla, lo peor que pasa es que el punto
   // sigue puesto, y eso no merece un mensaje de error encima de la lista.
@@ -54,106 +48,66 @@ export default function Notifications() {
   }, [userId]);
 
   if (isLoading) {
-    return (
-      <>
-        <Stack.Screen
-          options={{ title: t("notifications.title"), headerShown: true }}
-        />
-        <LoadingState />
-      </>
-    );
+    return <ScreenScaffold title={t("notifications.title")} loading />;
   }
 
   if (isError) {
     return (
-      <>
-        <Stack.Screen
-          options={{ title: t("notifications.title"), headerShown: true }}
-        />
-        <ErrorState onRetry={() => void refetch()} />
-      </>
+      <ScreenScaffold
+        title={t("notifications.title")}
+        error
+        onRetry={() => void refetch()}
+      />
     );
   }
 
   return (
-    <>
-      <Stack.Screen
-        options={{ title: t("notifications.title"), headerShown: true }}
-      />
+    <ScreenScaffold
+      title={t("notifications.title")}
+      contentClassName="flex-grow gap-4"
+    >
+      {(data ?? []).length === 0 ? (
+        <EmptyState title={t("notifications.empty")} />
+      ) : (
+        (data ?? []).map((entry) => {
+          const name = entry.payload.intercessor_name ?? "";
+          const who = entry.payload.intercessor_id;
+          const props = {
+            leading: <Avatar name={name} seed={who ?? entry.id} size={36} />,
+            title: t("notifications.prayedForYou", {
+              name,
+              planTitle: entry.payload.plan_title ?? "",
+            }),
+            meta: new Date(entry.created_at).toLocaleDateString(i18n.language, {
+              day: "numeric",
+              month: "long",
+            }),
+            // Sin leer, y sin contarlo: el número exacto no ayuda a nadie
+            // dentro de una lista que se acaba de marcar entera.
+            dot: !entry.read_at,
+          };
 
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="flex-grow gap-4 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-        >
-          {(data ?? []).length === 0 ? (
-            <EmptyState title={t("notifications.empty")} />
+          // A dónde lleva un aviso: al perfil de quien oró. Sin autor (aviso
+          // anónimo o borrado) la fila es informativa: sin chevron y sin tap.
+          return who ? (
+            <Link
+              key={entry.id}
+              href={{ pathname: "/persona/[id]", params: { id: who } }}
+              asChild
+            >
+              <ListRow accessibilityRole="link" {...props} />
+            </Link>
           ) : (
-            (data ?? []).map((entry) => {
-              const name = entry.payload.intercessor_name ?? "";
-              const who = entry.payload.intercessor_id;
+            <ListRow key={entry.id} disabled chevron={false} {...props} />
+          );
+        })
+      )}
 
-              const row = (
-                <View className="flex-1 flex-row items-center gap-3">
-                  <Avatar name={name} seed={who ?? entry.id} size={36} />
-
-                  <View className="flex-1 gap-0.5">
-                    <Text className="font-sans text-base text-plum">
-                      {t("notifications.prayedForYou", {
-                        name,
-                        planTitle: entry.payload.plan_title ?? "",
-                      })}
-                    </Text>
-                    <Text className="font-sans text-xs text-mist-ink">
-                      {new Date(entry.created_at).toLocaleDateString(
-                        i18n.language,
-                        { day: "numeric", month: "long" },
-                      )}
-                    </Text>
-                  </View>
-
-                  {/* Sin leer, y sin contarlo: el número exacto no ayuda a nadie
-                    dentro de una lista que se acaba de marcar entera. */}
-                  {entry.read_at ? null : (
-                    <View className="h-2 w-2 rounded-full bg-ember-accent" />
-                  )}
-                </View>
-              );
-
-              // A dónde lleva un aviso: al perfil de quien oró, que existe desde
-              // hace tres commits. Antes de eso no había ningún sitio al que ir,
-              // que es parte de por qué esta pantalla no se construyó entonces.
-              return who ? (
-                <Link
-                  key={entry.id}
-                  href={{ pathname: "/persona/[id]", params: { id: who } }}
-                  asChild
-                >
-                  <Tap
-                    accessibilityRole="link"
-                    className="flex-row rounded-card border border-glassedge/60 p-4"
-                  >
-                    {row}
-                  </Tap>
-                </Link>
-              ) : (
-                <View
-                  key={entry.id}
-                  className="flex-row rounded-card border border-glassedge/60 p-4"
-                >
-                  {row}
-                </View>
-              );
-            })
-          )}
-
-          <LoadMore
-            hasMore={hasNextPage}
-            loading={isFetchingNextPage}
-            onPress={() => void fetchNextPage()}
-          />
-        </ScrollView>
-      </DawnBackground>
-    </>
+      <LoadMore
+        hasMore={hasNextPage}
+        loading={isFetchingNextPage}
+        onPress={() => void fetchNextPage()}
+      />
+    </ScreenScaffold>
   );
 }

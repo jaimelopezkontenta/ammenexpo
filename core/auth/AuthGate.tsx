@@ -1,11 +1,13 @@
 import { Redirect, usePathname, useSegments } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { Orb } from "@/components/Orb";
 import { Wordmark } from "@/components/Wordmark";
+import { enterFadeAfter } from "@/theme/motion";
 
 import { useSession } from "./SessionProvider";
 
@@ -32,8 +34,14 @@ const Loading = () => {
       accessibilityLabel={t("common.loading")}
       accessibilityLiveRegion="polite"
     >
-      <Orb size={150} halo>
-        <Wordmark size={26} />
+      {/* El arranque amanece: la luz cálida del orbe nace abajo y sube a su
+          sitio una sola vez (variant="dawn"), y el wordmark llega un cuarto
+          de segundo después. Con menos movimiento pedido, todo salta al frame
+          final — el estático de siempre. */}
+      <Orb size={150} halo variant="dawn">
+        <Animated.View entering={enterFadeAfter(250)}>
+          <Wordmark size={26} />
+        </Animated.View>
       </Orb>
     </DawnBackground>
   );

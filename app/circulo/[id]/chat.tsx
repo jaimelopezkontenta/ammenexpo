@@ -37,6 +37,7 @@ import Animated from "react-native-reanimated";
 import { useThemeColors } from "@/theme";
 import { enterListItem } from "@/theme/motion";
 
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Tap } from "@/components/ui/Tap";
 
 const sameCalendarDay = (a: Date, b: Date) =>
@@ -195,10 +196,11 @@ export default function CircleChat() {
             inverted
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
-              <View className="items-center gap-2 py-16">
-                <Text className="text-center font-sans text-base text-mist-ink">
-                  {t("chat.empty")}
-                </Text>
+              // La lista está invertida (scaleY -1) y el empty no pasa por el
+              // wrapper de fila que lo desvoltea: sin el contra-volteo, el
+              // orbe y el texto saldrían cabeza abajo.
+              <View className="py-16" style={{ transform: [{ scaleY: -1 }] }}>
+                <EmptyState size="inline" title={t("chat.empty")} />
               </View>
             }
             renderItem={({ item, index }) => {
@@ -212,6 +214,10 @@ export default function CircleChat() {
                   new Date(older.created_at),
                   new Date(item.created_at),
                 );
+              // Racha: si el mensaje de encima (más antiguo) es de la misma
+              // persona y del mismo día, la cara y el nombre no se repiten.
+              const opensRun =
+                opensDay || !older || older.sender_id !== item.sender_id;
 
               return (
                 // Entrada solo en las burbujas visibles al abrir (la lista está
@@ -225,7 +231,7 @@ export default function CircleChat() {
                   ) : null}
                   <View className={item.is_mine ? "items-end" : "items-start"}>
                     <View className="max-w-[85%] gap-1">
-                      {!item.is_mine ? (
+                      {!item.is_mine && opensRun ? (
                         <View className="flex-row items-center gap-2">
                           <Avatar
                             name={item.sender_name}
@@ -292,8 +298,9 @@ export default function CircleChat() {
                                 () => report.mutateAsync(item.id),
                               )
                             }
+                            className="min-h-11 justify-center"
                           >
-                            <Text className="font-sans text-sm text-mist-ink underline">
+                            <Text className="font-sans text-sm text-mist-ink">
                               {t("moderation.report")}
                             </Text>
                           </Tap>
@@ -306,8 +313,9 @@ export default function CircleChat() {
                                 () => block.mutateAsync(item.sender_id),
                               )
                             }
+                            className="min-h-11 justify-center"
                           >
-                            <Text className="font-sans text-sm text-mist-ink underline">
+                            <Text className="font-sans text-sm text-mist-ink">
                               {t("moderation.block")}
                             </Text>
                           </Tap>
@@ -321,8 +329,9 @@ export default function CircleChat() {
                                   () => hide.mutateAsync(item.id),
                                 )
                               }
+                              className="min-h-11 justify-center"
                             >
-                              <Text className="font-sans text-sm text-mist-ink underline">
+                              <Text className="font-sans text-sm text-mist-ink">
                                 {t("moderation.hide")}
                               </Text>
                             </Tap>

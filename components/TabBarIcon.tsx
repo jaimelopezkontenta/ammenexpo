@@ -1,9 +1,9 @@
 import { BookOpen, House, LucideIcon, User, Users } from "lucide-react-native";
-import { ColorValue, View } from "react-native";
+import { ColorValue, StyleSheet, View } from "react-native";
 
 import { Orb } from "@/components/Orb";
 
-import { icon, useThemeColors } from "@/theme";
+import { icon, useThemeColors, withAlpha } from "@/theme";
 
 /**
  * Los iconos de la barra, en Lucide.
@@ -56,7 +56,20 @@ export const TabBarIcon = ({
           strokeWidth={icon.strokeWidth}
         />
       ) : (
-        <Orb size={26} />
+        // El anillo de vidrio del contrato (TOKENS.md): el orbe engastado en
+        // la barra, no flotando a pelo. Sin blur — a 32 px el vidrio se lee
+        // por el borde y la translucidez, y un desenfoque permanente en la
+        // barra no paga.
+        <View
+          className="h-8 w-8 items-center justify-center rounded-full"
+          style={{
+            backgroundColor: withAlpha("#FFFFFF", 0.5),
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: withAlpha(colors.glassedge, 0.65),
+          }}
+        >
+          <Orb size={26} />
+        </View>
       )}
     </View>
   );

@@ -115,7 +115,14 @@ export default function NewPrayerRequest() {
               </Text>
             ) : null}
 
-            <View className="mt-auto pt-6">
+            <View className="mt-auto gap-2 pt-6">
+              {/* Lo elegido, dicho junto al botón: publicar con o sin nombre
+                no debería depender de recordar un toggle más arriba. */}
+              <Text className="text-center font-sans text-sm text-mist-ink">
+                {isAnonymous
+                  ? t("feed.summaryAnonymous")
+                  : t("feed.summaryNamed")}
+              </Text>
               <Button
                 title={t("feed.publish")}
                 disabled={body.trim().length === 0}

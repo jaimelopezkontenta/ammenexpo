@@ -146,7 +146,7 @@ export default function Testimonies() {
           {(testimonies ?? []).map((entry) => (
             <View
               key={entry.id}
-              className="gap-2 rounded-card border border-glassedge/60 p-5"
+              className="gap-2 rounded-card border border-glassedge/65 bg-glass/60 p-5 shadow-soft"
             >
               <View className="flex-row items-center gap-2">
                 <Avatar

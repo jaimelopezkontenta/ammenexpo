@@ -34,6 +34,21 @@ const SCREENS: { name: string; path: string }[] = [
   { name: "lista", path: "/lista" },
   { name: "plus", path: "/plus" },
   { name: "notfound", path: "/ruta-inexistente" },
+  // La superficie social, sin red hasta Amanecer 3.0. Los UUID son los del
+  // seed (`supabase/seed.sql`), estables entre resets.
+  { name: "comunidad", path: "/comunidad" },
+  { name: "peticiones", path: "/peticiones" },
+  { name: "persona", path: "/persona/5eed0000-0000-0000-0000-000000000002" },
+  {
+    name: "chat",
+    path: "/circulo/5eed0000-0000-0000-0000-0000000000b1/chat",
+  },
+  { name: "avisos", path: "/avisos" },
+  { name: "libro-index", path: "/libro/43" },
+  {
+    name: "plan-dias",
+    path: "/plan/5eed0000-0000-0000-0000-0000000000a1/dias",
+  },
 ];
 
 const SNAPSHOT_OPTS = { maxDiffPixelRatio: 0.02, fullPage: false } as const;
@@ -65,9 +80,26 @@ for (const viewport of VIEWPORTS) {
       );
     });
 
+    test(`crear cuenta se ve como la referencia (${viewport.name})`, async ({
+      page,
+    }) => {
+      await page.goto("/crear-cuenta");
+      await expect(
+        page.getByRole("button", { name: "Crear cuenta" }),
+      ).toBeVisible();
+      await page.waitForTimeout(1_000);
+      await expect(page).toHaveScreenshot(
+        `crear-cuenta-${viewport.name}.png`,
+        SNAPSHOT_OPTS,
+      );
+    });
+
     test(`las pantallas con sesión se ven como la referencia (${viewport.name})`, async ({
       page,
     }) => {
+      // Dieciséis pantallas en un solo recorrido: el timeout global de 120 s
+      // se quedó corto al crecer la lista con Amanecer 3.0.
+      test.setTimeout(360_000);
       await login(page);
       for (const screen of SCREENS) {
         await page.goto(screen.path);

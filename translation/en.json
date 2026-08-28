@@ -28,6 +28,7 @@
     "profile": "Profile",
     "pray": "Pray",
     "circles": "Circles",
+    "together": "Together",
     "bible": "Bible"
   },
   "pray": {
@@ -46,10 +47,12 @@
     "sectionMyPlans": "My plans",
     "sectionMyList": "My list",
     "sectionForOthers": "For others",
-    "forOthersEmpty": "Plans people have trusted you to pray for show up here. If someone prayed for you, that is in Notices.",
+    "forOthersEmptyTitle": "No one has entrusted you a plan yet.",
     "forOthersEmptyHint": "You can share yours from My plans.",
     "newPlan": "New plan",
-    "openList": "Pray through my list"
+    "openList": "Pray through my list",
+    "planDuration": "{{count}}-day plan",
+    "planDuration_plural": "{{count}}-day plan"
   },
   "profile": {
     "title": "Your profile",
@@ -229,6 +232,7 @@
     "streak": "{{count}} day streak",
     "streak_plural": "{{count}} day streak",
     "days": "Earlier days",
+    "continueDay": "Continue on day {{number}}",
     "daysHint": "{{count}} day you have already walked.",
     "daysHint_plural": "{{count}} days you have already walked.",
     "dayPrayed": "Prayed",
@@ -383,6 +387,8 @@
     "placeholder": "My mother goes into surgery tomorrow…",
     "anonymous": "Ask without my name",
     "anonymousHint": "Nobody will see who wrote it, not even to block you. It can still be reported.",
+    "summaryNamed": "It will be published with your name.",
+    "summaryAnonymous": "It will be published without your name.",
     "publish": "Ask for prayer",
     "comment": "Say something",
     "commentPlaceholder": "I'm praying for you…",
@@ -461,9 +467,6 @@
   "notifications": {
     "prayedForYou": "{{name}} prayed for you — {{planTitle}}",
     "reminder": "It's your time to pray",
-    "intercessorReminder": "Today is day {{day}} of {{name}}'s plan",
-    "dailyDigest": "{{count}} person prayed for you yesterday",
-    "dailyDigest_plural": "{{count}} people prayed for you yesterday",
     "title": "Notifications",
     "empty": "Nothing here yet. When somebody prays for you, you'll find it here."
   },
@@ -497,6 +500,8 @@
   "bible": {
     "title": "Bible",
     "subtitle": "Reina-Valera 1909",
+    "textSmaller": "Smaller text",
+    "textLarger": "Larger text",
     "searchPlaceholder": "Search a word or a reference",
     "searchHint": "Type at least three letters. You can also type a reference, like \"John 3\".",
     "oldTestament": "Old Testament",

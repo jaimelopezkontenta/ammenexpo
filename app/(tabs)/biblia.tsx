@@ -120,8 +120,11 @@ export default function Bible() {
             className="rounded-card"
             onPress={() => openChapter(jump.book_id, jump.chapter, jump.verse)}
           >
-            <Glass dark className="rounded-card px-5 py-4">
-              <Text className="font-sans-semibold text-base text-white">
+            {/* Vidrio del sistema, no el oscuro: era la única tarjeta nocturna
+              de toda la app y se leía como de otra familia. El acento naranja
+              legible ya dice "esto es un salto". */}
+            <Glass flat readable className="rounded-card px-5 py-4 shadow-soft">
+              <Text className="font-sans-semibold text-base text-ember-ink">
                 {t("bible.goTo", {
                   reference: `${bookName(all, jump.book_id)} ${jump.chapter}`,
                 })}

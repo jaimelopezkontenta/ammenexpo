@@ -16,6 +16,14 @@ export const withAlpha = (hex: string, alpha: number) => {
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
+/**
+ * El velo de detrás de una hoja o un menú. Plum y no negro: es lo que ya está
+ * detrás de todo en el sistema, y un negro puro apagaría el amanecer en vez
+ * de bajarlo. Un solo valor — había dos (0,28 y 0,38) y el mismo gesto se veía
+ * distinto según qué overlay lo abriera.
+ */
+export const scrim = withAlpha(colors.plum.DEFAULT, 0.35);
+
 export const gradients = {
   /** El melocotón del CTA y del progreso del wizard, de izquierda a derecha. */
   cta: [colors.ember.DEFAULT, colors.ember.pale] as const,
