@@ -1,10 +1,11 @@
 import { router, Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Linking, ScrollView, Text, View } from "react-native";
+import { Linking, ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 
 /**
@@ -54,40 +55,24 @@ export default function CrisisResources() {
           contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
           contentContainerStyle={{ paddingBottom: scrollBottom }}
         >
-          <Text className="font-serif-bold text-2xl leading-8 text-plum">
-            {t("crisis.title")}
-          </Text>
+          <Txt variant="title">{t("crisis.title")}</Txt>
 
-          <Text
-            className="font-sans text-base leading-6 text-plum"
-            accessibilityRole="alert"
-          >
+          <Txt variant="body" accessibilityRole="alert">
             {t("crisis.intro")}
-          </Text>
+          </Txt>
 
-          <Text className="font-sans text-sm leading-6 text-mist-ink">
-            {t("crisis.notDiagnosis")}
-          </Text>
+          <Txt variant="caption">{t("crisis.notDiagnosis")}</Txt>
 
-          <Text
-            className="font-sans text-sm leading-6 text-mist-ink"
-            accessibilityRole="alert"
-          >
+          <Txt variant="caption" accessibilityRole="alert">
             {t("crisis.draftPrivate")}
-          </Text>
+          </Txt>
 
           <Card className="gap-4">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {t("crisis.resourcesTitle")}
-            </Text>
+            <Txt variant="subheadingLg">{t("crisis.resourcesTitle")}</Txt>
 
             <View className="gap-2">
-              <Text className="font-sans-medium text-base text-plum">
-                {t("crisis.resourceEsTitle")}
-              </Text>
-              <Text className="font-sans text-sm leading-5 text-mist-ink">
-                {t("crisis.resourceEsBody")}
-              </Text>
+              <Txt variant="bodyMedium">{t("crisis.resourceEsTitle")}</Txt>
+              <Txt variant="caption">{t("crisis.resourceEsBody")}</Txt>
               <Button
                 title={t("crisis.call024")}
                 accessibilityRole="link"
@@ -96,12 +81,8 @@ export default function CrisisResources() {
             </View>
 
             <View className="gap-2">
-              <Text className="font-sans-medium text-base text-plum">
-                {t("crisis.resourceIntlTitle")}
-              </Text>
-              <Text className="font-sans text-sm leading-5 text-mist-ink">
-                {t("crisis.resourceIntlBody")}
-              </Text>
+              <Txt variant="bodyMedium">{t("crisis.resourceIntlTitle")}</Txt>
+              <Txt variant="caption">{t("crisis.resourceIntlBody")}</Txt>
               <Button
                 title={t("crisis.call112")}
                 variant="secondary"
@@ -110,14 +91,12 @@ export default function CrisisResources() {
               />
             </View>
 
-            <Text className="font-sans-medium text-sm leading-5 text-danger">
+            <Txt variant="label" tone="danger">
               {t("crisis.resourceEmergency")}
-            </Text>
+            </Txt>
           </Card>
 
-          <Text className="font-sans text-sm leading-6 text-mist-ink">
-            {t("crisis.staying")}
-          </Text>
+          <Txt variant="caption">{t("crisis.staying")}</Txt>
 
           <View className="mt-auto gap-3 pt-6">
             <Button

@@ -1,9 +1,10 @@
 import { Link, router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { TabHeader } from "@/components/TabHeader";
+import { Txt } from "@/components/ui/Text";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -63,9 +64,9 @@ export default function Pray() {
           {/* El microcopy fija el reparto: tu plan se reza en Hoy; esta tab
           es para crearlo, compartirlo y orar por otros. */}
           <Animated.View entering={enterStagger(0)}>
-            <Text className="font-sans text-base leading-6 text-mist-ink">
+            <Txt variant="body" tone="secondary">
               {t("pray.intro")}
-            </Text>
+            </Txt>
           </Animated.View>
 
           {/* Mis planes: el CTA primario (Nuevo plan) no depende de que
@@ -112,23 +113,19 @@ export default function Pray() {
           a este bloque — nunca una pared que esconda los dos bloques de
           arriba. */}
           <Animated.View entering={enterStagger(3)} className="gap-4">
-            <Text className="font-editorial text-lg text-ember-ink">
-              {t("pray.sectionForOthers")}
-            </Text>
+            <Txt variant="editorial">{t("pray.sectionForOthers")}</Txt>
 
             {hasSharedPlans ? (
               <>
                 <Card className="gap-3">
                   <View className="flex-row items-center justify-between gap-3">
-                    <Text className="font-sans-semibold text-base text-plum">
-                      {t("pray.progressTitle")}
-                    </Text>
-                    <Text className="font-sans-semibold text-base text-plum">
+                    <Txt variant="subheading">{t("pray.progressTitle")}</Txt>
+                    <Txt variant="subheading">
                       {t("pray.progress", {
                         completed: prayerProgress.completedCount,
                         total: prayerProgress.total,
                       })}
-                    </Text>
+                    </Txt>
                   </View>
                   <View
                     className="h-2 overflow-hidden rounded-full bg-glass/70"
@@ -166,20 +163,18 @@ export default function Pray() {
                   that order. */}
                 {prayerProgress.allPrayed ? (
                   <Card className="gap-1">
-                    <Text className="font-sans-semibold text-base text-plum">
+                    <Txt variant="subheading">
                       {t("intercession.allPrayed")}
-                    </Text>
-                    <Text className="font-sans text-base leading-6 text-mist-ink">
+                    </Txt>
+                    <Txt variant="body" tone="secondary">
                       {t("intercession.allPrayedBody")}
-                    </Text>
+                    </Txt>
                   </Card>
                 ) : null}
 
                 {prayerProgress.pending.length > 0 ? (
                   <View className="gap-3">
-                    <Text className="font-editorial text-lg text-ember-ink">
-                      {t("pray.pending")}
-                    </Text>
+                    <Txt variant="editorial">{t("pray.pending")}</Txt>
                     {prayerProgress.pending.map((plan) => (
                       <PrayForCard
                         key={plan.plan_id}
@@ -197,9 +192,7 @@ export default function Pray() {
 
                 {prayerProgress.completed.length > 0 ? (
                   <View className="gap-3">
-                    <Text className="font-editorial text-lg text-ember-ink">
-                      {t("pray.completed")}
-                    </Text>
+                    <Txt variant="editorial">{t("pray.completed")}</Txt>
                     {prayerProgress.completed.map((plan) => (
                       <PrayForCard
                         key={plan.plan_id}

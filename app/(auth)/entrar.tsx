@@ -1,11 +1,12 @@
 import { Link } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { AuthScreen } from "@/components/AuthScreen";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
+import { Txt } from "@/components/ui/Text";
 import { authErrorKey, isValidEmail } from "@/core/auth/validation";
 import { supabase } from "@/utils/supabase";
 
@@ -83,12 +84,9 @@ export default function SignIn() {
               are rendered by the field itself, so a screen reader hears which
               one is wrong. */}
         {error && !errorField ? (
-          <Text
-            className="font-sans text-sm text-danger"
-            accessibilityRole="alert"
-          >
+          <Txt variant="caption" tone="danger" accessibilityRole="alert">
             {error}
-          </Text>
+          </Txt>
         ) : null}
 
         {/* The key has been translated in both languages since the beginning
@@ -111,7 +109,7 @@ export default function SignIn() {
       </View>
 
       <View className="mt-8 flex-row items-center justify-center gap-2">
-        <Text className="font-sans text-mist-ink">{t("auth.noAccount")}</Text>
+        <Txt variant="caption">{t("auth.noAccount")}</Txt>
         <Link href="/crear-cuenta" className="font-sans-semibold text-plum">
           {t("auth.signUp")}
         </Link>

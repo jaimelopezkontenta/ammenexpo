@@ -27,44 +27,31 @@ const RAW_TEXT = /<Text[\s/>]/g;
 
 /** Censo al arrancar la adopción. Solo se borra o se reduce, nunca crece. */
 const ALLOWLIST: Record<string, number> = {
-  "app/(auth)/crear-cuenta.tsx": 3,
-  "app/(auth)/entrar.tsx": 2,
   "app/(onboarding)/bienvenida.tsx": 13,
   "app/(public)/c/[token].tsx": 5,
   "app/(public)/i/[code].tsx": 2,
   "app/(public)/p/[token].tsx": 13,
-  "app/(tabs)/biblia.tsx": 11,
-  "app/(tabs)/index.tsx": 16,
-  "app/(tabs)/orar.tsx": 8,
-  "app/(tabs)/perfil.tsx": 11,
   "app/aceptar.tsx": 5,
   "app/acerca.tsx": 9,
   "app/bloqueados.tsx": 4,
-  "app/circulo/[id]/chat.tsx": 9,
   "app/circulo/[id]/index.tsx": 14,
   "app/circulo/buscar.tsx": 6,
-  "app/crisis.tsx": 11,
   "app/invitar.tsx": 2,
   "app/legal/[doc].tsx": 2,
-  "app/libro/[book]/[chapter].tsx": 11,
-  "app/libro/[book]/index.tsx": 3,
-  "app/lista/index.tsx": 7,
   "app/lista/orar.tsx": 6,
   "app/moderacion.tsx": 29,
   "app/orar/[planId].tsx": 7,
-  "app/persona/[id].tsx": 14,
   "app/peticiones/[id].tsx": 8,
   "app/peticiones/nueva.tsx": 4,
   "app/plan-publico/[planId].tsx": 4,
   "app/plan/[id]/compartir.tsx": 13,
   "app/plan/[id]/dia/[numero].tsx": 3,
-  "app/plan/[id]/dias.tsx": 7,
   "app/plan/nuevo.tsx": 11,
-  "app/plus.tsx": 10,
   "app/testimonios/index.tsx": 10,
   "app/testimonios/nuevo.tsx": 5,
   "app/versiculo.tsx": 3,
   // Ola 1 (2026-08-28): components/** y core/** migrados enteros a Txt.
+  // Ola 2 (2026-08-28): las 14 pantallas con red visual, a cero.
 };
 
 const tsxFiles = (dir: string): string[] =>

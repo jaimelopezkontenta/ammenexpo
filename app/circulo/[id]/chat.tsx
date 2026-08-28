@@ -6,12 +6,12 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Text,
   TextInput,
   View,
 } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Avatar } from "@/components/Avatar";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -225,9 +225,12 @@ export default function CircleChat() {
                 // animarlo sería trabajo que nadie ve.
                 <Animated.View entering={enterListItem(index)}>
                   {opensDay ? (
-                    <Text className="pb-3 pt-1 text-center font-editorial text-base text-ember-ink">
+                    <Txt
+                      variant="editorial"
+                      className="pb-3 pt-1 text-center text-base"
+                    >
                       {dayLabel(item.created_at)}
-                    </Text>
+                    </Txt>
                   ) : null}
                   <View className={item.is_mine ? "items-end" : "items-start"}>
                     <View className="max-w-[85%] gap-1">
@@ -239,9 +242,13 @@ export default function CircleChat() {
                             seed={item.sender_id}
                             size={20}
                           />
-                          <Text className="font-sans-medium text-xs text-mist-ink">
+                          <Txt
+                            variant="label"
+                            tone="secondary"
+                            className="text-xs"
+                          >
                             {item.sender_name}
-                          </Text>
+                          </Txt>
                         </View>
                       ) : null}
 
@@ -267,22 +274,22 @@ export default function CircleChat() {
                             : "border-glassedge/60 bg-glass/60"
                         }`}
                       >
-                        <Text
-                          className={`text-base leading-6 ${
-                            item.is_mine ? "text-white" : "text-plum"
-                          }`}
+                        <Txt
+                          variant="body"
+                          tone={item.is_mine ? "onDark" : "primary"}
                         >
                           {item.body}
-                        </Text>
+                        </Txt>
                         {/* La hora dentro de la burbuja, como en cualquier chat:
                       pequeña, al filo, sin robarle línea al mensaje. */}
-                        <Text
-                          className={`self-end pt-0.5 font-sans text-xs ${
-                            item.is_mine ? "text-white/70" : "text-mist-ink"
+                        <Txt
+                          variant="caption"
+                          className={`self-end pt-0.5 text-xs ${
+                            item.is_mine ? "text-white/70" : ""
                           }`}
                         >
                           {timeLabel(item.created_at)}
-                        </Text>
+                        </Txt>
                       </Tap>
 
                       {/* Behind a tap rather than always visible: every message
@@ -300,9 +307,9 @@ export default function CircleChat() {
                             }
                             className="min-h-11 justify-center"
                           >
-                            <Text className="font-sans text-sm text-mist-ink">
+                            <Txt variant="caption">
                               {t("moderation.report")}
-                            </Text>
+                            </Txt>
                           </Tap>
 
                           <Tap
@@ -315,9 +322,7 @@ export default function CircleChat() {
                             }
                             className="min-h-11 justify-center"
                           >
-                            <Text className="font-sans text-sm text-mist-ink">
-                              {t("moderation.block")}
-                            </Text>
+                            <Txt variant="caption">{t("moderation.block")}</Txt>
                           </Tap>
 
                           {isAdmin ? (
@@ -331,9 +336,9 @@ export default function CircleChat() {
                               }
                               className="min-h-11 justify-center"
                             >
-                              <Text className="font-sans text-sm text-mist-ink">
+                              <Txt variant="caption">
                                 {t("moderation.hide")}
-                              </Text>
+                              </Txt>
                             </Tap>
                           ) : null}
                         </View>
@@ -346,12 +351,14 @@ export default function CircleChat() {
           />
 
           {error ? (
-            <Text
-              className="px-7 pb-2 font-sans text-sm text-danger"
+            <Txt
+              variant="caption"
+              tone="danger"
+              className="px-7 pb-2"
               accessibilityRole="alert"
             >
               {error}
-            </Text>
+            </Txt>
           ) : null}
 
           <View
@@ -396,9 +403,9 @@ export default function CircleChat() {
               {send.isPending ? (
                 <ActivityIndicator color={colors.surface} />
               ) : (
-                <Text className="font-sans-semibold text-base text-white">
+                <Txt variant="subheading" tone="onDark">
                   {t("chat.send")}
-                </Text>
+                </Txt>
               )}
             </Tap>
           </View>

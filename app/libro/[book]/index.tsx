@@ -1,9 +1,10 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useBibleBooks, useReadingPosition } from "@/core/bible/queries";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -56,9 +57,9 @@ export default function BookChapters() {
           options={{ title: t("bible.title"), headerShown: true }}
         />
         <DawnBackground className="items-center justify-center gap-4 px-8">
-          <Text className="text-center font-sans text-base text-mist-ink">
+          <Txt variant="body" tone="secondary" className="text-center">
             {t("common.notFoundTitle")}
-          </Text>
+          </Txt>
           <View className="w-full">
             <Button
               title={t("bible.title")}
@@ -84,9 +85,9 @@ export default function BookChapters() {
           contentContainerClassName="gap-4 px-7 py-8 md:w-full md:max-w-read md:self-center"
           contentContainerStyle={{ paddingBottom: scrollBottom }}
         >
-          <Text className="font-editorial text-lg text-ember-ink">
+          <Txt variant="editorial">
             {t("bible.chapters", { count: entry.chapter_count })}
-          </Text>
+          </Txt>
 
           <View className="flex-row flex-wrap gap-2">
             {chapters.map((chapter) => {
@@ -115,15 +116,12 @@ export default function BookChapters() {
                     })
                   }
                 >
-                  <Text
-                    className={
-                      isCurrent
-                        ? "font-sans-semibold text-base text-plum"
-                        : "font-sans-medium text-base text-plum"
-                    }
+                  <Txt
+                    variant="bodyMedium"
+                    className={isCurrent ? "font-sans-semibold" : ""}
                   >
                     {chapter}
-                  </Text>
+                  </Txt>
                 </Tap>
               );
             })}

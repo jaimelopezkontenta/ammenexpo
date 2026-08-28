@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { Glass } from "@/components/Glass";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
+import { Txt } from "@/components/ui/Text";
 import { usePlanDays } from "@/core/plans/queries";
 import { usePlanSummary } from "@/core/plans/sharing";
 
@@ -49,11 +50,11 @@ export default function PlanDays() {
       title={plan?.title ?? t("plan.days")}
       contentClassName="gap-3"
     >
-      <Text className="font-sans text-sm text-mist-ink">
+      <Txt variant="caption">
         {t("plan.daysHint", {
           count: ordered.filter((day) => day.unlocked).length,
         })}
-      </Text>
+      </Txt>
 
       {current ? (
         <Button
@@ -79,17 +80,17 @@ export default function PlanDays() {
               key={day.day_number}
               className="gap-1 rounded-card border border-dashed border-glassedge/60 p-5"
             >
-              <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+              <Txt variant="overline">
                 {t("common.day", { number: day.day_number })}
-              </Text>
-              <Text className="font-sans text-base text-mist-ink">
+              </Txt>
+              <Txt variant="body" tone="secondary">
                 {t("plan.locked", {
                   date: new Date(day.unlock_date).toLocaleDateString(
                     i18n.language,
                     { day: "numeric", month: "long" },
                   ),
                 })}
-              </Text>
+              </Txt>
             </View>
           );
         }
@@ -108,26 +109,20 @@ export default function PlanDays() {
           >
             <Glass flat readable className="gap-1 rounded-card p-5 shadow-soft">
               <View className="flex-row items-center justify-between">
-                <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+                <Txt variant="overline">
                   {t("common.day", { number: day.day_number })}
-                </Text>
+                </Txt>
                 {/* A quiet mark, not a scoreboard: this is a record of what you
                     prayed, not a list of what you owe. */}
                 {day.prayed ? (
-                  <Text className="font-sans text-sm text-mist-ink">
-                    {t("plan.dayPrayed")}
-                  </Text>
+                  <Txt variant="caption">{t("plan.dayPrayed")}</Txt>
                 ) : null}
               </View>
 
-              <Text className="font-sans-semibold text-lg text-plum">
-                {day.title}
-              </Text>
+              <Txt variant="subheadingLg">{day.title}</Txt>
 
               {day.scripture_ref ? (
-                <Text className="font-sans text-sm text-mist-ink">
-                  {day.scripture_ref}
-                </Text>
+                <Txt variant="caption">{day.scripture_ref}</Txt>
               ) : null}
             </Glass>
           </Tap>

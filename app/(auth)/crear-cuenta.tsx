@@ -1,11 +1,12 @@
 import { Link } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { AuthScreen } from "@/components/AuthScreen";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
+import { Txt } from "@/components/ui/Text";
 import {
   attachPendingTokensToProfile,
   attachSignupSource,
@@ -110,20 +111,14 @@ export default function SignUp() {
               are rendered by the field itself, so a screen reader hears which
               one is wrong. */}
         {error && !errorField ? (
-          <Text
-            className="font-sans text-sm text-danger"
-            accessibilityRole="alert"
-          >
+          <Txt variant="caption" tone="danger" accessibilityRole="alert">
             {error}
-          </Text>
+          </Txt>
         ) : null}
         {notice ? (
-          <Text
-            className="font-sans text-sm text-mist-ink"
-            accessibilityRole="alert"
-          >
+          <Txt variant="caption" accessibilityRole="alert">
             {notice}
-          </Text>
+          </Txt>
         ) : null}
 
         <Button
@@ -134,7 +129,7 @@ export default function SignUp() {
       </View>
 
       <View className="mt-8 flex-row items-center justify-center gap-2">
-        <Text className="font-sans text-mist-ink">{t("auth.hasAccount")}</Text>
+        <Txt variant="caption">{t("auth.hasAccount")}</Txt>
         <Link href="/entrar" className="font-sans-semibold text-plum">
           {t("auth.signIn")}
         </Link>

@@ -2,7 +2,7 @@ import { Link, Stack, useLocalSearchParams } from "expo-router";
 import { MoreHorizontal } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
@@ -28,8 +28,10 @@ import { Tap } from "@/components/ui/Tap";
 /** Un número y lo que significa. Tres veces en la misma fila. */
 const Stat = ({ value, label }: { value: number; label: string }) => (
   <View className="items-center gap-0.5">
-    <Text className="font-sans-semibold text-lg text-plum">{value}</Text>
-    <Text className="font-sans text-xs text-mist-ink">{label}</Text>
+    <Txt variant="subheadingLg">{value}</Txt>
+    <Txt variant="caption" className="text-xs">
+      {label}
+    </Txt>
   </View>
 );
 
@@ -202,11 +204,11 @@ export default function PersonProfile() {
               size={96}
             />
 
-            <Text className="text-center font-serif-bold text-2xl text-plum">
+            <Txt variant="title" className="text-center">
               {person.display_name}
-            </Text>
+            </Txt>
 
-            <Text className="text-center font-sans text-sm text-mist-ink">
+            <Txt variant="caption" className="text-center">
               {t("profile.memberSince", {
                 // El idioma de la app, no el del navegador: con `undefined`
                 // ponía "May 2026" en una pantalla entera en español.
@@ -215,18 +217,18 @@ export default function PersonProfile() {
                   { year: "numeric", month: "long" },
                 ),
               })}
-            </Text>
+            </Txt>
 
             {/* Compartir círculo es lo que explica por qué esta persona puede ver
               tus peticiones, así que se dice en las dos direcciones. En tu
               propio perfil no: `shares_a_circle_with` contigo misma es cierto,
               y "compartís un círculo" sobre ti no significa nada. */}
             {!person.is_me ? (
-              <Text className="text-center font-sans text-sm text-mist-ink">
+              <Txt variant="caption" className="text-center">
                 {person.shares_circle
                   ? t("profile.sharesCircle")
                   : t("profile.noSharedCircle")}
-              </Text>
+              </Txt>
             ) : null}
 
             {/* Los tres números. La racha va aquí por decisión de producto, y es
@@ -263,9 +265,9 @@ export default function PersonProfile() {
 
           {(plans ?? []).length > 0 ? (
             <View className="gap-4">
-              <Text className="font-sans-medium text-sm text-mist-ink">
+              <Txt variant="label" tone="secondary">
                 {t("community.publicPlans")}
-              </Text>
+              </Txt>
 
               {/* `person_plans` solo devuelve planes `visibility = 'public'`,
                 así que toda esta lista es la lectura pública, no la oración.
@@ -283,12 +285,12 @@ export default function PersonProfile() {
                 >
                   <Tap accessibilityRole="link" className="rounded-card">
                     <Card flat className="gap-1">
-                      <Text className="font-serif-bold text-base text-plum">
+                      <Txt variant="title" className="text-base">
                         {plan.title}
-                      </Text>
-                      <Text className="font-sans text-sm text-mist-ink">
+                      </Txt>
+                      <Txt variant="caption">
                         {t("newPlan.days", { count: plan.duration_days })}
-                      </Text>
+                      </Txt>
                     </Card>
                   </Tap>
                 </Link>
@@ -298,9 +300,9 @@ export default function PersonProfile() {
 
           {(posts ?? []).length > 0 ? (
             <View className="gap-4">
-              <Text className="font-sans-medium text-sm text-mist-ink">
+              <Txt variant="label" tone="secondary">
                 {t("feed.title")}
-              </Text>
+              </Txt>
 
               {/* Solo lo que pidió con su nombre. Lo anónimo no llega hasta aquí
                 —el servidor lo excluye— porque una lista por persona es justo
@@ -308,9 +310,9 @@ export default function PersonProfile() {
               {(posts ?? []).map((post) => (
                 <Card key={post.id} flat className="gap-2">
                   <Txt variant="bodySerifReading">{post.body}</Txt>
-                  <Text className="font-sans text-sm text-mist-ink">
+                  <Txt variant="caption">
                     {t("feed.prayCount", { count: post.prayer_count })}
-                  </Text>
+                  </Txt>
                 </Card>
               ))}
             </View>
@@ -318,16 +320,14 @@ export default function PersonProfile() {
 
           {theirs.length > 0 ? (
             <View className="gap-4">
-              <Text className="font-sans-medium text-sm text-mist-ink">
+              <Txt variant="label" tone="secondary">
                 {t("testimony.title")}
-              </Text>
+              </Txt>
 
               {theirs.map((entry) => (
                 <Card key={entry.id} flat className="gap-2">
                   {entry.plan_title ? (
-                    <Text className="font-sans text-sm text-mist-ink">
-                      {entry.plan_title}
-                    </Text>
+                    <Txt variant="caption">{entry.plan_title}</Txt>
                   ) : null}
                   <Txt variant="bodySerifReading">{entry.body}</Txt>
                 </Card>
@@ -336,21 +336,15 @@ export default function PersonProfile() {
           ) : null}
 
           {notice ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" accessibilityRole="alert">
               {notice}
-            </Text>
+            </Txt>
           ) : null}
 
           {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" tone="danger" accessibilityRole="alert">
               {error}
-            </Text>
+            </Txt>
           ) : null}
         </ScrollView>
       </DawnBackground>

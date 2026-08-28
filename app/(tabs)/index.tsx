@@ -2,7 +2,7 @@ import { Link, router } from "expo-router";
 import { Check, MoreHorizontal } from "lucide-react-native";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { TabHeader } from "@/components/TabHeader";
@@ -293,12 +293,12 @@ export default function Today() {
               de treinta dias es la espera mas larga del producto, y la marca
               respirando dice "esta pasando algo" mejor que una rueda. */}
           <Orb size={110} halo variant="working" />
-          <Text className="text-center font-sans-semibold text-xl text-plum">
+          <Txt variant="subheadingLg" className="text-center text-xl">
             {t("plan.generating")}
-          </Text>
-          <Text className="text-center font-sans text-base text-mist-ink">
+          </Txt>
+          <Txt variant="body" tone="secondary" className="text-center">
             {t("plan.generatingHint")}
-          </Text>
+          </Txt>
         </ResponsiveTabContent>
       </DawnBackground>
     );
@@ -354,12 +354,14 @@ export default function Today() {
               }
             >
               {actionError ? (
-                <Text
-                  className="pb-3 text-center font-sans text-sm text-danger"
+                <Txt
+                  variant="caption"
+                  tone="danger"
+                  className="pb-3 text-center"
                   accessibilityRole="alert"
                 >
                   {actionError}
-                </Text>
+                </Txt>
               ) : null}
 
               {stalledWithoutDay ? (
@@ -416,39 +418,45 @@ export default function Today() {
               />
 
               <View className="flex-1 items-center justify-center gap-3">
-                <Text className="text-center font-sans-bold text-2xl text-plum">
+                <Txt variant="headingLg" className="text-center">
                   {t("plan.finishedTitle")}
-                </Text>
-                <Text className="text-center font-serif text-base leading-6 text-plum">
+                </Txt>
+                <Txt variant="bodySerif" className="text-center">
                   {plan.title}
-                </Text>
+                </Txt>
 
                 {/* An honest count, not a congratulation. Someone who prayed 11 of 30
               days is told 11 of 30 — rounding that up would make the one screen
               that looks back the one screen that flatters. */}
-                <Text className="mt-4 text-center font-sans text-base leading-6 text-mist-ink">
+                <Txt
+                  variant="body"
+                  tone="secondary"
+                  className="mt-4 text-center"
+                >
                   {t("plan.finishedDays", {
                     count: progress.days_prayed,
                     total: progress.days_total,
                   })}
-                </Text>
+                </Txt>
 
                 {progress.intercessions_received > 0 ? (
-                  <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+                  <Txt variant="body" tone="secondary" className="text-center">
                     {t("plan.finishedIntercessions", {
                       count: progress.intercessions_received,
                     })}
-                  </Text>
+                  </Txt>
                 ) : null}
               </View>
 
               {actionError ? (
-                <Text
-                  className="text-center font-sans text-sm text-danger"
+                <Txt
+                  variant="caption"
+                  tone="danger"
+                  className="text-center"
                   accessibilityRole="alert"
                 >
                   {actionError}
-                </Text>
+                </Txt>
               ) : null}
 
               <View className="gap-3">
@@ -496,14 +504,15 @@ export default function Today() {
                       loading={archivePlan.isPending}
                       onPress={() => void archiveCurrentPlan()}
                     />
-                    <Text
-                      className="text-center font-sans text-sm text-mist-ink"
+                    <Txt
+                      variant="caption"
+                      className="text-center"
                       accessibilityLiveRegion={
                         confirmingArchiveId === plan.id ? "polite" : "none"
                       }
                     >
                       {t("plan.archiveHint")}
-                    </Text>
+                    </Txt>
                   </>
                 ) : null}
               </View>
@@ -531,7 +540,7 @@ export default function Today() {
               `···` que abre el cajón del plan. */}
               <View className="flex-row items-center justify-between gap-3">
                 <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-2 gap-y-1">
-                  <Text className="font-sans-medium text-sm text-mist-ink">
+                  <Txt variant="label" tone="secondary">
                     {t("plan.dayOf", {
                       current: day.day_number,
                       total: plan.duration_days,
@@ -539,14 +548,18 @@ export default function Today() {
                     {plan.status === "generating" && !stuck
                       ? ` · ${t("plan.stillPreparing")}`
                       : ""}
-                  </Text>
+                  </Txt>
                   {/* La racha es un chip y no un segmento más de la línea: es la
                   única pieza de la fila que celebra, y merece forma propia. */}
                   {days > 0 ? (
                     <View className="rounded-full bg-plum-chip px-3 py-1">
-                      <Text className="font-sans-semibold text-xs text-white">
+                      <Txt
+                        variant="subheading"
+                        tone="onDark"
+                        className="text-xs"
+                      >
                         {t("plan.streak", { count: days })}
-                      </Text>
+                      </Txt>
                     </View>
                   ) : null}
                 </View>
@@ -575,12 +588,12 @@ export default function Today() {
               hoy viene a orar, no a arreglar la generación. */}
               {stuck ? (
                 <View className="gap-1.5">
-                  <Text className="font-sans text-sm leading-5 text-mist-ink">
+                  <Txt variant="caption">
                     {t("plan.stalledBody", {
                       written: progress?.days_written ?? day.day_number,
                       total: plan.duration_days,
                     })}
-                  </Text>
+                  </Txt>
                   <Tap
                     accessibilityRole="button"
                     accessibilityState={{ busy: continuePlan.isPending }}
@@ -594,9 +607,13 @@ export default function Today() {
                   >
                     {/* El mismo tono que el label del Button ghost: el naranja
                     que sí se lee, reservado para lo que pide acción. */}
-                    <Text className="font-sans-semibold text-sm text-ember-ink">
+                    <Txt
+                      variant="label"
+                      tone="accent"
+                      className="font-sans-semibold"
+                    >
                       {t("plan.stalledCta")}
-                    </Text>
+                    </Txt>
                   </Tap>
                 </View>
               ) : null}
@@ -648,9 +665,9 @@ export default function Today() {
                         strokeWidth={icon.strokeWidth}
                       />
                     </Orb>
-                    <Text className="text-center font-sans-medium text-base text-plum">
+                    <Txt variant="bodyMedium" className="text-center">
                       {t("plan.markedDone")}
-                    </Text>
+                    </Txt>
                   </Animated.View>
                 ) : (
                   <Button
@@ -672,12 +689,14 @@ export default function Today() {
               </View>
 
               {actionError ? (
-                <Text
-                  className="text-center font-sans text-sm text-danger"
+                <Txt
+                  variant="caption"
+                  tone="danger"
+                  className="text-center"
                   accessibilityRole="alert"
                 >
                   {actionError}
-                </Text>
+                </Txt>
               ) : null}
 
               {/* Lo social espera al "hecho": primero lo íntimo, después la
@@ -689,12 +708,13 @@ export default function Today() {
                   tomorrow, but it stays visually separate from private prayer. */}
                   <DaySection label={t("intercession.whoPrayed")}>
                     {prayedForMeFailed ? (
-                      <Text
-                        className="font-sans text-base leading-6 text-mist-ink"
+                      <Txt
+                        variant="body"
+                        tone="secondary"
                         accessibilityRole="alert"
                       >
                         {t("common.errorBody")}
-                      </Text>
+                      </Txt>
                     ) : (
                       <WhoPrayed
                         people={prayedForMe ?? []}

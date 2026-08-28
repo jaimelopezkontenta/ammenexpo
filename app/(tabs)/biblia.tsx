@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { TabHeader } from "@/components/TabHeader";
 import { Card } from "@/components/Card";
@@ -25,6 +25,7 @@ import { bookName, type BibleBook } from "@/core/bible/navigation";
 import { useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 
 const openChapter = (bookId: number, chapter: number, verse?: number) =>
   router.push({
@@ -50,10 +51,10 @@ const BookRow = ({ book }: { book: BibleBook }) => {
         })
       }
     >
-      <Text className="font-sans text-base text-plum">{book.modern_name}</Text>
-      <Text className="font-sans text-sm text-mist-ink">
+      <Txt variant="body">{book.modern_name}</Txt>
+      <Txt variant="caption">
         {t("bible.chapters", { count: book.chapter_count })}
-      </Text>
+      </Txt>
     </Tap>
   );
 };
@@ -101,9 +102,9 @@ export default function Bible() {
       >
         {/* El título ya lo dice TabHeader; repetirlo aquí eran dos "Biblia"
           apiladas empujando el buscador hacia abajo. Queda la edición. */}
-        <Text className="font-sans text-base text-mist-ink">
+        <Txt variant="body" tone="secondary">
           {t("bible.subtitle")}
-        </Text>
+        </Txt>
 
         <TextField
           label={t("bible.searchLabel")}
@@ -124,11 +125,11 @@ export default function Bible() {
               de toda la app y se leía como de otra familia. El acento naranja
               legible ya dice "esto es un salto". */}
             <Glass flat readable className="rounded-card px-5 py-4 shadow-soft">
-              <Text className="font-sans-semibold text-base text-ember-ink">
+              <Txt variant="subheading" tone="accent">
                 {t("bible.goTo", {
                   reference: `${bookName(all, jump.book_id)} ${jump.chapter}`,
                 })}
-              </Text>
+              </Txt>
             </Glass>
           </Tap>
         ) : null}
@@ -140,9 +141,7 @@ export default function Bible() {
 
         {searching ? (
           tooShort ? (
-            <Text className="font-sans text-sm text-mist-ink">
-              {t("bible.searchHint")}
-            </Text>
+            <Txt variant="caption">{t("bible.searchHint")}</Txt>
           ) : isFetching && !results ? (
             <ActivityIndicator
               color={colors.plum.DEFAULT}
@@ -159,9 +158,9 @@ export default function Bible() {
             )
           ) : (
             <View className="gap-4">
-              <Text className="font-sans text-sm text-mist-ink">
+              <Txt variant="caption">
                 {t("bible.results", { count: results![0].total_count })}
-              </Text>
+              </Txt>
 
               {results!.map((hit) => (
                 <Tap
@@ -172,21 +171,22 @@ export default function Bible() {
                     openChapter(hit.book_id, hit.chapter, hit.verse)
                   }
                 >
-                  <Text className="font-editorial text-base text-ember-ink">
+                  <Txt variant="editorial" className="text-base">
                     {hit.book_name} {hit.chapter}:{hit.verse}
-                  </Text>
-                  <Text className="font-serif text-base leading-7 text-plum">
+                  </Txt>
+                  <Txt variant="bodySerifReading">
                     {splitHighlights(hit.text, query).map((part, index) => (
-                      <Text
+                      <Txt
                         key={index}
+                        variant="bodySerifReading"
                         className={
                           part.match ? "bg-ember-pale font-serif-bold" : ""
                         }
                       >
                         {part.text}
-                      </Text>
+                      </Txt>
                     ))}
-                  </Text>
+                  </Txt>
                 </Tap>
               ))}
             </View>
@@ -201,20 +201,20 @@ export default function Bible() {
                 }
               >
                 <Card label={t("bible.continueReading")}>
-                  <Text className="font-sans-semibold text-lg text-plum">
+                  <Txt variant="subheadingLg">
                     {bookName(all, resume.bookId)} {resume.chapter}
-                  </Text>
+                  </Txt>
                 </Card>
               </Tap>
             ) : null}
 
             {[false, true].map((testament) => (
               <View key={String(testament)} className="gap-1">
-                <Text className="font-editorial text-lg text-ember-ink">
+                <Txt variant="editorial">
                   {testament
                     ? t("bible.newTestament")
                     : t("bible.oldTestament")}
-                </Text>
+                </Txt>
                 {/* Los libros van sobre vidrio y no sueltos sobre el degradado:
                   son sesenta y seis filas seguidas, y sin una superficie
                   debajo la lista se lee como texto flotando. */}

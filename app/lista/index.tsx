@@ -1,7 +1,7 @@
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -91,9 +91,7 @@ export default function PrayerList() {
         hitSlop={8}
         className="min-h-11 min-w-11 items-center justify-center px-2"
       >
-        <Text className="font-sans-semibold text-base text-plum">
-          {t("common.back")}
-        </Text>
+        <Txt variant="subheading">{t("common.back")}</Txt>
       </Tap>
     ),
   };
@@ -153,12 +151,9 @@ export default function PrayerList() {
             </View>
 
             {error ? (
-              <Text
-                className="font-sans text-sm text-danger"
-                accessibilityRole="alert"
-              >
+              <Txt variant="caption" tone="danger" accessibilityRole="alert">
                 {error}
-              </Text>
+              </Txt>
             ) : null}
 
             {/* El temporizador es lo que convierte una lista en una práctica, así
@@ -189,9 +184,13 @@ export default function PrayerList() {
                       )
                     }
                   >
-                    <Text className="font-sans-semibold text-sm text-ember-ink">
+                    <Txt
+                      variant="label"
+                      tone="accent"
+                      className="font-sans-semibold"
+                    >
                       {t("list.markAnswered")}
-                    </Text>
+                    </Txt>
                   </Tap>
 
                   <Tap
@@ -207,11 +206,11 @@ export default function PrayerList() {
                       }
                     }}
                   >
-                    <Text
+                    <Txt
+                      variant="caption"
+                      tone={confirming === item.id ? "danger" : "secondary"}
                       className={
-                        confirming === item.id
-                          ? "font-sans-semibold text-sm text-danger"
-                          : "font-sans text-sm text-mist-ink"
+                        confirming === item.id ? "font-sans-semibold" : ""
                       }
                       accessibilityLiveRegion={
                         confirming === item.id ? "polite" : "none"
@@ -220,7 +219,7 @@ export default function PrayerList() {
                       {confirming === item.id
                         ? t("list.removeConfirm")
                         : t("list.remove")}
-                    </Text>
+                    </Txt>
                   </Tap>
                 </View>
               </Card>
@@ -228,9 +227,9 @@ export default function PrayerList() {
 
             {answered.length > 0 ? (
               <View className="gap-4 pt-4">
-                <Text className="font-sans-medium text-sm text-mist-ink">
+                <Txt variant="label" tone="secondary">
                   {t("list.answeredTitle")}
-                </Text>
+                </Txt>
 
                 {answered.map((item) => (
                   <Card key={item.id} flat className="gap-2">
@@ -254,9 +253,13 @@ export default function PrayerList() {
                           accessibilityRole="link"
                           className="min-h-11 justify-center"
                         >
-                          <Text className="font-sans-semibold text-sm text-ember-ink">
+                          <Txt
+                            variant="label"
+                            tone="accent"
+                            className="font-sans-semibold"
+                          >
                             {t("list.tellIt")}
-                          </Text>
+                          </Txt>
                         </Tap>
                       </Link>
 
@@ -272,9 +275,7 @@ export default function PrayerList() {
                           )
                         }
                       >
-                        <Text className="font-sans text-sm text-mist-ink">
-                          {t("list.undoAnswered")}
-                        </Text>
+                        <Txt variant="caption">{t("list.undoAnswered")}</Txt>
                       </Tap>
                     </View>
                   </Card>

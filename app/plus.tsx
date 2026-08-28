@@ -2,15 +2,10 @@ import { Stack } from "expo-router";
 import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -105,9 +100,9 @@ export default function Plus() {
             contentContainerStyle={{ paddingBottom: scrollBottom }}
             keyboardShouldPersistTaps="handled"
           >
-            <Text className="font-sans text-base leading-6 text-mist-ink">
+            <Txt variant="body" tone="secondary">
               {t("paywall.subtitle")}
-            </Text>
+            </Txt>
 
             {/* Free first, and it is the longer list. Everything that makes this a
             place to be with other people stays free; what costs money is asking
@@ -126,9 +121,9 @@ export default function Plus() {
                     strokeWidth={icon.strokeWidth}
                     style={styles.checkAlign}
                   />
-                  <Text className="flex-1 font-sans text-base leading-6 text-plum">
+                  <Txt variant="body" className="flex-1">
                     {t(key)}
-                  </Text>
+                  </Txt>
                 </View>
               ))}
             </Card>
@@ -141,39 +136,40 @@ export default function Plus() {
                   strokeWidth={icon.strokeWidth}
                   style={styles.checkAlign}
                 />
-                <Text className="flex-1 font-sans text-base leading-6 text-plum">
+                <Txt variant="body" className="flex-1">
                   {t("paywall.paidPlans")}
-                </Text>
+                </Txt>
               </View>
             </Card>
 
-            <Text
-              className="text-center font-sans text-base leading-6 text-mist-ink"
+            <Txt
+              variant="body"
+              tone="secondary"
+              className="text-center"
               accessibilityRole="alert"
             >
               {t("paywall.notYet")}
-            </Text>
+            </Txt>
 
             {/* La lista de espera es la única salida real de esta pantalla:
             recoger interés sin prometer un pago. */}
             <Card className="gap-4">
-              <Text className="font-sans-semibold text-base text-plum">
-                {t("paywall.waitlistTitle")}
-              </Text>
-              <Text className="font-sans text-base leading-6 text-mist-ink">
+              <Txt variant="subheading">{t("paywall.waitlistTitle")}</Txt>
+              <Txt variant="body" tone="secondary">
                 {t("paywall.waitlistBody")}
-              </Text>
+              </Txt>
 
               {entryLoading ? (
                 <ActivityIndicator color={colors.plum.DEFAULT} />
               ) : entryError ? (
                 <View className="gap-3">
-                  <Text
-                    className="font-sans text-sm text-danger"
+                  <Txt
+                    variant="caption"
+                    tone="danger"
                     accessibilityRole="alert"
                   >
                     {t("common.errorBody")}
-                  </Text>
+                  </Txt>
                   <Button
                     title={t("common.retry")}
                     variant="secondary"
@@ -181,19 +177,13 @@ export default function Plus() {
                   />
                 </View>
               ) : justJoined ? (
-                <Text
-                  className="font-sans text-base text-plum"
-                  accessibilityRole="alert"
-                >
+                <Txt variant="body" accessibilityRole="alert">
                   {t("paywall.waitlistDone")}
-                </Text>
+                </Txt>
               ) : entry ? (
-                <Text
-                  className="font-sans text-base text-plum"
-                  accessibilityRole="alert"
-                >
+                <Txt variant="body" accessibilityRole="alert">
                   {t("paywall.waitlistAlready")}
-                </Text>
+                </Txt>
               ) : (
                 <View className="gap-4">
                   <TextField
@@ -220,12 +210,13 @@ export default function Plus() {
                   />
 
                   {error ? (
-                    <Text
-                      className="font-sans text-sm text-danger"
+                    <Txt
+                      variant="caption"
+                      tone="danger"
                       accessibilityRole="alert"
                     >
                       {error}
-                    </Text>
+                    </Txt>
                   ) : null}
 
                   <Button

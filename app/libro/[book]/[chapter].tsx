@@ -1,10 +1,11 @@
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, TextInput, View } from "react-native";
 
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { ReaderToolbar } from "@/components/ReaderToolbar";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Glass } from "@/components/Glass";
@@ -286,21 +287,30 @@ export default function ChapterReader() {
                               : undefined
                           }
                         >
-                          <Text className="pt-1 font-sans-semibold text-xs text-mist-ink">
+                          <Txt
+                            variant="subheading"
+                            tone="secondary"
+                            className="pt-1 text-xs"
+                          >
                             {row.verse}
-                          </Text>
-                          <Text className={`flex-1 ${FONT_CLASSES[fontStep]}`}>
+                          </Txt>
+                          {/* La tipografía del versículo la manda el paso
+                              A−/A+ del lector, encima de la variante. */}
+                          <Txt
+                            variant="reading"
+                            className={`flex-1 ${FONT_CLASSES[fontStep]}`}
+                          >
                             {row.text}
-                          </Text>
+                          </Txt>
                         </Tap>
 
                         {/* La nota se ve sin abrir nada: escribir algo al margen y que
                   luego haya que ir a buscarlo es la forma de no volver a
                   escribir ninguna. */}
                         {note && !isOpen ? (
-                          <Text className="px-2 font-sans text-sm leading-6 text-mist-ink">
+                          <Txt variant="caption" className="px-2">
                             {note}
-                          </Text>
+                          </Txt>
                         ) : null}
 
                         {isOpen ? (
@@ -316,11 +326,11 @@ export default function ChapterReader() {
                                 )
                               }
                             >
-                              <Text className="font-sans-medium text-sm text-ember-ink">
+                              <Txt variant="label" tone="accent">
                                 {isHighlighted
                                   ? t("bible.unhighlight")
                                   : t("bible.highlight")}
-                              </Text>
+                              </Txt>
                             </Tap>
 
                             <TextInput
@@ -350,20 +360,23 @@ export default function ChapterReader() {
                               >
                                 {/* Guardar vacío borra la nota, y lo dice: un botón de
                           guardar que borra sin avisar es una trampa. */}
-                                <Text className="font-sans-semibold text-sm text-plum">
+                                <Txt
+                                  variant="label"
+                                  className="font-sans-semibold"
+                                >
                                   {!noteDraft.trim() && note
                                     ? t("bible.noteDelete")
                                     : t("common.save")}
-                                </Text>
+                                </Txt>
                               </Tap>
 
                               <Tap
                                 accessibilityRole="button"
                                 onPress={() => setOpenVerse(null)}
                               >
-                                <Text className="font-sans text-sm text-mist-ink underline">
+                                <Txt variant="caption" className="underline">
                                   {t("common.cancel")}
-                                </Text>
+                                </Txt>
                               </Tap>
                             </View>
 
@@ -383,19 +396,24 @@ export default function ChapterReader() {
                               asChild
                             >
                               <Tap accessibilityRole="link">
-                                <Text className="font-sans-medium text-sm text-ember-ink underline">
+                                <Txt
+                                  variant="label"
+                                  tone="accent"
+                                  className="underline"
+                                >
                                   {t("bible.shareVerse")}
-                                </Text>
+                                </Txt>
                               </Tap>
                             </Link>
 
                             {markError ? (
-                              <Text
-                                className="font-sans text-sm text-danger"
+                              <Txt
+                                variant="caption"
+                                tone="danger"
                                 accessibilityRole="alert"
                               >
                                 {markError}
-                              </Text>
+                              </Txt>
                             ) : null}
                           </View>
                         ) : null}
@@ -420,12 +438,9 @@ export default function ChapterReader() {
                       color={colors.plum.DEFAULT}
                       strokeWidth={icon.strokeWidth}
                     />
-                    <Text
-                      numberOfLines={1}
-                      className="shrink font-sans-medium text-sm text-plum"
-                    >
+                    <Txt variant="label" numberOfLines={1} className="shrink">
                       {chapterLabel(all, previous)}
-                    </Text>
+                    </Txt>
                   </Tap>
                 ) : (
                   <View />
@@ -437,12 +452,9 @@ export default function ChapterReader() {
                     onPress={() => go(following)}
                     className="min-h-11 max-w-[48%] flex-row items-center gap-1 rounded-cta border border-glassedge/60 bg-glass/60 py-2 pl-4 pr-2"
                   >
-                    <Text
-                      numberOfLines={1}
-                      className="shrink font-sans-medium text-sm text-plum"
-                    >
+                    <Txt variant="label" numberOfLines={1} className="shrink">
                       {chapterLabel(all, following)}
-                    </Text>
+                    </Txt>
                     <ChevronRight
                       size={icon.sm}
                       color={colors.plum.DEFAULT}
@@ -472,9 +484,7 @@ export default function ChapterReader() {
                           : "border-glassedge/60 bg-glass/60"
                       }`}
                     >
-                      <Text className="font-sans-medium text-sm text-plum">
-                        {n}
-                      </Text>
+                      <Txt variant="label">{n}</Txt>
                     </Tap>
                   ),
                 )}

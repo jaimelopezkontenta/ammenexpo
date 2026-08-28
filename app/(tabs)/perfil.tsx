@@ -2,9 +2,10 @@ import * as Localization from "expo-localization";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, ScrollView, Text, View } from "react-native";
+import { Platform, ScrollView, View } from "react-native";
 
 import { TabHeader } from "@/components/TabHeader";
+import { Txt } from "@/components/ui/Text";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -190,13 +191,9 @@ export default function Profile() {
                 />
 
                 <View className="min-w-0 flex-1 gap-1">
-                  <Text className="font-sans-bold text-2xl text-plum">
-                    {profile.display_name}
-                  </Text>
+                  <Txt variant="headingLg">{profile.display_name}</Txt>
                   {session?.user.email ? (
-                    <Text className="font-sans text-sm text-mist-ink">
-                      {session.user.email}
-                    </Text>
+                    <Txt variant="caption">{session.user.email}</Txt>
                   ) : null}
 
                   <View className="flex-row flex-wrap gap-4 pt-1">
@@ -208,11 +205,11 @@ export default function Profile() {
                       // debajo de los 44px mínimos.
                       hitSlop={12}
                     >
-                      <Text className="font-sans text-sm text-mist-ink underline">
+                      <Txt variant="caption" className="underline">
                         {profile.avatar_url
                           ? t("profile.changePhoto")
                           : t("profile.addPhoto")}
-                      </Text>
+                      </Txt>
                     </Tap>
 
                     {profile.avatar_url ? (
@@ -222,9 +219,9 @@ export default function Profile() {
                         onPress={() => void handleRemovePhoto()}
                         hitSlop={12}
                       >
-                        <Text className="font-sans text-sm text-mist-ink underline">
+                        <Txt variant="caption" className="underline">
                           {t("profile.removePhoto")}
-                        </Text>
+                        </Txt>
                       </Tap>
                     ) : null}
                   </View>
@@ -257,9 +254,9 @@ export default function Profile() {
                 className="gap-6 md:min-w-0 md:flex-1"
               >
                 <View className="gap-3">
-                  <Text className="font-sans-medium text-sm text-mist-ink">
+                  <Txt variant="label" tone="secondary">
                     {t("profile.reminder")}
-                  </Text>
+                  </Txt>
                   <ChoiceChips
                     options={REMINDER_HOURS.map((slot) => ({
                       value: String(slot.hour),
@@ -282,29 +279,25 @@ export default function Profile() {
                   locales diarias al guardar (ver localReminders.ts); en web no
                   se puede programar nada, y el copy lo dice sin fingir que va
                   a sonar. */}
-                  <Text className="font-sans text-sm leading-5 text-mist-ink">
+                  <Txt variant="caption">
                     {Platform.OS === "web"
                       ? t("profile.reminderHintWeb")
                       : t("profile.reminderHintNative")}
-                  </Text>
+                  </Txt>
                 </View>
 
                 <View className="gap-2">
-                  <Text className="font-sans-medium text-sm text-mist-ink">
+                  <Txt variant="label" tone="secondary">
                     {t("profile.timezone")}
-                  </Text>
-                  <Text className="font-sans text-base text-plum">
-                    {profile.timezone}
-                  </Text>
-                  <Text className="font-sans text-sm text-mist-ink">
-                    {t("profile.timezoneHint")}
-                  </Text>
+                  </Txt>
+                  <Txt variant="body">{profile.timezone}</Txt>
+                  <Txt variant="caption">{t("profile.timezoneHint")}</Txt>
 
                   {zoneMoved ? (
                     <View className="gap-2 pt-1">
-                      <Text className="font-sans text-sm text-mist-ink">
+                      <Txt variant="caption">
                         {t("profile.timezoneMoved", { zone: deviceZone })}
-                      </Text>
+                      </Txt>
                       <Button
                         title={t("profile.timezoneUpdate", {
                           zone: deviceZone,
@@ -369,13 +362,15 @@ export default function Profile() {
                   />
 
                   {confirmingDelete ? (
-                    <Text
-                      className="text-center font-sans text-sm text-danger"
+                    <Txt
+                      variant="caption"
+                      tone="danger"
+                      className="text-center"
                       accessibilityRole="alert"
                       accessibilityLiveRegion="polite"
                     >
                       {t("profile.deleteWarning")}
-                    </Text>
+                    </Txt>
                   ) : null}
 
                   <Button
