@@ -1,21 +1,31 @@
-import { colors } from "./tokens";
+import { useColorScheme } from "nativewind";
+
+import { colors, colorsDark } from "./tokens";
 
 /**
  * La paleta activa, para lo que NO pasa por NativeWind: iconos de Lucide,
  * `ActivityIndicator`, `placeholderTextColor`, las opciones de
  * react-navigation y los degradados nativos.
  *
- * **El anochecer está apagado a propósito** (decisión de producto: solo tema
- * claro), así que hoy esto devuelve siempre la paleta clara. La capa oscura
- * quedó lista y medida (`colorsDark`, `theme/contrast.test.ts`): encenderla
- * es devolver aquí la paleta según `useColorScheme()` de nativewind, más los
- * otros dos interruptores que documenta `app.config.js`.
+ * **El anochecer está ENCENDIDO** (2026-08-28, decisión de Jaime) y sigue al
+ * sistema: `useColorScheme()` de nativewind — la MISMA fuente que voltea las
+ * variables CSS de las clases, para que la rama JS y la rama CSS no puedan
+ * discrepar. No hay toggle de usuario en v1; si llega, va por
+ * `colorScheme.set()` de nativewind, no por otra vía. Los otros interruptores
+ * viven en `tailwind.config.js` (variables oscuras) y `app.config.js`
+ * (`userInterfaceStyle: "automatic"`).
  *
  * El contrato de adopción se mantiene: cada componente declara
- * `const colors = useThemeColors()` con el mismo nombre que el import
- * estático, y ningún sitio de uso cambia cuando el tema llegue de verdad.
+ * `const colors = useThemeColors()` — los ~30 sitios de uso encendieron a la
+ * vez el día que este hook dejó de devolver la paleta clara fija.
  */
-export const useThemeColors = () => colors;
+export const useThemeColors = () => {
+  const { colorScheme } = useColorScheme();
+  return colorScheme === "dark" ? colorsDark : colors;
+};
 
-/** `true` en el anochecer — hoy nunca, porque el anochecer está apagado. */
-export const useIsDark = () => false;
+/** `true` en el anochecer: los degradados con gemelo y el tint del vidrio. */
+export const useIsDark = () => {
+  const { colorScheme } = useColorScheme();
+  return colorScheme === "dark";
+};

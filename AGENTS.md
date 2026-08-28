@@ -23,6 +23,16 @@ Reglas duras para no romper el sistema de `prototipo/TOKENS.md`. Si un cambio la
 - Un overlay (sheet, menú) tiene **un** control «Cerrar» anunciado. El scrim no es un segundo botón.
 - Navegar desde un sheet **después** de que el Modal se haya cerrado (`onClosed`), no en el mismo tap.
 
+## El anochecer (modo oscuro)
+
+Encendido con Amanecer 4.0 (2026-08-28). **La fuente de verdad es el sistema** — no hay toggle de usuario; si algún día llega, va por `colorScheme.set()` de nativewind y por ningún otro sitio.
+
+- **Qué voltea solo:** toda clase de token (`text-plum`, `bg-glass/60`, …) vía las variables CSS de `tailwind.config.js`; la rama JS (iconos, placeholders, opciones de navegación) vía `useThemeColors()`; los degradados con gemelo (`dawnDark`, `dayActionDark`) vía `useIsDark()`.
+- **Marca fija, a propósito:** el Orb, el Avatar, `VerseCard`/`VerseStory`, `gradients.cta` y `gradients.story`, `cta-ink` y el splash no cambian de tema. El melocotón es la marca.
+- **Invariante:** el `scrim` deriva de `scrimBase` (plum tinta) en los DOS temas — en oscuro `plum` es casi blanco y un velo derivado de la paleta activa iluminaría en vez de atenuar.
+- **Reglas para código nuevo:** nada de `colors` importado estático en componentes (siempre `useThemeColors()`); un degradado nuevo trae gemelo oscuro o un comentario «marca» que explique por qué no; una pantalla nueva entra en la baseline clara (`@visual`) y también en la oscura (`@dark`, `e2e/visual-dark.spec.ts`) si estrena un primitivo ciego al volteo CSS (vidrio, scrim, gradiente JS, blur). Ojo: el tag es `@dark`, nunca `@visual-dark` — `/@visual/` lo matchearía por substring.
+- **Limitaciones aceptadas (v1):** en web, el body llega oscuro desde el primer byte (`app/+html.tsx`) pero los degradados JS hidratan después — hay un parpadeo menor en el arranque. Y si el scheme del sistema cambia con la pestaña oculta, la rama JS queda desfasada hasta volver a primer plano con otro cambio o recargar (css-interop descarta eventos con `AppState !== "active"`).
+
 ## Fuera de este contrato
 
-- El modo oscuro es decisión de roadmap, no un parche local. (Las tabs sociales ya se unificaron en «Juntos» con Amanecer 3.0.)
+- (Las tabs sociales ya se unificaron en «Juntos» con Amanecer 3.0; el modo oscuro llegó con Amanecer 4.0.)

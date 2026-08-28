@@ -6,7 +6,7 @@ import { Orb } from "@/components/Orb";
 import { Txt } from "@/components/ui/Text";
 import { Wordmark } from "@/components/Wordmark";
 
-import { gradients } from "@/theme";
+import { colors, gradients } from "@/theme";
 
 /**
  * El versículo en vertical, para un estado de WhatsApp o una historia.
@@ -53,17 +53,27 @@ export const VerseStory = forwardRef<
       >
         <View style={{ flex: 1, justifyContent: "center", gap: height * 0.03 }}>
           {/* Como en VerseCard: el estilo inline manda sobre la escala de la
-              variante, que solo aporta familia y tinta. */}
+              variante, que solo aporta familia y tinta — y la tinta va FIJA
+              (paleta clara), porque el durazno de esta historia es marca y no
+              cambia con el tema del teléfono de quien la manda. */}
           <Txt
             variant="bodySerif"
-            style={{ fontSize, lineHeight: fontSize * 1.45 }}
+            style={{
+              fontSize,
+              lineHeight: fontSize * 1.45,
+              color: colors.plum.DEFAULT,
+            }}
           >
             {text}
           </Txt>
 
           <Txt
             variant="editorial"
-            style={{ fontSize: 40 * scale, lineHeight: 40 * scale * 1.25 }}
+            style={{
+              fontSize: 40 * scale,
+              lineHeight: 40 * scale * 1.25,
+              color: colors.ember.ink,
+            }}
           >
             {reference}
           </Txt>
@@ -73,10 +83,14 @@ export const VerseStory = forwardRef<
           {/* Quieto: esto se captura como una imagen, y una animación en el
               fotograma que se guarda solo puede salir a medias. */}
           <Orb size={width * 0.13} animated={false} />
-          <Wordmark size={34 * scale} />
+          <Wordmark size={34 * scale} brand />
           <Txt
             variant="caption"
-            style={{ fontSize: 22 * scale, lineHeight: 22 * scale * 1.25 }}
+            style={{
+              fontSize: 22 * scale,
+              lineHeight: 22 * scale * 1.25,
+              color: colors.mist.ink,
+            }}
           >
             ammen.app · Reina-Valera 1909
           </Txt>

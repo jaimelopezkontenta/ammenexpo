@@ -1,8 +1,10 @@
 # Amanecer 4.0 — Propuestas tras la adopción total de Txt
 
-**Estado: PROPUESTA — 2026-08-28. Nada de este documento se ejecuta sin OK de
-Jaime.** Convención del 3.0: bloque de progreso arriba; cada cierre se anota
-aquí el mismo día.
+**Estado: EJECUTADO — aprobado y cerrado por Jaime el 2026-08-28, con tres
+decisiones nuevas: el modo oscuro ENTRA (D-6 deja de estar vetado), D-2 va
+completo (escalonado + familias), y al cerrar hay deploy a staging.**
+Convención del 3.0: bloque de progreso arriba; cada cierre se anota aquí el
+mismo día.
 
 > **Progreso** (2026-08-28):
 > - ✅ Prerrequisitos cerrados hoy, antes de este documento: push del 3.0 con
@@ -11,7 +13,30 @@ aquí el mismo día.
 >   4 variantes nuevas (`headingLg`, `subheadingLg`, `bodyMedium`, `overline`),
 >   AGENTS.md endurecido y `theme/txt-adoption.test.ts` como ban permanente.
 >   Commits `4a1b991`…`1357389`, pusheados.
-> - ⬜ Todo lo de abajo espera decisión.
+> - ✅ **F1 — Harness (H-2, H-3, H-1)**: suite visual determinista (reloj
+>   fijo a las 10:00 + versículo mockeado + `colorScheme` explícito por
+>   proyecto), `npm run doctor`, y `npm run e2e:static` como árbitro local
+>   idéntico a CI (18/18 en 1,4 min). Commits `d557be5` + `b1c5e47`.
+> - ✅ **F2 — Afinado S (C-1, D-1, D-4)**: seed con claves canónicas +
+>   cinturón `sanitizeOnboardingAnswers` con test; orbe en `/aceptar`; horas
+>   cortas en los chips de horario. Commit `4616a2a`.
+> - ✅ **F3 — Diseño M (D-5, D-2, D-3)**: cabecera ancha de Hoy en
+>   escritorio; onboarding por familias (`SEASON_GROUPS`/`TOPIC_GROUPS` con
+>   guard de partición) con entrada escalonada; asomos «Mientras tanto» en
+>   Juntos con salto de segmento. Commit `e1ca8e7`.
+> - ✅ **F4 — El anochecer (D-6)**: modo oscuro ENCENDIDO siguiendo al
+>   sistema. Variables oscuras en el `addBase` de tailwind.config;
+>   `useThemeColors`/`useIsDark` reales sobre `useColorScheme` de nativewind;
+>   `userInterfaceStyle: "automatic"`; body y `theme-color` oscuros desde el
+>   primer byte en web; `StatusBar auto` + `expo-system-ui` keyed por tema;
+>   anillo del orbe a 0.18 en oscuro; `scrim` re-derivado de `scrimBase`
+>   (invariante — en oscuro `plum` es casi blanco y velaría iluminando); tinta
+>   de `VerseCard`/`VerseStory`/`Wordmark brand` clavada a la marca clara (con
+>   las clases volteando salía tinta clara sobre papel crema). Red `@dark`
+>   nueva: `e2e/visual-dark.spec.ts`, 11 baselines del subset ciego al volteo
+>   CSS. QA manual en navegador con emulación (scrim, vidrio, gemelos JS,
+>   lector, chat, cambio en caliente). Contrato en AGENTS.md («El anochecer»),
+>   con las dos limitaciones aceptadas v1 documentadas.
 
 ## Cómo se auditó
 
@@ -45,7 +70,7 @@ consola limpia, y los hallazgos recogidos durante las 5 olas.
 | D-3 | **Juntos con aire muerto.** El segmento Círculos deja media pantalla vacía con un solo círculo. Asomar lo vivo de los otros segmentos: últimas peticiones, última historia de Comunidad, badge en los segmentos | Captura `circulos-movil` | M |
 | D-4 | **Perfil: columna de horarios.** Los 5 chips de momento de oración caen uno por línea; en flujo compacto (2 por fila) la tarjeta respira | Captura `perfil-movil` | S |
 | D-5 | **Hoy escritorio: cabecera flotante.** El título centrado arriba queda desconectado del contenido a la izquierda, y el `···` flota solo. Alinear cabecera con la columna de lectura y anclar el `···` a la fila del día | Captura `hoy-escritorio` | S/M |
-| D-6 | **Modo oscuro: ya es barato.** La justificación de `Txt` era esta: hoy TODA la tinta de la app pasa por una tabla (`VARIANT`/`TONE`), `theme/tokens.ts` ya exporta `colorsDark` y `contrast.test.ts` lo mide en AA. Encenderlo es cambiar una tabla + QA visual, no tocar 60 pantallas. **Sigue vetado por decisión de producto: esta fila solo deja constancia de que el precio bajó** | Habilitado por la campaña de hoy | L (decisión) |
+| D-6 | **Modo oscuro: ya es barato.** La justificación de `Txt` era esta: hoy TODA la tinta de la app pasa por una tabla (`VARIANT`/`TONE`), `theme/tokens.ts` ya exporta `colorsDark` y `contrast.test.ts` lo mide en AA. Encenderlo es cambiar una tabla + QA visual, no tocar 60 pantallas. ~~Sigue vetado~~ **Jaime levantó el veto el 2026-08-28 y el anochecer quedó encendido ese mismo día (ver F4 arriba y «El anochecer» en AGENTS.md)** | Habilitado por la campaña de hoy | L (decisión) |
 
 ## Orden recomendado (si todo recibe OK)
 

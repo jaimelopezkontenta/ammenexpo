@@ -75,12 +75,12 @@ module.exports = ({ config }) => {
     },
     orientation: "portrait",
     icon: "./assets/icon.png",
-    // Solo clara, a propósito. El anochecer existe como capa preparada
-    // (colorsDark en theme/tokens.js, medida y congelada en
-    // theme/contrast.test.ts) pero está apagado: activar es "automatic" aquí
-    // + reencender useThemeColors/useIsDark y el bloque dark del plugin de
-    // tailwind.config.
-    userInterfaceStyle: "light",
+    // El anochecer sigue al sistema (encendido 2026-08-28; la paleta oscura
+    // vive en colorsDark, medida y congelada en theme/contrast.test.ts). Los
+    // otros dos interruptores: el bloque dark del plugin de tailwind.config y
+    // useThemeColors/useIsDark. En nativo este valor exige build nueva; web y
+    // Expo Go lo aplican ya.
+    userInterfaceStyle: "automatic",
     assetBundlePatterns: ["**/*"],
     ios: {
       supportsTablet: true,

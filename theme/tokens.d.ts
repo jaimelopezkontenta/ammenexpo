@@ -22,6 +22,13 @@ export interface Palette {
 export declare const colors: Palette;
 export declare const colorsDark: Palette;
 
+/**
+ * La base del velo de hojas/menús: plum tinta, el MISMO en los dos temas —
+ * en oscuro `plum` es casi blanco y un velo derivado de la paleta activa
+ * iluminaría en vez de atenuar.
+ */
+export declare const scrimBase: string;
+
 export declare const borderRadius: {
   card: number;
   input: number;

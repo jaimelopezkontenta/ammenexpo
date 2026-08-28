@@ -52,10 +52,18 @@ export const VerseCard = forwardRef<
     >
       <View className="flex-1 justify-center">
         {/* Aquí todo se mide en fracciones de `size`: el estilo inline manda
-            sobre la escala de cada variante, que solo aporta familia y tinta. */}
+            sobre la escala de cada variante, que solo aporta familia y tinta.
+            La tinta también va inline y FIJA (paleta clara): esta imagen es
+            marca — su papel crema no cambia con el tema, así que su tinta
+            tampoco puede; con las clases volteando, en el anochecer saldría
+            tinta clara sobre papel claro. */}
         <Txt
           variant="bodySerif"
-          style={{ fontSize, lineHeight: fontSize * 1.45 }}
+          style={{
+            fontSize,
+            lineHeight: fontSize * 1.45,
+            color: colors.plum.DEFAULT,
+          }}
         >
           {text}
         </Txt>
@@ -65,7 +73,11 @@ export const VerseCard = forwardRef<
         <Txt
           variant="title"
           tone="accent"
-          style={{ fontSize: 30 * scale, lineHeight: 30 * scale * 1.25 }}
+          style={{
+            fontSize: 30 * scale,
+            lineHeight: 30 * scale * 1.25,
+            color: colors.ember.ink,
+          }}
         >
           {reference}
         </Txt>
@@ -78,7 +90,11 @@ export const VerseCard = forwardRef<
             tiene el producto y no llevaba destino. */}
         <Txt
           variant="caption"
-          style={{ fontSize: 24 * scale, lineHeight: 24 * scale * 1.25 }}
+          style={{
+            fontSize: 24 * scale,
+            lineHeight: 24 * scale * 1.25,
+            color: colors.mist.ink,
+          }}
         >
           ammen.app · Reina-Valera 1909
         </Txt>

@@ -88,6 +88,15 @@ const colors = {
 };
 
 /**
+ * La base del velo de hojas y menús: plum TINTA, y el MISMO en los dos temas
+ * a propósito. En el anochecer `plum` invierte a casi blanco — derivar el
+ * scrim de la paleta activa lo convertiría en un velo blanco que ilumina en
+ * vez de atenuar. Por eso no vive dentro de `colors`/`colorsDark` ni pasa por
+ * las variables CSS: es una constante de marca, como `cta-ink`.
+ */
+const scrimBase = "#413653";
+
+/**
  * El anochecer: la misma estructura, remedida para fondos oscuros.
  *
  * Contrastes medidos (scripts en el historial de trabajo; el test que los
@@ -210,6 +219,7 @@ const tailwindColors = toTailwind(colors);
 module.exports = {
   colors,
   colorsDark,
+  scrimBase,
   borderRadius,
   boxShadow,
   icon,

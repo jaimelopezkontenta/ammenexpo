@@ -1,4 +1,5 @@
 import { Txt } from "@/components/ui/Text";
+import { colors } from "@/theme";
 
 /**
  * El nombre, en la itálica editorial.
@@ -11,9 +12,16 @@ import { Txt } from "@/components/ui/Text";
 export const Wordmark = ({
   size = 26,
   onDark = false,
+  brand = false,
 }: {
   size?: number;
   onDark?: boolean;
+  /**
+   * Tinta fija de marca (plum de la paleta clara), para superficies que no
+   * cambian de tema — la imagen 9:16 que se comparte. Sin esto, la firma
+   * seguiría el anochecer y saldría clara sobre el durazno claro.
+   */
+  brand?: boolean;
 }) => (
   <Txt
     variant="editorial"
@@ -21,7 +29,11 @@ export const Wordmark = ({
     accessibilityRole="text"
     // El tamaño es del caller (logo grande en la puerta, firma pequeña al
     // pie); el estilo inline gana a la escala de la variante.
-    style={{ fontSize: size, lineHeight: size * 1.25 }}
+    style={{
+      fontSize: size,
+      lineHeight: size * 1.25,
+      ...(brand ? { color: colors.plum.DEFAULT } : null),
+    }}
     className={onDark ? "text-white/90" : ""}
   >
     ammen

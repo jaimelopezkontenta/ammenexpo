@@ -1,6 +1,6 @@
 import { ScrollViewStyleReset } from "expo-router/html";
 
-import { colors } from "@/theme";
+import { colors, colorsDark } from "@/theme";
 import { fallbackLng } from "@/translation";
 
 /**
@@ -94,7 +94,21 @@ export default function Root({ children }: { children: React.ReactNode }) {
         {IS_STAGING ? (
           <meta name="robots" content="noindex,nofollow,noarchive" />
         ) : null}
-        <meta name="theme-color" content={colors.dawn.sky} />
+        {/*
+          El marco del navegador sigue al sistema, como la app: dos metas con
+          `media` en vez de una fija — la araña que no entiende `media` se
+          queda con la primera (clara), que es el caso seguro.
+        */}
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: light)"
+          content={colors.dawn.sky}
+        />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: dark)"
+          content={colorsDark.dawn.sky}
+        />
         <title>{SOCIAL_TITLE}</title>
 
         <ScrollViewStyleReset />
@@ -113,10 +127,17 @@ export default function Root({ children }: { children: React.ReactNode }) {
 // —o en crema, que es el centro y no el borde— dejaba una costura alrededor de
 // una app que ya no es ni lo uno ni lo otro.
 //
-// Sin rama de modo oscuro: la app es solo clara a propósito (el anochecer
-// existe como capa preparada, pero apagada — ver app.config.js). Pintar el
-// body oscuro con la app clara encima sería una costura, no un tema.
+// La rama oscura es CSS puro a propósito: llega en los primeros bytes, así
+// que con el sistema en oscuro el body es violeta desde el primer frame — sin
+// fogonazo claro durante la carga. (Los degradados JS, DawnBackground y
+// compañía, sí hidratan después; ese parpadeo menor es la limitación aceptada
+// del anochecer web v1 — ver AGENTS.md.)
 const responsiveBackground = `
 body {
   background-color: ${colors.dawn.sky};
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: ${colorsDark.dawn.sky};
+  }
 }`;

@@ -68,14 +68,17 @@ module.exports = {
     },
   },
   plugins: [
-    // La paleta como variables en `:root`. El anochecer está APAGADO a
-    // propósito (decisión de producto: solo tema claro): para encenderlo,
-    // añadir aquí `"@media (prefers-color-scheme: dark)": { ":root":
-    // tokens.cssVars.dark }`, junto con los otros dos interruptores que
-    // documenta app.config.js.
+    // La paleta como variables en `:root`, y el anochecer ENCENDIDO
+    // (2026-08-28, decisión de Jaime): con el sistema en oscuro, las ~65
+    // clases de token de toda la app voltean solas por CSS, sin JS. Los otros
+    // dos interruptores viven en app.config.js (`userInterfaceStyle`) y en
+    // `theme/useThemeColors.ts` (la rama JS: gradientes, iconos, blur).
     plugin(({ addBase }) => {
       addBase({
         ":root": tokens.cssVars.light,
+        "@media (prefers-color-scheme: dark)": {
+          ":root": tokens.cssVars.dark,
+        },
       });
     }),
   ],

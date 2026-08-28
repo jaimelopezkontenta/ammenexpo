@@ -1,4 +1,4 @@
-import { colors, colorsDark } from "./tokens";
+import { colors, colorsDark, scrimBase } from "./tokens";
 
 /**
  * Los degradados del sistema, derivados de los tokens.
@@ -21,8 +21,14 @@ export const withAlpha = (hex: string, alpha: number) => {
  * detrás de todo en el sistema, y un negro puro apagaría el amanecer en vez
  * de bajarlo. Un solo valor — había dos (0,28 y 0,38) y el mismo gesto se veía
  * distinto según qué overlay lo abriera.
+ *
+ * Derivado de `scrimBase` (invariante al tema) y no de la paleta activa: en
+ * el anochecer `plum` es casi blanco y el velo iluminaría. Por ser constante
+ * puede seguir evaluándose a nivel de módulo (PlanOptionsSheet y ActionMenu
+ * lo consumen dentro de StyleSheet.create); si algún día se vuelve temático,
+ * hay que moverlo a un hook y sacar a esos dos de StyleSheet.
  */
-export const scrim = withAlpha(colors.plum.DEFAULT, 0.35);
+export const scrim = withAlpha(scrimBase, 0.35);
 
 export const gradients = {
   /** El melocotón del CTA y del progreso del wizard, de izquierda a derecha. */

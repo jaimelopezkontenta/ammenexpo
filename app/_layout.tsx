@@ -7,6 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import * as SystemUI from "expo-system-ui";
 import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -88,6 +90,14 @@ export default function RootLayout() {
     }
   }, [ready]);
 
+  // La root view nativa (lo que asoma en Android al abrir el teclado o
+  // durante una transición) acompaña al tema: sin esto se queda blanca y
+  // parpadea claro dentro del anochecer. Keyed por la paleta activa — cambia
+  // de scheme en caliente y esto la repinta.
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(colors.dawn.sky);
+  }, [colors.dawn.sky]);
+
   if (!ready) {
     return null;
   }
@@ -96,6 +106,10 @@ export default function RootLayout() {
     // La raíz de los gestos (swipe para cerrar una hoja, y los que vengan):
     // sin este View por encima, ningún `GestureDetector` de la app funciona.
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* "auto" sigue al tema: tinta oscura sobre el cielo claro, clara sobre
+          el anochecer. Antes no se declaraba y valía de chiripa (el default
+          era el correcto para solo-claro). */}
+      <StatusBar style="auto" />
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
           <SessionProvider>
