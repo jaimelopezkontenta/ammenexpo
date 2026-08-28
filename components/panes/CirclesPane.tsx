@@ -15,6 +15,8 @@ import {
   useUnreadCounts,
   type CircleVisibility,
 } from "@/core/circles/queries";
+import { usePrayerFeed } from "@/core/posts/queries";
+import { useHomeFeed } from "@/core/social/feed";
 
 import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -25,7 +27,16 @@ import { Txt } from "@/components/ui/Text";
  * Los círculos — el contenido del segmento, con su alta inline y su scroll.
  * La pantalla alrededor (TabHeader, fondo, segmentos) la pone la tab Juntos.
  */
-export const CirclesPane = () => {
+export const CirclesPane = ({
+  onGoToSegment,
+}: {
+  /**
+   * Dentro de la tab Juntos, los asomos del final saltan al segmento vecino.
+   * Sin el callback (si el pane volviera a montarse suelto), el bloque
+   * entero no se pinta.
+   */
+  onGoToSegment?: (segment: "community" | "requests") => void;
+}) => {
   const { t } = useTranslation();
   const { session } = useSession();
   const userId = session?.user.id;
@@ -33,6 +44,16 @@ export const CirclesPane = () => {
   const { data: circles, isLoading, isError, refetch } = useMyCircles(userId);
   const createCircle = useCreateCircle(userId);
   const { data: unread } = useUnreadCounts(userId);
+
+  // Los asomos comparten queryKey con los panes vecinos: montarlas aquí es
+  // adelantar la caché, no pagar dos veces — al cambiar de segmento, el pane
+  // de destino pinta al instante.
+  const requestsPeek = usePrayerFeed();
+  const communityPeek = useHomeFeed();
+  const latestRequest = requestsPeek.data?.[0];
+  const latestStory = communityPeek.data?.find(
+    (entry) => entry.kind !== "request",
+  );
 
   const [isCreating, setIsCreating] = useState(false);
   const [name, setName] = useState("");
@@ -78,7 +99,7 @@ export const CirclesPane = () => {
     return (
       <KeyboardScreen>
         <ScrollView
-          contentContainerClassName="gap-6 px-7 py-10 md:w-full md:max-w-read md:self-center"
+          contentContainerClassName="gap-6 px-7 py-10 md:w-full md:max-w-read md:self-center md:px-10"
           keyboardShouldPersistTaps="handled"
         >
           <Txt variant="headingLg">{t("circles.createTitle")}</Txt>
@@ -145,7 +166,9 @@ export const CirclesPane = () => {
   }
 
   return (
-    <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-6 md:w-full md:max-w-read md:self-center">
+    // `md:px-10` como el TabHeader y la fila de segmentos: sin él, el
+    // contenido de Juntos quedaba 12 px desalineado de su propia cabecera.
+    <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-6 md:w-full md:max-w-read md:self-center md:px-10">
       {/* El título ya lo dice TabHeader; dos "Círculos" apilados no eran
           jerarquía sino eco. Queda la línea que explica qué es esto. */}
       <Txt variant="body" tone="secondary">
@@ -190,6 +213,63 @@ export const CirclesPane = () => {
       ) : (
         <EmptyState title={t("circles.empty")} body={t("circles.emptyBody")} />
       )}
+
+      {/* Lo vivo de los otros segmentos, asomado: con un círculo o ninguno,
+          media pantalla quedaba muerta — y lo que pasa en Comunidad y en el
+          muro es exactamente lo que esta tab promete juntar. */}
+      {onGoToSegment && (latestRequest || latestStory) ? (
+        <View className="gap-2 pt-4">
+          <Txt variant="overline">{t("together.meanwhile")}</Txt>
+
+          {latestRequest ? (
+            <ListRow
+              accessibilityRole="button"
+              onPress={() => onGoToSegment("requests")}
+              leading={
+                <Avatar
+                  name={
+                    latestRequest.is_anonymous
+                      ? t("feed.anonymousName")
+                      : (latestRequest.author_name ?? "")
+                  }
+                  url={
+                    latestRequest.is_anonymous
+                      ? null
+                      : latestRequest.author_avatar_url
+                  }
+                  seed={
+                    latestRequest.is_anonymous
+                      ? latestRequest.id
+                      : (latestRequest.author_id ?? "")
+                  }
+                  size={40}
+                />
+              }
+              title={latestRequest.body}
+              titleLines={1}
+              meta={t("feed.title")}
+            />
+          ) : null}
+
+          {latestStory ? (
+            <ListRow
+              accessibilityRole="button"
+              onPress={() => onGoToSegment("community")}
+              leading={
+                <Avatar
+                  name={latestStory.author_name ?? ""}
+                  url={latestStory.author_avatar_url}
+                  seed={latestStory.author_id ?? latestStory.id}
+                  size={40}
+                />
+              }
+              title={latestStory.title ?? latestStory.body ?? ""}
+              titleLines={1}
+              meta={t("community.title")}
+            />
+          ) : null}
+        </View>
+      ) : null}
     </ScrollView>
   );
 };

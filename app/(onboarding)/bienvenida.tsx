@@ -20,8 +20,10 @@ import {
   GENDER_KEYS,
   REMINDER_HOURS,
   REMINDER_MAX,
+  SEASON_GROUPS,
   SEASON_KEYS,
   SEASON_MAX,
+  TOPIC_GROUPS,
   TOPIC_KEYS,
   toggleWithLimit,
 } from "@/core/onboarding/options";
@@ -224,6 +226,12 @@ export default function Onboarding() {
                   }
                   max={SEASON_MAX}
                   multiple
+                  groups={SEASON_GROUPS.map((group) => ({
+                    key: group.key,
+                    label: t(`onboarding.seasonGroups.${group.key}`),
+                    values: group.keys,
+                  }))}
+                  stagger
                 />
                 {/* Said out loud, because a chip that stops responding with no
               explanation reads as a broken chip. */}
@@ -256,6 +264,12 @@ export default function Onboarding() {
                     setTopics((current) => toggleWithLimit(current, value))
                   }
                   multiple
+                  groups={TOPIC_GROUPS.map((group) => ({
+                    key: group.key,
+                    label: t(`onboarding.topicGroups.${group.key}`),
+                    values: group.keys,
+                  }))}
+                  stagger
                 />
 
                 {/* Folded in here rather than given a fifth step: it is the same

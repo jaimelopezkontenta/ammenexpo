@@ -49,7 +49,9 @@ export default function Together() {
       </View>
 
       {segment === "circles" ? (
-        <CirclesPane />
+        // Los asomos del final del segmento saltan al segmento de destino:
+        // misma pantalla, sin ruta de por medio.
+        <CirclesPane onGoToSegment={setSegment} />
       ) : segment === "community" ? (
         <CommunityPane />
       ) : (

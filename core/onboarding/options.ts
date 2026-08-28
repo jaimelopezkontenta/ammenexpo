@@ -60,6 +60,37 @@ export const TOPIC_KEYS = [
 
 export const GENDER_KEYS = ["feminine", "masculine", "neutral"] as const;
 
+/**
+ * Las familias de las dos paredes de 16 chips del onboarding. Dieciséis
+ * píldoras de golpe se leen como inventario; en cuatro grupos con rótulo cada
+ * opción tiene vecindario y la pantalla se recorre con la vista, no se
+ * escanea. Los rótulos viven en `onboarding.seasonGroups.*` /
+ * `onboarding.topicGroups.*` (es+en); un vitest garantiza que los grupos son
+ * una partición exacta de sus KEYS — ni huérfanos ni repetidos.
+ */
+export const SEASON_GROUPS: { key: string; keys: string[] }[] = [
+  { key: "inside", keys: ["anxiety", "grief", "loneliness", "gratitude"] },
+  {
+    key: "mine",
+    keys: ["family", "relationship", "breakup", "children", "lovedOneIll"],
+  },
+  {
+    key: "path",
+    keys: ["work", "studies", "decision", "money", "farFromHome"],
+  },
+  { key: "faithBody", keys: ["faith", "health"] },
+];
+
+export const TOPIC_GROUPS: { key: string; keys: string[] }[] = [
+  { key: "innerPeace", keys: ["peace", "rest", "comfort", "hope"] },
+  { key: "path", keys: ["wisdom", "guidance", "purpose", "courage"] },
+  { key: "mine", keys: ["family", "health", "provision", "protection"] },
+  {
+    key: "heart",
+    keys: ["gratitude", "forgiveness", "strength", "patience"],
+  },
+];
+
 /** The same hours and keys the profile offers, because it is the same list. */
 export const REMINDER_HOURS: { key: string; hour: number }[] = [
   { key: "early", hour: 6 },

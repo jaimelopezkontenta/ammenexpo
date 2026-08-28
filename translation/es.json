@@ -31,6 +31,9 @@
     "together": "Juntos",
     "bible": "Biblia"
   },
+  "together": {
+    "meanwhile": "Mientras tanto"
+  },
   "pray": {
     "title": "Orar por otros",
     "subtitle": "Planes que otras personas han compartido contigo.",
@@ -160,6 +163,18 @@
       "studies": "Los estudios",
       "farFromHome": "Lejos de casa",
       "lovedOneIll": "Alguien querido está enfermo"
+    },
+    "seasonGroups": {
+      "inside": "Por dentro",
+      "mine": "Los tuyos",
+      "path": "El camino",
+      "faithBody": "La fe y el cuerpo"
+    },
+    "topicGroups": {
+      "innerPeace": "Paz interior",
+      "path": "El camino",
+      "mine": "Los tuyos",
+      "heart": "El corazón"
     },
     "topics": {
       "peace": "Paz",

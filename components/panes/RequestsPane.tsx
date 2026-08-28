@@ -83,7 +83,7 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
   return (
     <>
       <ScrollView
-        contentContainerClassName="flex-grow gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+        contentContainerClassName="flex-grow gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center md:px-10"
         contentContainerStyle={{ paddingBottom: scrollBottom }}
       >
         <Txt variant="body" tone="secondary">
@@ -160,7 +160,7 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
         final del muro entero — había que recorrer todas las peticiones de
         otros para poder escribir la tuya. */}
       <View
-        className="px-7 pt-3 md:w-full md:max-w-read md:self-center"
+        className="px-7 pt-3 md:w-full md:max-w-read md:self-center md:px-10"
         style={{ paddingBottom: scrollBottom }}
       >
         <Button

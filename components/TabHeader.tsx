@@ -38,10 +38,18 @@ const greetingKey = (hour: number) => {
 export const TabHeader = ({
   title,
   name,
+  wide = false,
 }: {
   title: string;
   /** El nombre de quien entra. Sin él no se saluda, en vez de saludar a nadie. */
   name?: string | null;
+  /**
+   * Sigue al contenido hasta `max-w-page` en lg+. Solo para pantallas cuyo
+   * contenido también se ensancha (Hoy con su columna de contexto): en las
+   * demás el contenido se queda en `max-w-read` y una cabecera más ancha
+   * quedaría flotando igual de desconectada, pero al revés.
+   */
+  wide?: boolean;
 }) => {
   const { t } = useTranslation();
   const colors = useThemeColors();
@@ -55,9 +63,13 @@ export const TabHeader = ({
     // extra va en style, no en una clase pt-*.
     // En md+ la cabecera se alinea con la columna de lectura, no con el filo
     // de la ventana: un título pegado arriba-izquierda a 2000 px del contenido
-    // centrado se leía como de otra página.
+    // centrado se leía como de otra página. Y en lg+ sigue al contenido hasta
+    // `max-w-page` — clavada en `max-w-read` quedaba 240 px hacia dentro del
+    // borde real de la página en Hoy, flotando desconectada.
     <View
-      className="w-full flex-row items-center justify-between gap-3 px-7 pb-2 md:max-w-read md:self-center md:px-10"
+      className={`w-full flex-row items-center justify-between gap-3 px-7 pb-2 md:max-w-read md:self-center md:px-10 ${
+        wide ? "lg:max-w-page" : ""
+      }`}
       style={{ paddingTop: insets.top + 8 }}
     >
       <View className="min-w-0 flex-1">

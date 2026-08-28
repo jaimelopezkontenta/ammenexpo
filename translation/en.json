@@ -31,6 +31,9 @@
     "together": "Together",
     "bible": "Bible"
   },
+  "together": {
+    "meanwhile": "Meanwhile"
+  },
   "pray": {
     "title": "Pray for others",
     "subtitle": "Plans other people have shared with you.",
@@ -160,6 +163,18 @@
       "studies": "Studying",
       "farFromHome": "Far from home",
       "lovedOneIll": "Someone I love is ill"
+    },
+    "seasonGroups": {
+      "inside": "Within",
+      "mine": "Your people",
+      "path": "The road",
+      "faithBody": "Faith and body"
+    },
+    "topicGroups": {
+      "innerPeace": "Inner peace",
+      "path": "The road",
+      "mine": "Your people",
+      "heart": "The heart"
     },
     "topics": {
       "peace": "Peace",

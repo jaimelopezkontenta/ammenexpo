@@ -525,7 +525,9 @@ export default function Today() {
 
   return (
     <DawnBackground>
-      <TabHeader title={t("tabs.today")} name={profile?.display_name} />
+      {/* `wide`: el contenido de abajo se abre a `max-w-page` en lg y la
+          cabecera lo acompaña — si no, quedaba 240 px hacia dentro. */}
+      <TabHeader title={t("tabs.today")} name={profile?.display_name} wide />
       <ScrollView
         contentContainerClassName="py-8"
         keyboardShouldPersistTaps="handled"

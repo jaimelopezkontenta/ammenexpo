@@ -119,7 +119,7 @@ export const CommunityPane = () => {
 
   return (
     <ScrollView
-      contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
+      contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center md:px-10"
       contentContainerStyle={{ paddingBottom: scrollBottom }}
       keyboardShouldPersistTaps="handled"
     >
