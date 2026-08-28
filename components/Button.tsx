@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { Tap, TapProps } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 import { gradients, useThemeColors } from "@/theme";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
@@ -45,9 +46,9 @@ export const Button = forwardRef<View, ButtonProps>(
     const content = loading ? (
       <ActivityIndicator color={spinner[variant]} />
     ) : (
-      <Text className={`font-sans-semibold text-lg ${LABEL[variant]}`}>
+      <Txt variant="subheadingLg" className={LABEL[variant]}>
         {title}
-      </Text>
+      </Txt>
     );
 
     return (

@@ -1,12 +1,13 @@
 import { Link } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import type { Intercession } from "@/core/intercessions/queries";
 
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 
 type Props = {
   people: Intercession[];
@@ -28,9 +29,9 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
 
   if (people.length === 0) {
     return (
-      <Text className="font-sans text-base leading-6 text-mist-ink">
+      <Txt variant="body" tone="secondary">
         {t("intercession.nobodyYet")}
-      </Text>
+      </Txt>
     );
   }
 
@@ -62,11 +63,11 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                   seed={person.intercessor_id}
                   size={32}
                 />
-                <Text className="flex-1 font-sans-medium text-base text-plum">
+                <Txt variant="bodyMedium" className="flex-1">
                   {t("intercession.personPrayed", {
                     name: person.intercessor_name,
                   })}
-                </Text>
+                </Txt>
               </Tap>
             </Link>
 
@@ -74,9 +75,9 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                 is no "reported" placeholder to keep: the text is simply gone
                 and the prayer stays. */}
             {person.message ? (
-              <Text className="font-sans text-base leading-6 text-mist-ink">
+              <Txt variant="body" tone="secondary">
                 «{person.message}»
-              </Text>
+              </Txt>
             ) : null}
 
             {/* Outside the message check, unlike before. Reporting was the only
@@ -100,11 +101,11 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                     }
                   }}
                 >
-                  <Text
+                  <Txt
+                    variant="caption"
+                    tone={isConfirming ? "danger" : "secondary"}
                     className={
-                      isConfirming
-                        ? "font-sans-semibold text-sm text-danger"
-                        : "font-sans text-sm text-mist-ink underline"
+                      isConfirming ? "font-sans-semibold" : "underline"
                     }
                     // Nothing announced the label flipping, so a screen reader
                     // user tapped "Reportar", heard silence, and had no way to
@@ -114,7 +115,7 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                     {isConfirming
                       ? t("intercession.reportConfirm")
                       : t("intercession.report")}
-                  </Text>
+                  </Txt>
                 </Tap>
               ) : null}
 
@@ -123,9 +124,9 @@ export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
                 accessibilityLabel={`${t("moderation.block")} ${person.intercessor_name}`}
                 onPress={() => onBlock(person.intercessor_id)}
               >
-                <Text className="font-sans text-sm text-mist-ink underline">
+                <Txt variant="caption" className="underline">
                   {t("moderation.block")}
-                </Text>
+                </Txt>
               </Tap>
             </View>
           </View>

@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { Txt } from "@/components/ui/Text";
 
 /**
  * El nombre, en la itálica editorial.
@@ -15,11 +15,15 @@ export const Wordmark = ({
   size?: number;
   onDark?: boolean;
 }) => (
-  <Text
+  <Txt
+    variant="editorial"
+    tone="primary"
     accessibilityRole="text"
+    // El tamaño es del caller (logo grande en la puerta, firma pequeña al
+    // pie); el estilo inline gana a la escala de la variante.
     style={{ fontSize: size, lineHeight: size * 1.25 }}
-    className={`font-editorial ${onDark ? "text-white/90" : "text-plum"}`}
+    className={onDark ? "text-white/90" : ""}
   >
     ammen
-  </Text>
+  </Txt>
 );

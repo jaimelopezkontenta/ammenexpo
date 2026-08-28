@@ -1,6 +1,5 @@
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text } from "react-native";
 
 import { DaySection } from "@/components/DaySection";
 import { Txt } from "@/components/ui/Text";
@@ -44,9 +43,7 @@ export const ScriptureSection = ({
 
   return (
     <DaySection label={t("plan.scripture")} tone="scripture">
-      <Text className="font-serif text-lg leading-reading text-plum">
-        {scriptureText}
-      </Text>
+      <Txt variant="reading">{scriptureText}</Txt>
 
       {scriptureRef ? (
         <Txt variant="editorial" className="text-base">
@@ -74,9 +71,12 @@ export const ScriptureSection = ({
             })
           }
         >
-          <Text className="font-sans-medium text-sm text-mist-ink">
-            {t("bible.readInContext")} <Text aria-hidden>→</Text>
-          </Text>
+          <Txt variant="label" tone="secondary">
+            {t("bible.readInContext")}{" "}
+            <Txt variant="label" tone="secondary" aria-hidden>
+              →
+            </Txt>
+          </Txt>
         </Tap>
       ) : null}
     </DaySection>
@@ -117,17 +117,13 @@ export const DayView = ({ day, books, focus = "all" }: Props) => {
 
       {day.interpretation && (all || focus === "meaning") ? (
         <DaySection label={t("plan.meaning")}>
-          <Text className="font-sans text-base leading-7 text-plum">
-            {day.interpretation}
-          </Text>
+          <Txt variant="body">{day.interpretation}</Txt>
         </DaySection>
       ) : null}
 
       {day.daily_action && (all || focus === "action") ? (
         <DaySection label={t("plan.action")} tone="action">
-          <Text className="font-serif text-lg leading-reading text-plum">
-            {day.daily_action}
-          </Text>
+          <Txt variant="reading">{day.daily_action}</Txt>
         </DaySection>
       ) : null}
 
@@ -136,9 +132,9 @@ export const DayView = ({ day, books, focus = "all" }: Props) => {
           que solo se lee. */}
       {all || focus === "prayer" ? (
         <DaySection label={t("plan.prayer")}>
-          <Text className="font-serif text-lg italic leading-reading text-plum">
+          <Txt variant="reading" className="italic">
             {day.prayer_body}
-          </Text>
+          </Txt>
         </DaySection>
       ) : null}
     </>

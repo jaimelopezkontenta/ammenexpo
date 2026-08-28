@@ -1,6 +1,7 @@
 import { forwardRef, useId } from "react";
-import { Text, TextInput, TextInputProps, View } from "react-native";
+import { TextInput, TextInputProps, View } from "react-native";
 
+import { Txt } from "@/components/ui/Text";
 import { useThemeColors } from "@/theme";
 
 /**
@@ -38,9 +39,9 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
         {/* aria-hidden on web: the visible label would otherwise be read once as
             loose text and again as the input's accessible name. */}
         {hideLabel ? null : (
-          <Text className="font-sans-medium text-sm text-mist-ink" aria-hidden>
+          <Txt variant="label" tone="secondary" aria-hidden>
             {label}
-          </Text>
+          </Txt>
         )}
         <TextInput
           ref={ref}
@@ -60,14 +61,15 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
           } ${inputProps.className ?? ""}`}
         />
         {error ? (
-          <Text
+          <Txt
+            variant="caption"
+            tone="danger"
             nativeID={errorId}
             id={errorId}
-            className="font-sans text-sm text-danger"
             accessibilityRole="alert"
           >
             {error}
-          </Text>
+          </Txt>
         ) : null}
       </View>
     );

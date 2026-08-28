@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
-import { Text, ViewProps } from "react-native";
+import { ViewProps } from "react-native";
 
 import { Glass } from "@/components/Glass";
+import { Txt } from "@/components/ui/Text";
 
 /**
  * La superficie sobre la que va casi todo: el versículo, el tema, una petición,
@@ -34,9 +35,9 @@ export const Card = ({
     {...viewProps}
   >
     {label ? (
-      <Text className="mb-2 font-editorial text-lg text-ember-ink">
+      <Txt variant="editorial" className="mb-2">
         {label}
-      </Text>
+      </Txt>
     ) : null}
     {children}
   </Glass>

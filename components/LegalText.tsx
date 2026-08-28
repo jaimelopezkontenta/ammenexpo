@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { Txt } from "@/components/ui/Text";
 
 /**
  * Un párrafo legal, con lo que va en negrita en negrita.
@@ -9,15 +9,16 @@ import { Text } from "react-native";
  * hace falta y no trae una librería para dos asteriscos.
  */
 export const LegalText = ({ text }: { text: string }) => (
-  <Text className="font-sans text-base leading-6 text-plum">
+  <Txt variant="body">
     {text.split("**").map((chunk, index) =>
       index % 2 === 1 ? (
-        <Text key={index} className="font-sans-semibold">
+        // El tramo en negrita hereda el párrafo y solo sube el peso.
+        <Txt key={index} className="font-sans-semibold">
           {chunk}
-        </Text>
+        </Txt>
       ) : (
         chunk
       ),
     )}
-  </Text>
+  </Txt>
 );

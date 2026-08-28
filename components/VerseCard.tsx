@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
+import { Txt } from "@/components/ui/Text";
 import { colors } from "@/theme";
 
 /**
@@ -50,21 +51,24 @@ export const VerseCard = forwardRef<
       className="justify-between"
     >
       <View className="flex-1 justify-center">
-        <Text
+        {/* Aquí todo se mide en fracciones de `size`: el estilo inline manda
+            sobre la escala de cada variante, que solo aporta familia y tinta. */}
+        <Txt
+          variant="bodySerif"
           style={{ fontSize, lineHeight: fontSize * 1.45 }}
-          className="font-serif text-plum"
         >
           {text}
-        </Text>
+        </Txt>
       </View>
 
       <View className="flex-row items-end justify-between">
-        <Text
-          style={{ fontSize: 30 * scale }}
-          className="font-serif-bold text-ember-ink"
+        <Txt
+          variant="title"
+          tone="accent"
+          style={{ fontSize: 30 * scale, lineHeight: 30 * scale * 1.25 }}
         >
           {reference}
-        </Text>
+        </Txt>
         {/* Sin logotipo ni marca de agua encima del texto: quien comparte esto
             comparte un versículo, no un anuncio.
 
@@ -72,12 +76,12 @@ export const VerseCard = forwardRef<
             WhatsApp, la ve gente que no tiene la app, y hasta aquí el pie decía
             un nombre y ningún sitio al que ir. Es la unidad viral más pura que
             tiene el producto y no llevaba destino. */}
-        <Text
-          style={{ fontSize: 24 * scale }}
-          className="font-sans text-mist-ink"
+        <Txt
+          variant="caption"
+          style={{ fontSize: 24 * scale, lineHeight: 24 * scale * 1.25 }}
         >
           ammen.app · Reina-Valera 1909
-        </Text>
+        </Txt>
       </View>
     </View>
   );

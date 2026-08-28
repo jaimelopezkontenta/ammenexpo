@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { FONT_STEPS, type ReaderFontStep } from "@/core/bible/readerPrefs";
 
@@ -36,7 +36,11 @@ export const ReaderToolbar = ({
         next === null ? "opacity-40" : ""
       }`}
     >
-      <Text className={`font-serif-bold text-plum ${textClass}`}>{label}</Text>
+      {/* La A de muestra: serif del sistema con el tamaño del control
+          (la clase de tamaño del caller gana a la escala de `title`). */}
+      <Txt variant="title" className={textClass}>
+        {label}
+      </Txt>
     </Tap>
   );
 

@@ -1,7 +1,7 @@
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Txt } from "@/components/ui/Text";
@@ -137,21 +137,15 @@ export const CommunityPane = () => {
       />
 
       {notice ? (
-        <Text
-          className="font-sans text-sm text-mist-ink"
-          accessibilityRole="alert"
-        >
+        <Txt variant="caption" accessibilityRole="alert">
           {notice}
-        </Text>
+        </Txt>
       ) : null}
 
       {error ? (
-        <Text
-          className="font-sans text-sm text-danger"
-          accessibilityRole="alert"
-        >
+        <Txt variant="caption" tone="danger" accessibilityRole="alert">
           {error}
-        </Text>
+        </Txt>
       ) : null}
 
       {searching ? (
@@ -160,9 +154,9 @@ export const CommunityPane = () => {
         ) : people.isError ? (
           <ErrorState onRetry={() => void people.refetch()} />
         ) : (people.data ?? []).length === 0 ? (
-          <Text className="font-sans text-base leading-6 text-mist-ink">
+          <Txt variant="body" tone="secondary">
             {t("community.nobodyFound")}
-          </Text>
+          </Txt>
         ) : (
           (people.data ?? []).map((person) => (
             <View
@@ -187,14 +181,12 @@ export const CommunityPane = () => {
                     size={40}
                   />
                   <View className="flex-1">
-                    <Text className="font-sans-medium text-base text-plum">
-                      {person.display_name}
-                    </Text>
-                    <Text className="font-sans text-sm text-mist-ink">
+                    <Txt variant="bodyMedium">{person.display_name}</Txt>
+                    <Txt variant="caption">
                       {t("community.followers", {
                         count: person.follower_count,
                       })}
-                    </Text>
+                    </Txt>
                   </View>
                 </Tap>
               </Link>
@@ -204,9 +196,9 @@ export const CommunityPane = () => {
                 disabled={pending === person.id}
                 onPress={() => void handleFollow(person.id, person.i_follow)}
               >
-                <Text className="font-sans-medium text-sm text-ember-ink">
+                <Txt variant="label" tone="accent">
                   {person.i_follow ? t("social.following") : t("social.follow")}
-                </Text>
+                </Txt>
               </Tap>
             </View>
           ))
@@ -221,11 +213,11 @@ export const CommunityPane = () => {
                 lo público reciente —un feed vacío el primer día es la forma más
                 rápida de no volver— y sin decirlo parece que la app enseña
                 desconocidos porque sí. */}
-          <Text className="font-sans text-sm leading-6 text-mist-ink">
+          <Txt variant="caption">
             {following > 0
               ? t("community.fromFollowing", { count: following })
               : t("community.fromEveryone")}
-          </Text>
+          </Txt>
 
           <Link href="/peticiones/nueva" asChild>
             <Button title={t("feed.newPost")} variant="secondary" />
@@ -383,23 +375,21 @@ const StoryCard = ({
           asChild
         >
           <Tap accessibilityRole="link" className="flex-1">
-            <Text className="font-sans-medium text-sm text-mist-ink">
+            <Txt variant="label" tone="secondary">
               {entry.author_name}
-            </Text>
+            </Txt>
           </Tap>
         </Link>
 
         {/* Qué es cada fila. Sin esto, un testimonio y una petición se leen
             igual, y son cosas muy distintas: una pide, la otra cuenta. */}
-        <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
-          {t(`community.kind.${entry.kind}`)}
-        </Text>
+        <Txt variant="overline">{t(`community.kind.${entry.kind}`)}</Txt>
       </View>
 
       {entry.title ? (
-        <Text className="font-serif-bold text-base text-plum">
+        <Txt variant="title" className="text-base">
           {entry.title}
-        </Text>
+        </Txt>
       ) : null}
 
       {entry.body ? <Txt variant="bodySerifReading">{entry.body}</Txt> : null}
@@ -417,17 +407,17 @@ const StoryCard = ({
             asChild
           >
             <Tap accessibilityRole="link">
-              <Text className="font-sans text-sm text-ember-ink underline">
+              <Txt variant="caption" tone="accent" className="underline">
                 {t("community.openPlan")}
-              </Text>
+              </Txt>
             </Tap>
           </Link>
         ) : (
           <Link href="/testimonios" asChild>
             <Tap accessibilityRole="link">
-              <Text className="font-sans text-sm text-ember-ink underline">
+              <Txt variant="caption" tone="accent" className="underline">
                 {t("community.openTestimonies")}
-              </Text>
+              </Txt>
             </Tap>
           </Link>
         )}
@@ -435,9 +425,9 @@ const StoryCard = ({
         {entry.is_mine ? null : (
           <>
             <Tap accessibilityRole="button" onPress={onReport}>
-              <Text className="font-sans text-sm text-mist-ink underline">
+              <Txt variant="caption" className="underline">
                 {t("moderation.report")}
-              </Text>
+              </Txt>
             </Tap>
 
             <Tap
@@ -445,9 +435,9 @@ const StoryCard = ({
               accessibilityLabel={`${t("moderation.block")} ${entry.author_name ?? ""}`}
               onPress={onBlock}
             >
-              <Text className="font-sans text-sm text-mist-ink underline">
+              <Txt variant="caption" className="underline">
                 {t("moderation.block")}
-              </Text>
+              </Txt>
             </Tap>
           </>
         )}

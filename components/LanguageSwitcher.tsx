@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { useSession } from "@/core/auth/SessionProvider";
 import { useUpdateLocale } from "@/core/profile/queries";
 import { supportedLanguages, type LanguageCode } from "@/translation";
 
 import { Pill } from "@/components/ui/Pill";
+import { Txt } from "@/components/ui/Text";
 
 const LABELS: Record<LanguageCode, string> = {
   es: "Español",
@@ -20,9 +21,9 @@ export const LanguageSwitcher = () => {
 
   return (
     <View className="w-full gap-2">
-      <Text className="text-center font-sans-medium text-sm text-mist-ink">
+      <Txt variant="label" tone="secondary" className="text-center">
         {t("common.language")}
-      </Text>
+      </Txt>
       <View
         className="flex-row justify-center gap-3"
         accessibilityRole="radiogroup"

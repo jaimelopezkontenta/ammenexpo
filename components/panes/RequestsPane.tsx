@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
@@ -20,6 +20,7 @@ import {
 } from "@/core/posts/queries";
 
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Txt } from "@/components/ui/Text";
 import { useToast } from "@/core/toast/ToastProvider";
 
 /**
@@ -85,18 +86,14 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
         contentContainerClassName="flex-grow gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
         contentContainerStyle={{ paddingBottom: scrollBottom }}
       >
-        <Text className="font-sans text-base leading-6 text-mist-ink">
+        <Txt variant="body" tone="secondary">
           {t("feed.subtitle")}
-        </Text>
+        </Txt>
 
         {/* Said out loud rather than implied. An open wall with no moderator is
             a real property of this screen, and pretending otherwise would be
             the dishonest version. */}
-        {!circulo ? (
-          <Text className="font-sans text-sm leading-5 text-mist-ink">
-            {t("feed.wallNoAdmin")}
-          </Text>
-        ) : null}
+        {!circulo ? <Txt variant="caption">{t("feed.wallNoAdmin")}</Txt> : null}
 
         {(requests ?? []).length === 0 ? (
           <EmptyState

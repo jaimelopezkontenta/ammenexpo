@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Card } from "@/components/Card";
 import type { SharedPlan } from "@/core/intercessions/queries";
 
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 
 type Props = {
   plan: SharedPlan;
@@ -38,35 +39,27 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
             size={36}
           />
           <View className="flex-1 gap-1">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {plan.owner_name}
-            </Text>
-            <Text className="font-sans text-sm text-mist-ink">
-              {plan.plan_title}
-            </Text>
+            <Txt variant="subheadingLg">{plan.owner_name}</Txt>
+            <Txt variant="caption">{plan.plan_title}</Txt>
           </View>
         </View>
 
         <View className="gap-1">
-          <Text className="font-editorial text-base text-ember-ink">
+          <Txt variant="editorial" className="text-base">
             {t("common.day", { number: plan.day_number })}
-          </Text>
-          <Text className="font-sans text-base leading-6 text-plum">
-            {plan.day_title}
-          </Text>
+          </Txt>
+          <Txt variant="body">{plan.day_title}</Txt>
         </View>
 
-        <Text
-          className={
-            plan.already_prayed
-              ? "font-sans-medium text-sm text-mist-ink"
-              : "font-sans-semibold text-sm text-plum"
-          }
+        <Txt
+          variant="label"
+          tone={plan.already_prayed ? "secondary" : "primary"}
+          className={plan.already_prayed ? "" : "font-sans-semibold"}
         >
           {plan.already_prayed
             ? t("intercession.prayedFor", { name: plan.owner_name })
             : t("intercession.openToPray")}
-        </Text>
+        </Txt>
       </Card>
     </Tap>
   );

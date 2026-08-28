@@ -1,14 +1,9 @@
 import { ReactNode } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { Orb } from "@/components/Orb";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -58,19 +53,20 @@ export const AuthScreen = ({
             <View className="pb-4">
               <Orb size={84} halo />
             </View>
-            <Text
-              className="text-center font-sans-bold text-3xl leading-9 text-plum"
+            <Txt
+              variant="display"
+              className="text-center"
               accessibilityRole="header"
             >
               {title}
-            </Text>
+            </Txt>
             {intro ? (
               // Plum y no el gris secundario, como en el prototipo: es una sola
               // línea bajo el título, no texto de apoyo, y sobre el periwinkle
               // de los bordes del radial el gris se queda en 3,64.
-              <Text className="text-center font-sans text-base text-plum">
+              <Txt variant="body" className="text-center">
                 {intro}
-              </Text>
+              </Txt>
             ) : null}
           </View>
 
@@ -83,9 +79,13 @@ export const AuthScreen = ({
         >
           <Wordmark />
           {footer ? (
-            <Text className="mt-1 text-center font-sans text-xs leading-4 text-mist-ink">
+            // La letra pequeña de verdad: un paso por debajo de `caption`.
+            <Txt
+              variant="caption"
+              className="mt-1 text-center text-xs leading-4"
+            >
               {footer}
-            </Text>
+            </Txt>
           ) : null}
         </View>
       </KeyboardAvoidingView>

@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { Text } from "react-native";
 import {
   interpolateColor,
   useAnimatedStyle,
@@ -9,6 +8,7 @@ import {
 } from "react-native-reanimated";
 
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 import { useThemeColors, withAlpha } from "@/theme";
 import { DURATION } from "@/theme/motion";
 
@@ -84,16 +84,16 @@ export const Pill = ({
       }`}
       style={colorStyle}
     >
-      <Text
+      <Txt
+        variant="caption"
+        tone={selected ? "onDark" : "primary"}
         numberOfLines={numberOfLines}
-        className={
-          selected
-            ? "font-sans-semibold text-sm text-white"
-            : "font-sans text-sm text-plum"
-        }
+        // El peso extra al seleccionar es estado de la píldora, no otra
+        // variante: se afina encima de `caption`.
+        className={selected ? "font-sans-semibold" : ""}
       >
         {label}
-      </Text>
+      </Txt>
     </Tap>
   );
 };

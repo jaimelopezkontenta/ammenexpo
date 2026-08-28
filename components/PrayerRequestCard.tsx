@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Card } from "@/components/Card";
@@ -53,19 +53,19 @@ export const PrayerRequestCard = ({
             seed={request.is_anonymous ? request.id : (request.author_id ?? "")}
             size={28}
           />
-          <Text className="flex-1 font-sans-medium text-sm text-mist-ink">
+          <Txt variant="label" tone="secondary" className="flex-1">
             {/* Somebody who asked anonymously has no name to show and no id to
               correlate — that is the whole point of the checkbox. */}
             {request.is_anonymous
               ? t("feed.anonymousName")
               : (request.author_name ?? "")}
-          </Text>
+          </Txt>
         </View>
 
         {request.answered_at ? (
-          <Text className="font-sans-medium text-sm text-mist-ink">
+          <Txt variant="label" tone="secondary">
             {t("feed.answered")}
-          </Text>
+          </Txt>
         ) : null}
       </View>
 
@@ -74,21 +74,17 @@ export const PrayerRequestCard = ({
           por qué nadie contesta — y volviéndolo a intentar. */}
       {request.held_at ? (
         <View className="gap-1 rounded-input bg-dawn-cream p-4">
-          <Text className="font-sans-medium text-sm text-plum">
-            {t("moderation.held")}
-          </Text>
-          <Text className="font-sans text-sm leading-5 text-mist-ink">
-            {t("moderation.heldHint")}
-          </Text>
+          <Txt variant="label">{t("moderation.held")}</Txt>
+          <Txt variant="caption">{t("moderation.heldHint")}</Txt>
         </View>
       ) : null}
 
       <Txt variant="bodySerifReading">{request.body}</Txt>
 
       {request.prayer_count > 0 ? (
-        <Text className="font-sans text-sm text-mist-ink">
+        <Txt variant="caption">
           {t("feed.prayCount", { count: request.prayer_count })}
-        </Text>
+        </Txt>
       ) : null}
 
       {/* The gesture, and the way to take it back: a counter that only ever
@@ -102,31 +98,30 @@ export const PrayerRequestCard = ({
           request.i_prayed ? "bg-glass/60" : "bg-plum-chip"
         }`}
       >
-        <Text
-          className={`font-sans-semibold text-base ${
-            request.i_prayed ? "text-mist-ink" : "text-white"
-          }`}
+        <Txt
+          variant="subheading"
+          tone={request.i_prayed ? "secondary" : "onDark"}
         >
           {request.i_prayed ? t("feed.prayed") : t("feed.pray")}
-        </Text>
+        </Txt>
       </Tap>
 
       <View className="flex-row flex-wrap gap-4">
         <Tap accessibilityRole="link" onPress={onOpen}>
-          <Text className="font-sans text-sm text-mist-ink underline">
+          <Txt variant="caption" className="underline">
             {request.comment_count > 0
               ? t("feed.commentCount", { count: request.comment_count })
               : t("feed.comment")}
-          </Text>
+          </Txt>
         </Tap>
 
         {request.is_mine ? (
           <>
             {request.answered_at ? null : (
               <Tap accessibilityRole="button" onPress={onMarkAnswered}>
-                <Text className="font-sans text-sm text-mist-ink underline">
+                <Txt variant="caption" className="underline">
                   {t("feed.markAnswered")}
-                </Text>
+                </Txt>
               </Tap>
             )}
 
@@ -141,24 +136,24 @@ export const PrayerRequestCard = ({
                 onDelete();
               }}
             >
-              <Text
+              <Txt
+                variant="caption"
+                tone={confirmingDelete ? "danger" : "secondary"}
                 className={
-                  confirmingDelete
-                    ? "font-sans-semibold text-sm text-danger"
-                    : "text-sm text-mist-ink underline"
+                  confirmingDelete ? "font-sans-semibold" : "underline"
                 }
                 accessibilityLiveRegion={confirmingDelete ? "polite" : "none"}
               >
                 {confirmingDelete ? t("feed.deleteConfirm") : t("feed.delete")}
-              </Text>
+              </Txt>
             </Tap>
           </>
         ) : (
           <>
             <Tap accessibilityRole="button" onPress={onReport}>
-              <Text className="font-sans text-sm text-mist-ink underline">
+              <Txt variant="caption" className="underline">
                 {t("moderation.report")}
-              </Text>
+              </Txt>
             </Tap>
 
             {/* Missing on purpose for anonymous requests: there is no id to
@@ -170,17 +165,17 @@ export const PrayerRequestCard = ({
                 accessibilityLabel={`${t("moderation.block")} ${request.author_name ?? ""}`}
                 onPress={() => onBlock(request.author_id!)}
               >
-                <Text className="font-sans text-sm text-mist-ink underline">
+                <Txt variant="caption" className="underline">
                   {t("moderation.block")}
-                </Text>
+                </Txt>
               </Tap>
             ) : null}
 
             {canHide ? (
               <Tap accessibilityRole="button" onPress={onHide}>
-                <Text className="font-sans text-sm text-mist-ink underline">
+                <Txt variant="caption" className="underline">
                   {t("moderation.hide")}
-                </Text>
+                </Txt>
               </Tap>
             ) : null}
           </>

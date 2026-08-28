@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { Card } from "@/components/Card";
+import { Txt } from "@/components/ui/Text";
 import { gradients, useIsDark } from "@/theme";
 
 type Tone = "plain" | "scripture" | "action";
@@ -45,9 +46,9 @@ export const DaySection = ({
           end={{ x: 1, y: 1 }}
           style={styles.warm}
         >
-          <Text className="mb-2 font-editorial text-lg text-ember-ink">
+          <Txt variant="editorial" className="mb-2">
             {label}
-          </Text>
+          </Txt>
           {children}
         </LinearGradient>
       </View>

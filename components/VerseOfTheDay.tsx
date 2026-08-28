@@ -1,11 +1,12 @@
 import { Link } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { Card } from "@/components/Card";
 import { useVerseOfTheDay } from "@/core/bible/queries";
 
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 
 /**
  * El versículo del día.
@@ -26,9 +27,7 @@ export const VerseOfTheDay = () => {
 
   return (
     <Card label={t("bible.verseOfTheDay")} className="gap-2">
-      <Text className="font-serif text-lg leading-reading text-plum">
-        {data.text}
-      </Text>
+      <Txt variant="reading">{data.text}</Txt>
 
       <View className="flex-row flex-wrap items-center gap-4">
         {/* Al capítulo entero, que es lo que más valor añadió al lector cuando
@@ -46,9 +45,9 @@ export const VerseOfTheDay = () => {
           asChild
         >
           <Tap accessibilityRole="link">
-            <Text className="font-editorial text-base text-ember-ink">
+            <Txt variant="editorial" className="text-base">
               {data.reference}
-            </Text>
+            </Txt>
           </Tap>
         </Link>
 
@@ -64,9 +63,9 @@ export const VerseOfTheDay = () => {
           asChild
         >
           <Tap accessibilityRole="link">
-            <Text className="font-sans-medium text-sm text-plum underline">
+            <Txt variant="label" className="underline">
               {t("bible.shareVerse")}
-            </Text>
+            </Txt>
           </Tap>
         </Link>
       </View>

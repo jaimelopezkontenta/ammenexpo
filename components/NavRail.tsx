@@ -2,10 +2,11 @@
 // del registro (que no está instalado): el tipo sale de la misma copia que
 // tipa la prop `tabBar` de `<Tabs>`.
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { Glass } from "@/components/Glass";
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 import { useThemeColors, withAlpha } from "@/theme";
 
 /** El ancho del raíl; las escenas reservan este hueco en `sceneStyle`. */
@@ -73,18 +74,21 @@ export const NavRail = ({
               className="relative w-full items-center gap-1 rounded-input py-3"
             >
               {options.tabBarIcon?.({ focused, color, size: 24 })}
-              <Text
+              <Txt
+                variant="label"
                 numberOfLines={1}
+                // La tinta acompaña al icono (ember al enfocar) y el tamaño
+                // es el del raíl, más chico que la escala: ambos se afinan.
                 style={{ color }}
-                className="font-sans-medium text-[11.5px]"
+                className="text-[11.5px]"
               >
                 {label}
-              </Text>
+              </Txt>
               {badge ? (
                 <View className="absolute right-4 top-1 min-w-5 items-center justify-center rounded-full bg-ember-accent px-1.5 py-0.5">
-                  <Text className="font-sans-semibold text-xs text-white">
+                  <Txt variant="subheading" tone="onDark" className="text-xs">
                     {badge}
-                  </Text>
+                  </Txt>
                 </View>
               ) : null}
             </Tap>

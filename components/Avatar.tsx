@@ -1,7 +1,8 @@
 import { Image } from "expo-image";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { ORB_COLORS } from "@/components/Orb";
+import { Txt } from "@/components/ui/Text";
 import { colors } from "@/theme";
 
 /**
@@ -106,12 +107,14 @@ export const Avatar = ({ name, url, seed, size = 40 }: AvatarProps) => {
       importantForAccessibility="no"
       aria-hidden
     >
-      <Text
+      <Txt
+        variant="subheading"
+        // La inicial escala con el avatar y su tinta es fija (plum sobre los
+        // tonos pálidos del orbe): el estilo inline gana a la variante.
         style={{ color: TONE_INK, fontSize: size * 0.42 }}
-        className="font-sans-semibold"
       >
         {initialOf(name)}
-      </Text>
+      </Txt>
     </View>
   );
 };

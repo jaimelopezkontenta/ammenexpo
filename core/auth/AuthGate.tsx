@@ -1,11 +1,12 @@
 import { Redirect, usePathname, useSegments } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { Orb } from "@/components/Orb";
+import { Txt } from "@/components/ui/Text";
 import { Wordmark } from "@/components/Wordmark";
 import { enterFadeAfter } from "@/theme/motion";
 
@@ -101,15 +102,16 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   if (onboardingFailed) {
     return (
       <DawnBackground className="items-center justify-center gap-3 px-8">
-        <Text
-          className="text-center font-sans-bold text-xl text-plum"
+        <Txt
+          variant="heading"
+          className="text-center"
           accessibilityRole="alert"
         >
           {t("common.errorTitle")}
-        </Text>
-        <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+        </Txt>
+        <Txt variant="body" tone="secondary" className="text-center">
           {t("common.errorBody")}
-        </Text>
+        </Txt>
         <View className="mt-4 w-full gap-3">
           <Button
             title={t("common.retry")}

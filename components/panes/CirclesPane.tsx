@@ -1,7 +1,7 @@
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { Button } from "@/components/Button";
@@ -19,6 +19,7 @@ import {
 import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListRow } from "@/components/ui/ListRow";
+import { Txt } from "@/components/ui/Text";
 
 /**
  * Los círculos — el contenido del segmento, con su alta inline y su scroll.
@@ -80,9 +81,7 @@ export const CirclesPane = () => {
           contentContainerClassName="gap-6 px-7 py-10 md:w-full md:max-w-read md:self-center"
           keyboardShouldPersistTaps="handled"
         >
-          <Text className="font-sans-bold text-2xl text-plum">
-            {t("circles.createTitle")}
-          </Text>
+          <Txt variant="headingLg">{t("circles.createTitle")}</Txt>
 
           <TextField
             label={t("circles.name")}
@@ -102,9 +101,9 @@ export const CirclesPane = () => {
           />
 
           <View className="gap-3">
-            <Text className="font-sans-medium text-sm text-mist-ink">
+            <Txt variant="label" tone="secondary">
               {t("circles.visibility")}
-            </Text>
+            </Txt>
             <ChoiceChips
               options={[
                 { value: "private", label: t("circles.visibilityPrivate") },
@@ -114,20 +113,17 @@ export const CirclesPane = () => {
               onToggle={(value) => setVisibility(value as CircleVisibility)}
             />
             {/* Public circles carry a moderation duty, so say so before creating. */}
-            <Text className="font-sans text-sm text-mist-ink">
+            <Txt variant="caption">
               {visibility === "private"
                 ? t("circles.visibilityPrivateHint")
                 : t("circles.visibilityPublicHint")}
-            </Text>
+            </Txt>
           </View>
 
           {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" tone="danger" accessibilityRole="alert">
               {error}
-            </Text>
+            </Txt>
           ) : null}
 
           <View className="gap-3 pt-2">
@@ -152,9 +148,9 @@ export const CirclesPane = () => {
     <ScrollView contentContainerClassName="flex-grow gap-4 px-7 py-6 md:w-full md:max-w-read md:self-center">
       {/* El título ya lo dice TabHeader; dos "Círculos" apilados no eran
           jerarquía sino eco. Queda la línea que explica qué es esto. */}
-      <Text className="font-sans text-base text-mist-ink">
+      <Txt variant="body" tone="secondary">
         {t("circles.subtitle")}
-      </Text>
+      </Txt>
 
       {/* Las dos puertas van arriba: en una cuenta nueva son lo único que
           hay que ver, y al fondo de un scroll eran un CTA huérfano. */}

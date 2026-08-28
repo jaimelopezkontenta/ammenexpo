@@ -1,7 +1,7 @@
 import { Link } from "expo-router";
 import { Bell } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Wordmark } from "@/components/Wordmark";
@@ -11,6 +11,7 @@ import { useUnreadNotifications } from "@/core/notifications/queries";
 import { icon, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 
 /**
  * La cabecera de las cinco pestañas.
@@ -60,14 +61,16 @@ export const TabHeader = ({
       style={{ paddingTop: insets.top + 8 }}
     >
       <View className="min-w-0 flex-1">
-        <Text className="font-sans-bold text-3xl text-plum">{title}</Text>
+        <Txt variant="display">{title}</Txt>
         {name ? (
-          <Text
+          <Txt
+            variant="editorial"
+            tone="primary"
             numberOfLines={1}
-            className="mt-0.5 font-editorial text-base text-plum"
+            className="mt-0.5 text-base"
           >
             {t(greetingKey(new Date().getHours()))}, {name}
-          </Text>
+          </Txt>
         ) : null}
       </View>
 

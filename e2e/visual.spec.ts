@@ -97,9 +97,11 @@ for (const viewport of VIEWPORTS) {
     test(`las pantallas con sesión se ven como la referencia (${viewport.name})`, async ({
       page,
     }) => {
-      // Dieciséis pantallas en un solo recorrido: el timeout global de 120 s
-      // se quedó corto al crecer la lista con Amanecer 3.0.
-      test.setTimeout(360_000);
+      // Dieciocho pantallas en un solo recorrido: el timeout global de 120 s
+      // se quedó corto al crecer la lista con Amanecer 3.0, y los 360 s se
+      // quedaron justos en cuanto cada goto ronda los 20 s con la máquina
+      // cargada (medido 2026-08-28): presupuesto con margen, no al filo.
+      test.setTimeout(600_000);
       await login(page);
       for (const screen of SCREENS) {
         await page.goto(screen.path);

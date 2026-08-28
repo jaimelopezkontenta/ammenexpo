@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { Orb } from "@/components/Orb";
+import { Txt } from "@/components/ui/Text";
 import { Wordmark } from "@/components/Wordmark";
 
 import { gradients } from "@/theme";
@@ -51,19 +52,21 @@ export const VerseStory = forwardRef<
         }}
       >
         <View style={{ flex: 1, justifyContent: "center", gap: height * 0.03 }}>
-          <Text
+          {/* Como en VerseCard: el estilo inline manda sobre la escala de la
+              variante, que solo aporta familia y tinta. */}
+          <Txt
+            variant="bodySerif"
             style={{ fontSize, lineHeight: fontSize * 1.45 }}
-            className="font-serif text-plum"
           >
             {text}
-          </Text>
+          </Txt>
 
-          <Text
-            style={{ fontSize: 40 * scale }}
-            className="font-editorial text-ember-ink"
+          <Txt
+            variant="editorial"
+            style={{ fontSize: 40 * scale, lineHeight: 40 * scale * 1.25 }}
           >
             {reference}
-          </Text>
+          </Txt>
         </View>
 
         <View style={{ alignItems: "center", gap: height * 0.012 }}>
@@ -71,12 +74,12 @@ export const VerseStory = forwardRef<
               fotograma que se guarda solo puede salir a medias. */}
           <Orb size={width * 0.13} animated={false} />
           <Wordmark size={34 * scale} />
-          <Text
-            style={{ fontSize: 22 * scale }}
-            className="font-sans text-mist-ink"
+          <Txt
+            variant="caption"
+            style={{ fontSize: 22 * scale, lineHeight: 22 * scale * 1.25 }}
           >
             ammen.app · Reina-Valera 1909
-          </Text>
+          </Txt>
         </View>
       </LinearGradient>
     </View>

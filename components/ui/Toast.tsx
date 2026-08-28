@@ -1,9 +1,10 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Glass } from "@/components/Glass";
 import { Tap, triggerHaptic } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 import type { ToastItem, ToastVariant } from "@/core/toast/ToastProvider";
 import { DURATION } from "@/theme/motion";
 
@@ -12,7 +13,7 @@ import { DURATION } from "@/theme/motion";
  * reloj, fuera del flujo — el layout de la pantalla no se entera.
  *
  * `accessibilityRole="alert"` + liveRegion assertive: el lector de pantalla
- * anuncia el aviso al aparecer, igual que anunciaba los `<Text role="alert">`
+ * anuncia el aviso al aparecer, igual que anunciaban los textos `role="alert"`
  * que este sistema sustituye.
  */
 
@@ -52,9 +53,9 @@ const ToastCard = ({
       <Glass flat readable className="overflow-hidden rounded-card shadow-card">
         <View className="flex-row items-center gap-3 py-3 pl-3 pr-4">
           <View className={`h-8 w-1 rounded-full ${ACCENT[item.variant]}`} />
-          <Text className="flex-1 font-sans-medium text-sm leading-5 text-plum">
+          <Txt variant="label" className="flex-1">
             {item.message}
-          </Text>
+          </Txt>
         </View>
       </Glass>
     </Tap>

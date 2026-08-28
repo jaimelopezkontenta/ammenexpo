@@ -8,7 +8,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
@@ -25,6 +24,7 @@ import type { OwnPlan } from "@/core/plans/queries";
 import { icon, scrim, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 import { DURATION, enterSheet } from "@/theme/motion";
 
 type Props = {
@@ -181,9 +181,7 @@ export const PlanOptionsSheet = ({
                 <View>
                   <SheetGrabHandle />
                   <View className="flex-row items-center justify-between">
-                    <Text className="font-editorial text-lg text-ember-ink">
-                      {t("plan.planOptions")}
-                    </Text>
+                    <Txt variant="editorial">{t("plan.planOptions")}</Txt>
                     <Tap
                       accessibilityRole="button"
                       accessibilityLabel={t("common.close")}
@@ -219,12 +217,9 @@ export const PlanOptionsSheet = ({
                   onPress={() => onDraftTitleChange(planTitle)}
                   className="min-h-11 justify-center"
                 >
-                  <Text
-                    numberOfLines={2}
-                    className="font-serif text-lg text-plum"
-                  >
+                  <Txt variant="reading" numberOfLines={2}>
                     {planTitle} ✎
-                  </Text>
+                  </Txt>
                 </Tap>
               ) : (
                 <View className="gap-2">
@@ -272,25 +267,28 @@ export const PlanOptionsSheet = ({
                       loading={archivePending}
                       onPress={onArchive}
                     />
-                    <Text
-                      className="text-center font-sans text-sm leading-5 text-mist-ink"
+                    <Txt
+                      variant="caption"
+                      className="text-center"
                       accessibilityLiveRegion={
                         confirmingArchive ? "polite" : "none"
                       }
                     >
                       {t("plan.archiveHint")}
-                    </Text>
+                    </Txt>
                   </>
                 ) : null}
               </View>
 
               {error ? (
-                <Text
-                  className="text-center font-sans text-sm text-danger"
+                <Txt
+                  variant="caption"
+                  tone="danger"
+                  className="text-center"
                   accessibilityRole="alert"
                 >
                   {error}
-                </Text>
+                </Txt>
               ) : null}
             </ScrollView>
           </Glass>

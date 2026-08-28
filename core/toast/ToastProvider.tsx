@@ -16,7 +16,7 @@ import { ToastHost, toastHaptic } from "@/components/ui/Toast";
  *
  * Antes cada pantalla tenía su `const [notice, setNotice]` con un `setTimeout`
  * de 6 s copiado a mano (dos veces, literal, entre el círculo y su chat) y el
- * aviso se pintaba como un `<Text>` que empujaba el layout: el contenido
+ * aviso se pintaba como un Text suelto que empujaba el layout: el contenido
  * saltaba justo cuando la app quería decir "todo bien".
  *
  * Esto NO es para errores de validación de formulario: un campo mal escrito

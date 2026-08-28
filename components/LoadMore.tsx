@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 import { useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
+import { Txt } from "@/components/ui/Text";
 
 interface Props {
   hasMore: boolean;
@@ -46,9 +47,7 @@ export const LoadMore = ({ hasMore, loading, onPress }: Props) => {
             accessibilityLabel={t("common.loadMore")}
           />
         ) : (
-          <Text className="font-sans-medium text-base text-plum">
-            {t("common.loadMore")}
-          </Text>
+          <Txt variant="bodyMedium">{t("common.loadMore")}</Txt>
         )}
       </Tap>
     </View>

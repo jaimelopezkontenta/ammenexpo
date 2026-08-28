@@ -1,10 +1,11 @@
 import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Txt } from "@/components/ui/Text";
 
 import { useThemeColors } from "@/theme";
 
@@ -113,16 +114,13 @@ export const ErrorState = ({ onRetry, message }: ErrorStateProps) => {
 
   return (
     <DawnBackground className="items-center justify-center gap-3 px-8">
-      <Text
-        className="text-center font-sans-bold text-xl text-plum"
-        accessibilityRole="alert"
-      >
+      <Txt variant="heading" className="text-center" accessibilityRole="alert">
         {t("common.errorTitle")}
-      </Text>
-      <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+      </Txt>
+      <Txt variant="body" tone="secondary" className="text-center">
         {message ??
           (offline ? t("common.errorNetwork") : t("common.errorBody"))}
-      </Text>
+      </Txt>
       {onRetry ? (
         <View className="mt-4 w-full">
           <Button title={t("common.retry")} onPress={onRetry} />

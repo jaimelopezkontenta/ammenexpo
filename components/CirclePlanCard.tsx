@@ -1,9 +1,10 @@
 import { Link } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { Txt } from "@/components/ui/Text";
 import type { Circle, CirclePlan } from "@/core/circles/queries";
 
 interface CirclePlanCardProps {
@@ -41,12 +42,10 @@ export const CirclePlanCard = ({
 
     return (
       <Card flat className="gap-2">
-        <Text className="font-sans-semibold text-base text-plum">
-          {t("circles.planEmpty")}
-        </Text>
-        <Text className="font-sans text-base leading-6 text-mist-ink">
+        <Txt variant="subheading">{t("circles.planEmpty")}</Txt>
+        <Txt variant="body" tone="secondary">
           {t("circles.planEmptyBody")}
-        </Text>
+        </Txt>
         <Link
           href={{ pathname: "/plan/nuevo", params: { circulo: circle.id } }}
           asChild
@@ -60,52 +59,47 @@ export const CirclePlanCard = ({
   return (
     <Card flat className="gap-3">
       <View className="gap-1">
-        <Text className="font-sans-medium text-sm text-mist-ink">
+        <Txt variant="label" tone="secondary">
           {t("circles.planLabel")}
-        </Text>
-        <Text className="font-sans-semibold text-lg text-plum">
-          {plan.title}
-        </Text>
+        </Txt>
+        <Txt variant="subheadingLg">{plan.title}</Txt>
       </View>
 
       {/* A streak nobody can see is a counter, not a streak. */}
       {circle.streak_count > 0 ? (
-        <Text className="font-sans text-sm text-mist-ink">
+        <Txt variant="caption">
           {t("circles.streak", { count: circle.streak_count })}
-        </Text>
+        </Txt>
       ) : null}
 
       {plan.status === "generating" && !plan.day_id ? (
-        <Text className="font-sans text-base text-mist-ink">
+        <Txt variant="body" tone="secondary">
           {t("plan.generating")}
-        </Text>
+        </Txt>
       ) : null}
 
       {plan.day_id ? (
         <>
-          <Text className="font-sans text-base text-plum">
+          <Txt variant="body">
             {t("common.day", { number: plan.day_number })} · {plan.day_title}
-          </Text>
+          </Txt>
 
           {plan.prayed_count > 0 ? (
-            <Text className="font-sans text-sm text-mist-ink">
+            <Txt variant="caption">
               {t("circles.prayedToday", { count: plan.prayed_count })}
-            </Text>
+            </Txt>
           ) : null}
 
           {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" tone="danger" accessibilityRole="alert">
               {error}
-            </Text>
+            </Txt>
           ) : null}
 
           {plan.prayed_today ? (
-            <Text className="font-sans-medium text-base text-mist-ink">
+            <Txt variant="bodyMedium" tone="secondary">
               {t("plan.markedDone")}
-            </Text>
+            </Txt>
           ) : (
             <Button
               title={t("plan.markDone")}
