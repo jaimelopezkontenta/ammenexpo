@@ -2,7 +2,7 @@ import Constants from "expo-constants";
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, ScrollView, Text, View } from "react-native";
+import { Linking, ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { Button } from "@/components/Button";
@@ -66,9 +66,7 @@ export default function About() {
 
           {/* Dicho aquí y no escondido: el plan lo escribe un modelo, y en materia
             religiosa eso hay que decirlo en voz alta. */}
-          <Text className="font-sans text-sm leading-6 text-mist-ink">
-            {t("profile.aboutAi")}
-          </Text>
+          <Txt variant="caption">{t("profile.aboutAi")}</Txt>
 
           {/* Los dos documentos, siempre a mano y no solo en la puerta de
             entrada: quien quiera releer qué aceptó tiene que poder. */}
@@ -76,24 +74,22 @@ export default function About() {
             <Link
               href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}
             >
-              <Text className="font-sans text-base text-ember-ink underline">
+              <Txt variant="body" tone="accent" className="underline">
                 {t("legal.terms")}
-              </Text>
+              </Txt>
             </Link>
 
             <Link
               href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
             >
-              <Text className="font-sans text-base text-ember-ink underline">
+              <Txt variant="body" tone="accent" className="underline">
                 {t("legal.privacy")}
-              </Text>
+              </Txt>
             </Link>
           </View>
 
           <View className="gap-2">
-            <Text className="font-sans text-sm text-mist-ink">
-              {t("profile.version", { version })}
-            </Text>
+            <Txt variant="caption">{t("profile.version", { version })}</Txt>
 
             <Tap
               accessibilityRole="link"
@@ -107,14 +103,12 @@ export default function About() {
                 );
               }}
             >
-              <Text className="font-sans text-base text-ember-ink underline">
+              <Txt variant="body" tone="accent" className="underline">
                 {t("profile.support")}
-              </Text>
+              </Txt>
             </Tap>
 
-            <Text className="font-sans text-sm leading-6 text-mist-ink">
-              {t("profile.supportHint")}
-            </Text>
+            <Txt variant="caption">{t("profile.supportHint")}</Txt>
           </View>
 
           {/* Llevarte tus datos. Iba junto a borrar la cuenta hasta que me di
@@ -127,26 +121,18 @@ export default function About() {
               loading={exportData.isPending}
               onPress={() => void handleExport()}
             />
-            <Text className="font-sans text-sm leading-6 text-mist-ink">
-              {t("legal.exportHint")}
-            </Text>
+            <Txt variant="caption">{t("legal.exportHint")}</Txt>
 
             {notice ? (
-              <Text
-                className="font-sans text-sm text-mist-ink"
-                accessibilityRole="alert"
-              >
+              <Txt variant="caption" accessibilityRole="alert">
                 {notice}
-              </Text>
+              </Txt>
             ) : null}
 
             {error ? (
-              <Text
-                className="font-sans text-sm text-danger"
-                accessibilityRole="alert"
-              >
+              <Txt variant="caption" tone="danger" accessibilityRole="alert">
                 {error}
-              </Text>
+              </Txt>
             ) : null}
           </View>
         </ScrollView>

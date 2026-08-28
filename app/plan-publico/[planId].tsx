@@ -1,9 +1,10 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { Txt } from "@/components/ui/Text";
 import { DaySection } from "@/components/DaySection";
 import { ScriptureSection } from "@/components/DayView";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -79,18 +80,18 @@ export default function PublicPlanDayScreen() {
               size={40}
             />
             <View className="flex-1 gap-1">
-              <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+              <Txt variant="overline">
                 {t("common.day", { number: plan.day_number })}
-              </Text>
-              <Text className="font-sans-bold text-2xl leading-8 text-plum">
+              </Txt>
+              <Txt variant="headingLg">
                 {t("community.publicPlan.title", { name: plan.owner_name })}
-              </Text>
+              </Txt>
             </View>
           </View>
 
-          <Text className="font-sans text-base text-mist-ink">
+          <Txt variant="body" tone="secondary">
             {plan.plan_title}
-          </Text>
+          </Txt>
 
           <ScriptureSection
             scriptureText={plan.scripture_text}
@@ -102,11 +103,11 @@ export default function PublicPlanDayScreen() {
             el contrato B2. Esto es lo que Comunidad promete; orar sigue
             pidiendo un share explícito. */}
           <DaySection label={t("community.kind.plan")}>
-            <Text className="font-sans text-sm leading-6 text-mist-ink">
+            <Txt variant="caption">
               {t("community.publicPlan.readOnlyHint", {
                 name: plan.owner_name,
               })}
-            </Text>
+            </Txt>
           </DaySection>
         </ScrollView>
       </DawnBackground>

@@ -1,10 +1,11 @@
 import { router, Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
+import { Txt } from "@/components/ui/Text";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
@@ -119,12 +120,10 @@ export default function PrayThrough() {
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />
         <KeyboardScreen>
           <DawnBackground className="justify-center gap-6 px-8">
-            <Text className="font-serif-bold text-2xl text-plum">
-              {t("list.howLong")}
-            </Text>
-            <Text className="font-sans text-base leading-6 text-mist-ink">
+            <Txt variant="title">{t("list.howLong")}</Txt>
+            <Txt variant="body" tone="secondary">
               {t("list.howLongHint", { count: items.length })}
-            </Text>
+            </Txt>
 
             <ChoiceChips
               options={LENGTHS.map((value) => ({
@@ -155,26 +154,27 @@ export default function PrayThrough() {
             <Orb size={72} />
             {done ? null : (
               <>
-                <Text className="font-sans text-sm text-mist-ink">
+                <Txt variant="caption">
                   {t("list.position", {
                     current: index + 1,
                     total: items.length,
                   })}
-                </Text>
-                <Text className="font-sans text-sm tabular-nums text-mist-ink">
+                </Txt>
+                <Txt variant="caption" className="tabular-nums">
                   {minutesLeft}:{String(seconds).padStart(2, "0")}
-                </Text>
+                </Txt>
               </>
             )}
           </View>
 
-          <Text
-            className="text-center font-serif text-2xl leading-reading text-plum"
+          <Txt
+            variant="reading"
+            className="text-center text-2xl leading-reading"
             accessibilityRole={done ? "alert" : undefined}
             accessibilityLiveRegion={done ? "polite" : undefined}
           >
             {done ? t("list.finished", { count: items.length }) : item.body}
-          </Text>
+          </Txt>
 
           {done ? null : isLast ? (
             <Button
@@ -197,9 +197,9 @@ export default function PrayThrough() {
               onPress={() => goBackOr("/orar")}
               className="items-center"
             >
-              <Text className="font-sans text-sm text-mist-ink underline">
+              <Txt variant="caption" className="underline">
                 {t("list.stop")}
-              </Text>
+              </Txt>
             </Tap>
           )}
         </DawnBackground>

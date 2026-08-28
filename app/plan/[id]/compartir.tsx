@@ -1,9 +1,10 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Txt } from "@/components/ui/Text";
 import { Card } from "@/components/Card";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -168,14 +169,12 @@ export default function SharePlan() {
           contentContainerStyle={{ paddingBottom: scrollBottom }}
         >
           <View className="gap-1">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {plan.title}
-            </Text>
-            <Text className="font-sans text-base text-mist-ink">
+            <Txt variant="subheadingLg">{plan.title}</Txt>
+            <Txt variant="body" tone="secondary">
               {stillWriting
                 ? t("share.stillWritingMinute")
                 : t("share.subtitle")}
-            </Text>
+            </Txt>
           </View>
 
           {/* Publicar, y **dejar de publicar**, que es la mitad que importa:
@@ -183,12 +182,10 @@ export default function SharePlan() {
             la única salida habría sido borrarlo entero con los días ya orados
             dentro. */}
           <View className="gap-3">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {t("share.publicTitle")}
-            </Text>
-            <Text className="font-sans text-sm text-mist-ink">
+            <Txt variant="subheadingLg">{t("share.publicTitle")}</Txt>
+            <Txt variant="caption">
               {isPublic ? t("share.publicOn") : t("share.publicOff")}
-            </Text>
+            </Txt>
             <Button
               title={isPublic ? t("share.unpublish") : t("share.publish")}
               variant="secondary"
@@ -198,9 +195,7 @@ export default function SharePlan() {
           </View>
 
           <View className="gap-3">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {t("share.circlesTitle")}
-            </Text>
+            <Txt variant="subheadingLg">{t("share.circlesTitle")}</Txt>
 
             {(circles ?? []).length > 0 ? (
               <>
@@ -213,24 +208,20 @@ export default function SharePlan() {
                   onToggle={(circleId) => void handleToggleCircle(circleId)}
                   multiple
                 />
-                <Text className="font-sans text-sm text-mist-ink">
-                  {t("share.circlesHint")}
-                </Text>
+                <Txt variant="caption">{t("share.circlesHint")}</Txt>
               </>
             ) : (
               // A failed read used to render "Todavía no tienes círculos", which
               // is a different and untrue thing to say — and it says it on the
               // screen where someone is deciding who gets to see their request.
-              <Text className="font-sans text-sm text-mist-ink">
+              <Txt variant="caption">
                 {circlesFailed ? t("common.errorBody") : t("newPlan.noCircles")}
-              </Text>
+              </Txt>
             )}
           </View>
 
           <View className="gap-3">
-            <Text className="font-sans-semibold text-lg text-plum">
-              {t("share.linkTitle")}
-            </Text>
+            <Txt variant="subheadingLg">{t("share.linkTitle")}</Txt>
 
             {linkLoading ? (
               <ActivityIndicator
@@ -240,14 +231,12 @@ export default function SharePlan() {
             ) : linkUrl ? (
               <>
                 <Card className="gap-2">
-                  <Text className="font-sans text-sm text-mist-ink" selectable>
+                  <Txt variant="caption" selectable>
                     {linkUrl}
-                  </Text>
+                  </Txt>
                 </Card>
 
-                <Text className="font-sans text-sm text-mist-ink">
-                  {t("share.linkWarning")}
-                </Text>
+                <Txt variant="caption">{t("share.linkWarning")}</Txt>
 
                 <Button
                   title={t("common.share")}
@@ -267,9 +256,7 @@ export default function SharePlan() {
               </>
             ) : (
               <>
-                <Text className="font-sans text-sm text-mist-ink">
-                  {t("share.noLinkHint")}
-                </Text>
+                <Txt variant="caption">{t("share.noLinkHint")}</Txt>
                 <Button
                   title={t("share.createLink")}
                   loading={createLink.isPending}
@@ -280,21 +267,15 @@ export default function SharePlan() {
           </View>
 
           {notice ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" accessibilityRole="alert">
               {notice}
-            </Text>
+            </Txt>
           ) : null}
 
           {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" tone="danger" accessibilityRole="alert">
               {error}
-            </Text>
+            </Txt>
           ) : null}
         </ScrollView>
       </DawnBackground>

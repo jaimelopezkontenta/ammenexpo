@@ -1,10 +1,11 @@
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -169,16 +170,16 @@ export default function CircleDetail() {
             heading just pushed the useful content down. */}
           <View className="gap-1">
             {circle.description ? (
-              <Text className="font-sans text-base text-mist-ink">
+              <Txt variant="body" tone="secondary">
                 {circle.description}
-              </Text>
+              </Txt>
             ) : null}
-            <Text className="font-sans text-sm text-mist-ink">
+            <Txt variant="caption">
               {t("circles.members", { count: circle.member_count })} ·{" "}
               {circle.visibility === "private"
                 ? t("circles.visibilityPrivate")
                 : t("circles.visibilityPublic")}
-            </Text>
+            </Txt>
           </View>
 
           {/* Above the roster on purpose: what the circle is *doing* matters more
@@ -193,20 +194,17 @@ export default function CircleDetail() {
           />
 
           <View className="gap-3">
-            <Text className="font-sans-medium text-sm text-mist-ink">
+            <Txt variant="label" tone="secondary">
               {t("circles.membersTitle")}
-            </Text>
+            </Txt>
             {/* A failed roster read used to render an empty list —
               indistinguishable from a circle of one — and silently set
               `isAdmin` to false, hiding "Expulsar" from a real admin at the
               moment they most likely need it. */}
             {membersFailed ? (
-              <Text
-                className="font-sans text-base leading-6 text-mist-ink"
-                accessibilityRole="alert"
-              >
+              <Txt variant="body" tone="secondary" accessibilityRole="alert">
                 {t("common.errorBody")}
-              </Text>
+              </Txt>
             ) : null}
 
             {(members ?? []).map((member) => (
@@ -232,17 +230,17 @@ export default function CircleDetail() {
                         seed={member.user_id}
                         size={32}
                       />
-                      <Text className="flex-1 font-sans text-base text-plum">
+                      <Txt variant="body" className="flex-1">
                         {member.display_name}
-                      </Text>
+                      </Txt>
                     </Tap>
                   </Link>
                   {member.role !== "member" ? (
-                    <Text className="font-sans text-sm text-mist-ink">
+                    <Txt variant="caption">
                       {member.role === "owner"
                         ? t("circles.owner")
                         : t("circles.admin")}
-                    </Text>
+                    </Txt>
                   ) : null}
                 </View>
 
@@ -255,9 +253,7 @@ export default function CircleDetail() {
                       accessibilityRole="button"
                       onPress={() => void handleBlock(member.user_id)}
                     >
-                      <Text className="font-sans text-sm text-mist-ink">
-                        {t("moderation.block")}
-                      </Text>
+                      <Txt variant="caption">{t("moderation.block")}</Txt>
                     </Tap>
 
                     {isAdmin && member.role !== "owner" ? (
@@ -265,11 +261,11 @@ export default function CircleDetail() {
                         accessibilityRole="button"
                         onPress={() => void handleRemove(member.user_id)}
                       >
-                        <Text className="font-sans text-sm text-mist-ink">
+                        <Txt variant="caption">
                           {pendingRemoval === member.user_id
                             ? t("circles.removeConfirmCta")
                             : t("circles.remove")}
-                        </Text>
+                        </Txt>
                       </Tap>
                     ) : null}
                   </View>
@@ -282,9 +278,9 @@ export default function CircleDetail() {
             nothing about before — including whether your own plan is among
             them, the answer to "is this circle seeing my requests?". */}
           <View className="gap-3">
-            <Text className="font-sans-medium text-sm text-mist-ink">
+            <Txt variant="label" tone="secondary">
               {t("circles.sharedTitle")}
-            </Text>
+            </Txt>
 
             {(sharedPlans ?? []).length === 0 ? (
               <EmptyState title={t("circles.sharedEmpty")} />
@@ -305,12 +301,10 @@ export default function CircleDetail() {
                       })
                 }
               >
-                <Text className="font-sans-medium text-base text-plum">
-                  {shared.plan_title}
-                </Text>
-                <Text className="font-sans text-sm text-mist-ink">
+                <Txt variant="bodyMedium">{shared.plan_title}</Txt>
+                <Txt variant="caption">
                   {shared.is_mine ? t("circles.sharedMine") : shared.owner_name}
-                </Text>
+                </Txt>
               </Tap>
             ))}
           </View>
@@ -331,23 +325,23 @@ export default function CircleDetail() {
 
           {inviteUrl ? (
             <Card className="gap-2">
-              <Text className="font-sans-medium text-sm text-mist-ink">
+              <Txt variant="label" tone="secondary">
                 {t("circles.inviteLink")}
-              </Text>
-              <Text className="font-sans text-sm text-mist-ink" selectable>
+              </Txt>
+              <Txt variant="caption" selectable>
                 {inviteUrl}
-              </Text>
+              </Txt>
             </Card>
           ) : null}
 
           {confirmingLeave ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
+            <Txt
+              variant="caption"
               accessibilityRole="alert"
               accessibilityLiveRegion="polite"
             >
               {t("circles.leaveConfirm")}
-            </Text>
+            </Txt>
           ) : null}
 
           <View className="mt-auto gap-3 pt-6">

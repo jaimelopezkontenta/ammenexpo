@@ -1,9 +1,10 @@
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Card } from "@/components/Card";
+import { Txt } from "@/components/ui/Text";
 import { DawnBackground } from "@/components/DawnBackground";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { useScreenPadding } from "@/components/useScreenPadding";
@@ -138,12 +139,8 @@ export default function NewPlan() {
             keyboardShouldPersistTaps="handled"
           >
             <View className="gap-3">
-              <Text className="font-sans-semibold text-lg text-plum">
-                {t("newPlan.topicQuestion")}
-              </Text>
-              <Text className="font-sans text-sm text-mist-ink">
-                {t("newPlan.topicHint")}
-              </Text>
+              <Txt variant="subheadingLg">{t("newPlan.topicQuestion")}</Txt>
+              <Txt variant="caption">{t("newPlan.topicHint")}</Txt>
               <ChoiceChips
                 options={TOPIC_KEYS.map((key) => ({
                   value: key,
@@ -164,15 +161,11 @@ export default function NewPlan() {
                 maxLength={CUSTOM_TOPIC_MAX}
                 multiline
               />
-              <Text className="font-sans text-sm text-mist-ink">
-                {t("newPlan.customHint")}
-              </Text>
+              <Txt variant="caption">{t("newPlan.customHint")}</Txt>
             </View>
 
             <View className="gap-3">
-              <Text className="font-sans-semibold text-lg text-plum">
-                {t("newPlan.durationQuestion")}
-              </Text>
+              <Txt variant="subheadingLg">{t("newPlan.durationQuestion")}</Txt>
               <ChoiceChips
                 options={DURATIONS.map((days) => ({
                   value: String(days),
@@ -187,9 +180,9 @@ export default function NewPlan() {
             yo" here would be offering a contradiction. */}
             {circulo ? null : (
               <View className="gap-3">
-                <Text className="font-sans-semibold text-lg text-plum">
+                <Txt variant="subheadingLg">
                   {t("newPlan.visibilityQuestion")}
-                </Text>
+                </Txt>
                 <ChoiceChips
                   options={[
                     { value: "private", label: t("newPlan.visPrivate") },
@@ -203,9 +196,7 @@ export default function NewPlan() {
                   selected={[visibility]}
                   onToggle={(value) => setVisibility(value as PlanVisibility)}
                 />
-                <Text className="font-sans text-sm text-mist-ink">
-                  {visibilityHint}
-                </Text>
+                <Txt variant="caption">{visibilityHint}</Txt>
 
                 {visibility === "circles" ? (
                   hasCircles ? (
@@ -226,9 +217,7 @@ export default function NewPlan() {
                     // Without a way out this option is a dead end: nothing to pick,
                     // and creating the plan is blocked on picking something.
                     <View className="gap-3">
-                      <Text className="font-sans text-sm text-mist-ink">
-                        {t("newPlan.noCircles")}
-                      </Text>
+                      <Txt variant="caption">{t("newPlan.noCircles")}</Txt>
                       <Button
                         title={t("circles.create")}
                         variant="secondary"
@@ -241,22 +230,17 @@ export default function NewPlan() {
             )}
 
             {error ? (
-              <Text
-                className="font-sans text-sm text-danger"
-                accessibilityRole="alert"
-              >
+              <Txt variant="caption" tone="danger" accessibilityRole="alert">
                 {error}
-              </Text>
+              </Txt>
             ) : null}
 
             {atLimit ? (
               <Card className="gap-2" accessibilityRole="alert">
-                <Text className="font-sans-semibold text-base text-plum">
-                  {t("plan.limitTitle")}
-                </Text>
-                <Text className="font-sans text-base leading-6 text-mist-ink">
+                <Txt variant="subheading">{t("plan.limitTitle")}</Txt>
+                <Txt variant="body" tone="secondary">
                   {t("plan.limitBody")}
-                </Text>
+                </Txt>
                 {/* Al techo la salida es la lista de espera, no una suscripción:
                 el botón dice «apuntarme a la lista» y no el nombre de Plus,
                 porque lo que se ofrece aquí es dejar nombre y correo. */}
@@ -272,7 +256,7 @@ export default function NewPlan() {
             <View className="gap-2 pb-4">
               {/* Lo elegido, en una línea junto al botón: el CTA anclado al
                 final de un formulario largo no debería ser un acto de fe. */}
-              <Text className="text-center font-sans text-sm text-mist-ink">
+              <Txt variant="caption" className="text-center">
                 {[
                   t("newPlan.days", { count: duration }),
                   topics.length > 0
@@ -292,7 +276,7 @@ export default function NewPlan() {
                 ]
                   .filter(Boolean)
                   .join(" · ")}
-              </Text>
+              </Txt>
               <Button
                 title={t("newPlan.create")}
                 loading={generate.isPending}

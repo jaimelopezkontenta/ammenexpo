@@ -1,9 +1,10 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { Txt } from "@/components/ui/Text";
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
@@ -123,22 +124,19 @@ export default function PrayerRequestComments() {
           keyboardShouldPersistTaps="handled"
         >
           {notice ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
+            <Txt
+              variant="caption"
               accessibilityRole="alert"
               accessibilityLiveRegion="polite"
             >
               {notice}
-            </Text>
+            </Txt>
           ) : null}
 
           {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" tone="danger" accessibilityRole="alert">
               {error}
-            </Text>
+            </Txt>
           ) : null}
 
           {(comments ?? []).map((comment) => (
@@ -150,19 +148,17 @@ export default function PrayerRequestComments() {
                   seed={comment.author_id}
                   size={24}
                 />
-                <Text className="font-sans-medium text-sm text-mist-ink">
+                <Txt variant="label" tone="secondary">
                   {comment.author_name}
-                </Text>
+                </Txt>
               </View>
               {comment.held_at ? (
-                <Text className="font-sans-medium text-sm text-mist-ink">
+                <Txt variant="label" tone="secondary">
                   {t("moderation.held")} · {t("moderation.heldHint")}
-                </Text>
+                </Txt>
               ) : null}
 
-              <Text className="font-sans text-base leading-6 text-plum">
-                {comment.body}
-              </Text>
+              <Txt variant="body">{comment.body}</Txt>
 
               {!comment.is_mine ? (
                 <View className="flex-row gap-4 pt-0.5">
@@ -179,9 +175,9 @@ export default function PrayerRequestComments() {
                       )
                     }
                   >
-                    <Text className="font-sans text-sm text-mist-ink underline">
+                    <Txt variant="caption" className="underline">
                       {t("moderation.report")}
-                    </Text>
+                    </Txt>
                   </Tap>
 
                   <Tap
@@ -194,9 +190,9 @@ export default function PrayerRequestComments() {
                       )
                     }
                   >
-                    <Text className="font-sans text-sm text-mist-ink underline">
+                    <Txt variant="caption" className="underline">
                       {t("moderation.block")}
-                    </Text>
+                    </Txt>
                   </Tap>
 
                   {/* Bloquear solo te lo quita a ti de delante; ocultar lo quita
@@ -212,9 +208,9 @@ export default function PrayerRequestComments() {
                         )
                       }
                     >
-                      <Text className="font-sans text-sm text-mist-ink underline">
+                      <Txt variant="caption" className="underline">
                         {t("moderation.hide")}
-                      </Text>
+                      </Txt>
                     </Tap>
                   ) : null}
                 </View>

@@ -1,7 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { DayView } from "@/components/DayView";
 import { Txt } from "@/components/ui/Text";
@@ -80,9 +80,9 @@ export default function PlanDayDetail() {
             {/* Read-only on purpose. Marking a past day prayed belongs on Hoy,
               where "today" is what the streak is actually counting. */}
             {prayed ? (
-              <Text className="font-sans-medium text-base text-mist-ink">
+              <Txt variant="bodyMedium" tone="secondary">
                 {t("plan.dayPrayed")}
-              </Text>
+              </Txt>
             ) : null}
           </View>
 
@@ -107,9 +107,9 @@ export default function PlanDayDetail() {
                     color={colors.plum.DEFAULT}
                     strokeWidth={icon.strokeWidth}
                   />
-                  <Text className="font-sans-medium text-sm text-plum">
+                  <Txt variant="label">
                     {t("common.day", { number: day.day_number - 1 })}
-                  </Text>
+                  </Txt>
                 </Tap>
               ) : (
                 <View />
@@ -124,9 +124,9 @@ export default function PlanDayDetail() {
                   onPress={() => goToDay(day.day_number + 1)}
                   className="min-h-11 flex-row items-center gap-1 rounded-cta border border-glassedge/60 bg-glass/60 py-2 pl-4 pr-2"
                 >
-                  <Text className="font-sans-medium text-sm text-plum">
+                  <Txt variant="label">
                     {t("common.day", { number: day.day_number + 1 })}
-                  </Text>
+                  </Txt>
                   <ChevronRight
                     size={icon.sm}
                     color={colors.plum.DEFAULT}

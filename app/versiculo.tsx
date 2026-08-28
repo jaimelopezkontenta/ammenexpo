@@ -1,10 +1,11 @@
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
+import { Txt } from "@/components/ui/Text";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { VerseCard } from "@/components/VerseCard";
 import { VerseStory } from "@/components/VerseStory";
@@ -91,9 +92,7 @@ export default function VerseImage() {
   return (
     <ScreenScaffold {...screen}>
       <View className="items-center gap-1">
-        <Text className="font-editorial text-lg text-ember-ink">
-          {t("bible.formatLabel")}
-        </Text>
+        <Txt variant="editorial">{t("bible.formatLabel")}</Txt>
         <ChoiceChips
           options={[
             { value: "square", label: t("bible.formatSquare") },
@@ -140,21 +139,24 @@ export default function VerseImage() {
       />
 
       {notice ? (
-        <Text
-          className="text-center font-sans text-sm text-mist-ink"
+        <Txt
+          variant="caption"
+          className="text-center"
           accessibilityRole="alert"
         >
           {notice}
-        </Text>
+        </Txt>
       ) : null}
 
       {error ? (
-        <Text
-          className="text-center font-sans text-sm text-danger"
+        <Txt
+          variant="caption"
+          tone="danger"
+          className="text-center"
           accessibilityRole="alert"
         >
           {error}
-        </Text>
+        </Txt>
       ) : null}
     </ScreenScaffold>
   );

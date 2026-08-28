@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -123,15 +123,16 @@ export default function SharedPlanPreviewScreen() {
   if (isError) {
     return (
       <DawnBackground className="items-center justify-center gap-3 px-8">
-        <Text
-          className="text-center font-sans-bold text-xl text-plum"
+        <Txt
+          variant="heading"
+          className="text-center"
           accessibilityRole="alert"
         >
           {t("common.errorTitle")}
-        </Text>
-        <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+        </Txt>
+        <Txt variant="body" tone="secondary" className="text-center">
           {t("common.errorBody")}
-        </Text>
+        </Txt>
         <View className="mt-4 w-full">
           <Button title={t("common.retry")} onPress={() => void refetch()} />
         </View>
@@ -142,12 +143,12 @@ export default function SharedPlanPreviewScreen() {
   if (!data) {
     return (
       <DawnBackground className="items-center justify-center gap-3 px-8">
-        <Text className="text-center font-sans-bold text-xl text-plum">
+        <Txt variant="heading" className="text-center">
           {t("share.previewNotFound")}
-        </Text>
-        <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+        </Txt>
+        <Txt variant="body" tone="secondary" className="text-center">
           {t("share.previewNotFoundHint")}
-        </Text>
+        </Txt>
 
         {/* This group has no header, so without a way forward a visitor who
             opened an expired WhatsApp link was simply stuck on two lines of
@@ -160,9 +161,9 @@ export default function SharedPlanPreviewScreen() {
             />
           ) : (
             <>
-              <Text className="text-center font-sans text-base text-mist-ink">
+              <Txt variant="body" tone="secondary" className="text-center">
                 {t("share.deadLinkInvite")}
-              </Text>
+              </Txt>
               <Link href="/crear-cuenta" asChild>
                 <Button title={t("share.deadLinkCta")} />
               </Link>
@@ -185,31 +186,29 @@ export default function SharedPlanPreviewScreen() {
         paddingBottom: scrollBottom,
       }}
     >
-      <Text className="font-sans-medium text-sm text-mist-ink">
+      <Txt variant="label" tone="secondary">
         {t("common.day", { number: data.day_number })}
-      </Text>
+      </Txt>
 
-      <Text className="mt-2 font-sans-bold text-3xl text-plum">
+      <Txt variant="display" className="mt-2">
         {t("share.previewTitle", { name: data.owner_name })}
-      </Text>
+      </Txt>
 
       <View className="mt-8 gap-6">
         <View className="gap-1.5">
-          <Text className="font-sans-semibold text-xl text-plum">
+          <Txt variant="subheadingLg" className="text-xl">
             {data.day_title}
-          </Text>
+          </Txt>
           {data.plan_theme ? (
-            <Text className="font-sans text-base text-mist-ink">
+            <Txt variant="body" tone="secondary">
               {data.plan_theme}
-            </Text>
+            </Txt>
           ) : null}
         </View>
 
         {data.scripture_text ? (
           <Card label={t("plan.scripture")} className="gap-2">
-            <Text className="font-serif text-lg leading-reading text-plum">
-              {data.scripture_text}
-            </Text>
+            <Txt variant="reading">{data.scripture_text}</Txt>
             {data.scripture_ref ? (
               <Txt variant="editorial" className="text-base">
                 {data.scripture_ref}
@@ -226,21 +225,21 @@ export default function SharedPlanPreviewScreen() {
             label={t("intercession.prayerFor", { name: data.owner_name })}
             className="gap-2"
           >
-            <Text className="font-serif text-lg leading-reading text-plum">
-              {data.intercessor_prayer}
-            </Text>
+            <Txt variant="reading">{data.intercessor_prayer}</Txt>
           </Card>
         ) : null}
       </View>
 
       <View className="mt-auto gap-3 pt-12">
         {redeemError ? (
-          <Text
-            className="text-center font-sans text-sm text-danger"
+          <Txt
+            variant="caption"
+            tone="danger"
+            className="text-center"
             accessibilityRole="alert"
           >
             {redeemError}
-          </Text>
+          </Txt>
         ) : null}
 
         {session ? (
@@ -251,9 +250,9 @@ export default function SharedPlanPreviewScreen() {
           />
         ) : (
           <>
-            <Text className="text-center font-sans text-base text-mist-ink">
+            <Txt variant="body" tone="secondary" className="text-center">
               {t("share.previewSignupHint", { name: data.owner_name })}
-            </Text>
+            </Txt>
             <Link href="/crear-cuenta" asChild>
               <Button
                 title={t("share.previewCta", { name: data.owner_name })}

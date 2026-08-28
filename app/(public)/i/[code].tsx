@@ -1,9 +1,10 @@
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -58,15 +59,15 @@ export default function InviteLanding() {
       className="items-center justify-center gap-3 px-8"
       style={{ paddingTop: top, paddingBottom: scrollBottom }}
     >
-      <Text className="text-center font-serif-bold text-2xl text-plum">
+      <Txt variant="title" className="text-center">
         {/* Un código que ya no existe no es un error: se dice lo que hay, que
             es una invitación a la app, sin nombre. */}
         {name ? t("invite.landing", { name }) : t("invite.landingUnknown")}
-      </Text>
+      </Txt>
 
-      <Text className="text-center font-sans text-base leading-6 text-mist-ink">
+      <Txt variant="body" tone="secondary" className="text-center">
         {t("invite.body")}
-      </Text>
+      </Txt>
 
       {/* Este grupo no tiene cabecera, así que sin salidas alguien que abre un
           enlace de WhatsApp se queda mirando dos líneas de texto. */}

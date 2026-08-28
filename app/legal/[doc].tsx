@@ -1,8 +1,9 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { LegalText } from "@/components/LegalText";
 import { legalDocument } from "@/core/legal/documents";
@@ -37,12 +38,8 @@ export default function LegalDocument() {
           contentContainerStyle={{ paddingBottom: scrollBottom }}
         >
           <View className="gap-1">
-            <Text className="font-serif-bold text-2xl text-plum">
-              {document.title}
-            </Text>
-            <Text className="font-sans text-sm text-mist-ink">
-              {document.updated}
-            </Text>
+            <Txt variant="title">{document.title}</Txt>
+            <Txt variant="caption">{document.updated}</Txt>
           </View>
 
           {document.body.map((paragraph, index) => (

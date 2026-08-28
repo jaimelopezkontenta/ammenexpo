@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Text } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Txt } from "@/components/ui/Text";
 import { Card } from "@/components/Card";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -67,18 +67,16 @@ export default function Invite() {
       title={t("invite.title")}
       contentClassName="flex-grow gap-6"
     >
-      <Text className="font-serif text-lg leading-reading text-plum">
-        {t("invite.body")}
-      </Text>
+      <Txt variant="reading">{t("invite.body")}</Txt>
 
       {code ? (
         /* El enlace en una tarjeta con su rótulo, no una URL cruda flotando.
            Sigue seleccionable a mano: es lo que salva el día que la hoja del
            sistema falla o el portapapeles está capado. */
         <Card label={t("invite.linkLabel")}>
-          <Text selectable className="font-sans text-base text-plum">
+          <Txt variant="body" selectable>
             {buildShareUrl(`/i/${code}`, "invitacion")}
-          </Text>
+          </Txt>
         </Card>
       ) : null}
 

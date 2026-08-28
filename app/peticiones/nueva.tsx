@@ -1,10 +1,11 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
@@ -85,44 +86,37 @@ export default function NewPrayerRequest() {
                     : "border-glassedge/60 bg-dawn-cream-bg"
                 }`}
               >
-                <Text
-                  className={
-                    isAnonymous
-                      ? "font-sans-semibold text-base text-white"
-                      : "text-base text-mist-ink"
-                  }
+                <Txt
+                  variant="body"
+                  tone={isAnonymous ? "onDark" : "secondary"}
+                  className={isAnonymous ? "font-sans-semibold" : ""}
                 >
                   {t("feed.anonymous")}
-                </Text>
+                </Txt>
               </Tap>
 
               {/* The cost is stated before the choice, not after: without a name
               there is no id to block either, and somebody deciding to post
               anonymously deserves to know that cuts both ways. */}
               {isAnonymous ? (
-                <Text className="font-sans text-sm leading-5 text-mist-ink">
-                  {t("feed.anonymousHint")}
-                </Text>
+                <Txt variant="caption">{t("feed.anonymousHint")}</Txt>
               ) : null}
             </View>
 
             {error ? (
-              <Text
-                className="font-sans text-sm text-danger"
-                accessibilityRole="alert"
-              >
+              <Txt variant="caption" tone="danger" accessibilityRole="alert">
                 {error}
-              </Text>
+              </Txt>
             ) : null}
 
             <View className="mt-auto gap-2 pt-6">
               {/* Lo elegido, dicho junto al botón: publicar con o sin nombre
                 no debería depender de recordar un toggle más arriba. */}
-              <Text className="text-center font-sans text-sm text-mist-ink">
+              <Txt variant="caption" className="text-center">
                 {isAnonymous
                   ? t("feed.summaryAnonymous")
                   : t("feed.summaryNamed")}
-              </Text>
+              </Txt>
               <Button
                 title={t("feed.publish")}
                 disabled={body.trim().length === 0}

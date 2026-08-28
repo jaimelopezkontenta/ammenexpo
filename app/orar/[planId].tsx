@@ -1,10 +1,11 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DaySection } from "@/components/DaySection";
+import { Txt } from "@/components/ui/Text";
 import { ScriptureSection } from "@/components/DayView";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
@@ -101,15 +102,13 @@ export default function PrayForSomeone() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="gap-1">
-            <Text className="font-sans-semibold text-xs uppercase tracking-wide text-mist-ink">
+            <Txt variant="overline">
               {t("common.day", { number: plan.day_number })}
-            </Text>
-            <Text className="font-sans-bold text-3xl leading-9 text-plum">
-              {plan.day_title}
-            </Text>
-            <Text className="font-sans text-base text-mist-ink">
+            </Txt>
+            <Txt variant="display">{plan.day_title}</Txt>
+            <Txt variant="body" tone="secondary">
               {plan.plan_title}
-            </Text>
+            </Txt>
           </View>
 
           {/* The shared component rather than an inlined copy: this screen used
@@ -128,22 +127,22 @@ export default function PrayForSomeone() {
             <DaySection
               label={t("intercession.prayerFor", { name: plan.owner_name })}
             >
-              <Text className="font-serif text-lg leading-reading text-plum">
-                {plan.intercessor_prayer}
-              </Text>
+              <Txt variant="reading">{plan.intercessor_prayer}</Txt>
             </DaySection>
           ) : null}
 
           {plan.already_prayed || sent ? (
-            <Text
-              className="text-center font-sans-medium text-base text-mist-ink"
+            <Txt
+              variant="bodyMedium"
+              tone="secondary"
+              className="text-center"
               accessibilityRole="alert"
               accessibilityLiveRegion="polite"
             >
               {sent
                 ? t("intercession.prayedThanks", { name: plan.owner_name })
                 : t("intercession.prayedFor", { name: plan.owner_name })}
-            </Text>
+            </Txt>
           ) : (
             <View className="gap-3 pb-6">
               {/* Chips and free text are alternatives, so picking one still
@@ -184,20 +183,17 @@ export default function PrayForSomeone() {
                 explanation. The counter only appears once it is close enough
                 to matter. */}
               {message.length > MESSAGE_MAX - 60 ? (
-                <Text className="text-right font-sans text-sm text-mist-ink">
+                <Txt variant="caption" className="text-right">
                   {t("intercession.remaining", {
                     count: MESSAGE_MAX - message.length,
                   })}
-                </Text>
+                </Txt>
               ) : null}
 
               {error ? (
-                <Text
-                  className="font-sans text-sm text-danger"
-                  accessibilityRole="alert"
-                >
+                <Txt variant="caption" tone="danger" accessibilityRole="alert">
                   {error}
-                </Text>
+                </Txt>
               ) : null}
 
               <Button

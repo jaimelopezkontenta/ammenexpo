@@ -1,9 +1,10 @@
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -71,9 +72,9 @@ export default function CircleInvite() {
         className="items-center justify-center gap-3 px-8"
         style={{ paddingTop: top, paddingBottom: scrollBottom }}
       >
-        <Text className="text-center font-sans-bold text-xl text-plum">
+        <Txt variant="heading" className="text-center">
           {t("circles.inviteNotFound")}
-        </Text>
+        </Txt>
 
         {/* No header in this group, so without these a dead invite left a
             stranger on a single line of text with nowhere to go. */}
@@ -103,25 +104,27 @@ export default function CircleInvite() {
       className="items-center justify-center gap-3 px-8"
       style={{ paddingTop: top, paddingBottom: scrollBottom }}
     >
-      <Text className="text-center font-sans-bold text-2xl text-plum">
+      <Txt variant="headingLg" className="text-center">
         {t("circles.joinTitle", { name: circle.name })}
-      </Text>
-      <Text className="text-center font-sans text-base text-mist-ink">
+      </Txt>
+      <Txt variant="body" tone="secondary" className="text-center">
         {t("circles.joinBody", { count: circle.member_count })}
-      </Text>
+      </Txt>
       {circle.description ? (
-        <Text className="text-center font-sans text-base text-mist-ink">
+        <Txt variant="body" tone="secondary" className="text-center">
           {circle.description}
-        </Text>
+        </Txt>
       ) : null}
 
       {joinError ? (
-        <Text
-          className="text-center font-sans text-sm text-danger"
+        <Txt
+          variant="caption"
+          tone="danger"
+          className="text-center"
           accessibilityRole="alert"
         >
           {joinError}
-        </Text>
+        </Txt>
       ) : null}
 
       <View className="mt-8 w-full gap-3">

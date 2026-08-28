@@ -1,7 +1,7 @@
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { LoadMore } from "@/components/LoadMore";
@@ -138,21 +138,15 @@ function ReportsQueue() {
       />
 
       {notice ? (
-        <Text
-          className="font-sans text-sm text-mist-ink"
-          accessibilityRole="alert"
-        >
+        <Txt variant="caption" accessibilityRole="alert">
           {notice}
-        </Text>
+        </Txt>
       ) : null}
 
       {error ? (
-        <Text
-          className="font-sans text-sm text-danger"
-          accessibilityRole="alert"
-        >
+        <Txt variant="caption" tone="danger" accessibilityRole="alert">
           {error}
-        </Text>
+        </Txt>
       ) : null}
 
       {queue.isLoading ? (
@@ -160,9 +154,9 @@ function ReportsQueue() {
       ) : queue.isError ? (
         <ErrorState onRetry={() => void queue.refetch()} />
       ) : (queue.data ?? []).length === 0 ? (
-        <Text className="font-sans text-base leading-6 text-mist-ink">
+        <Txt variant="body" tone="secondary">
           {t("moderation.queueEmpty")}
-        </Text>
+        </Txt>
       ) : (
         (queue.data ?? []).map((report) => {
           const hide = hideFor(report);
@@ -173,12 +167,12 @@ function ReportsQueue() {
               className="gap-3 rounded-card border border-glassedge/60 p-5"
             >
               <View className="flex-row items-center justify-between gap-3">
-                <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
+                <Txt variant="overline">
                   {t(`moderation.target.${report.target_type}`)}
-                </Text>
-                <Text className="font-sans text-xs text-mist-ink">
+                </Txt>
+                <Txt variant="caption" className="text-xs">
                   {new Date(report.created_at).toLocaleString()}
-                </Text>
+                </Txt>
               </View>
 
               {/* Lo reportado, literal. Sin esto habría que creerse el
@@ -187,7 +181,7 @@ function ReportsQueue() {
                 {report.content ?? t("moderation.contentGone")}
               </Txt>
 
-              <Text className="font-sans text-sm text-mist-ink">
+              <Txt variant="caption">
                 {t("moderation.reportedBy", { name: report.reporter_name })}
                 {report.author_name
                   ? ` · ${t("moderation.writtenBy", { name: report.author_name })}`
@@ -195,7 +189,7 @@ function ReportsQueue() {
                 {report.already_hidden
                   ? ` · ${t("moderation.alreadyHidden")}`
                   : ""}
-              </Text>
+              </Txt>
 
               {report.author_id ? (
                 <Link
@@ -206,9 +200,9 @@ function ReportsQueue() {
                   asChild
                 >
                   <Tap accessibilityRole="link">
-                    <Text className="font-sans text-sm text-ember-ink underline">
+                    <Txt variant="caption" tone="accent" className="underline">
                       {t("moderation.openProfile")}
-                    </Text>
+                    </Txt>
                   </Tap>
                 </Link>
               ) : null}
@@ -220,9 +214,9 @@ function ReportsQueue() {
                       accessibilityRole="button"
                       onPress={() => void run(hide, t("moderation.hideDone"))}
                     >
-                      <Text className="font-sans text-sm text-mist-ink underline">
+                      <Txt variant="caption" className="underline">
                         {t("moderation.hide")}
-                      </Text>
+                      </Txt>
                     </Tap>
                   ) : null}
 
@@ -236,9 +230,9 @@ function ReportsQueue() {
                         )
                       }
                     >
-                      <Text className="font-sans text-sm text-mist-ink underline">
+                      <Txt variant="caption" className="underline">
                         {t("moderation.block")}
-                      </Text>
+                      </Txt>
                     </Tap>
                   ) : null}
 
@@ -255,9 +249,9 @@ function ReportsQueue() {
                       )
                     }
                   >
-                    <Text className="font-sans-medium text-sm text-plum underline">
+                    <Txt variant="label" className="underline">
                       {t("moderation.markReviewed")}
-                    </Text>
+                    </Txt>
                   </Tap>
 
                   <Tap
@@ -273,9 +267,9 @@ function ReportsQueue() {
                       )
                     }
                   >
-                    <Text className="font-sans text-sm text-mist-ink underline">
+                    <Txt variant="caption" className="underline">
                       {t("moderation.dismiss")}
-                    </Text>
+                    </Txt>
                   </Tap>
                 </View>
               ) : null}
@@ -343,34 +337,34 @@ function HeldQueue() {
       className="gap-3 rounded-card border border-glassedge/60 p-5"
     >
       <View className="flex-row items-center justify-between gap-3">
-        <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
+        <Txt variant="overline">
           {t(`moderation.target.${hold.target_type}`)} ·{" "}
           {t(`moderation.holdStatus.${hold.status}`)}
-        </Text>
-        <Text className="font-sans text-xs text-mist-ink">
+        </Txt>
+        <Txt variant="caption" className="text-xs">
           {new Date(hold.created_at).toLocaleString()}
-        </Text>
+        </Txt>
       </View>
 
       <Txt variant="bodySerifReading">
         {hold.body ?? t("moderation.contentGone")}
       </Txt>
 
-      <Text className="font-sans text-sm text-mist-ink">
+      <Txt variant="caption">
         {t("moderation.writtenBy", { name: hold.author_name })}
         {hold.claimed_by_name
           ? ` · ${t("moderation.claimedBy", { name: hold.claimed_by_name })}`
           : ""}
-      </Text>
+      </Txt>
 
       <Link
         href={{ pathname: "/persona/[id]", params: { id: hold.author_id } }}
         asChild
       >
         <Tap accessibilityRole="link">
-          <Text className="font-sans text-sm text-ember-ink underline">
+          <Txt variant="caption" tone="accent" className="underline">
             {t("moderation.openProfile")}
-          </Text>
+          </Txt>
         </Tap>
       </Link>
 
@@ -381,9 +375,9 @@ function HeldQueue() {
             void run(() => claim.mutateAsync(hold.id), t("moderation.claim"))
           }
         >
-          <Text className="font-sans-medium text-sm text-plum underline">
+          <Txt variant="label" className="underline">
             {t("moderation.claim")}
-          </Text>
+          </Txt>
         </Tap>
       ) : null}
 
@@ -410,9 +404,9 @@ function HeldQueue() {
                 );
               }}
             >
-              <Text className="font-sans text-sm text-mist-ink underline">
+              <Txt variant="caption" className="underline">
                 {t("moderation.release")}
-              </Text>
+              </Txt>
             </Tap>
 
             <Tap
@@ -427,9 +421,9 @@ function HeldQueue() {
                 );
               }}
             >
-              <Text className="font-sans text-sm text-danger underline">
+              <Txt variant="caption" tone="danger" className="underline">
                 {t("moderation.remove")}
-              </Text>
+              </Txt>
             </Tap>
           </View>
         </View>
@@ -440,21 +434,15 @@ function HeldQueue() {
   return (
     <View className="gap-5">
       {notice ? (
-        <Text
-          className="font-sans text-sm text-mist-ink"
-          accessibilityRole="alert"
-        >
+        <Txt variant="caption" accessibilityRole="alert">
           {notice}
-        </Text>
+        </Txt>
       ) : null}
 
       {error ? (
-        <Text
-          className="font-sans text-sm text-danger"
-          accessibilityRole="alert"
-        >
+        <Txt variant="caption" tone="danger" accessibilityRole="alert">
           {error}
-        </Text>
+        </Txt>
       ) : null}
 
       {queue.isLoading ? (
@@ -462,9 +450,9 @@ function HeldQueue() {
       ) : queue.isError ? (
         <ErrorState onRetry={() => void queue.refetch()} />
       ) : (queue.data ?? []).length === 0 ? (
-        <Text className="font-sans text-base leading-6 text-mist-ink">
+        <Txt variant="body" tone="secondary">
           {t("moderation.holdEmpty")}
-        </Text>
+        </Txt>
       ) : (
         (queue.data ?? []).map(renderRow)
       )}
@@ -515,26 +503,18 @@ function CrisisQueue() {
 
   return (
     <View className="gap-5">
-      <Text className="font-sans text-sm leading-6 text-mist-ink">
-        {t("moderation.crisisHint")}
-      </Text>
+      <Txt variant="caption">{t("moderation.crisisHint")}</Txt>
 
       {notice ? (
-        <Text
-          className="font-sans text-sm text-mist-ink"
-          accessibilityRole="alert"
-        >
+        <Txt variant="caption" accessibilityRole="alert">
           {notice}
-        </Text>
+        </Txt>
       ) : null}
 
       {error ? (
-        <Text
-          className="font-sans text-sm text-danger"
-          accessibilityRole="alert"
-        >
+        <Txt variant="caption" tone="danger" accessibilityRole="alert">
           {error}
-        </Text>
+        </Txt>
       ) : null}
 
       {queue.isLoading ? (
@@ -542,26 +522,26 @@ function CrisisQueue() {
       ) : queue.isError ? (
         <ErrorState onRetry={() => void queue.refetch()} />
       ) : open.length === 0 ? (
-        <Text className="font-sans text-base leading-6 text-mist-ink">
+        <Txt variant="body" tone="secondary">
           {t("moderation.crisisEmpty")}
-        </Text>
+        </Txt>
       ) : (
         open.map((escalation) => (
           <View
             key={escalation.id}
             className="gap-3 rounded-card border border-danger p-5"
           >
-            <Text className="font-sans text-xs uppercase tracking-wide text-mist-ink">
+            <Txt variant="overline">
               {new Date(escalation.created_at).toLocaleString()}
-            </Text>
+            </Txt>
 
             <Txt variant="bodySerifReading">
               {escalation.body ?? t("moderation.contentGone")}
             </Txt>
 
-            <Text className="font-sans text-sm text-mist-ink">
+            <Txt variant="caption">
               {t("moderation.writtenBy", { name: escalation.author_name })}
-            </Text>
+            </Txt>
 
             <Link
               href={{
@@ -571,9 +551,9 @@ function CrisisQueue() {
               asChild
             >
               <Tap accessibilityRole="link">
-                <Text className="font-sans text-sm text-ember-ink underline">
+                <Txt variant="caption" tone="accent" className="underline">
                   {t("moderation.openProfile")}
-                </Text>
+                </Txt>
               </Tap>
             </Link>
 
@@ -605,9 +585,9 @@ function CrisisQueue() {
                 );
               }}
             >
-              <Text className="font-sans-medium text-sm text-plum underline">
+              <Txt variant="label" className="underline">
                 {t("moderation.acknowledge")}
-              </Text>
+              </Txt>
             </Tap>
           </View>
         ))

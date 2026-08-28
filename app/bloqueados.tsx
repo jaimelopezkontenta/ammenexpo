@@ -1,10 +1,11 @@
 import { Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -56,17 +57,14 @@ export default function BlockedPeople() {
             contentContainerClassName="gap-4 px-7 py-8 md:w-full md:max-w-read md:self-center"
             contentContainerStyle={{ paddingBottom: scrollBottom }}
           >
-            <Text className="font-sans text-base leading-6 text-mist-ink">
+            <Txt variant="body" tone="secondary">
               {t("moderation.blockedHint")}
-            </Text>
+            </Txt>
 
             {error ? (
-              <Text
-                className="font-sans text-sm text-danger"
-                accessibilityRole="alert"
-              >
+              <Txt variant="caption" tone="danger" accessibilityRole="alert">
                 {error}
-              </Text>
+              </Txt>
             ) : null}
 
             {(blocks ?? []).length === 0 ? (
@@ -78,17 +76,13 @@ export default function BlockedPeople() {
                 key={entry.blocked_id}
                 className="flex-row items-center justify-between"
               >
-                <Text className="font-sans text-base text-plum">
-                  {entry.display_name}
-                </Text>
+                <Txt variant="body">{entry.display_name}</Txt>
                 <Tap
                   accessibilityRole="button"
                   accessibilityLabel={`${t("moderation.unblock")} ${entry.display_name}`}
                   onPress={() => void handleUnblock(entry.blocked_id)}
                 >
-                  <Text className="font-sans text-sm text-mist-ink">
-                    {t("moderation.unblock")}
-                  </Text>
+                  <Txt variant="caption">{t("moderation.unblock")}</Txt>
                 </Tap>
               </View>
             ))}

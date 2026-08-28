@@ -1,10 +1,11 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
+import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
@@ -77,9 +78,9 @@ export default function NewTestimony() {
             keyboardShouldPersistTaps="handled"
           >
             {plan ? (
-              <Text className="font-sans text-sm text-mist-ink">
+              <Txt variant="caption">
                 {t("testimony.duringPlan", { title: plan.title })}
-              </Text>
+              </Txt>
             ) : null}
 
             <View className="gap-2">
@@ -94,9 +95,7 @@ export default function NewTestimony() {
             </View>
 
             <View className="gap-3">
-              <Text className="font-sans-semibold text-lg text-plum">
-                {t("testimony.whoSees")}
-              </Text>
+              <Txt variant="subheadingLg">{t("testimony.whoSees")}</Txt>
               <ChoiceChips
                 options={[
                   { value: "private", label: t("testimony.visPrivate") },
@@ -108,28 +107,25 @@ export default function NewTestimony() {
                   setVisibility(value as TestimonyVisibility)
                 }
               />
-              <Text className="font-sans text-sm text-mist-ink">{hint}</Text>
+              <Txt variant="caption">{hint}</Txt>
             </View>
 
             {error ? (
-              <Text
-                className="font-sans text-sm text-danger"
-                accessibilityRole="alert"
-              >
+              <Txt variant="caption" tone="danger" accessibilityRole="alert">
                 {error}
-              </Text>
+              </Txt>
             ) : null}
 
             <View className="mt-auto gap-2 pt-6">
               {/* Quién lo verá, dicho junto al botón: la elección de arriba no
                 debería exigir memoria al llegar abajo. */}
-              <Text className="text-center font-sans text-sm text-mist-ink">
+              <Txt variant="caption" className="text-center">
                 {visibility === "private"
                   ? t("testimony.visPrivate")
                   : visibility === "circles"
                     ? t("testimony.visCircles")
                     : t("testimony.visPublic")}
-              </Text>
+              </Txt>
               <Button
                 title={t("testimony.save")}
                 disabled={body.trim().length === 0}

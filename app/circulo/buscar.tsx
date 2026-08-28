@@ -1,9 +1,10 @@
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
+import { Txt } from "@/components/ui/Text";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -82,12 +83,9 @@ export default function FindCircles() {
           />
 
           {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" tone="danger" accessibilityRole="alert">
               {error}
-            </Text>
+            </Txt>
           ) : null}
 
           {isLoading ? <LoadingState /> : null}
@@ -110,19 +108,17 @@ export default function FindCircles() {
               key={circle.id}
               className="gap-2 rounded-card border border-glassedge/65 bg-glass/60 p-5 shadow-soft"
             >
-              <Text className="font-sans-semibold text-lg text-plum">
-                {circle.name}
-              </Text>
+              <Txt variant="subheadingLg">{circle.name}</Txt>
 
               {circle.description ? (
-                <Text className="font-sans text-base leading-6 text-mist-ink">
+                <Txt variant="body" tone="secondary">
                   {circle.description}
-                </Text>
+                </Txt>
               ) : null}
 
-              <Text className="font-sans text-sm text-mist-ink">
+              <Txt variant="caption">
                 {t("circles.members", { count: circle.member_count })}
-              </Text>
+              </Txt>
 
               {circle.is_member ? (
                 <Tap
@@ -134,9 +130,7 @@ export default function FindCircles() {
                     })
                   }
                 >
-                  <Text className="font-sans-medium text-base text-plum">
-                    {t("circles.alreadyIn")}
-                  </Text>
+                  <Txt variant="bodyMedium">{t("circles.alreadyIn")}</Txt>
                 </Tap>
               ) : (
                 <Tap
@@ -146,15 +140,14 @@ export default function FindCircles() {
                   disabled={joining !== null}
                   onPress={() => void handleJoin(circle.id)}
                 >
-                  <Text
-                    className={`font-sans-medium text-base ${
-                      joining !== null ? "text-mist-ink" : "text-plum"
-                    }`}
+                  <Txt
+                    variant="bodyMedium"
+                    tone={joining !== null ? "secondary" : "primary"}
                   >
                     {joining === circle.id
                       ? t("circles.joining")
                       : t("circles.join")}
-                  </Text>
+                  </Txt>
                 </Tap>
               )}
             </View>

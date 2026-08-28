@@ -1,7 +1,7 @@
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
@@ -113,27 +113,24 @@ export default function Testimonies() {
           contentContainerClassName="flex-grow gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
           contentContainerStyle={{ paddingBottom: scrollBottom }}
         >
-          <Text className="font-sans text-base text-mist-ink">
+          <Txt variant="body" tone="secondary">
             {t("testimony.subtitle")}
-          </Text>
+          </Txt>
 
           {notice ? (
-            <Text
-              className="font-sans text-sm text-mist-ink"
+            <Txt
+              variant="caption"
               accessibilityRole="alert"
               accessibilityLiveRegion="polite"
             >
               {notice}
-            </Text>
+            </Txt>
           ) : null}
 
           {error ? (
-            <Text
-              className="font-sans text-sm text-danger"
-              accessibilityRole="alert"
-            >
+            <Txt variant="caption" tone="danger" accessibilityRole="alert">
               {error}
-            </Text>
+            </Txt>
           ) : null}
 
           {(testimonies ?? []).length === 0 ? (
@@ -155,17 +152,17 @@ export default function Testimonies() {
                   seed={entry.author_id}
                   size={28}
                 />
-                <Text className="font-sans-medium text-sm text-mist-ink">
+                <Txt variant="label" tone="secondary">
                   {entry.author_name}
-                </Text>
+                </Txt>
               </View>
 
               <Txt variant="bodySerifReading">{entry.body}</Txt>
 
               {entry.plan_title ? (
-                <Text className="font-sans text-sm text-mist-ink">
+                <Txt variant="caption">
                   {t("testimony.duringPlan", { title: entry.plan_title })}
-                </Text>
+                </Txt>
               ) : null}
 
               {/* Yours carries the way back: somebody who shared and regretted it
@@ -183,9 +180,13 @@ export default function Testimonies() {
                       accessibilityRole="button"
                       onPress={() => void handleShare(entry.body)}
                     >
-                      <Text className="font-sans text-sm text-ember-ink underline">
+                      <Txt
+                        variant="caption"
+                        tone="accent"
+                        className="underline"
+                      >
                         {t("testimony.share")}
-                      </Text>
+                      </Txt>
                     </Tap>
 
                     {entry.visibility !== "private" ? (
@@ -202,9 +203,9 @@ export default function Testimonies() {
                           )
                         }
                       >
-                        <Text className="font-sans text-sm text-mist-ink underline">
+                        <Txt variant="caption" className="underline">
                           {t("testimony.makePrivate")}
-                        </Text>
+                        </Txt>
                       </Tap>
                     ) : null}
 
@@ -223,11 +224,15 @@ export default function Testimonies() {
                         );
                       }}
                     >
-                      <Text
+                      <Txt
+                        variant="caption"
+                        tone={
+                          confirmingDelete === entry.id ? "danger" : "secondary"
+                        }
                         className={
                           confirmingDelete === entry.id
-                            ? "font-sans-semibold text-sm text-danger"
-                            : "text-sm text-mist-ink underline"
+                            ? "font-sans-semibold"
+                            : "underline"
                         }
                         accessibilityLiveRegion={
                           confirmingDelete === entry.id ? "polite" : "none"
@@ -236,7 +241,7 @@ export default function Testimonies() {
                         {confirmingDelete === entry.id
                           ? t("testimony.deleteConfirm")
                           : t("testimony.delete")}
-                      </Text>
+                      </Txt>
                     </Tap>
                   </>
                 ) : (
@@ -250,9 +255,9 @@ export default function Testimonies() {
                         )
                       }
                     >
-                      <Text className="font-sans text-sm text-mist-ink underline">
+                      <Txt variant="caption" className="underline">
                         {t("moderation.report")}
-                      </Text>
+                      </Txt>
                     </Tap>
 
                     <Tap
@@ -265,9 +270,9 @@ export default function Testimonies() {
                         )
                       }
                     >
-                      <Text className="font-sans text-sm text-mist-ink underline">
+                      <Txt variant="caption" className="underline">
                         {t("moderation.block")}
-                      </Text>
+                      </Txt>
                     </Tap>
                   </>
                 )}
