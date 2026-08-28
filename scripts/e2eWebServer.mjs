@@ -38,6 +38,10 @@ const exported = spawnSync(
   {
     stdio: "inherit",
     env: { ...process.env, E2E_WEB_OUTPUT: "single" },
+    // En Windows `npx.cmd` es un batch y Node moderno exige shell (EINVAL sin
+    // ella). En CI (Linux) no cambia nada. Desde `npm run e2e:static` este
+    // script también corre en local.
+    shell: process.platform === "win32",
   },
 );
 

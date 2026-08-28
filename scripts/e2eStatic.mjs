@@ -58,7 +58,9 @@ const args = ["playwright", "test", "--project=chromium", ...extraArgs];
 const result = spawnSync(NPX, args, {
   stdio: "inherit",
   env: { ...process.env, E2E_STATIC: "1" },
-  shell: false,
+  // En Windows `npx.cmd` es un batch: Node moderno exige shell para
+  // ejecutarlo (EINVAL sin ella). Los argumentos son simples y fijos.
+  shell: process.platform === "win32",
 });
 
 process.exit(result.status ?? 1);
