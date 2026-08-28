@@ -84,9 +84,14 @@ values
 -- aceptar los términos en cada arranque.
 -- ---------------------------------------------------------------------------
 
+-- Las claves de `topics` y `gender` son las del catálogo del cliente
+-- (`core/onboarding/options.ts`: TOPIC_KEYS/GENDER_KEYS, en inglés), no las
+-- etiquetas traducidas: el seed viejo guardaba «paz»/«familia»/«male» y
+-- plan/nuevo enseñaba claves crudas, no marcaba chips y mandaba temas que el
+-- generador descartaba en silencio.
 update public.profile_settings
-   set onboarding_answers = '{"seasons":["decision"],"topics":["paz","familia"],
-                              "gender":"male","custom_topic":null,
+   set onboarding_answers = '{"seasons":["decision"],"topics":["peace","family"],
+                              "gender":"masculine","custom_topic":null,
                               "reminder_keys":["morning"]}'::jsonb,
        terms_version = '2026-08-02',
        terms_accepted_at = now(),

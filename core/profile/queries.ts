@@ -4,6 +4,10 @@ import i18n from "i18next";
 import { supabase } from "@/utils/supabase";
 
 import { syncLocalReminders } from "@/core/notifications/localReminders";
+import {
+  sanitizeOnboardingAnswers,
+  type OnboardingAnswers,
+} from "./onboardingAnswers";
 
 import type { Streak } from "./streak";
 
@@ -161,16 +165,10 @@ export const useDeleteAccount = () =>
     },
   });
 
-export type OnboardingAnswers = {
-  /** Several since the onboarding went multi-select. */
-  seasons?: string[];
-  /** The single-season shape, kept so older rows still read. */
-  season?: string;
-  topics?: string[];
-  custom_topic?: string;
-  gender?: string;
-  reminder_keys?: string[];
-};
+export {
+  sanitizeOnboardingAnswers,
+  type OnboardingAnswers,
+} from "./onboardingAnswers";
 
 /**
  * What the person already told us during onboarding.
@@ -196,9 +194,9 @@ export const useOnboardingAnswers = (userId: string | undefined) =>
 
       if (error) throw error;
 
-      return (
+      return sanitizeOnboardingAnswers(
         (data as { onboarding_answers: OnboardingAnswers | null } | null)
-          ?.onboarding_answers ?? null
+          ?.onboarding_answers ?? null,
       );
     },
   });

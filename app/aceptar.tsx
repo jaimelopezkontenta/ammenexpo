@@ -5,6 +5,7 @@ import { ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { Orb } from "@/components/Orb";
 import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -51,6 +52,13 @@ export default function AcceptTerms() {
           paddingBottom: scrollBottom,
         }}
       >
+        {/* La marca preside la puerta, como en las pantallas de acceso: era la
+          única del arranque sin orbe ni wordmark. El título sigue a la
+          izquierda — esto es una pantalla de lectura, no un formulario. */}
+        <View className="items-center pb-2">
+          <Orb size={84} halo />
+        </View>
+
         <Txt variant="title">{t("legal.gateTitle")}</Txt>
 
         <Txt variant="body" tone="secondary">

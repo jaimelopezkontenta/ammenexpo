@@ -6,6 +6,8 @@ supabase/.branches/
 # Build output and Expo's generated route manifest.
 dist/
 dist-test/
+# El export que sirve `npm run e2e:static` (y CI).
+dist-e2e/
 .expo/
 
 node_modules/

@@ -9,6 +9,8 @@ module.exports = defineConfig([
     ignores: [
       "dist/*",
       "dist-test/*",
+      // El export que sirve `npm run e2e:static` (y CI): bundle generado.
+      "dist-e2e/*",
       ".expo/*",
       "supabase/.temp/*",
       "supabase/.branches/*",

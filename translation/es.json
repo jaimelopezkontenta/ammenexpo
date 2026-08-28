@@ -180,11 +180,11 @@
       "courage": "Valentía"
     },
     "hours": {
-      "early": "Temprano, 6:00",
-      "morning": "Por la mañana, 8:00",
-      "noon": "A mediodía, 12:00",
-      "evening": "Por la tarde, 18:00",
-      "night": "Por la noche, 21:00"
+      "early": "6:00",
+      "morning": "8:00",
+      "noon": "12:00",
+      "evening": "18:00",
+      "night": "21:00"
     },
     "genderQuestion": "¿Cómo prefieres que te hablemos?",
     "genderHint": "Para que las oraciones estén bien escritas para ti.",

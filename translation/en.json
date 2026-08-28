@@ -180,11 +180,11 @@
       "courage": "Courage"
     },
     "hours": {
-      "early": "Early, 6:00",
-      "morning": "Morning, 8:00",
-      "noon": "Midday, 12:00",
-      "evening": "Evening, 18:00",
-      "night": "Night, 21:00"
+      "early": "6:00",
+      "morning": "8:00",
+      "noon": "12:00",
+      "evening": "18:00",
+      "night": "21:00"
     },
     "genderQuestion": "How should we address you?",
     "genderHint": "So the prayers are written correctly for you.",
