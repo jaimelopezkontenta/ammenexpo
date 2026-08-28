@@ -21,7 +21,10 @@
 > - ✅ O7: `NavRail` md+ (vidrio, absoluto, `RAIL_WIDTH` en sceneStyle; tipo desde el bottom-tabs vendorizado de expo-router), `TabHeader` alineado al ancho de lectura en md+, columna de contexto lg+ en Hoy (VerseOfTheDay) y aside de capítulos en el lector.
 > - Decisión #1: la alternativa ligera YA estaba de serie (plan/nuevo precarga temas del onboarding). Decisión #2: aplicada la versión mínima; la tab "Juntos" sigue esperando OK.
 > - ✅ Cierre: 15 capturas de verificación por pantalla sin errores; baselines regeneradas y **suite visual verde 6/6** (18 pantallas × 2 viewports tras añadir también libro-index y plan-dias); informe antes/después actualizado (artifact "Amanecer 3.0"). Vitest 326/326, typecheck y lint verdes en todo momento.
-> - Pendiente real tras el plan: spike formSheet, CI visual con baselines Linux, adopción incremental de Txt, háptica/gestos en dispositivo físico. Decisiones de producto que siguen esperando OK: onboarding→generación directa; tab social unificada.
+> - ✅ Decisiones de producto resueltas por Jaime: (1) onboarding→plan directo — resultó estar YA implementado en `bienvenida.tsx` (encadena la generación de 7 días con caída elegante) y cubierto por `fresh-account.spec`; la doc estaba desactualizada. (2) Tab social **"Juntos"** implementada: `(tabs)/circulos.tsx` como hub con segmentos Pill y el contenido en `components/panes/{CirclesPane,CommunityPane,RequestsPane}` compartidos con las rutas clásicas `/comunidad` y `/peticiones` (vivas para enlaces y avisos).
+> - ✅ Fix raíz de Metro: los scratch de `dbLock.test.ts` van a `os.tmpdir()` — el blockList del resolver no protege el recorrido del FallbackWatcher.
+> - ✅ **Commit `539e225`** con todo el uplift (verify verde: 326 vitest, typecheck, lint, visual 6/6 con 25 baselines regeneradas con Juntos) y **deploy a staging** por la vía REST: https://ammen-staging.web.app (verificado sirviendo el build nuevo).
+> - Pendiente real tras el plan: spike formSheet, CI visual con baselines Linux (Jaime: "más adelante"), adopción incremental de Txt, háptica/gestos en dispositivo físico, snapshot visual del onboarding.
 
 ## Contexto
 
