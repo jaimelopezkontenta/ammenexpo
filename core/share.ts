@@ -64,12 +64,16 @@ export const shareOrCopy = async (
       }
     }
 
-    try {
-      await nav?.clipboard?.writeText(url);
-      return "copied";
-    } catch {
-      return "failed";
+    if (nav?.clipboard?.writeText) {
+      try {
+        await nav.clipboard.writeText(url);
+        return "copied";
+      } catch {
+        return "failed";
+      }
     }
+
+    return "failed";
   }
 
   try {
