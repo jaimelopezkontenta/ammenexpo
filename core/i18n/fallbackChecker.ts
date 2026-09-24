@@ -6,7 +6,7 @@ export const fallbackChecker = (resources: Resource, fallbackLng: string) => {
 
   if (!hasFallback) {
     throw new Error(
-      `fallbackLng  "${fallbackLng}", is not present in your resources, please check your config, languages available: ${languages.join(", ")}`,
+      `fallbackLng "${fallbackLng}" is not among the loaded resources. Available languages: ${languages.join(", ")}`,
     );
   }
   return fallbackLng;
