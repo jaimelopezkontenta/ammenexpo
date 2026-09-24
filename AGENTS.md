@@ -36,3 +36,15 @@ Encendido con Amanecer 4.0 (2026-08-28). **La fuente de verdad es el sistema** �
 ## Fuera de este contrato
 
 - (Las tabs sociales ya se unificaron en «Juntos» con Amanecer 3.0; el modo oscuro llegó con Amanecer 4.0.)
+
+## Tipos en `supabase/functions` (Deno)
+
+`npm run typecheck` no mira `supabase/functions/` (está excluido del `tsconfig`: lo compila Deno) y eslint tampoco, así que un error de tipos ahí solo aparece al desplegar. Tras tocar un fichero de esa carpeta, compruébalo aparte:
+
+```bash
+npx tsc --noEmit --ignoreConfig --strict --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --allowImportingTsExtensions supabase/functions/<ruta>.ts
+```
+
+- **Módulos puros** (`schema.ts`, `bounds.ts`, `prompt.ts`, `sanitize.ts`, `providers/types.ts`, `send-intercession-push/payload.ts`…): **0 errores**.
+- **Entradas con runtime Deno** (`index.ts`, `providers/anthropic.ts`, `scripture.ts`): `TS2304 Cannot find name 'Deno'` y `TS2307` de imports `npm:` son esperables sin Deno instalado. Cualquier otro error no lo es: compara con el mismo comando sobre el fichero sin tu cambio.
+- Un cambio en esa carpeta trae su propio `*.test.ts`: Vitest es lo único del pipeline que sí lo ejecuta.
