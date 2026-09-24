@@ -1133,7 +1133,7 @@ versión): `eslint.config.js` y `.prettierignore` ahora ignoran
 `playwright-report/`, `test-results/` y `blob-report/` de forma explícita.
 
 **Prueba/check reproducible añadido:** `lintArtifactSafety.test.ts` (raíz del
-repo, fuera de `e2e/` porque `vitest.config.ts` excluye ese directorio) —
+repo, fuera de `e2e/` porque `vitest.config.mts` excluye ese directorio) —
 tres assertions automatizadas que fallan si alguien quita esos patrones de
 `eslint.config.js`, `.prettierignore` o `.gitignore`, sin tener que volver a
 fallar un E2E de verdad para descubrirlo la próxima vez.

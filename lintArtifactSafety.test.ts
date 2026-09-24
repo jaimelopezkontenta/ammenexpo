@@ -15,7 +15,7 @@ import { describe, expect, it } from "vitest";
  * y reproducible que falla en el momento en que alguien quite el ignore de
  * `eslint.config.js` o de `.prettierignore` — antes de que haga falta volver
  * a fallar un E2E de verdad para descubrirlo. Vive en la raíz, no en `e2e/`:
- * `vitest.config.ts` excluye ese directorio entero porque es territorio de
+ * `vitest.config.mts` excluye ese directorio entero porque es territorio de
  * Playwright.
  */
 

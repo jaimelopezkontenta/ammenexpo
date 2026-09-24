@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // Import relativo y no `@/utils/supabase` a propósito: es el mismo patrón que
 // `core/plans/offline.ts`, y deja que el test mockee el módulo con `vi.mock`
 // sin que Vitest tenga que resolver el alias `@/` (que no está configurado en
-// `vitest.config.ts`).
+// `vitest.config.mts`).
 import { supabase } from "../../utils/supabase";
 
 /** Una fila de la lista de espera. Una por usuario. */
