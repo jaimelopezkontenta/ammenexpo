@@ -108,6 +108,8 @@ export const isGeneratedPlan = (value: unknown): value is GeneratedPlan => {
       const d = day as Record<string, unknown>;
       return (
         typeof d.day_number === "number" &&
+        Number.isInteger(d.day_number) &&
+        d.day_number >= 1 &&
         typeof d.title === "string" &&
         typeof d.scripture_ref === "string" &&
         typeof d.interpretation === "string" &&
