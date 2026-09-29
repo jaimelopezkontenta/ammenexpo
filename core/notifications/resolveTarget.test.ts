@@ -38,6 +38,28 @@ describe("outboxIdFromPayload", () => {
     expect(outboxIdFromPayload(payload)).toBeNull();
   });
 
+  // Oleada 6: solo existe el tipo `intercession`. Un payload que traiga una
+  // ruta o un tipo que el servidor no emite no abre nada, ni aunque se
+  // parezca a una pantalla real de la app.
+  it("never navigates from a route or an unknown type carried in the payload", () => {
+    const smuggled = [
+      { type: "reminder", outboxId: "11111111-1111-1111-1111-111111111111" },
+      { type: "plan", outboxId: "11111111-1111-1111-1111-111111111111" },
+      { type: "comment", outboxId: "11111111-1111-1111-1111-111111111111" },
+      {
+        type: "Intercession",
+        outboxId: "11111111-1111-1111-1111-111111111111",
+      },
+      { url: "/plan/aaaa0000-0000-0000-0000-000000000001", outboxId: "x" },
+    ];
+
+    for (const payload of smuggled) {
+      expect(outboxIdFromPayload(payload as NotificationPayload)).toBeNull();
+    }
+    // Y sin autorización del servidor, un tap remoto no tiene destino.
+    expect(destinationForTap("notif-123", null)).toBeNull();
+  });
+
   it("is null when there is no payload at all", () => {
     expect(outboxIdFromPayload(null)).toBeNull();
     expect(outboxIdFromPayload(undefined)).toBeNull();

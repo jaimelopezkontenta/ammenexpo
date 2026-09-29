@@ -705,13 +705,48 @@
     "intro": "What you wrote sounds like you're going through something very hard, maybe thinking about hurting yourself. We didn't publish it as a normal request — not because asking for help is wrong, but because this deserves more than an \"Amen\" button.",
     "notDiagnosis": "This is not a diagnosis or an assessment: it's an automatic notice based on the words you used, and it can be wrong. No person and no system will step in without you speaking first.",
     "resourcesTitle": "Immediate help",
-    "resourceEsTitle": "Spain — Línea 024",
-    "resourceEsBody": "024, free and available all day. Suicide prevention support.",
-    "resourceIntlTitle": "International",
-    "resourceIntlBody": "If you are not in Spain, search for \"crisis line\" or \"suicide prevention line\" together with your country, or call your local emergency number.",
+    "lines": {
+      "ES": {
+        "title": "Spain — Línea 024",
+        "body": "Free, confidential and available all day. Suicide prevention support."
+      },
+      "US": {
+        "title": "United States — 988 Lifeline",
+        "body": "988 Suicide & Crisis Lifeline. Free, confidential and available all day."
+      },
+      "CA": {
+        "title": "Canada — 9-8-8",
+        "body": "9-8-8 Suicide Crisis Helpline. Free and available all day."
+      },
+      "GB": {
+        "title": "United Kingdom — Samaritans",
+        "body": "Free and available all day."
+      },
+      "IE": {
+        "title": "Ireland — Samaritans",
+        "body": "Free and available all day."
+      },
+      "AU": {
+        "title": "Australia — Lifeline",
+        "body": "Available all day, every day."
+      },
+      "MX": {
+        "title": "Mexico — Línea de la Vida",
+        "body": "Free, confidential and available all day."
+      },
+      "AR": {
+        "title": "Argentina — Centro de Asistencia al Suicida",
+        "body": "Free from the City of Buenos Aires and Greater Buenos Aires. Not available 24 hours: if it is urgent, call emergency services."
+      }
+    },
+    "callNumber": "Call {{number}}",
+    "otherCountriesTitle": "Other countries",
+    "findYourLineTitle": "Find the line for your country",
+    "otherCountriesBody": "findahelpline.com lets you look up a helpline in your country.",
+    "findHelpline": "Find a helpline",
+    "emergencyNumbers": "Emergencies: 112 across the European Union and in many other countries; 911 in the United States, Canada, Mexico and many countries in the Americas.",
     "resourceEmergency": "If there is immediate danger to your life, call emergency services now.",
-    "call024": "Call 024",
-    "call112": "Call 112",
+    "callEmergency": "Call emergency services ({{number}})",
     "draftPrivate": "What you wrote was not published — it stays private. Nobody else has seen it.",
     "staying": "You can stay in the app. This does not delete the draft or remove you from anything.",
     "goHome": "Back to Today"

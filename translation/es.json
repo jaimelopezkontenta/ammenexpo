@@ -705,13 +705,48 @@
     "intro": "Lo que escribiste suena a que estás pasando un momento muy difícil, quizá pensando en hacerte daño. No lo publicamos como una petición normal — no porque esté mal pedir ayuda, sino porque esto merece más que un botón de \"Amén\".",
     "notDiagnosis": "Esto no es un diagnóstico ni una evaluación: es un aviso automático a partir de las palabras que usaste, y puede equivocarse. Ninguna persona ni ningún sistema va a intervenir sin que tú hables primero.",
     "resourcesTitle": "Ayuda inmediata",
-    "resourceEsTitle": "España — Línea 024",
-    "resourceEsBody": "024, gratuita y todo el día. Atención a la conducta suicida.",
-    "resourceIntlTitle": "Internacional",
-    "resourceIntlBody": "Si no estás en España, busca \"línea de crisis\" o \"línea de prevención del suicidio\" junto con tu país, o llama al número de emergencias local.",
+    "lines": {
+      "ES": {
+        "title": "España — Línea 024",
+        "body": "Gratuita, confidencial y todo el día. Atención a la conducta suicida."
+      },
+      "US": {
+        "title": "Estados Unidos — 988 Lifeline",
+        "body": "988 Suicide & Crisis Lifeline. Gratuita, confidencial y todo el día."
+      },
+      "CA": {
+        "title": "Canadá — 9-8-8",
+        "body": "9-8-8 Suicide Crisis Helpline. Gratuita y todo el día."
+      },
+      "GB": {
+        "title": "Reino Unido — Samaritans",
+        "body": "Gratuita y todo el día."
+      },
+      "IE": {
+        "title": "Irlanda — Samaritans",
+        "body": "Gratuita y todo el día."
+      },
+      "AU": {
+        "title": "Australia — Lifeline",
+        "body": "Todo el día, todos los días."
+      },
+      "MX": {
+        "title": "México — Línea de la Vida",
+        "body": "Gratuita, confidencial y todo el día."
+      },
+      "AR": {
+        "title": "Argentina — Centro de Asistencia al Suicida",
+        "body": "Gratuita desde la Ciudad de Buenos Aires y el Gran Buenos Aires. No atiende las 24 horas: si es urgente, llama a emergencias."
+      }
+    },
+    "callNumber": "Llamar al {{number}}",
+    "otherCountriesTitle": "Otros países",
+    "findYourLineTitle": "Encuentra la línea de tu país",
+    "otherCountriesBody": "En findahelpline.com puedes buscar la línea de ayuda de tu país.",
+    "findHelpline": "Buscar una línea de ayuda",
+    "emergencyNumbers": "Emergencias: 112 en la Unión Europea y en muchos otros países; 911 en Estados Unidos, Canadá, México y muchos países de América.",
     "resourceEmergency": "Si hay un riesgo inmediato para tu vida, llama a emergencias ahora mismo.",
-    "call024": "Llamar al 024",
-    "call112": "Llamar al 112",
+    "callEmergency": "Llamar a emergencias ({{number}})",
     "draftPrivate": "Lo que escribiste no se publicó: quedó en privado. Nadie más lo ha visto.",
     "staying": "Puedes quedarte en la app. Esto no borra el borrador ni te expulsa de ninguna parte.",
     "goHome": "Volver a Hoy"

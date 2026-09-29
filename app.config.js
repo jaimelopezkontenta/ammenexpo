@@ -23,9 +23,14 @@
  * alguien con acceso a EAS lo use; no una prueba de que ya se ejecutó.
  */
 
+const { universalLinkConfig } = require("./core/native/universalLinks");
+
 /** @param {import('@expo/config').ConfigContext} context */
 module.exports = ({ config }) => {
   const projectId = process.env.EAS_PROJECT_ID;
+  // Universal links / App Links: nada hasta que el dueño decida el dominio
+  // (core/native/universalLinks.js, docs/runbooks/native-release.md).
+  const links = universalLinkConfig(process.env);
 
   return {
     ...config,
@@ -85,6 +90,7 @@ module.exports = ({ config }) => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "app.ammen.ammen",
+      ...links.ios,
     },
     android: {
       adaptiveIcon: {
@@ -96,10 +102,12 @@ module.exports = ({ config }) => {
       // release. El http:// de Supabase local ya lo permite el manifest de
       // debug que genera Expo (`tools:replace`), que es el único que lo necesita.
       //
-      // Sin copia de seguridad de Android: AsyncStorage guarda la sesión y el
-      // texto de oración del día (`ammen.todayDay.*`), y con `allowBackup` todo
-      // eso acabaría en las copias de Google de la cuenta.
+      // Sin copia de seguridad de Android: AsyncStorage guarda el texto de
+      // oración del día (`ammen.todayDay.*`) —y la sesión, si el llavero
+      // falla (core/native/secureSessionStorage.ts)—, y con `allowBackup`
+      // todo eso acabaría en las copias de Google de la cuenta.
       allowBackup: false,
+      ...links.android,
     },
     // Solo se declara `extra.eas` cuando hay un projectId de verdad que
     // poner — un objeto `{ eas: { projectId: undefined } }` no es lo mismo
