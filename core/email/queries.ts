@@ -8,6 +8,7 @@ import {
   type EmailPreferences,
 } from "./cadence";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 const parsePrefs = (
   row: {
@@ -32,7 +33,7 @@ export const useEmailPreferences = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("email_preferences")
         .select("cadence, social, nudge")
-        .eq("user_id", userId!)
+        .eq("user_id", requireUserId(userId))
         .maybeSingle();
 
       if (error) throw error;
@@ -63,7 +64,7 @@ export const useUpdateEmailPreferences = (userId: string | undefined) => {
       const { data, error } = await supabase
         .from("email_preferences")
         .update(changes)
-        .eq("user_id", userId!)
+        .eq("user_id", requireUserId(userId))
         .select("user_id");
 
       if (error) throw error;

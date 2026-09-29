@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export type CircleVisibility = "private" | "public";
 
@@ -39,7 +40,7 @@ export const useMyCircles = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("group_members")
         .select(`groups!inner(${CIRCLE_COLUMNS})`)
-        .eq("user_id", userId!);
+        .eq("user_id", requireUserId(userId));
 
       if (error) throw error;
 
@@ -107,7 +108,7 @@ export const useCreateCircle = (userId: string | undefined) => {
       const { data, error } = await supabase
         .from("groups")
         .insert({
-          owner_id: userId!,
+          owner_id: requireUserId(userId),
           name: input.name.trim(),
           description: input.description?.trim() || null,
           visibility: input.visibility,
@@ -191,7 +192,7 @@ export const useLeaveCircle = (userId: string | undefined) => {
         .from("group_members")
         .delete()
         .eq("group_id", circleId)
-        .eq("user_id", userId!)
+        .eq("user_id", requireUserId(userId))
         .select("user_id");
 
       if (error) throw error;
@@ -268,7 +269,7 @@ export const useJoinPublicCircle = (userId: string | undefined) => {
     mutationFn: async (circleId: string) => {
       const { error } = await supabase
         .from("group_members")
-        .insert({ group_id: circleId, user_id: userId! });
+        .insert({ group_id: circleId, user_id: requireUserId(userId) });
 
       if (error) throw error;
     },

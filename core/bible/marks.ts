@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export const NOTE_MAX = 2000;
 
@@ -79,7 +80,7 @@ export const useToggleHighlight = (
     mutationFn: async (input: { verse: number; on: boolean }) => {
       if (input.on) {
         const { error } = await supabase.from("bible_highlights").insert({
-          user_id: userId!,
+          user_id: requireUserId(userId),
           book_id: bookId!,
           chapter: chapter!,
           verse: input.verse,
@@ -135,7 +136,7 @@ export const useSaveNote = (
       // reemplaza en vez de fallar, que es lo que hace un margen.
       const { error } = await supabase.from("bible_notes").upsert(
         {
-          user_id: userId!,
+          user_id: requireUserId(userId),
           book_id: bookId!,
           chapter: chapter!,
           verse: input.verse,

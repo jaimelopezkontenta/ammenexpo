@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PAGE_SIZE, rowId, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export const TESTIMONY_MAX = 2000;
 
@@ -61,7 +62,7 @@ export const useWriteTestimony = (userId: string | undefined) => {
       listItemId?: string;
     }) => {
       const { error } = await supabase.from("testimonies").insert({
-        user_id: userId!,
+        user_id: requireUserId(userId),
         body: input.body.trim().slice(0, TESTIMONY_MAX),
         visibility: input.visibility,
         plan_id: input.planId ?? null,
@@ -134,7 +135,7 @@ export const useReportTestimony = (userId: string | undefined) =>
   useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("reports").insert({
-        reporter_id: userId!,
+        reporter_id: requireUserId(userId),
         target_type: "testimony",
         target_id: id,
       });

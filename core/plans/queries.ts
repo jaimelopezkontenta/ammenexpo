@@ -26,6 +26,7 @@ import {
 } from "@/core/plans/stuckDetection";
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export type PlanStatus =
   "generating" | "failed" | "active" | "completed" | "archived";
@@ -95,7 +96,7 @@ export const useMyPlans = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("prayer_plans")
         .select(PLAN_COLUMNS)
-        .eq("owner_id", userId!)
+        .eq("owner_id", requireUserId(userId))
         .in("status", ["generating", "active", "failed"])
         .order("created_at", { ascending: false });
 
@@ -124,7 +125,7 @@ export const useActivePlanId = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("profile_settings")
         .select("active_plan_id")
-        .eq("id", userId!)
+        .eq("id", requireUserId(userId))
         .maybeSingle();
 
       if (error) throw error;
@@ -144,7 +145,7 @@ export const useSetActivePlan = (userId: string | undefined) => {
       const { data, error } = await supabase
         .from("profile_settings")
         .update({ active_plan_id: planId })
-        .eq("id", userId!)
+        .eq("id", requireUserId(userId))
         .select("active_plan_id");
 
       if (error) throw error;
@@ -456,9 +457,10 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
 
   return useMutation({
     mutationFn: async () => {
+      const uid = requireUserId(userId);
       const { error } = await supabase
         .from("prayer_logs")
-        .insert({ plan_day_id: dayId!, user_id: userId! });
+        .insert({ plan_day_id: dayId!, user_id: uid });
 
       // Marking the same day from two devices trips the unique index on
       // (user_id, plan_day_id). It is not a failure — you did pray — and
@@ -470,7 +472,7 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
       // Sin red: se encola en vez de fallar. La UI igual marca "Oraste hoy"
       // (onSuccess invalida) y el flush lo manda a la base al volver la red.
       if (isNetworkError(error)) {
-        await enqueuePrayed({ dayId: dayId!, userId: userId! });
+        await enqueuePrayed({ dayId: dayId!, userId: uid });
         return;
       }
 

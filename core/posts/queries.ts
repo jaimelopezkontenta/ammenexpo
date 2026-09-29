@@ -8,6 +8,7 @@ import {
 import { PAGE_SIZE, rowId, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export const POST_MAX = 2000;
 export const COMMENT_MAX = 1000;
@@ -107,7 +108,7 @@ export const useWritePrayerRequest = (userId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .insert({
-          author_id: userId!,
+          author_id: requireUserId(userId),
           body: input.body.trim().slice(0, POST_MAX),
           is_anonymous: input.isAnonymous,
           group_id: input.circleId ?? null,
@@ -141,7 +142,7 @@ export const useTogglePostPrayer = (userId: string | undefined) => {
           .from("post_prayers")
           .delete()
           .eq("post_id", input.postId)
-          .eq("user_id", userId!);
+          .eq("user_id", requireUserId(userId));
 
         if (error) throw error;
         return;
@@ -149,7 +150,7 @@ export const useTogglePostPrayer = (userId: string | undefined) => {
 
       const { error } = await supabase
         .from("post_prayers")
-        .insert({ post_id: input.postId, user_id: userId! });
+        .insert({ post_id: input.postId, user_id: requireUserId(userId) });
 
       // Two taps in a row is not a failure — you did pray.
       if (error && error.code !== "23505") throw error;
@@ -190,7 +191,7 @@ export const useWriteComment = (
         .from("comments")
         .insert({
           post_id: postId!,
-          author_id: userId!,
+          author_id: requireUserId(userId),
           body: trimmed.slice(0, COMMENT_MAX),
         })
         .select("crisis_flagged_at")
@@ -312,7 +313,7 @@ export const useReportPost = (userId: string | undefined) =>
   useMutation({
     mutationFn: async (input: { id: string; kind: "post" | "comment" }) => {
       const { error } = await supabase.from("reports").insert({
-        reporter_id: userId!,
+        reporter_id: requireUserId(userId),
         target_type: input.kind,
         target_id: input.id,
       });

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export type Block = {
   blocked_id: string;
@@ -83,7 +84,7 @@ export const useBlockUser = (userId: string | undefined) => {
     mutationFn: async (blockedId: string) => {
       const { error } = await supabase
         .from("blocks")
-        .insert({ blocker_id: userId!, blocked_id: blockedId });
+        .insert({ blocker_id: requireUserId(userId), blocked_id: blockedId });
 
       if (error) throw error;
     },
@@ -100,7 +101,7 @@ export const useUnblockUser = (userId: string | undefined) => {
       const { data, error } = await supabase
         .from("blocks")
         .delete()
-        .eq("blocker_id", userId!)
+        .eq("blocker_id", requireUserId(userId))
         .eq("blocked_id", blockedId)
         .select("blocked_id");
 

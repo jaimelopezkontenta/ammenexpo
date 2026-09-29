@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 /**
  * Invitar a alguien a Ammen.
@@ -23,7 +24,7 @@ export const useMyInviteCode = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("invites")
         .select("code")
-        .eq("inviter_id", userId!)
+        .eq("inviter_id", requireUserId(userId))
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -46,7 +47,7 @@ export const useCreateInviteCode = (userId: string | undefined) => {
     mutationFn: async (): Promise<string> => {
       const { data, error } = await supabase
         .from("invites")
-        .insert({ inviter_id: userId! })
+        .insert({ inviter_id: requireUserId(userId) })
         .select("code")
         .single();
 

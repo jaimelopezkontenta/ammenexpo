@@ -61,6 +61,26 @@ const QUERY_KEY_SELECTORS = [
   "CallExpression[callee.property.name=/^(?:setQueryData|getQueryData|setQueriesData|getQueriesData|ensureQueryData|prefetchQuery|fetchQuery)$/] > ArrayExpression:first-child",
 ].map((selector) => ({ selector, message: QUERY_KEY_MESSAGE }));
 
+// Un `userId!` dentro de un `queryFn` o un `mutationFn` funciona mientras la
+// query lleve su `enabled: Boolean(userId)`; el día que falte, la aserción es
+// un `undefined` que viaja a Supabase. `requireUserId()` lo dice antes de
+// construir la petición (ADR 0006, «Consecuencias»).
+const USER_ID_ASSERTION_SELECTOR = {
+  selector: "TSNonNullExpression[expression.name='userId']",
+  message:
+    "Nada de `userId!`: usa requireUserId(userId) de core/auth/requireUserId.ts, que lanza NotSignedInError en vez de mandar un undefined a Supabase.",
+};
+
+// Lo que `no-restricted-syntax` vigila en todo el código de la app. Va en una
+// constante porque un bloque `files` que vuelve a declarar la regla la
+// reemplaza entera, no la amplía: una excepción parcial tiene que repetir el
+// resto.
+const CONTRACT_SYNTAX = [
+  ROUTER_BACK_SELECTOR,
+  ...TXT_COLOR_SELECTORS,
+  ...QUERY_KEY_SELECTORS,
+];
+
 module.exports = defineConfig([
   expoConfig,
   {
@@ -147,9 +167,8 @@ module.exports = defineConfig([
       ],
       "no-restricted-syntax": [
         "error",
-        ROUTER_BACK_SELECTOR,
-        ...TXT_COLOR_SELECTORS,
-        ...QUERY_KEY_SELECTORS,
+        ...CONTRACT_SYNTAX,
+        USER_ID_ASSERTION_SELECTOR,
       ],
     },
   },
@@ -172,6 +191,21 @@ module.exports = defineConfig([
       "components/Wordmark.tsx",
     ],
     rules: { "no-restricted-imports": "off" },
+  },
+  {
+    // Pendiente: db-6. Otro frente edita estos ficheros a la vez y todavía
+    // llevan sus `userId!`: aquí solo se levanta esa regla (el resto del
+    // contrato sigue). Se quita el bloque al fusionar.
+    files: [
+      "core/profile/**/*.{ts,tsx}",
+      "core/auth/SessionProvider.tsx",
+      "core/auth/pendingToken.ts",
+      "core/notifications/**/*.{ts,tsx}",
+      "core/legal/**/*.{ts,tsx}",
+      "core/onboarding/**/*.{ts,tsx}",
+    ],
+    ignores: ["**/*.test.{ts,tsx}"],
+    rules: { "no-restricted-syntax": ["error", ...CONTRACT_SYNTAX] },
   },
   {
     // La única que puede llamar a router.back(): es la que comprueba el historial.
