@@ -17,6 +17,7 @@ import {
   useClaimHold,
   useCrisisQueue,
   useHeldContentQueue,
+  useHideReportedContent,
   useReleaseHold,
   useRemoveHold,
   useReportQueue,
@@ -24,8 +25,6 @@ import {
   type HeldContent,
   type ReportStatus,
 } from "@/core/moderation/queue";
-import { useHideComment, useHidePost } from "@/core/posts/queries";
-import { useHideMessage } from "@/core/circles/chat";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -89,9 +88,7 @@ function ReportsQueue() {
 
   const queue = useReportQueue(status);
   const resolve = useResolveReport();
-  const hidePost = useHidePost();
-  const hideComment = useHideComment(undefined);
-  const hideMessage = useHideMessage(undefined);
+  const hideReported = useHideReportedContent();
   const block = useBlockUser(userId);
 
   const run = async (action: () => Promise<unknown>, done: string) => {
@@ -106,17 +103,17 @@ function ReportsQueue() {
     }
   };
 
+  // Desde el reporte y como staff: los `hide_*` de antes eran de admin de
+  // círculo y no servían ni en círculos ajenos ni en el muro abierto.
   const hideFor = (report: {
+    id: string;
     target_type: string;
-    target_id: string;
   }): (() => Promise<unknown>) | null => {
     switch (report.target_type) {
       case "post":
-        return () => hidePost.mutateAsync(report.target_id);
       case "comment":
-        return () => hideComment.mutateAsync(report.target_id);
       case "message":
-        return () => hideMessage.mutateAsync(report.target_id);
+        return () => hideReported.mutateAsync(report.id);
       // Un testimonio y una intercesión no se ocultan: el testimonio lo retira
       // quien lo escribió, y una intercesión reportada se resuelve bloqueando.
       // Fingir un botón que no hace nada sería peor que no ponerlo.
@@ -212,7 +209,9 @@ function ReportsQueue() {
                   {hide && !report.already_hidden ? (
                     <Tap
                       accessibilityRole="button"
-                      onPress={() => void run(hide, t("moderation.hideDone"))}
+                      onPress={() =>
+                        void run(hide, t("moderation.hideReportedDone"))
+                      }
                     >
                       <Txt variant="caption" className="underline">
                         {t("moderation.hide")}

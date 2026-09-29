@@ -344,6 +344,11 @@ export type CirclePlan = {
   day_title: string | null;
   prayed_today: boolean;
   prayed_count: number;
+  /**
+   * Todos los días escritos y el último ya desbloqueado antes de hoy. El plan
+   * sigue ahí (su último día se puede releer) hasta que quien lo creó lo archiva.
+   */
+  finished: boolean;
 };
 
 /**

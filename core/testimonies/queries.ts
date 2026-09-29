@@ -35,9 +35,10 @@ export const useVisibleTestimonies = (userId: string | undefined) =>
     queryKey: ["testimonies", userId],
     enabled: Boolean(userId),
     keyOf: (row) => row.id,
-    fetchPage: async (before) => {
-      const { data, error } = await supabase.rpc("visible_testimonies", {
-        p_before: before,
+    fetchPage: async (cursor) => {
+      const { data, error } = await supabase.rpc("visible_testimonies_page", {
+        p_before: cursor?.created_at ?? null,
+        p_before_id: cursor?.id ?? null,
         p_limit: PAGE_SIZE,
       });
 

@@ -61,10 +61,11 @@ export const usePrayerFeed = (circleId?: string) =>
   usePagedQuery<PrayerRequest>({
     queryKey: ["prayerFeed", circleId ?? "wall"],
     keyOf: (row) => row.id,
-    fetchPage: async (before) => {
-      const { data, error } = await supabase.rpc("prayer_feed", {
+    fetchPage: async (cursor) => {
+      const { data, error } = await supabase.rpc("prayer_feed_page", {
         p_group_id: circleId ?? null,
-        p_before: before,
+        p_before: cursor?.created_at ?? null,
+        p_before_id: cursor?.id ?? null,
         p_limit: PAGE_SIZE,
       });
 

@@ -30,9 +30,10 @@ export const useNotifications = (userId: string | undefined) =>
     queryKey: ["notifications", userId],
     enabled: Boolean(userId),
     keyOf: (row) => row.id,
-    fetchPage: async (before) => {
-      const { data, error } = await supabase.rpc("my_notifications", {
-        p_before: before,
+    fetchPage: async (cursor) => {
+      const { data, error } = await supabase.rpc("my_notifications_page", {
+        p_before: cursor?.created_at ?? null,
+        p_before_id: cursor?.id ?? null,
         p_limit: PAGE_SIZE,
       });
 

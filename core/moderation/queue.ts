@@ -33,10 +33,11 @@ export const useReportQueue = (status: ReportStatus) =>
   usePagedQuery<QueuedReport>({
     queryKey: ["reportQueue", status],
     keyOf: (row) => row.id,
-    fetchPage: async (before) => {
-      const { data, error } = await supabase.rpc("report_queue", {
+    fetchPage: async (cursor) => {
+      const { data, error } = await supabase.rpc("report_queue_page", {
         p_status: status,
-        p_before: before,
+        p_before: cursor?.created_at ?? null,
+        p_before_id: cursor?.id ?? null,
         p_limit: PAGE_SIZE,
       });
 
@@ -86,6 +87,36 @@ export const useResolveReport = () => {
   });
 };
 
+/**
+ * Ocultar lo reportado, desde el reporte.
+ *
+ * La cola usaba \`hide_post\`/\`hide_comment\`/\`hide_message\`, que son de admin
+ * de círculo: el staff no podía ocultar nada de un círculo ajeno y nada del
+ * muro abierto, que no tiene admin. \`hide_reported_content\` es de staff, parte
+ * de un reporte abierto (no de un id cualquiera) y deja escrito quién ocultó.
+ */
+export const useHideReportedContent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reportId: string) => {
+      const { data, error } = await supabase.rpc("hide_reported_content", {
+        p_report_id: reportId,
+      });
+
+      if (error) throw error;
+      if (data !== true) throw new Error("hide_reported_content_refused");
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["reportQueue"] });
+      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+      void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
+      void queryClient.invalidateQueries({ queryKey: ["postComments"] });
+      void queryClient.invalidateQueries({ queryKey: ["circleMessages"] });
+    },
+  });
+};
+
 export type HoldStatus = "pending" | "claimed" | "released" | "removed";
 
 export type HeldContent = {
@@ -114,10 +145,14 @@ export const useHeldContentQueue = (
   usePagedQuery<HeldContent>({
     queryKey: ["heldContentQueue", statuses.join(",")],
     keyOf: (row) => row.id,
-    fetchPage: async (before) => {
-      const { data, error } = await supabase.rpc("held_content_queue", {
+    // Más antiguo primero y el cursor hacia delante: es la cola de un SLA. La
+    // RPC vieja ordenaba así pero paginaba con `created_at <`, y la segunda
+    // página volvía a pedir la primera — la cola no pasaba de 30.
+    fetchPage: async (cursor) => {
+      const { data, error } = await supabase.rpc("held_content_queue_page", {
         p_statuses: statuses,
-        p_before: before,
+        p_after: cursor?.created_at ?? null,
+        p_after_id: cursor?.id ?? null,
         p_limit: PAGE_SIZE,
       });
 
@@ -131,7 +166,6 @@ const invalidateHoldQueue = (
   queryClient: ReturnType<typeof useQueryClient>,
 ) => {
   void queryClient.invalidateQueries({ queryKey: ["heldContentQueue"] });
-  void queryClient.invalidateQueries({ queryKey: ["openHolds"] });
   void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
   void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
 };
@@ -201,12 +235,20 @@ export type CrisisEscalation = {
   acknowledged_at: string | null;
 };
 
+/** El máximo que sirve `open_crisis_queue` por llamada. */
+const CRISIS_PAGE = 50;
+/** Un tope para no quedarse en bucle si la RPC cambiara de contrato. */
+const CRISIS_MAX_PAGES = 40;
+
 /**
  * B1b: crisis, en su propia cola, nunca mezclada con el filtro genérico.
  *
  * No pagina con `usePagedQuery`: es una cola de guardia, no un muro — se
  * espera que esté vacía casi siempre, y cuando no lo está, se quiere entera
- * en pantalla, no cargada "de 30 en 30".
+ * en pantalla, no cargada "de 30 en 30". Por eso se recorren todas las
+ * páginas de `open_crisis_queue` (solo lo abierto, lo más antiguo primero,
+ * cursor compuesto): `crisis_queue` mezclaba abiertas y atendidas y cortaba en
+ * 30, así que con historial una crisis abierta podía no salir nunca.
  */
 export const useCrisisQueue = (userId: string | undefined) =>
   useQuery({
@@ -215,11 +257,25 @@ export const useCrisisQueue = (userId: string | undefined) =>
     // El deber de guardia no espera a que alguien vuelva a abrir la pantalla.
     refetchInterval: 30_000,
     queryFn: async (): Promise<CrisisEscalation[]> => {
-      const { data, error } = await supabase.rpc("crisis_queue");
+      const rows: CrisisEscalation[] = [];
+      let after: CrisisEscalation | undefined;
 
-      if (error) throw error;
+      for (let page = 0; page < CRISIS_MAX_PAGES; page += 1) {
+        const { data, error } = await supabase.rpc("open_crisis_queue", {
+          p_after: after?.created_at ?? null,
+          p_after_id: after?.id ?? null,
+          p_limit: CRISIS_PAGE,
+        });
 
-      return (data ?? []) as CrisisEscalation[];
+        if (error) throw error;
+
+        const batch = (data ?? []) as CrisisEscalation[];
+        rows.push(...batch);
+        if (batch.length < CRISIS_PAGE) break;
+        after = batch[batch.length - 1];
+      }
+
+      return rows;
     },
   });
 
@@ -238,7 +294,6 @@ export const useAcknowledgeCrisis = () => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["crisisQueue"] });
-      void queryClient.invalidateQueries({ queryKey: ["openCrisis"] });
     },
   });
 };

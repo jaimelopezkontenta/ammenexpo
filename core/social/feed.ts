@@ -48,9 +48,18 @@ export const useHomeFeed = () =>
     // Une tres fuentes en una lista, así que un `id` puede repetirse entre
     // clases: la clave es la pareja.
     keyOf: (row) => `${row.kind}-${row.id}`,
-    fetchPage: async (before) => {
-      const { data, error } = await supabase.rpc("home_feed", {
-        p_before: before,
+    // Por la misma razón el cursor lleva la clase: `home_feed_page` desempata
+    // por (created_at, id, kind), y sin `kind` no devuelve nada.
+    cursorOf: (row) => ({
+      created_at: row.created_at,
+      id: row.id,
+      kind: row.kind,
+    }),
+    fetchPage: async (cursor) => {
+      const { data, error } = await supabase.rpc("home_feed_page", {
+        p_before: cursor?.created_at ?? null,
+        p_before_id: cursor?.id ?? null,
+        p_before_kind: cursor?.kind ?? null,
         p_limit: PAGE_SIZE,
       });
 

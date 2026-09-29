@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import {
   holdStatusForTarget,
   runSql,
+  runSqlScalar,
   SEED_A,
   SEED_A_ID,
   SEED_B_ID,
@@ -20,6 +21,8 @@ import {
 
 const RELEASE_POST_ID = "e2e40000-0000-0000-0000-000000000001";
 const REMOVE_POST_ID = "e2e40000-0000-0000-0000-000000000002";
+const REPORTED_POST_ID = "e2e40000-0000-0000-0000-000000000003";
+const REPORT_ID = "e2e40000-0000-0000-0000-0000000000a3";
 
 /** Corpus B1a de circles.sql — insulto, no oración, no crisis. */
 const HOLD_CORPUS = "eres un idiota";
@@ -53,8 +56,9 @@ const cleanup = () => {
 
     delete from public.content_holds
      where target_id in ('${RELEASE_POST_ID}', '${REMOVE_POST_ID}');
+    delete from public.reports where id = '${REPORT_ID}';
     delete from public.posts
-     where id in ('${RELEASE_POST_ID}', '${REMOVE_POST_ID}');
+     where id in ('${RELEASE_POST_ID}', '${REMOVE_POST_ID}', '${REPORTED_POST_ID}');
 
     update public.profiles
        set is_staff = false
@@ -147,5 +151,46 @@ test.describe("moderación — hold por UI, staff por SQL", () => {
     } finally {
       deleteHeldPost(REMOVE_POST_ID);
     }
+  });
+
+  // Un post del muro abierto no tiene círculo ni admin: con `hide_post` el
+  // staff no podía ocultarlo. La cola lo oculta ahora desde el reporte.
+  test("staff oculta desde un reporte un post del muro abierto", async ({
+    page,
+  }) => {
+    runSql(`
+      begin;
+      delete from public.reports where id = '${REPORT_ID}';
+      delete from public.posts where id = '${REPORTED_POST_ID}';
+
+      insert into public.posts (id, author_id, body)
+      values ('${REPORTED_POST_ID}', '${SEED_B_ID}', 'Una petición que alguien reportó');
+
+      insert into public.reports (id, reporter_id, target_type, target_id, reason)
+      values ('${REPORT_ID}', '${SEED_A_ID}', 'post', '${REPORTED_POST_ID}', 'spam');
+      commit;
+    `);
+
+    await signInAsStaff(page);
+    await page.goto("/moderacion");
+    await expect(
+      page.getByText("Una petición que alguien reportó"),
+    ).toBeVisible({ timeout: 10_000 });
+
+    await page.getByRole("button", { name: "Ocultar para todos" }).click();
+
+    await expect(page.getByText("Oculto para todos.")).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await expect
+      .poll(
+        () =>
+          runSqlScalar(`
+            select hidden_by from public.posts where id = '${REPORTED_POST_ID}'
+          `),
+        { timeout: 10_000 },
+      )
+      .toBe(SEED_A_ID);
   });
 });

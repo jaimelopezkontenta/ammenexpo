@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { flattenUnique, nextPageCursor, PAGE_SIZE } from "./paging";
 
 describe("nextPageCursor", () => {
-  const row = (ts: string) => ({ created_at: ts });
+  const row = (ts: string, id = ts) => ({ created_at: ts, id });
 
   it("devuelve undefined cuando la página está incompleta (menos de PAGE_SIZE)", () => {
     const page = Array.from({ length: PAGE_SIZE - 1 }, (_, i) =>
@@ -17,15 +17,47 @@ describe("nextPageCursor", () => {
     expect(nextPageCursor([])).toBeUndefined();
   });
 
-  it("devuelve el created_at de la última fila cuando la página está llena", () => {
+  it("devuelve la fecha y el id de la última fila cuando la página está llena", () => {
     const lastTs = "2025-06-15T23:59:59";
     const page = Array.from({ length: PAGE_SIZE }, (_, i) =>
       row(`2025-01-01T00:00:${String(i).padStart(2, "0")}`),
     );
-    // Reemplazar la última para tener un timestamp conocido
-    page[PAGE_SIZE - 1] = row(lastTs);
+    // Reemplazar la última para tener una fila conocida
+    page[PAGE_SIZE - 1] = row(lastTs, "ultima");
 
-    expect(nextPageCursor(page)).toBe(lastTs);
+    expect(nextPageCursor(page)).toEqual({ created_at: lastTs, id: "ultima" });
+  });
+
+  it("con dos filas en el mismo instante, el id es lo que las distingue", () => {
+    const sameTs = "2025-06-15T08:00:00";
+    const page = Array.from({ length: PAGE_SIZE }, (_, i) =>
+      row(sameTs, `fila-${i}`),
+    );
+
+    expect(nextPageCursor(page)).toEqual({
+      created_at: sameTs,
+      id: `fila-${PAGE_SIZE - 1}`,
+    });
+  });
+
+  it("usa cursorOf cuando la lista necesita desempatar por más campos", () => {
+    const page = Array.from({ length: PAGE_SIZE }, (_, i) => ({
+      created_at: "2025-06-15T08:00:00",
+      id: `id-${i}`,
+      kind: "plan",
+    }));
+
+    expect(
+      nextPageCursor(page, (r) => ({
+        created_at: r.created_at,
+        id: r.id,
+        kind: r.kind,
+      })),
+    ).toEqual({
+      created_at: "2025-06-15T08:00:00",
+      id: `id-${PAGE_SIZE - 1}`,
+      kind: "plan",
+    });
   });
 });
 

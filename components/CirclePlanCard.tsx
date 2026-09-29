@@ -72,6 +72,17 @@ export const CirclePlanCard = ({
         </Txt>
       ) : null}
 
+      {/* Terminado no es vacío: se dice, y el último día se queda para releer.
+        Sin esto la tarjeta seguía pidiendo «Ya oré» en un día que ya pasó. */}
+      {plan.finished ? (
+        <View className="gap-1">
+          <Txt variant="bodyMedium">{t("circles.planFinished")}</Txt>
+          <Txt variant="body" tone="secondary">
+            {t("circles.planFinishedBody")}
+          </Txt>
+        </View>
+      ) : null}
+
       {plan.status === "generating" && !plan.day_id ? (
         <Txt variant="body" tone="secondary">
           {t("plan.generating")}
@@ -84,7 +95,7 @@ export const CirclePlanCard = ({
             {t("common.day", { number: plan.day_number })} · {plan.day_title}
           </Txt>
 
-          {plan.prayed_count > 0 ? (
+          {!plan.finished && plan.prayed_count > 0 ? (
             <Txt variant="caption">
               {t("circles.prayedToday", { count: plan.prayed_count })}
             </Txt>
@@ -96,7 +107,7 @@ export const CirclePlanCard = ({
             </Txt>
           ) : null}
 
-          {plan.prayed_today ? (
+          {plan.finished ? null : plan.prayed_today ? (
             <Txt variant="bodyMedium" tone="secondary">
               {t("plan.markedDone")}
             </Txt>
