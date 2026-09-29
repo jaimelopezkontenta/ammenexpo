@@ -1,4 +1,4 @@
-import { X } from "lucide-react-native";
+import { X } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
 import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";

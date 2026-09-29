@@ -1,4 +1,10 @@
-import { BookOpen, House, LucideIcon, User, Users } from "lucide-react-native";
+import {
+  BookOpen,
+  House,
+  LucideIcon,
+  User,
+  Users,
+} from "@/components/ui/icons";
 import { ColorValue, StyleSheet, View } from "react-native";
 
 import { Orb } from "@/components/Orb";

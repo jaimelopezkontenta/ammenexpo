@@ -6,17 +6,17 @@
   ],
   "export": "dist-e2e",
   "limits": {
-    "entryRaw": 5643264,
-    "entryGzip": 1094656,
-    "totalRaw": 5643264,
-    "totalGzip": 1094656
+    "entryRaw": 3713024,
+    "entryGzip": 902144,
+    "totalRaw": 3713024,
+    "totalGzip": 902144
   },
   "measured": {
     "date": "2026-09-29",
-    "commit": "b9fb720",
-    "entryRaw": 5374282,
-    "entryGzip": 1042101,
-    "totalRaw": 5374282,
-    "totalGzip": 1042101
+    "commit": "iconos por ruta",
+    "entryRaw": 3535605,
+    "entryGzip": 859154,
+    "totalRaw": 3535605,
+    "totalGzip": 859154
   }
 }

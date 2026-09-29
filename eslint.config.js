@@ -131,6 +131,12 @@ module.exports = defineConfig([
                 "Todo texto pasa por Txt (components/ui/Text.tsx) — AGENTS.md.",
             },
             {
+              name: "lucide-react-native",
+              allowTypeImports: true,
+              message:
+                "Los iconos salen de components/ui/icons.ts (cada uno por su ruta): el import general mete 1.759 iconos (~1,85 MB) en el bundle web.",
+            },
+            {
               name: "@/theme",
               importNames: ["colors"],
               message:

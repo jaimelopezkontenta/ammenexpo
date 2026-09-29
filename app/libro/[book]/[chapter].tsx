@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 
-import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import { ChevronLeft, ChevronRight } from "@/components/ui/icons";
 import { DawnBackground } from "@/components/DawnBackground";
 import { Txt } from "@/components/ui/Text";
 import { ReaderToolbar } from "@/components/ReaderToolbar";

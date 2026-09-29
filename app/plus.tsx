@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { Check } from "lucide-react-native";
+import { Check } from "@/components/ui/icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";

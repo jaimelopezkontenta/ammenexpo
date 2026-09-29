@@ -1,5 +1,5 @@
 import { Link, Stack, useLocalSearchParams } from "expo-router";
-import { MoreHorizontal } from "lucide-react-native";
+import { MoreHorizontal } from "@/components/ui/icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";

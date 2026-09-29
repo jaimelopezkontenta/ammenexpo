@@ -1,4 +1,4 @@
-import { Check } from "lucide-react-native";
+import { Check } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 

@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { Bell } from "lucide-react-native";
+import { Bell } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
