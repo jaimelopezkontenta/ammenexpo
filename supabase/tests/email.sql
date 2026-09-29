@@ -522,3 +522,11 @@ select pg_temp.assert(
     repeat('x', 80), :DANI)),
   'a display name of 80 characters is accepted');
 
+-- R1 S8: `not valid` dejaba que un nombre viejo de más de 80 rompiera
+-- cualquier UPDATE de su fila (el latido, la racha…). La migración los
+-- recorta y valida la restricción: ya no queda ninguna fila fuera.
+select pg_temp.assert(
+  (select convalidated from pg_constraint
+    where conrelid = 'public.profiles'::regclass
+      and conname = 'profiles_display_name_length'),
+  'the display name length constraint is validated, so every existing row fits');
