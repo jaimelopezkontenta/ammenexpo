@@ -35,16 +35,15 @@ export const EmailInviteField = ({ kind, token }: Props) => {
       toast.success(t("email.inviteSent"));
     } catch (caught) {
       const reason = caught instanceof Error ? caught.message : "";
-      // Los topes dicen cuál saltó: al destinatario ya se le escribió, o quien
-      // invita (o el servicio entero) ha llegado a su techo por hoy.
+      // Solo hay dos topes que se puedan decir: quien invita o el servicio entero
+      // ha llegado a su techo por hoy. Que a esa persona ya se le escribiera NO se
+      // dice (el servidor responde igual): revelaría a quién han invitado otros.
       toast.error(
-        reason === "rate_limited"
-          ? t("email.inviteRateLimited")
-          : reason === "sender_rate_limited"
-            ? t("email.inviteSenderLimited")
-            : reason === "global_rate_limited"
-              ? t("email.inviteBusy")
-              : t("common.errorGeneric"),
+        reason === "sender_rate_limited"
+          ? t("email.inviteSenderLimited")
+          : reason === "global_rate_limited"
+            ? t("email.inviteBusy")
+            : t("common.errorGeneric"),
       );
     }
   };

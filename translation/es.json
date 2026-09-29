@@ -515,7 +515,6 @@
     "inviteSend": "Enviar",
     "inviteHint": "Un correo. Quien lo reciba no hace falta que tenga cuenta.",
     "inviteSent": "Enviado.",
-    "inviteRateLimited": "A esa persona ya le escribimos esta semana.",
     "inviteSenderLimited": "Por hoy ya has invitado a bastante gente por correo. Mañana puedes seguir, o comparte el enlace.",
     "inviteBusy": "Ahora mismo no podemos enviar más invitaciones. Prueba en un rato o comparte el enlace."
   },

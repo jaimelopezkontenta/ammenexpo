@@ -515,7 +515,6 @@
     "inviteSend": "Send",
     "inviteHint": "One email. They don't need an account yet.",
     "inviteSent": "Sent.",
-    "inviteRateLimited": "We already wrote to that person this week.",
     "inviteSenderLimited": "You have invited plenty of people by email today. You can keep going tomorrow, or share the link.",
     "inviteBusy": "We can’t send more invitations right now. Try again in a while or share the link."
   },
