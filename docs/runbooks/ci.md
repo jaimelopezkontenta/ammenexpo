@@ -158,11 +158,11 @@ abrirá su PR.
 
 ## Abierto
 
-- **`supabase start -x studio,vector,logflare`** en `verify.yml` es un experimento
-  (commit aparte, revertible) que no se pudo probar sin Docker. Mirar en el primer
-  run: que arranque (con `[analytics] enabled = true`, excluir `vector` podría
-  dejar contenedores esperando su driver de logs) y que `supabase status -o env`
-  siga devolviendo `API_URL` y `ANON_KEY`. Si falla: volver a `npx supabase start`.
-  `visual-baselines.yml` usa el arranque completo a propósito.
+- **`supabase start -x studio,vector,logflare`: descartado (2026-09-29).** El primer run
+  de CI se quedó más de 19 minutos en «Arrancar Supabase local»: con
+  `[analytics] enabled = true`, excluir `vector` deja contenedores esperando su driver de
+  logs. `verify.yml` vuelve al arranque completo. Reabrir solo desactivando antes analytics
+  en `supabase/config.toml` (y comprobando que `supabase status -o env` sigue dando
+  `API_URL` y `ANON_KEY`).
 - **Baselines Linux:** todavía no hay ninguna commiteada; el paso visual de
   `verify` está inactivo hasta entonces.

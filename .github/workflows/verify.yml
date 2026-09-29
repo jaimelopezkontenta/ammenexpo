@@ -58,14 +58,11 @@ jobs:
       - name: Proveedor de planes local para e2e
         run: printf 'AI_PROVIDER=fixture\n' >> supabase/functions/.env
 
-      # EXPERIMENTO (commit aparte, fácil de revertir): sin Studio, Vector ni
-      # Logflare, que en CI no sirven para nada y son de las imágenes más
-      # pesadas. NO se excluye imgproxy: Storage lo usa en el reset. No se pudo
-      # probar en local (Docker/Supabase son del dueño de la base): el primer run
-      # de CI decide. Si falla al arrancar (p. ej. un contenedor que espera a
-      # Vector con analytics activado), volver a `npx supabase start`.
+      # Arranque completo. Se probó `-x studio,vector,logflare` (2026-09-29) y el paso
+      # se quedó colgado más de 19 minutos: con `[analytics] enabled = true` hay
+      # contenedores que esperan a Vector. No repetir sin desactivar analytics.
       - name: Arrancar Supabase local
-        run: npx supabase start -x studio,vector,logflare
+        run: npx supabase start
 
       # `types/supabase.ts` se genera del esquema (`npm run db:types`). Si una
       # migración cambia el esquema y nadie regenera, el cliente tipado miente.
