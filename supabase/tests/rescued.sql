@@ -116,6 +116,38 @@ select pg_temp.assert(
 
 commit;
 
+-- R1 S13: el chat de sus círculos también es suyo. Y al redefinir la función
+-- entera, ninguna sección de antes puede perderse por el camino.
+begin;
+
+insert into public.messages (conversation_id, sender_id, body)
+values
+  (:'conv_g1', :VERA, 'Gracias por orar por mi hermana'),
+  (:'conv_g1', :TEO,  'Un mensaje de Teo, no de Vera');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"e4444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select public.export_my_data() as export_chat \gset
+
+select pg_temp.assert(
+  (:'export_chat')::jsonb -> 'circle_messages'
+    @> '[{"circle": "Círculo del rescate", "body": "Gracias por orar por mi hermana"}]'::jsonb
+    and jsonb_array_length((:'export_chat')::jsonb -> 'circle_messages') = 1,
+  'export carries the messages she wrote in her circles, with the circle name, and only hers');
+
+select pg_temp.assert(
+  (:'export_chat')::jsonb ?& array[
+    'exported_at', 'about_this_file', 'profile', 'settings', 'email_preferences',
+    'plans', 'days_i_prayed', 'prayer_requests', 'comments', 'testimonies',
+    'prayers_received', 'prayers_given', 'circles', 'following',
+    'prayer_list', 'bible_notes', 'bible_highlights', 'plus_waitlist',
+    'blocked', 'circle_messages'
+  ],
+  'and every section the export had before is still there');
+
+rollback;
+
 begin;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"e3333333-3333-3333-3333-333333333333","role":"authenticated"}';
