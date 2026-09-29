@@ -8,7 +8,9 @@ import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
+import { bookLabel } from "@/core/bible/navigation";
 import { useBibleBooks, useReadingPosition } from "@/core/bible/queries";
+import { useBibleVersion } from "@/core/bible/useBibleVersion";
 import { useSession } from "@/core/auth/SessionProvider";
 
 import { Tap } from "@/components/ui/Tap";
@@ -19,6 +21,9 @@ export default function BookChapters() {
   const { book } = useLocalSearchParams<{ book: string }>();
   const bookId = Number(book);
   const { session } = useSession();
+  // Solo para el nombre del libro: el índice no lee texto, así que no espera
+  // a saber la versión (a lo sumo el título cambia de idioma al leer el disco).
+  const { version } = useBibleVersion();
   // Por dónde vas: el capítulo de la posición guardada se marca en la
   // rejilla, para que «continuar» no dependa de recordar un número.
   const { data: position } = useReadingPosition(session?.user.id);
@@ -29,7 +34,13 @@ export default function BookChapters() {
 
   // No query of its own: chapter_count travels with the books list, which is
   // already cached from the Biblia tab.
-  const { data: books, isLoading, isError, error, refetch } = useBibleBooks();
+  const {
+    data: books,
+    isLoading,
+    isLoadingError,
+    error,
+    refetch,
+  } = useBibleBooks();
   const entry = (books ?? []).find((candidate) => candidate.id === bookId);
 
   if (isLoading) {
@@ -48,7 +59,7 @@ export default function BookChapters() {
   // existe» sobre un libro perfectamente válido, sin reintento. Con la lista en
   // caché (viene de la pestaña Biblia) el fallo de un refetch no estorba: solo
   // cuenta si no hay libro que enseñar.
-  if (!entry && isError) {
+  if (!entry && isLoadingError) {
     return (
       <>
         <Stack.Screen
@@ -89,7 +100,9 @@ export default function BookChapters() {
 
   return (
     <>
-      <Stack.Screen options={{ title: entry.modern_name, headerShown: true }} />
+      <Stack.Screen
+        options={{ title: bookLabel(entry, version), headerShown: true }}
+      />
       <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-4 px-7 py-8 md:w-full md:max-w-read md:self-center"

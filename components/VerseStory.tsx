@@ -27,8 +27,8 @@ import { colors, gradients } from "@/theme";
  */
 export const VerseStory = forwardRef<
   View,
-  { text: string; reference: string; width?: number }
->(({ text, reference, width = 1080 }, ref) => {
+  { text: string; reference: string; versionName: string; width?: number }
+>(({ text, reference, versionName, width = 1080 }, ref) => {
   const height = (width * 16) / 9;
   const scale = width / 1080;
 
@@ -92,7 +92,7 @@ export const VerseStory = forwardRef<
               color: colors.mist.ink,
             }}
           >
-            ammen.app · Reina-Valera 1909
+            ammen.app · {versionName}
           </Txt>
         </View>
       </LinearGradient>

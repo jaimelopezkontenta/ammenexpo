@@ -19,3 +19,13 @@ export const bibleVersionForLanguage = (
   language: string | null | undefined,
 ): BibleVersion =>
   language?.toLowerCase().startsWith("en") ? "web" : "rvr1909";
+
+/**
+ * El idioma de cada versión (`bible_versions.language`). Decide qué nombre de
+ * libro se enseña con ella, igual que `bible_book_label` en la base: «Juan» con
+ * la RVR, «John» con la WEB.
+ */
+export const BIBLE_VERSION_LANGUAGE: Record<BibleVersion, "es" | "en"> = {
+  rvr1909: "es",
+  web: "en",
+};

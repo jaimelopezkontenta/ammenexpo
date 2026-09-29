@@ -29,6 +29,7 @@ import {
   useChapter,
   useSaveReadingPosition,
 } from "@/core/bible/queries";
+import { useBibleVersion } from "@/core/bible/useBibleVersion";
 
 import { Tap } from "@/components/ui/Tap";
 import { icon, useThemeColors } from "@/theme";
@@ -60,12 +61,22 @@ export default function ChapterReader() {
   const targetVerse = verse ? Number(verse) : null;
 
   const { data: books } = useBibleBooks();
+  // La versión se espera antes de pedir el capítulo: pedirlo con la supuesta
+  // (la del idioma) podía pintar un instante la otra Biblia a quien eligió.
+  const {
+    version,
+    ready: versionReady,
+    setVersion: setBibleVersion,
+  } = useBibleVersion();
   const {
     data: verses,
-    isLoading,
-    isError,
+    isLoading: chapterLoading,
+    isLoadingError,
     refetch,
-  } = useChapter(bookId, chapterNumber);
+  } = useChapter(bookId, chapterNumber, version, { enabled: versionReady });
+  // Una query en espera no está «cargando» para React Query, y sin esto la
+  // pantalla caía en «No encontramos ese capítulo» el instante de leer el disco.
+  const isLoading = !versionReady || chapterLoading;
 
   // A malformed deep link gives NaN, which disables the query — and a disabled
   // query reports isLoading false, so the screen used to sail past the spinner
@@ -203,18 +214,18 @@ export default function ChapterReader() {
   // An error and an empty chapter look the same from here, and both used to
   // render nothing at all — with an empty title, since chapterLabel returns ""
   // for a book the list does not have.
-  if (isError || (verses ?? []).length === 0) {
+  if (isLoadingError || (verses ?? []).length === 0) {
     return (
       <>
         <Stack.Screen
           options={{
-            title: chapterLabel(all, current) || t("bible.title"),
+            title: chapterLabel(all, current, version) || t("bible.title"),
             headerShown: true,
           }}
         />
         <ErrorState
-          onRetry={isError ? () => void refetch() : undefined}
-          message={isError ? undefined : t("bible.chapterNotFound")}
+          onRetry={isLoadingError ? () => void refetch() : undefined}
+          message={isLoadingError ? undefined : t("bible.chapterNotFound")}
         />
       </>
     );
@@ -223,7 +234,10 @@ export default function ChapterReader() {
   return (
     <>
       <Stack.Screen
-        options={{ title: chapterLabel(all, current), headerShown: true }}
+        options={{
+          title: chapterLabel(all, current, version),
+          headerShown: true,
+        }}
       />
       <DawnBackground>
         <ScrollView
@@ -234,7 +248,12 @@ export default function ChapterReader() {
         >
           <View className="lg:flex-row lg:items-start lg:gap-8">
             <View className="min-w-0 lg:max-w-read lg:flex-1">
-              <ReaderToolbar step={fontStep} onStep={setFontStep} />
+              <ReaderToolbar
+                step={fontStep}
+                onStep={setFontStep}
+                version={version}
+                onVersion={setBibleVersion}
+              />
               {/*
             El capítulo entero va sobre un panel, y el panel es `flat`: sin
             desenfoque. Un capítulo como Salmos 119 son 176 versículos de
@@ -396,6 +415,9 @@ export default function ChapterReader() {
                                   book: String(bookId),
                                   chapter: String(chapterNumber),
                                   verse: String(row.verse),
+                                  // La imagen lleva el texto que se está
+                                  // leyendo, no el de la versión por defecto.
+                                  version,
                                 },
                               }}
                               asChild
@@ -434,7 +456,7 @@ export default function ChapterReader() {
                 {previous ? (
                   <Tap
                     accessibilityRole="button"
-                    accessibilityLabel={`${t("bible.previous")} · ${chapterLabel(all, previous)}`}
+                    accessibilityLabel={`${t("bible.previous")} · ${chapterLabel(all, previous, version)}`}
                     onPress={() => go(previous)}
                     className="min-h-11 max-w-[48%] flex-row items-center gap-1 rounded-cta border border-glassedge/60 bg-glass/60 py-2 pl-2 pr-4"
                   >
@@ -444,7 +466,7 @@ export default function ChapterReader() {
                       strokeWidth={icon.strokeWidth}
                     />
                     <Txt variant="label" numberOfLines={1} className="shrink">
-                      {chapterLabel(all, previous)}
+                      {chapterLabel(all, previous, version)}
                     </Txt>
                   </Tap>
                 ) : (
@@ -453,12 +475,12 @@ export default function ChapterReader() {
                 {following ? (
                   <Tap
                     accessibilityRole="button"
-                    accessibilityLabel={`${t("bible.next")} · ${chapterLabel(all, following)}`}
+                    accessibilityLabel={`${t("bible.next")} · ${chapterLabel(all, following, version)}`}
                     onPress={() => go(following)}
                     className="min-h-11 max-w-[48%] flex-row items-center gap-1 rounded-cta border border-glassedge/60 bg-glass/60 py-2 pl-4 pr-2"
                   >
                     <Txt variant="label" numberOfLines={1} className="shrink">
-                      {chapterLabel(all, following)}
+                      {chapterLabel(all, following, version)}
                     </Txt>
                     <ChevronRight
                       size={icon.sm}

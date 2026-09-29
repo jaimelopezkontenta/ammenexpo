@@ -54,14 +54,14 @@ export const qk = {
     key<
       [version: string, bookId: number | undefined, chapter: number | undefined]
     >("bibleChapter"),
-  bibleReference: key<[query: string]>("bibleReference"),
-  bibleSearch: key<[query: string]>("bibleSearch"),
+  bibleReference: key<[version: string, query: string]>("bibleReference"),
+  bibleSearch: key<[version: string, query: string]>("bibleSearch"),
   chapterMarks:
     key<[userId: Id, bookId: number | undefined, chapter: number | undefined]>(
       "chapterMarks",
     ),
   readingPosition: key<[userId: Id]>("readingPosition"),
-  verseOfTheDay: key<[]>("verseOfTheDay"),
+  verseOfTheDay: key<[version: string]>("verseOfTheDay"),
 
   // -- Planes ----------------------------------------------------------------
   myPlans: key<[userId: Id]>("myPlans"),

@@ -24,8 +24,8 @@ import { colors } from "@/theme";
  */
 export const VerseCard = forwardRef<
   View,
-  { text: string; reference: string; size?: number }
->(({ text, reference, size = 1080 }, ref) => {
+  { text: string; reference: string; versionName: string; size?: number }
+>(({ text, reference, versionName, size = 1080 }, ref) => {
   // Un versículo de dos palabras («Y lloró Jesús») pide letra grande; uno de
   // cuatrocientos caracteres pide que quepa. Tres tramos y no una fórmula
   // continua: los saltos son visibles, predecibles y se pueden mirar uno a uno.
@@ -96,7 +96,7 @@ export const VerseCard = forwardRef<
             color: colors.mist.ink,
           }}
         >
-          ammen.app · Reina-Valera 1909
+          ammen.app · {versionName}
         </Txt>
       </View>
     </View>

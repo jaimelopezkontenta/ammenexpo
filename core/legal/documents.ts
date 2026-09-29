@@ -37,7 +37,7 @@ const ES_TERMS: Document = {
 
     "**La inteligencia artificial.** El plan de oración lo escribe un modelo de lenguaje a partir de lo que le cuentas. Lo que produce son **sugerencias para orar**: no es consejo médico, ni legal, ni psicológico, ni una enseñanza doctrinal de ninguna iglesia. Puede equivocarse. Si estás en una situación de riesgo, busca ayuda profesional.",
 
-    "**La Biblia.** El texto bíblico es la Reina-Valera 1909, que es de dominio público.",
+    "**La Biblia.** El texto bíblico es de dominio público: la Reina-Valera 1909, en español, y la World English Bible, en inglés.",
 
     "**Suscripción.** Hay funciones gratuitas y una suscripción de pago. Cuando exista, se cobra por la tienda de aplicaciones correspondiente y se cancela desde ahí; se renueva sola salvo que la canceles al menos 24 horas antes de que termine el periodo.",
 
@@ -95,7 +95,7 @@ const EN_TERMS: Document = {
 
     "**Artificial intelligence.** Your prayer plan is written by a language model from what you tell it. What it produces are **suggestions for prayer**: not medical, legal or psychological advice, and not the doctrinal teaching of any church. It can be wrong. If you are at risk, seek professional help.",
 
-    "**The Bible.** The biblical text is the Reina-Valera 1909, which is in the public domain.",
+    "**The Bible.** The biblical text is in the public domain: the Reina-Valera 1909, in Spanish, and the World English Bible, in English.",
 
     "**Subscription.** Some features are free and there is a paid subscription. Where it exists, it is billed by the corresponding app store and cancelled there; it renews automatically unless you cancel at least 24 hours before the period ends.",
 
