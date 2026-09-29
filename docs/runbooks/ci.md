@@ -1,0 +1,171 @@
+# Runbook — CI
+
+Todo vive en `.github/`. Nada de CI despliega: los deploys los hace una persona.
+
+## Qué corre
+
+| Workflow / job               | Cuándo                       | Bloquea | Qué mira                                                                                               |
+| ---------------------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `verify` · `verify`          | PR y push a `main`           | sí      | Guard de migraciones, tipos de la base, `npm run verify`, Playwright funcional y (ver abajo) el visual |
+| `verify` · `functions-types` | ídem, en paralelo            | sí      | `deno check` de las seis edge functions                                                                |
+| `verify` · `expo-health`     | ídem, en paralelo            | no      | `expo-doctor` y `expo install --check` (hoy fallan los dos; ver abajo)                                 |
+| `visual-baselines`           | a mano (`workflow_dispatch`) | —       | Genera las baselines Linux de la regresión visual y las sube como artefacto                            |
+| Dependabot                   | semanal                      | —       | Acciones de GitHub; en npm solo avisos de seguridad                                                    |
+
+El job `verify` corre en un runner efímero con Supabase local, así que serializa
+base y e2e por construcción. Los otros dos no levantan Supabase.
+
+Pasos de `verify`, en orden: checkout con historia completa → `npm ci` → guard de
+migraciones → Chromium → `AI_PROVIDER=fixture` → `supabase start` → tipos de la
+base contra las migraciones → `supabaseCiEnv` → `npm run verify` (typecheck, lint,
+vitest, `db:test`) → Playwright `chromium` → regresión visual (condicionada).
+
+## Regenerar las baselines Linux
+
+Las baselines de `e2e/**-snapshots/` son `*-win32.png`; Playwright añade la
+plataforma al nombre y en Linux ninguna casa. Por eso la suite visual solo corre
+en CI cuando existen `*-linux.png` (`hashFiles('e2e/**/*-linux.png') != ''` en
+`verify.yml`). Se generan en el propio runner de CI, no a mano:
+
+```bash
+gh workflow run visual-baselines.yml --ref <rama>
+gh run watch                                    # elige el run recién lanzado
+gh run download <id> -n visual-baselines-linux -D .
+git status                                      # e2e/**-snapshots/*-linux.png
+```
+
+El artefacto trae las rutas relativas a la raíz (`e2e/visual.spec.ts-snapshots/…`),
+así que `-D .` las deja en su sitio. Después:
+
+1. **Revisar cada captura** contra la baseline de Windows (ADR 0003: las baselines
+   se regeneran a propósito, con el diff revisado, nunca «hasta que pase»).
+2. Commitear **el juego completo** (`git add e2e`). Con capturas sueltas, las que
+   falten se escriben y dan el test por fallado.
+3. Las `*-win32.png` se quedan: son las de quien corre `npm run e2e:visual` en Windows.
+
+Notas:
+
+- El workflow hace una **segunda pasada sin actualizar**. Si falla, las baselines
+  recién generadas no se reproducen contra sí mismas: no commitear, mirar el
+  artefacto `playwright-visual-failure-<id>`.
+- `gh workflow run` solo encuentra el workflow si el fichero está en la rama por
+  defecto; la rama a probar va en `--ref`.
+- Regenerar cuando cambie a propósito algo visible y cuando GitHub cambie el
+  contenido de `ubuntu-latest` (fuentes, Chromium): un fallo visual sin cambio de
+  código en el diff huele a eso. Se puede fijar `ubuntu-24.04` en los dos
+  workflows para no depender de ello.
+- Las capturas de un run visual fallido en `verify` están en el artefacto
+  `playwright-failure-<id>` (`test-results/`, con el diff).
+
+## Leer un fallo del guard de migraciones
+
+`node scripts/checkMigrations.mjs --base <sha>` (en CI, la base del PR o el commit
+anterior al push; en local, `npm run migrations:check` contra `origin/main`). Cada
+línea `✗` es un problema; ADR 0001 explica el porqué.
+
+| Mensaje                                                           | Qué pasó                                              | Qué hacer                                                                   |
+| ----------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| `el nombre no es <14 dígitos>_<snake_case>.sql`                   | Fichero a mano o mal nombrado                         | Borrarlo y generarlo con `npx supabase migration new <nombre>`              |
+| `repite la versión … de …`                                        | Dos ficheros con el mismo número (típico de un merge) | `db push` compara versiones: renombrar el nuevo con un timestamp posterior  |
+| `ya estaba publicada y se ha editado — añade una migración nueva` | Se tocó una migración que ya está en `main`           | Revertir el cambio en ese fichero y poner el arreglo en una migración nueva |
+| `ya estaba publicada y se ha borrado`                             | Se borró una migración de `main`                      | Restaurarla                                                                 |
+| `es nueva pero su versión no es posterior a la última publicada`  | La rama nació antes que otra migración ya mergeada    | Renombrar la nueva con un timestamp posterior a `main` y rebasar            |
+| `No se pudo leer la ref base «…»`                                 | Falta historia (fetch superficial)                    | El checkout de CI lleva `fetch-depth: 0`; en local, `git fetch origin`      |
+
+Una excepción real (un `migration repair` en staging) va en
+`IMMUTABILITY_EXCEPTIONS`, con su motivo, dentro del propio script.
+
+## `functions-types`: el `deno check` de las edge functions
+
+`npm run typecheck` y ESLint no miran `supabase/functions/` (es Deno), así que
+un error de tipos ahí solo aparecía al desplegar. El job hace `deno check
+--frozen` sobre el `index.ts` de cada función, sin Supabase ni `npm ci`.
+
+- **Deno 2.1.4, fijo.** Es la línea del edge-runtime que ejecuta las funciones
+  (`deno_version = 2` en `supabase/config.toml`; su `Cargo.toml` depende de
+  `deno_core` 0.324, de la época de Deno 2.1: es una deducción, no una versión
+  publicada). El chequeo de tipos cambia con el TypeScript de cada Deno: subirlo es
+  una decisión.
+- **`supabase/functions/deno.json`** solo fija `nodeModulesDir: none`. Sin él, con
+  el `package.json` de la raíz a la vista, Deno resolvía los `npm:` contra el
+  `node_modules` de la app (`@anthropic-ai/sdk` ni resolvía y `supabase-js` salía
+  de la versión de la raíz, no de la del especificador).
+- **`supabase/functions/deno.lock`** fija lo que resuelven los rangos
+  (`^2.58.0`, `^0.70.0`). Con `--frozen`, un especificador nuevo o cambiado hace
+  fallar el job con «The lockfile is out of date». Se actualiza desde
+  `supabase/functions/`:
+
+  ```bash
+  npx --yes deno@2.1.4 check --frozen=false send-email/index.ts enqueue-emails/index.ts \
+    email-unsubscribe/index.ts resend-webhook/index.ts send-intercession-push/index.ts \
+    generate-prayer-plan/index.ts
+  ```
+
+  Para subir versiones dentro del rango, borrar `deno.lock` antes; revisar el diff:
+  un `supabase-js` o un SDK más nuevo puede destapar errores nuevos. Dependabot no
+  toca este lock.
+
+- **Sin `--frozen` local:** `npx --yes deno@2.1.4 check <entradas>` baja el binario
+  a la caché de npx (no a `node_modules`) y sirve para comprobar antes de subir.
+- Los `*.test.ts` no se chequean aquí: son de Vitest.
+
+### Deuda conocida (a fecha 2026-09-29)
+
+`generate-prayer-plan` trae 3 errores de tipos; su paso es un **trinquete**
+(`KNOWN_ERRORS: "3"` en `verify.yml`): pasa con 3 o menos, falla con más y avisa
+si baja. Cuando lleguen a 0, su `index.ts` pasa al paso bloqueante y se borra el
+trinquete.
+
+| Dónde                                             | Error                                                                                        |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `generate-prayer-plan/index.ts:325`               | TS2322: `days` tiene `title: string \| null` y `DayPayload` pide `string`                    |
+| `generate-prayer-plan/providers/anthropic.ts:104` | TS2353: `output_config` no existe en `MessageCreateParamsBase` de `@anthropic-ai/sdk@0.70.1` |
+| `generate-prayer-plan/providers/anthropic.ts:116` | TS2339: `stop_details` no existe en `Message` (mismo SDK)                                    |
+
+Los dos de `anthropic.ts` sugieren que el código está escrito para un SDK más
+nuevo que el que permite `^0.70.0`: o se sube el especificador (y el lock), o se
+adaptan los tipos. En ejecución los campos viajan igual (el edge-runtime no
+comprueba tipos): no se ha probado contra la API.
+
+**Latente con un Deno más nuevo:** con Deno ≥ 2.5 (TypeScript 5.9)
+`resend-webhook/svix.ts:55` deja de compilar (TS2769: `Uint8Array<ArrayBufferLike>`
+no es `BufferSource` en `crypto.subtle.importKey`). Medido con 2.5.7, 2.7.14 y
+2.9.6; con 2.1.4, 2.3.7 y 2.4.4 pasa. Habrá que arreglarlo antes de subir la versión
+de Deno del job.
+
+## `expo-health`
+
+`expo-doctor` y `expo install --check` con `continue-on-error` y una anotación
+`::warning::` si fallan. A 2026-09-29 los dos fallan sobre `main`:
+
+- `expo install --check`: 10 paquetes de SDK 56 con parches por detrás
+  (`expo` 56.0.18 vs `~56.0.23`, `expo-router` 56.2.17 vs `~56.2.21`, `expo-image`,
+  `expo-image-picker`, `expo-linking`, `expo-notifications`, `expo-sharing`,
+  `expo-splash-screen`, `expo-constants`, `@expo/metro-runtime`). Se arregla con
+  `npx expo install --fix` (toca `package.json` y el lock).
+- `expo-doctor` (20 de 22): esa misma comprobación de versiones y una que consulta
+  un aviso remoto («Hermes V1 con regresión de memoria» en `expo@56.0.18`; lo
+  arregla `expo` ≥ 57.0.9 o React Native ≥ 0.86.2).
+
+Al dejar el repo al día, quitar el `continue-on-error` de `expo install --check`
+(es determinista). `expo-doctor` no debería ser bloqueante: parte de su resultado
+depende de datos remotos.
+
+## Dependabot
+
+`.github/dependabot.yml`: acciones semanales agrupadas; npm con
+`open-pull-requests-limit: 0`, es decir, solo avisos de seguridad. El bloque
+`ignore` (Expo, React Native, React, NativeWind) solo afecta a las actualizaciones
+de versión: hoy no filtra nada, y un aviso de seguridad de un paquete de Expo sí
+abrirá su PR.
+
+## Abierto
+
+- **`supabase start -x studio,vector,logflare`** en `verify.yml` es un experimento
+  (commit aparte, revertible) que no se pudo probar sin Docker. Mirar en el primer
+  run: que arranque (con `[analytics] enabled = true`, excluir `vector` podría
+  dejar contenedores esperando su driver de logs) y que `supabase status -o env`
+  siga devolviendo `API_URL` y `ANON_KEY`. Si falla: volver a `npx supabase start`.
+  `visual-baselines.yml` usa el arranque completo a propósito.
+- **Baselines Linux:** todavía no hay ninguna commiteada; el paso visual de
+  `verify` está inactivo hasta entonces.
