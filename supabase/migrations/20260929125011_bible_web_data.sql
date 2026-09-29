@@ -10,26 +10,18 @@
 -- Por qué el fichero pegado dentro de un dollar-quote y no 31.103 INSERT: es el
 -- mismo texto que publica eBible.org, línea por línea («GEN 1:1 In the
 -- beginning…»), así que se puede comparar con el original a simple vista, y
--- Postgres lo parte y lo parsea de una vez. El dollar-quote `$web-- Ammen — la World English Bible (WEB), el texto.
---
--- Fuente: eBible.org, fichero engwebp_vpl.txt (edición «2020 stable text», canon
--- protestante de 66 libros, sin notas ni títulos), descargado el 2026-09-29 de
--- https://eBible.org/Scriptures/ . La WEB es de dominio público; «World English
--- Bible» es marca de eBible.org, y la única condición es no llamar así a un
--- texto alterado. **No se edita a mano**: si hubiera que tocar el texto, se
--- regenera desde el fichero original o deja de poder llamarse WEB.
---
- no
+-- Postgres lo parte y lo parsea de una vez. El dollar-quote de etiqueta «web» no
 -- interpreta nada: ni comillas ni barras (el fichero no contiene la etiqueta;
 -- el generador lo comprueba).
 --
--- En TROZOS de 200 líneas (156 sentencias de ~27 KB), no en una sola de
--- 4,3 MB: con una única sentencia gigante `supabase start` se quedó colgado más
--- de 12 minutos en el runner de CI (Linux) aplicando esta migración — el CLI
--- parte cada migración en sentencias y ese partido no aguanta un literal tan
--- grande. En local (Windows) entraba en 3 s, por eso no se vio antes. Cada trozo
--- es el mismo INSERT con líneas consecutivas del fichero: el contenido cargado
--- es idéntico, y la comprobación de abajo sigue exigiendo los 31098 versículos.
+-- Está en TROZOS de 200 líneas (156 sentencias de ~27 KB) y SIN escribir la etiqueta
+-- del dollar-quote en ningún comentario: el divisor de sentencias del CLI de
+-- supabase (`supabase start`, JavaScript) no distingue un comentario de código y
+-- toma esa etiqueta por una apertura, con lo que parte la migración mal y se
+-- quedó colgado más de 12 minutos en el runner de CI (Linux). Con `db reset`, en
+-- local, entraba en 3 s, por eso no se vio antes. Cada trozo es el mismo INSERT con
+-- líneas consecutivas del fichero: el contenido cargado es idéntico, y la
+-- comprobación de abajo sigue exigiendo los 31098 versículos.
 --
 -- Los códigos de libro son los de SIL/UBS; su posición en la lista de abajo es
 -- el `bible_books.id` canónico (GEN = 1 … REV = 66). `supabase/tests/bible.sql`
