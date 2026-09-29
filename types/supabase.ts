@@ -38,6 +38,7 @@ export type Database = {
           id: number
           modern_name: string
           name: string
+          name_en: string
           new_testament: boolean
         }
         Insert: {
@@ -45,6 +46,7 @@ export type Database = {
           id: number
           modern_name: string
           name: string
+          name_en: string
           new_testament: boolean
         }
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           id?: number
           modern_name?: string
           name?: string
+          name_en?: string
           new_testament?: boolean
         }
         Relationships: []
@@ -150,6 +153,7 @@ export type Database = {
           search_vector: unknown
           text: string
           verse: number
+          version: string
         }
         Insert: {
           book_id: number
@@ -157,6 +161,7 @@ export type Database = {
           search_vector?: unknown
           text: string
           verse: number
+          version?: string
         }
         Update: {
           book_id?: number
@@ -164,6 +169,7 @@ export type Database = {
           search_vector?: unknown
           text?: string
           verse?: number
+          version?: string
         }
         Relationships: [
           {
@@ -173,7 +179,41 @@ export type Database = {
             referencedRelation: "bible_books"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bible_verses_version_fkey"
+            columns: ["version"]
+            isOneToOne: false
+            referencedRelation: "bible_versions"
+            referencedColumns: ["code"]
+          },
         ]
+      }
+      bible_versions: {
+        Row: {
+          code: string
+          is_default: boolean
+          language: string
+          license: string
+          name: string
+          source: string
+        }
+        Insert: {
+          code: string
+          is_default?: boolean
+          language: string
+          license: string
+          name: string
+          source: string
+        }
+        Update: {
+          code?: string
+          is_default?: boolean
+          language?: string
+          license?: string
+          name?: string
+          source?: string
+        }
+        Relationships: []
       }
       blocks: {
         Row: {
@@ -2088,6 +2128,11 @@ export type Database = {
         Returns: boolean
       }
       archive_my_plan: { Args: { p_plan_id: string }; Returns: undefined }
+      bible_book_label: {
+        Args: { p_book_id: number; p_version?: string }
+        Returns: string
+      }
+      bible_search_config: { Args: { p_version: string }; Returns: unknown }
       blocked_either_way: { Args: { p_user_id: string }; Returns: boolean }
       can_create_circle_plan: { Args: { p_group_id: string }; Returns: boolean }
       can_pray_plan: { Args: { pid: string }; Returns: boolean }
@@ -2471,7 +2516,7 @@ export type Database = {
       join_group_with_token: { Args: { token: string }; Returns: string }
       local_today: { Args: { p_user: string }; Returns: string }
       locate_reference: {
-        Args: { p_ref: string }
+        Args: { p_ref: string; p_version?: string }
         Returns: {
           book_id: number
           chapter: number
@@ -2824,7 +2869,7 @@ export type Database = {
         Returns: boolean
       }
       resolve_scripture: {
-        Args: { p_ref: string }
+        Args: { p_ref: string; p_version?: string }
         Returns: {
           book_id: number
           canonical_ref: string
@@ -2839,7 +2884,12 @@ export type Database = {
       run_email_jobs: { Args: never; Returns: Json }
       run_queue_drains: { Args: never; Returns: Json }
       search_bible: {
-        Args: { p_limit?: number; p_offset?: number; p_query: string }
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query: string
+          p_version?: string
+        }
         Returns: {
           book_id: number
           book_name: string
@@ -2892,7 +2942,7 @@ export type Database = {
       valid_timezone: { Args: { tz: string }; Returns: string }
       verify_email_prefs_token: { Args: { p_token: string }; Returns: string }
       verse_of_the_day: {
-        Args: never
+        Args: { p_version?: string }
         Returns: {
           book_id: number
           book_name: string
@@ -2903,7 +2953,7 @@ export type Database = {
         }[]
       }
       verse_of_the_day_for: {
-        Args: { p_user: string }
+        Args: { p_user: string; p_version?: string }
         Returns: {
           book_id: number
           book_name: string
