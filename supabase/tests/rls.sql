@@ -1320,6 +1320,93 @@ select pg_temp.assert(
 
 commit;
 
+-- ---------------------------------------------------------------------------
+-- invites: el código lo pone el servidor; quién aceptó, el canje
+--
+-- Se podía insertar una invitación ya «aceptada» por otra persona —que pasaba
+-- a verla como suya, y cuyo canje de verdad ya no avisaba a quien invitó— o
+-- con un código elegido a mano, que acaba sin escapar en la URL del correo
+-- (`/i/<code>`).
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000003","role":"authenticated"}';
+
+-- useCreateInviteCode
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.invites (inviter_id)
+    values ('c1c10000-0000-0000-0000-000000000003')
+  $q$),
+  'asking for an invite code the way the app does still works');
+
+select pg_temp.assert(
+  (select code ~ '^[0-9a-f]{32}$' and accepted_by is null and accepted_at is null
+     from public.invites where inviter_id = 'c1c10000-0000-0000-0000-000000000003'),
+  'and the server picks the code');
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('code',        $v$'moises'$v$),
+      ('accepted_by', $v$'c1c10000-0000-0000-0000-000000000004'$v$),
+      ('accepted_at', 'now()'),
+      ('channel',     $v$'whatsapp'$v$),
+      ('created_at',  $v$'2000-01-01'$v$),
+      ('id',          $v$'c1c1d000-0000-0000-0000-0000000000ff'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.raises(format(
+      'insert into public.invites (inviter_id, %I) values (%L, %s)',
+      forced.col, 'c1c10000-0000-0000-0000-000000000003', forced.val))
+    then
+      raise exception 'FAIL  an invite cannot be created with its own %', forced.col;
+    end if;
+    raise notice 'PASS  an invite cannot be created with its own %', forced.col;
+  end loop;
+end;
+$$;
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.invites (inviter_id)
+    values ('c1c10000-0000-0000-0000-000000000004')
+  $q$),
+  'nor in somebody else''s name');
+
+commit;
+
+select code as moises_code from public.invites
+ where inviter_id = 'c1c10000-0000-0000-0000-000000000003' \gset
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000004","role":"authenticated"}';
+
+select pg_temp.assert(
+  (public.redeem_invite_code(:'moises_code') ->> 'ok')::boolean,
+  'redeeming the code still works');
+
+commit;
+
+select pg_temp.assert(
+  (select accepted_by = 'c1c10000-0000-0000-0000-000000000004' and accepted_at is not null
+     from public.invites where code = :'moises_code'),
+  'and it is the redemption that records who accepted');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000003","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.rotate_my_invite_code() is distinct from :'moises_code',
+  'and the code still rotates, through its RPC');
+
+commit;
+
 \echo ''
 \echo '================================'
 \echo ' ALL RLS ASSERTIONS PASSED'
