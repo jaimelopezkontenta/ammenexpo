@@ -1,12 +1,7 @@
-import { createClient } from "npm:@supabase/supabase-js@^2.58.0";
-
+import { createAdminClient } from "../_shared/admin.ts";
+import { json, preflight } from "../_shared/http.ts";
+import { createLogger, describeError, requestIdFrom } from "../_shared/log.ts";
 import { verifyResendSignature } from "./svix.ts";
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
 
 type ResendEvent = {
   type?: string;
@@ -22,12 +17,14 @@ type ResendEvent = {
  */
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok");
+    return preflight();
   }
 
   if (req.method !== "POST") {
     return json({ ok: false, error: "method_not_allowed" }, 405);
   }
+
+  const logger = createLogger("resend-webhook", requestIdFrom(req.headers));
 
   const secret = Deno.env.get("RESEND_WEBHOOK_SECRET")?.trim() ?? "";
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim() ?? "";
@@ -35,6 +32,7 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ?? "";
 
   if (!secret || !supabaseUrl || !serviceRoleKey) {
+    logger.error("not_configured");
     return json({ ok: false, error: "webhook_not_configured" }, 503);
   }
 
@@ -52,6 +50,7 @@ Deno.serve(async (req: Request) => {
   });
 
   if (!ok) {
+    logger.warn("signature.rejected");
     return json({ ok: false, error: "invalid_signature" }, 401);
   }
 
@@ -59,10 +58,11 @@ Deno.serve(async (req: Request) => {
   try {
     parsed = JSON.parse(body) as ResendEvent;
   } catch {
+    logger.warn("body.invalid_json");
     return json({ ok: false, error: "invalid_json" }, 400);
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createAdminClient(supabaseUrl, serviceRoleKey);
   const { data, error } = await supabase.rpc("record_email_event", {
     p_svix_id: svixId,
     p_event_type: parsed.type ?? "unknown",
@@ -71,9 +71,17 @@ Deno.serve(async (req: Request) => {
   });
 
   if (error) {
-    console.error("record_email_event failed", error);
+    logger.error("record.failed", describeError(error));
     return json({ ok: false, error: "persist_failed" }, 500);
   }
+
+  // `svix_id` es un id opaco; el tipo de evento, una etiqueta de Resend. Ni el
+  // destinatario ni el payload.
+  logger.info("event.recorded", {
+    svix_id: svixId,
+    event_type: parsed.type ?? "unknown",
+    recorded: Boolean(data),
+  });
 
   return json({ ok: true, recorded: Boolean(data) });
 });

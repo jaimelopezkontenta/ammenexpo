@@ -1,8 +1,11 @@
+import { createAdminClient, type SupabaseClient } from "../_shared/admin.ts";
+import { CORS_INVOKER, jsonWith, preflight } from "../_shared/http.ts";
 import {
-  createClient,
-  type SupabaseClient,
-} from "npm:@supabase/supabase-js@^2.58.0";
-
+  createLogger,
+  describeError,
+  type Logger,
+  requestIdFrom,
+} from "../_shared/log.ts";
 import { renderEmail } from "../_shared/emails/render.ts";
 import type {
   EmailLocale,
@@ -14,23 +17,21 @@ import {
   isAllowlisted,
   resolveEmailSenderConfig,
 } from "./config.ts";
+import { deliveryErrorCode } from "./outcome.ts";
 
 const RESEND_URL = "https://api.resend.com/emails";
 const FROM = "Ammen <hola@mail.ammen.app>";
 const REPLY_TO = "hola@ammen.app";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-ammen-invoker",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+/**
+ * Sin timeout, un Resend que no contesta deja colgada toda la invocación (y con
+ * ella los 50 correos arrendados) hasta que el reloj del edge la mata. Con él, el
+ * fallo es reintentable como cualquier otro: el `Idempotency-Key` hace que un
+ * reintento tras un correo que SÍ salió no lo duplique.
+ */
+const RESEND_TIMEOUT_MS = 20_000;
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+const json = jsonWith(CORS_INVOKER);
 
 type ClaimedRow = {
   outbox_id: string;
@@ -46,6 +47,7 @@ type ClaimedRow = {
 
 const mark = async (
   supabase: SupabaseClient,
+  logger: Logger,
   outboxId: string,
   status: "sent" | "permanent_failure" | "retryable_failure" | "skipped",
   resendId: string | null,
@@ -59,7 +61,13 @@ const mark = async (
   });
 
   if (rpcError) {
-    console.error("mark_email_delivery failed", outboxId, rpcError);
+    // Sin `rpcError.message`: lleva el `p_error`, que puede citar la respuesta
+    // de Resend (y con ella el destinatario).
+    logger.error("mark.failed", {
+      outbox_id: outboxId,
+      status,
+      ...describeError(rpcError),
+    });
   }
 };
 
@@ -114,6 +122,7 @@ const sendOne = async (input: {
       method: "POST",
       headers,
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
     });
   } catch (caught) {
     const reason = caught instanceof Error ? caught.message : "transport_error";
@@ -135,7 +144,12 @@ const sendOne = async (input: {
     };
   }
 
-  const payload = (await response.json()) as { id?: string };
+  // Un 200 cuyo cuerpo no es JSON tampoco lanza: sin id no hay nada que dar por
+  // enviado, así que se trata como cualquier respuesta sin id (y el
+  // Idempotency-Key evita el duplicado al reintentar).
+  const payload = (await response.json().catch(() => ({}))) as {
+    id?: string;
+  };
   if (!payload.id) {
     return { retryable: true, error: "resend_missing_id" };
   }
@@ -150,8 +164,10 @@ const sendOne = async (input: {
  */
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS });
+    return preflight(CORS_INVOKER);
   }
+
+  const logger = createLogger("send-email", requestIdFrom(req.headers));
 
   if (
     authorizeInvoker(
@@ -160,6 +176,8 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_URL") ?? undefined,
     ) === "unauthorized"
   ) {
+    // Nunca el valor del header ni el secreto: solo que hubo un rechazo.
+    logger.warn("auth.rejected");
     return json({ ok: false, error: "unauthorized" }, 401);
   }
 
@@ -176,12 +194,14 @@ Deno.serve(async (req: Request) => {
 
   if (!config.enabled) {
     if (config.reason === "kill_switch") {
+      logger.info("skipped", { reason: "kill_switch" });
       return json({ ok: true, skipped: "kill_switch", sent: 0 });
     }
+    logger.error("sender.not_configured");
     return json({ ok: false, error: "sender_not_configured" }, 503);
   }
 
-  const supabase = createClient(config.supabaseUrl, config.serviceRoleKey);
+  const supabase = createAdminClient(config.supabaseUrl, config.serviceRoleKey);
 
   const { data: claimed, error: claimError } = await supabase.rpc(
     "claim_email_outbox_batch",
@@ -189,7 +209,7 @@ Deno.serve(async (req: Request) => {
   );
 
   if (claimError) {
-    console.error("claim_email_outbox_batch failed", claimError);
+    logger.error("claim.failed", describeError(claimError));
     return json({ ok: false, error: "claim_email_outbox_batch_failed" }, 500);
   }
 
@@ -199,6 +219,8 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true, sent: 0, retried: 0, failed: 0, skipped: 0 });
   }
 
+  logger.info("batch.claimed", { rows: rows.length });
+
   let sent = 0;
   let retried = 0;
   let failed = 0;
@@ -207,16 +229,51 @@ Deno.serve(async (req: Request) => {
   for (const row of rows) {
     if (!isAllowlisted(row.to_email, config.allowlist)) {
       skipped += 1;
-      await mark(supabase, row.outbox_id, "skipped", null, "not_allowlisted");
+      await mark(
+        supabase,
+        logger,
+        row.outbox_id,
+        "skipped",
+        null,
+        "not_allowlisted",
+      );
       continue;
     }
 
     let prefsToken: string | null = null;
     if (row.user_id && row.channel !== "T") {
-      const { data: token } = await supabase.rpc("issue_email_prefs_token", {
-        p_user: row.user_id,
-      });
+      const { data: token, error: tokenError } = await supabase.rpc(
+        "issue_email_prefs_token",
+        { p_user: row.user_id },
+      );
+
+      if (tokenError) {
+        // Un correo que no es transaccional sin enlace de baja (ni cabecera
+        // List-Unsubscribe) no debe salir: se reintenta con backoff en vez de
+        // mandarlo sin salida.
+        retried += 1;
+        logger.warn("prefs_token.failed", {
+          outbox_id: row.outbox_id,
+          ...describeError(tokenError),
+        });
+        await mark(
+          supabase,
+          logger,
+          row.outbox_id,
+          "retryable_failure",
+          null,
+          "prefs_token_failed",
+        );
+        continue;
+      }
+
       prefsToken = (token as string | null) ?? null;
+
+      if (prefsToken === null) {
+        // La función devuelve null si la base no tiene su secreto HMAC. Se
+        // sigue enviando (es lo que ya pasaba), pero queda dicho.
+        logger.warn("prefs_token.missing", { outbox_id: row.outbox_id });
+      }
     }
 
     const rendered = renderEmail({
@@ -247,14 +304,24 @@ Deno.serve(async (req: Request) => {
 
     if ("id" in result) {
       sent += 1;
-      await mark(supabase, row.outbox_id, "sent", result.id, null);
+      await mark(supabase, logger, row.outbox_id, "sent", result.id, null);
       continue;
     }
 
+    // Ni el correo ni la respuesta de Resend: solo la plantilla y un código.
+    const failure = {
+      outbox_id: row.outbox_id,
+      template: row.template,
+      attempts: row.attempts,
+      code: deliveryErrorCode(result.error),
+    };
+
     if ("permanent" in result) {
       failed += 1;
+      logger.warn("delivery.permanent_failure", failure);
       await mark(
         supabase,
+        logger,
         row.outbox_id,
         "permanent_failure",
         null,
@@ -264,14 +331,18 @@ Deno.serve(async (req: Request) => {
     }
 
     retried += 1;
+    logger.warn("delivery.retryable_failure", failure);
     await mark(
       supabase,
+      logger,
       row.outbox_id,
       "retryable_failure",
       null,
       result.error,
     );
   }
+
+  logger.info("batch.done", { sent, retried, failed, skipped });
 
   return json({ ok: true, sent, retried, failed, skipped });
 });

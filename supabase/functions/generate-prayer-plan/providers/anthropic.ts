@@ -1,11 +1,23 @@
 import Anthropic from "npm:@anthropic-ai/sdk@^0.70.0";
 
+import { createLogger, describeError, type Logger } from "../../_shared/log.ts";
 import {
   type GenerateArgs,
   type GenerateResult,
   type PlanProvider,
   ProviderRefusal,
 } from "./types.ts";
+import {
+  AttemptTimeout,
+  attemptTimeoutFor,
+  backoffFor,
+  type Budget,
+  BudgetExhausted,
+  canStartAttempt,
+  DEFAULT_BUDGET,
+  makeIsRetryable,
+  remainingMs,
+} from "./retry.ts";
 
 /**
  * Tried in order. Overload is per-model capacity, not per-account, so when
@@ -36,79 +48,106 @@ const MODELS = [
  * of capacity pressure marked someone's whole plan as failed and left them
  * pressing "Reintentar" for a problem that had already passed.
  *
- * The SDK's own `maxRetries` is not enough on its own: it retries the *request*,
- * and this call streams. Once the stream is open an overload surfaces from
- * `finalMessage()`, past the point the SDK can help, so the whole attempt has to
- * be repeated here.
+ * The SDK's own retries are OFF (`maxRetries: 0`) on purpose. They cover only
+ * the *request*, and this call streams: once the stream is open an overload
+ * surfaces from `finalMessage()`, past the point the SDK can help, so the whole
+ * attempt has to be repeated here anyway. Two retry layers stacked multiply
+ * each other; one layer, with one budget (`retry.ts`), does not.
  */
-const MAX_ATTEMPTS = 4;
-
-const RETRYABLE = new Set([
-  "overloaded_error",
-  "api_error",
-  "rate_limit_error",
-  "timeout_error",
-]);
-
-const isRetryable = (error: unknown) => {
-  const status = (error as { status?: number }).status;
-
-  if (status === 429 || (status !== undefined && status >= 500)) {
-    return true;
-  }
-
-  const type = (error as { error?: { error?: { type?: string } } })?.error
-    ?.error?.type;
-
-  if (type && RETRYABLE.has(type)) {
-    return true;
-  }
-
-  // Streaming surfaces the payload as the message, so fall back to reading it.
-  return RETRYABLE.has(
-    (() => {
-      try {
-        return JSON.parse(String((error as Error).message))?.error?.type ?? "";
-      } catch {
-        return "";
-      }
-    })(),
-  );
+export type AnthropicProviderOptions = {
+  /** Where the retries and fallbacks are reported. */
+  logger?: Logger;
+  /** Overrides of `DEFAULT_BUDGET`, mainly for tests. */
+  budget?: Partial<Budget>;
+  /** Injected so the retry loop can be tested without really waiting. */
+  sleep?: (ms: number) => Promise<void>;
+  now?: () => number;
+  random?: () => number;
 };
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const realSleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-export const createAnthropicProvider = (apiKey: string): PlanProvider => {
-  const client = new Anthropic({ apiKey });
+export const createAnthropicProvider = (
+  apiKey: string,
+  options: AnthropicProviderOptions = {},
+): PlanProvider => {
+  const budget: Budget = { ...DEFAULT_BUDGET, ...options.budget };
+  const logger =
+    options.logger ?? createLogger("generate-prayer-plan", "no-request");
+  const sleep = options.sleep ?? realSleep;
+  const now = options.now ?? Date.now;
+
+  const isRetryable = makeIsRetryable({
+    APIConnectionError: Anthropic.APIConnectionError,
+    AnthropicError: Anthropic.AnthropicError,
+  });
+
+  // La clasificación por tipo depende de que el SDK exponga sus clases de error
+  // como estáticas. Si una versión futura las mueve, no se rompe (se clasifica
+  // solo por status y por el payload del stream), pero los errores de conexión
+  // dejarían de reintentarse sin que nada lo diga: que al menos se vea.
+  if (
+    typeof Anthropic.APIConnectionError !== "function" ||
+    typeof Anthropic.AnthropicError !== "function"
+  ) {
+    logger.warn("provider.sdk_error_classes_missing");
+  }
+
+  // `timeout` is the SDK's time to the first byte; the per-attempt `signal`
+  // below is what bounds the whole stream. Without either, the default is ten
+  // minutes — longer than the edge's own wall clock.
+  const client = new Anthropic({
+    apiKey,
+    maxRetries: 0,
+    timeout: budget.attemptTimeoutMs,
+  });
 
   const attempt = async (
     { system, messages, schema }: GenerateArgs,
     model: (typeof MODELS)[number],
+    timeoutMs: number,
   ): Promise<GenerateResult> => {
-    // Streaming is not optional here: a 30-day plan is a lot of output
-    // tokens, and a non-streaming request at this max_tokens risks an HTTP
-    // timeout well before the model is done.
-    const stream = client.messages.stream({
-      model: model.id,
-      max_tokens: 64000,
-      // Identical for every user, so it caches. Volatile content lives in
-      // the user turn, after this breakpoint.
-      system: [
-        {
-          type: "text",
-          text: system,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      ...(model.thinking ? { thinking: model.thinking } : {}),
-      output_config: {
-        ...(model.effort ? { effort: model.effort } : {}),
-        format: { type: "json_schema", schema },
-      },
-      messages,
-    });
+    const signal = AbortSignal.timeout(timeoutMs);
+    let message;
 
-    const message = await stream.finalMessage();
+    try {
+      // Streaming is not optional here: a 30-day plan is a lot of output
+      // tokens, and a non-streaming request at this max_tokens risks an HTTP
+      // timeout well before the model is done.
+      const stream = client.messages.stream(
+        {
+          model: model.id,
+          max_tokens: 64000,
+          // Identical for every user, so it caches. Volatile content lives in
+          // the user turn, after this breakpoint.
+          system: [
+            {
+              type: "text",
+              text: system,
+              cache_control: { type: "ephemeral" },
+            },
+          ],
+          ...(model.thinking ? { thinking: model.thinking } : {}),
+          output_config: {
+            ...(model.effort ? { effort: model.effort } : {}),
+            format: { type: "json_schema", schema },
+          },
+          messages,
+        },
+        { signal, timeout: timeoutMs, maxRetries: 0 },
+      );
+
+      message = await stream.finalMessage();
+    } catch (error) {
+      // Our own timer fired: the SDK reports that as a user abort, which is not
+      // retryable — but here it is exactly a slow attempt, and it is.
+      if (signal.aborted) {
+        throw new AttemptTimeout(model.id, timeoutMs);
+      }
+
+      throw error;
+    }
 
     // Check before touching content: a refusal can come back with an empty
     // content array, and indexing into it blindly throws.
@@ -138,12 +177,39 @@ export const createAnthropicProvider = (apiKey: string): PlanProvider => {
   return {
     name: "anthropic",
     generate: async (args: GenerateArgs): Promise<GenerateResult> => {
+      const deadline = args.deadline ?? now() + budget.totalMs;
       let lastError: unknown;
+      let failedAttempts = 0;
 
-      for (const model of MODELS) {
-        for (let n = 1; n <= MAX_ATTEMPTS; n++) {
+      for (const [modelIndex, model] of MODELS.entries()) {
+        for (let n = 1; n <= budget.maxAttemptsPerModel; n++) {
+          const remaining = remainingMs(deadline, now());
+
+          if (!canStartAttempt(remaining, budget)) {
+            logger.warn("provider.budget_exhausted", {
+              model: model.id,
+              failed_attempts: failedAttempts,
+              remaining_ms: remaining,
+            });
+
+            throw lastError ?? new BudgetExhausted();
+          }
+
           try {
-            return await attempt(args, model);
+            const result = await attempt(
+              args,
+              model,
+              attemptTimeoutFor(remaining, budget),
+            );
+
+            if (failedAttempts > 0) {
+              logger.info("provider.recovered", {
+                model: model.id,
+                failed_attempts: failedAttempts,
+              });
+            }
+
+            return result;
           } catch (error) {
             // A refusal is a decision, not a hiccup: repeating the same request
             // would only get the same answer back, from any model.
@@ -152,16 +218,36 @@ export const createAnthropicProvider = (apiKey: string): PlanProvider => {
             }
 
             lastError = error;
+            failedAttempts += 1;
 
-            if (n < MAX_ATTEMPTS) {
-              const backoff = 1000 * 2 ** (n - 1);
-              console.warn(`${model.id} busy, retrying in ${backoff}ms`);
-              await wait(backoff);
+            logger.warn("provider.attempt_failed", {
+              model: model.id,
+              attempt: n,
+              ...describeError(error),
+            });
+
+            if (n < budget.maxAttemptsPerModel) {
+              const delay = backoffFor({
+                error,
+                attempt: n,
+                remaining: remainingMs(deadline, now()),
+                budget,
+                random: options.random,
+              });
+
+              logger.warn("provider.retrying", {
+                model: model.id,
+                delay_ms: delay,
+              });
+
+              await sleep(delay);
             }
           }
         }
 
-        console.warn(`${model.id} unavailable, falling back`);
+        if (modelIndex < MODELS.length - 1) {
+          logger.warn("provider.fallback", { from_model: model.id });
+        }
       }
 
       throw lastError;

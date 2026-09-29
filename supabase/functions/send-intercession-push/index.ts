@@ -1,8 +1,11 @@
+import { createAdminClient, type SupabaseClient } from "../_shared/admin.ts";
+import { CORS_INVOKER, jsonWith, preflight } from "../_shared/http.ts";
 import {
-  createClient,
-  type SupabaseClient,
-} from "npm:@supabase/supabase-js@^2.58.0";
-
+  createLogger,
+  describeError,
+  type Logger,
+  requestIdFrom,
+} from "../_shared/log.ts";
 import {
   authorizeInvoker,
   BATCH_SIZE,
@@ -10,6 +13,7 @@ import {
   chunk,
   classifyTicket,
   errorReasonFor,
+  logReasonFor,
   pairTicketsWithDestinations,
   resolveSenderConfig,
   unmatchedTicketCount,
@@ -19,18 +23,14 @@ import {
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-ammen-invoker",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+/**
+ * Sin timeout, un Expo que no contesta deja colgada la invocación con hasta 200
+ * filas arrendadas. Con él, el lote se trata como un fallo de transporte:
+ * reintentable, con backoff (ver el `catch` de más abajo).
+ */
+const EXPO_TIMEOUT_MS = 30_000;
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+const json = jsonWith(CORS_INVOKER);
 
 type ClaimedRow = {
   outbox_id: string;
@@ -54,6 +54,7 @@ const sendBatch = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify(messages),
+    signal: AbortSignal.timeout(EXPO_TIMEOUT_MS),
   });
 
   if (!response.ok) {
@@ -70,6 +71,7 @@ const sendBatch = async (
 
 const resolveOutbox = async (
   supabase: SupabaseClient,
+  logger: Logger,
   outboxId: string,
   status: "sent" | "permanent_failure" | "retryable_failure",
   receiptId: string | null,
@@ -83,7 +85,11 @@ const resolveOutbox = async (
   });
 
   if (rpcError) {
-    console.error("mark_push_delivery failed", outboxId, rpcError);
+    logger.error("mark.failed", {
+      outbox_id: outboxId,
+      status,
+      ...describeError(rpcError),
+    });
   }
 };
 
@@ -116,8 +122,13 @@ const resolveOutbox = async (
  */
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS });
+    return preflight(CORS_INVOKER);
   }
+
+  const logger = createLogger(
+    "send-intercession-push",
+    requestIdFrom(req.headers),
+  );
 
   // Si el secret está definido, el header tiene que coincidir. Sin secret,
   // solo se deja pasar en local; fuera de local es fail-closed.
@@ -129,6 +140,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_URL") ?? undefined,
     ) === "unauthorized"
   ) {
+    logger.warn("auth.rejected");
     return json({ ok: false, error: "unauthorized" }, 401);
   }
 
@@ -141,16 +153,18 @@ Deno.serve(async (req: Request) => {
 
   if (!config.enabled) {
     if (config.reason === "kill_switch") {
+      logger.info("skipped", { reason: "kill_switch" });
       return json({ ok: true, skipped: "kill_switch", sent: 0 });
     }
 
     // Fail-closed: sin configuración interna válida no se envía nada. `503`
     // porque es una condición de despliegue, no un fallo transitorio de un
     // envío concreto. Sin drenar el outbox: ni una fila se arrienda aquí.
+    logger.error("sender.not_configured");
     return json({ ok: false, error: "sender_not_configured" }, 503);
   }
 
-  const supabase = createClient(config.supabaseUrl, config.serviceRoleKey);
+  const supabase = createAdminClient(config.supabaseUrl, config.serviceRoleKey);
 
   // `claim_push_outbox_batch` arrienda lo que devuelve (`leased_until`), así
   // que una segunda invocación que se solape en el tiempo no puede recibir
@@ -162,7 +176,7 @@ Deno.serve(async (req: Request) => {
   );
 
   if (claimError) {
-    console.error("claim_push_outbox_batch failed", claimError);
+    logger.error("claim.failed", describeError(claimError));
     return json({ ok: false, error: "claim_push_outbox_batch_failed" }, 500);
   }
 
@@ -171,6 +185,8 @@ Deno.serve(async (req: Request) => {
   if (rows.length === 0) {
     return json({ ok: true, sent: 0, retried: 0, failed: 0 });
   }
+
+  logger.info("batch.claimed", { rows: rows.length });
 
   let sent = 0;
   let retried = 0;
@@ -191,9 +207,10 @@ Deno.serve(async (req: Request) => {
         // No debería pasar según la documentación de Expo, pero "no
         // debería" no es lo mismo que "no puede": se registra y se sigue,
         // en vez de dejar que un ticket sobrante desalinee el resto.
-        console.error(
-          `send-intercession-push: Expo returned ${extra} more ticket(s) than destinations sent`,
-        );
+        logger.error("tickets.unmatched", {
+          extra,
+          destinations: destinations.length,
+        });
       }
 
       await Promise.all(
@@ -205,6 +222,7 @@ Deno.serve(async (req: Request) => {
               sent += 1;
               await resolveOutbox(
                 supabase,
+                logger,
                 destination.outboxId,
                 "sent",
                 ticket && ticket.status === "ok" ? ticket.id : null,
@@ -219,8 +237,16 @@ Deno.serve(async (req: Request) => {
               retried += 1;
             }
 
+            // Al log, solo el código de Expo: su `message` cita el token.
+            logger.warn("delivery.not_sent", {
+              outbox_id: destination.outboxId,
+              outcome,
+              reason: logReasonFor(ticket),
+            });
+
             await resolveOutbox(
               supabase,
+              logger,
               destination.outboxId,
               outcome,
               null,
@@ -236,13 +262,17 @@ Deno.serve(async (req: Request) => {
       // lease sin que nadie suba el contador ni reprograme nada.
       const reason =
         caught instanceof Error ? caught.message : "transport_error";
-      console.error("send-intercession-push batch transport failure", caught);
+      logger.error("batch.transport_failure", {
+        batch_size: batch.length,
+        ...describeError(caught),
+      });
 
       await Promise.all(
         batch.map(async (row) => {
           retried += 1;
           await resolveOutbox(
             supabase,
+            logger,
             row.outbox_id,
             "retryable_failure",
             null,
@@ -252,6 +282,8 @@ Deno.serve(async (req: Request) => {
       );
     }
   }
+
+  logger.info("batch.done", { sent, retried, failed });
 
   return json({ ok: true, sent, retried, failed });
 });
