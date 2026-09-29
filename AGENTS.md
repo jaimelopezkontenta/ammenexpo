@@ -49,6 +49,15 @@ Encendido con Amanecer 4.0 (2026-08-28). **El default es Sistema** (sigue al OS)
 
 Nada de `npm run deploy:web:staging` ni `firebase deploy`: los deploys los hace el usuario.
 
+## Datos y estado
+
+- **Cliente tipado:** `utils/supabase.ts` es `createClient<Database>`. Los tipos salen de `types/supabase.ts` (generado: `npm run db:types`; `db:types:check` falla si derivan). No escribas casts para acallar una RPC: si el tipo no cuadra, el esquema o la llamada están mal.
+- **Claves de React Query solo desde `qk`** (`core/query/keys.ts`). ESLint prohíbe `queryKey: [...]` a mano y los `setQueryData([...])`. Una clave nueva se añade allí, con su test de valores.
+- **Errores en pantalla:** una puerta «si falló → ErrorState» usa `isLoadingError` (falló y no hay nada que enseñar), no `isError`: un refetch fallido con datos en pantalla no debe taparlos.
+- **Claves de almacenamiento** (`ammen.*`) solo en `core/storage/keys.ts` (versionadas; `keys.test.ts` impide escribirlas a mano en otro sitio). Lo que es de una persona se limpia con `clearUserScopedStorage()` al cerrar sesión; las preferencias del dispositivo (tema, versión de Biblia, idioma) no.
+- **Id de usuario en pantallas:** `useUserId()` (`core/auth/useUserId.ts`), no `session?.user.id` repetido.
+- **Biblia:** `bible_verses` guarda cada versículo por versión (`rvr1909`, `web`): toda lectura directa filtra `version`; las RPC de texto reciben `p_version` (`core/bible/versions.ts`, `useBibleVersion()`).
+
 ## Migraciones
 
 - Una migración nueva sale **siempre** de `npx supabase migration new <nombre>`: timestamp real, nunca un número puesto a mano.
