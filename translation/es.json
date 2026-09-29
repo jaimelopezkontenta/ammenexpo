@@ -69,6 +69,7 @@
     "reminderHintNative": "Te avisaremos en este teléfono a las horas que elijas. Si no das permiso, la app sigue igual.",
     "reminderHintWeb": "En el navegador el aviso es el correo, a la hora que elegiste para orar. Lo puedes cambiar en Correo.",
     "reminderDenied": "Sin permiso no podemos avisarte. Puedes darlo en los ajustes del teléfono.",
+    "openSettings": "Abrir los ajustes",
     "saved": "Guardado.",
     "delete": "Borrar mi cuenta",
     "deleteConfirm": "Sí, borrar todo",
@@ -225,7 +226,10 @@
     "customLabel": "¿Hay algo concreto?",
     "customPlaceholder": "Mi hermana está enferma, una decisión sobre mudarme…",
     "customHint": "Opcional. Es lo que hará que tu plan no se parezca a ningún otro.",
-    "timeHint_plural": "Puedes elegir hasta {{count}} momentos del día."
+    "timeHint_plural": "Puedes elegir hasta {{count}} momentos del día.",
+    "preparingTitle": "Preparando tu plan",
+    "preparingBody": "Lo escribimos con lo que nos has contado. Tarda unos segundos.",
+    "planLater": "No pudimos preparar tu plan ahora. Puedes crearlo desde Hoy."
   },
   "plan": {
     "todayTitle": "Tu oración de hoy",
@@ -565,7 +569,8 @@
     "create": "Crear el plan",
     "days_plural": "{{count}} días",
     "visPublic": "Todo el mundo",
-    "visPublicHint": "Aparecerá en tu perfil y en la comunidad. Cualquiera podrá leerlo. Para que alguien ore por ti hace falta compartirlo con esa persona o con un círculo."
+    "visPublicHint": "Aparecerá en tu perfil y en la comunidad. Cualquiera podrá leerlo. Para que alguien ore por ti hace falta compartirlo con esa persona o con un círculo.",
+    "makePrivate": "Crearlo solo para mí"
   },
   "bible": {
     "title": "Biblia",

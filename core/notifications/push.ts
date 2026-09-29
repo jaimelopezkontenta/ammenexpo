@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
 import { Platform } from "react-native";
 
@@ -264,3 +265,15 @@ export const useNotificationResponseHandler = ({
     };
   }, [ensureCoordinator]);
 };
+
+/**
+ * Si este teléfono deja avisar. Solo en nativo (en web el aviso es el correo).
+ * Con el refresco al volver del fondo (core/query/client.ts), si alguien lo
+ * activa en los ajustes y vuelve, Perfil se entera solo.
+ */
+export const usePushPermissionStatus = () =>
+  useQuery({
+    queryKey: ["pushPermission"],
+    enabled: Platform.OS !== "web",
+    queryFn: async () => (await Notifications.getPermissionsAsync()).status,
+  });

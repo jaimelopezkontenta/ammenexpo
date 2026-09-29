@@ -157,7 +157,7 @@ lo mismo, más los e2e de Playwright, en cada PR y en cada push a `main`.
 |---|---|
 | `npm run e2e` | Playwright (Chromium) contra Metro. Resetea la base al empezar |
 | `npm run e2e:static` | Los mismos e2e contra el export estático, igual que CI |
-| `npm run e2e:visual` | Regresión visual, en claro y en oscuro |
+| `npm run e2e:visual` | Regresión visual, en claro y en oscuro, contra el export estático (como CI; tarda unos minutos en exportar) |
 | `npm run e2e:visual:update` | Regenera las baselines. Solo tras un cambio visual deliberado, revisando el diff |
 | `npm run test:chunks` | La generación por tramos contra la Edge Function servida (necesita `supabase functions serve`) |
 | `npm run email:preview` | Renderiza las plantillas de correo a `email-preview/` para mirarlas en el navegador |

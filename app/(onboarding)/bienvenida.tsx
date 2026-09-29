@@ -14,6 +14,8 @@ import { TextField } from "@/components/TextField";
 import { WizardHeader } from "@/components/WizardHeader";
 import { Wordmark } from "@/components/Wordmark";
 import { useSession } from "@/core/auth/SessionProvider";
+import { Orb } from "@/components/Orb";
+import { useToast } from "@/core/toast/ToastProvider";
 import { useGeneratePlan } from "@/core/plans/queries";
 import { EMAIL_CADENCES, type EmailCadence } from "@/core/email/cadence";
 import { defaultOnboardingCadence } from "@/core/email/queries";
@@ -37,7 +39,11 @@ const TOTAL_STEPS = 4;
 export default function Onboarding() {
   const { t, i18n } = useTranslation();
   const { top, scrollBottom } = useScreenPadding();
-  const { session, refreshOnboarding } = useSession();
+  const { session, refreshOnboarding, signOut } = useSession();
+  const toast = useToast();
+  // Entre guardar las respuestas y tener el primer plan: la pantalla que
+  // explica la espera, en vez de un spinner mudo dentro del botón.
+  const [preparing, setPreparing] = useState(false);
   const generate = useGeneratePlan(session?.user.id);
 
   const [step, setStep] = useState(1);
@@ -125,7 +131,9 @@ export default function Onboarding() {
       }
 
       // El plan sale de las mismas respuestas: si la generación falla, el alta
-      // ya está hecha y Hoy mostrará el vacío con salida, no un error aquí.
+      // ya está hecha y Hoy mostrará el vacío con salida — pero se dice, en vez
+      // de tragarse el error y dejar a la persona ante un vacío sin explicación.
+      setPreparing(true);
       try {
         await generate.mutateAsync({
           duration_days: 7,
@@ -134,7 +142,7 @@ export default function Onboarding() {
           visibility: "private",
         });
       } catch {
-        // El alta no se revierte: Hoy enseña el vacío con CTA.
+        toast.info(t("onboarding.planLater"));
       }
 
       await refreshOnboarding();
@@ -143,10 +151,27 @@ export default function Onboarding() {
       // `{ error }` left `isSubmitting` true forever: a spinner that never
       // stops, still with nothing said.
       setError(t("common.errorGeneric"));
+      setPreparing(false);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (preparing) {
+    return (
+      <DawnBackground className="items-center justify-center gap-4 px-8">
+        <Orb size={120} halo variant="working" />
+        <View className="items-center gap-2" accessibilityLiveRegion="polite">
+          <Txt variant="headingLg" className="text-center">
+            {t("onboarding.preparingTitle")}
+          </Txt>
+          <Txt variant="body" tone="secondary" className="text-center">
+            {t("onboarding.preparingBody")}
+          </Txt>
+        </View>
+      </DawnBackground>
+    );
+  }
 
   return (
     <KeyboardScreen>
@@ -307,6 +332,14 @@ export default function Onboarding() {
                   <Txt variant="body" tone="secondary" className="text-center">
                     {t("onboarding.timeHint", { count: REMINDER_MAX })}
                   </Txt>
+                  {/* Lo que va a pasar antes de que el sistema pregunte: el
+                    permiso de avisos llega justo al terminar, y sin esto salía
+                    de la nada. */}
+                  {Platform.OS !== "web" ? (
+                    <Txt variant="caption" className="text-center">
+                      {t("profile.reminderHintNative")}
+                    </Txt>
+                  ) : null}
                 </View>
                 <ChoiceChips
                   options={hourOptions}
@@ -353,7 +386,7 @@ export default function Onboarding() {
           {/* Volver vive arriba, en la cabecera, como en el diseño: abajo solo
             queda la accion que avanza. Dos botones apilados hacian que el de
             retroceder pesara lo mismo que el de seguir. */}
-          <View className="mt-auto pt-10">
+          <View className="mt-auto gap-3 pt-10">
             <Button
               title={
                 step === TOTAL_STEPS
@@ -370,6 +403,15 @@ export default function Onboarding() {
                 }
               }}
             />
+            {/* En el primer paso no hay «atrás»: sin esto, quien entró con la
+              cuenta que no era no tenía por dónde salir del asistente. */}
+            {step === 1 ? (
+              <Button
+                title={t("auth.signOut")}
+                variant="ghost"
+                onPress={() => void signOut()}
+              />
+            ) : null}
           </View>
         </ScrollView>
 

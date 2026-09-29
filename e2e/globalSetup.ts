@@ -265,21 +265,43 @@ const AUTH_POLL_MS = 2_000;
  * primeros logins pintan "Algo salió mal" aunque el seed ya esté. Esperar
  * al health de GoTrue evita esa carrera.
  */
-const waitForAuth = async () => {
-  const deadline = Date.now() + AUTH_WAIT_MS;
-
+const authIsUp = async (deadline: number) => {
   while (Date.now() < deadline) {
     try {
       const response = await fetch(AUTH_HEALTH);
-      if (response.ok) return;
+      if (response.ok) return true;
     } catch {
       // Todavía levantando.
     }
     await new Promise((resolve) => setTimeout(resolve, AUTH_POLL_MS));
   }
+  return false;
+};
+
+/**
+ * Auth, vía Kong, tras el reset. Un `db reset` reinicia GoTrue y a veces Kong
+ * se queda con el upstream viejo devolviendo 502 aunque auth esté sano (visto
+ * el 2026-08-28 y tres veces el 2026-09-29). El remedio conocido es reiniciar
+ * Kong: se aplica solo, una vez, a mitad de plazo, en vez de tumbar la corrida.
+ */
+const waitForAuth = async () => {
+  if (await authIsUp(Date.now() + AUTH_WAIT_MS / 2)) return;
+
+  console.warn(
+    "[globalSetup] Auth no responde vía Kong; reiniciando supabase_kong_ammen (upstream viejo tras el reset).",
+  );
+  try {
+    run("docker restart supabase_kong_ammen");
+  } catch (caught) {
+    console.warn(
+      `[globalSetup] no se pudo reiniciar Kong: ${errorOutput(caught)}`,
+    );
+  }
+
+  if (await authIsUp(Date.now() + AUTH_WAIT_MS)) return;
 
   throw new Error(
-    `[globalSetup] Auth no respondió en ${AUTH_WAIT_MS / 1000}s tras el reset (${AUTH_HEALTH}).`,
+    `[globalSetup] Auth no respondió tras el reset ni tras reiniciar Kong (${AUTH_HEALTH}).`,
   );
 };
 

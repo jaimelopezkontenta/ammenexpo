@@ -15,6 +15,7 @@
  * Los argumentos extra se reenvían a Playwright:
  *   npm run e2e:static                        → --project=chromium
  *   npm run e2e:static -- -g "clic real"      → filtro
+ *   npm run e2e:visual                        → proyectos visual (claro y oscuro)
  */
 
 import { spawnSync } from "node:child_process";
@@ -53,7 +54,17 @@ console.log(
 );
 
 const extraArgs = process.argv.slice(2);
-const args = ["playwright", "test", "--project=chromium", ...extraArgs];
+// Sin `--project` explícito, el árbitro funcional (chromium). `e2e:visual` lo
+// pasa con los suyos: la red visual también corre contra el export estático,
+// donde no existe el botón ⚡ de desarrollo de Expo que Metro pinta a ratos
+// abajo a la izquierda y que hacía fallar capturas sin que cambiara la app.
+const hasProject = extraArgs.some((arg) => arg.startsWith("--project"));
+const args = [
+  "playwright",
+  "test",
+  ...(hasProject ? [] : ["--project=chromium"]),
+  ...extraArgs,
+];
 
 const result = spawnSync(NPX, args, {
   stdio: "inherit",

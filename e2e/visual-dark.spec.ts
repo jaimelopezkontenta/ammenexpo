@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { snapshotOpts } from "./helpers/visual";
+import { notFoundOpts, snapshotOpts } from "./helpers/visual";
 
 /**
  * @dark — la red del anochecer.
@@ -119,7 +119,7 @@ for (const viewport of [
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `dark-${screen.name}-${viewport.name}.png`,
-          snapshotOpts(page),
+          screen.name === "notfound" ? notFoundOpts(page) : snapshotOpts(page),
         );
       }
     });

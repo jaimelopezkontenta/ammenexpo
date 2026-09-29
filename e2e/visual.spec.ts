@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { snapshotOpts } from "./helpers/visual";
+import {
+  notFoundOpts,
+  pinReadingPosition,
+  snapshotOpts,
+} from "./helpers/visual";
 
 /**
  * @visual — la red de seguridad visual de las fases de UI.
@@ -139,6 +143,9 @@ for (const viewport of VIEWPORTS) {
       await stabilize(page);
       await login(page);
       for (const screen of SCREENS) {
+        if (screen.name === "biblia" || screen.name === "libro-index") {
+          pinReadingPosition();
+        }
         await page.goto(screen.path);
         // networkidle en vez de un selector por pantalla: lo que se captura
         // es la pantalla asentada, sin spinners de React Query a medias.
@@ -146,7 +153,7 @@ for (const viewport of VIEWPORTS) {
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `${screen.name}-${viewport.name}.png`,
-          snapshotOpts(page),
+          screen.name === "notfound" ? notFoundOpts(page) : snapshotOpts(page),
         );
       }
     });

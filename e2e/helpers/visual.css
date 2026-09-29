@@ -1,0 +1,11 @@
+/*
+ * CSS que Playwright aplica solo mientras captura (stylePath).
+ *
+ * El punto de avisos sin leer aparece cuando llega su consulta, y a veces no
+ * ha llegado: enmascararlo no servía, porque la máscara solo existe si el
+ * elemento existe y la captura cambiaba según llegara o no. Oculto siempre,
+ * la captura es la misma.
+ */
+[data-testid="unread-dot"] {
+  visibility: hidden !important;
+}

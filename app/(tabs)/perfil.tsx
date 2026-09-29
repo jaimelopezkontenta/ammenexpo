@@ -2,7 +2,7 @@ import * as Localization from "expo-localization";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, ScrollView, View } from "react-native";
+import { Linking, Platform, ScrollView, View } from "react-native";
 
 import { TabHeader } from "@/components/TabHeader";
 import { Txt } from "@/components/ui/Text";
@@ -18,6 +18,7 @@ import { ResponsiveTabContent } from "@/components/ResponsiveTabContent";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
+import { usePushPermissionStatus } from "@/core/notifications/push";
 import {
   AvatarTooLarge,
   useRemoveAvatar,
@@ -62,6 +63,7 @@ export default function Profile() {
   const uploadAvatar = useUploadAvatar(userId);
   const removeAvatar = useRemoveAvatar(userId);
   const deleteAccount = useDeleteAccount();
+  const { data: pushPermission } = usePushPermissionStatus();
   const { data: openReports } = useOpenReportCount(userId);
 
   // Null means "not edited", so the field simply shows whatever the server
@@ -299,6 +301,20 @@ export default function Profile() {
                         ? t("profile.reminderHintWeb")
                         : t("profile.reminderHintNative")}
                     </Txt>
+                    {/* Denegado el permiso, las horas no sirven de nada y nadie
+                      lo decía: se dice, y se ofrece el camino a los ajustes. */}
+                    {pushPermission === "denied" ? (
+                      <View className="gap-2">
+                        <Txt variant="caption" tone="danger">
+                          {t("profile.reminderDenied")}
+                        </Txt>
+                        <Button
+                          title={t("profile.openSettings")}
+                          variant="secondary"
+                          onPress={() => void Linking.openSettings()}
+                        />
+                      </View>
+                    ) : null}
                   </View>
 
                   <View className="gap-2">

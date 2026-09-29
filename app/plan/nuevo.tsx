@@ -6,6 +6,7 @@ import { ScrollView, View } from "react-native";
 import { Card } from "@/components/Card";
 import { Txt } from "@/components/ui/Text";
 import { DawnBackground } from "@/components/DawnBackground";
+import { Orb } from "@/components/Orb";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
@@ -132,6 +133,29 @@ export default function NewPlan() {
           ? t("newPlan.visPublicHint")
           : t("newPlan.visLinkHint");
 
+  // Mientras se escribe el plan, la espera se explica con el orbe trabajando
+  // en vez de un spinner dentro de un botón al final de un formulario largo.
+  if (generate.isPending) {
+    return (
+      <>
+        <Stack.Screen
+          options={{ title: t("newPlan.title"), headerShown: true }}
+        />
+        <DawnBackground className="items-center justify-center gap-4 px-8">
+          <Orb size={120} halo variant="working" />
+          <View className="items-center gap-2" accessibilityLiveRegion="polite">
+            <Txt variant="headingLg" className="text-center">
+              {t("onboarding.preparingTitle")}
+            </Txt>
+            <Txt variant="body" tone="secondary" className="text-center">
+              {t("onboarding.preparingBody")}
+            </Txt>
+          </View>
+        </DawnBackground>
+      </>
+    );
+  }
+
   return (
     <>
       <Stack.Screen
@@ -242,14 +266,16 @@ export default function NewPlan() {
                       multiple
                     />
                   ) : (
-                    // Without a way out this option is a dead end: nothing to pick,
-                    // and creating the plan is blocked on picking something.
+                    // Sin círculos esta opción era un callejón: nada que elegir y el
+                    // plan bloqueado hasta elegir algo. Mandar a Juntos a crear uno
+                    // perdía el formulario a medio rellenar; la salida está aquí
+                    // mismo, y es la que el texto ya proponía.
                     <View className="gap-3">
                       <Txt variant="caption">{t("newPlan.noCircles")}</Txt>
                       <Button
-                        title={t("circles.create")}
+                        title={t("newPlan.makePrivate")}
                         variant="secondary"
-                        onPress={() => router.push("/circulos")}
+                        onPress={() => setVisibility("private")}
                       />
                     </View>
                   )
