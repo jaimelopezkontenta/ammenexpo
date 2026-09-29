@@ -1,5 +1,5 @@
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 
@@ -14,6 +14,7 @@ import { ChoiceChips } from "@/components/ChoiceChips";
 import { TextField } from "@/components/TextField";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useMyCircles } from "@/core/circles/queries";
+import { classifyError } from "@/core/net/classifyError";
 import {
   CUSTOM_TOPIC_MAX,
   TOPIC_KEYS,
@@ -60,16 +61,26 @@ export default function NewPlan() {
   const [duration, setDuration] = useState(7);
   const [visibility, setVisibility] = useState<PlanVisibility>("private");
   const [selectedCircles, setSelectedCircles] = useState<string[]>([]);
+  // Lo que falla al generar va arriba, junto a la cuota: el formulario
+  // vuelve a montarse tras la espera, arriba del todo, y al pie ese aviso
+  // quedaba fuera de vista. Elegir círculo sí se avisa donde se elige.
   const [error, setError] = useState<string | null>(null);
+  const [circlesError, setCirclesError] = useState<string | null>(null);
   const [atLimit, setAtLimit] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (error || atLimit) scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, [error, atLimit]);
 
   const hasCircles = (circles ?? []).length > 0;
 
   const handleCreate = async () => {
     setError(null);
+    setCirclesError(null);
 
     if (!circulo && visibility === "circles" && selectedCircles.length === 0) {
-      setError(t("newPlan.chooseCircles"));
+      setCirclesError(t("newPlan.chooseCircles"));
       return;
     }
 
@@ -120,7 +131,11 @@ export default function NewPlan() {
       }
 
       setAtLimit(false);
-      setError(t("common.errorGeneric"));
+      setError(
+        classifyError(caught) === "network"
+          ? t("common.errorNetwork")
+          : t("common.errorGeneric"),
+      );
     }
   };
 
@@ -144,11 +159,17 @@ export default function NewPlan() {
         <DawnBackground className="items-center justify-center gap-4 px-8">
           <Orb size={120} halo variant="working" />
           <View className="items-center gap-2" accessibilityLiveRegion="polite">
+            {/* Un plan de círculo no es «tu plan», ni sale de lo que contaste
+                en el onboarding: sale de los temas de este formulario. */}
             <Txt variant="headingLg" className="text-center">
-              {t("onboarding.preparingTitle")}
+              {circulo
+                ? t("newPlan.preparingCircleTitle")
+                : t("onboarding.preparingTitle")}
             </Txt>
             <Txt variant="body" tone="secondary" className="text-center">
-              {t("onboarding.preparingBody")}
+              {circulo
+                ? t("newPlan.preparingCircleBody")
+                : t("onboarding.preparingBody")}
             </Txt>
           </View>
         </DawnBackground>
@@ -164,10 +185,37 @@ export default function NewPlan() {
       <KeyboardScreen>
         <DawnBackground>
           <ScrollView
+            ref={scrollRef}
             contentContainerClassName="gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
             contentContainerStyle={{ paddingBottom: scrollBottom }}
             keyboardShouldPersistTaps="handled"
           >
+            {error ? (
+              <Card accessibilityRole="alert">
+                <Txt variant="body" tone="danger">
+                  {error}
+                </Txt>
+              </Card>
+            ) : null}
+
+            {atLimit && !exhausted ? (
+              <Card className="gap-2" accessibilityRole="alert">
+                <Txt variant="subheading">{t("plan.limitTitle")}</Txt>
+                <Txt variant="body" tone="secondary">
+                  {t("plan.limitBody")}
+                </Txt>
+                {/* Al techo la salida es la lista de espera, no una suscripción:
+                el botón dice «apuntarme a la lista» y no el nombre de Plus,
+                porque lo que se ofrece aquí es dejar nombre y correo. */}
+                <Link href="/plus" asChild>
+                  <Button
+                    title={t("plan.limitWaitlistCta")}
+                    variant="secondary"
+                  />
+                </Link>
+              </Card>
+            ) : null}
+
             {exhausted ? (
               <Card className="gap-2" accessibilityRole="alert">
                 <Txt variant="subheading">{t("plan.limitTitle")}</Txt>
@@ -246,7 +294,10 @@ export default function NewPlan() {
                     { value: "public", label: t("newPlan.visPublic") },
                   ]}
                   selected={[visibility]}
-                  onToggle={(value) => setVisibility(value as PlanVisibility)}
+                  onToggle={(value) => {
+                    setCirclesError(null);
+                    setVisibility(value as PlanVisibility);
+                  }}
                 />
                 <Txt variant="caption">{visibilityHint}</Txt>
 
@@ -258,11 +309,12 @@ export default function NewPlan() {
                         label: circle.name,
                       }))}
                       selected={selectedCircles}
-                      onToggle={(value) =>
+                      onToggle={(value) => {
+                        setCirclesError(null);
                         setSelectedCircles((list) =>
                           toggleWithLimit(list, value),
-                        )
-                      }
+                        );
+                      }}
                       multiple
                     />
                   ) : (
@@ -275,37 +327,26 @@ export default function NewPlan() {
                       <Button
                         title={t("newPlan.makePrivate")}
                         variant="secondary"
-                        onPress={() => setVisibility("private")}
+                        onPress={() => {
+                          setCirclesError(null);
+                          setVisibility("private");
+                        }}
                       />
                     </View>
                   )
                 ) : null}
+
+                {circlesError ? (
+                  <Txt
+                    variant="caption"
+                    tone="danger"
+                    accessibilityRole="alert"
+                  >
+                    {circlesError}
+                  </Txt>
+                ) : null}
               </View>
             )}
-
-            {error ? (
-              <Txt variant="caption" tone="danger" accessibilityRole="alert">
-                {error}
-              </Txt>
-            ) : null}
-
-            {atLimit && !exhausted ? (
-              <Card className="gap-2" accessibilityRole="alert">
-                <Txt variant="subheading">{t("plan.limitTitle")}</Txt>
-                <Txt variant="body" tone="secondary">
-                  {t("plan.limitBody")}
-                </Txt>
-                {/* Al techo la salida es la lista de espera, no una suscripción:
-                el botón dice «apuntarme a la lista» y no el nombre de Plus,
-                porque lo que se ofrece aquí es dejar nombre y correo. */}
-                <Link href="/plus" asChild>
-                  <Button
-                    title={t("plan.limitWaitlistCta")}
-                    variant="secondary"
-                  />
-                </Link>
-              </Card>
-            ) : null}
 
             <View className="gap-2 pb-4">
               {/* Lo elegido, en una línea junto al botón: el CTA anclado al
