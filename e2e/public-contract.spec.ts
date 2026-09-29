@@ -177,18 +177,21 @@ test.describe("B2 — contrato public/Orar, por la UI", () => {
       const createLink = ownerPage.getByRole("button", {
         name: "Crear enlace",
       });
-      // Si una corrida anterior dejó el enlace vivo, no hay que crearlo otra
-      // vez: el botón pasa a "Desactivar enlace" y un click a "Crear enlace"
-      // esperaría hasta el timeout del test.
-      if (await createLink.isVisible().catch(() => false)) {
-        await createLink.click({ timeout: 15_000 });
-      }
-
       // El texto es `selectable` en la pantalla real, no un dato inventado
       // por el test: el mismo `<Text>` que alguien copiaría a mano.
       const linkLocator = ownerPage.getByText(
         /^http:\/\/127\.0\.0\.1:8081\/p\//,
       );
+      // La pantalla carga en dos tiempos: primero el plan, luego el estado del
+      // enlace. `isVisible()` no espera, así que mirarlo nada más navegar daba
+      // «no está» en un runner lento y NO se creaba el enlace (falló en CI el
+      // 2026-09-29). Se espera a que aparezca una de las dos cosas y solo entonces
+      // se decide: si una corrida anterior dejó el enlace vivo, ya no hay
+      // «Crear enlace» que pulsar.
+      await expect(createLink.or(linkLocator)).toBeVisible({ timeout: 15_000 });
+      if (await createLink.isVisible()) {
+        await createLink.click({ timeout: 15_000 });
+      }
       await expect(linkLocator).toBeVisible({ timeout: 10_000 });
       const shareUrl = (await linkLocator.textContent())?.trim();
       expect(shareUrl).toBeTruthy();
