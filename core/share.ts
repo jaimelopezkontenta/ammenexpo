@@ -83,3 +83,28 @@ export const shareOrCopy = async (
     return "failed";
   }
 };
+
+/** ¿Se puede copiar al portapapeles aquí? Hoy, solo en web. */
+export const canCopyText = (): boolean =>
+  Platform.OS === "web" &&
+  Boolean(
+    (globalThis as { navigator?: WebNavigator }).navigator?.clipboard
+      ?.writeText,
+  );
+
+/**
+ * Copia un texto al portapapeles. Solo en web: en nativo haría falta
+ * `expo-clipboard`, un módulo nativo que entra en el lote de la Oleada 6; allí
+ * el botón de compartir abre la hoja del sistema, que ya trae «Copiar».
+ */
+export const copyText = async (text: string): Promise<boolean> => {
+  if (!canCopyText()) return false;
+  try {
+    await (
+      globalThis as { navigator?: WebNavigator }
+    ).navigator!.clipboard!.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+};

@@ -10,7 +10,11 @@ import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
-import { useCircleInvitePreview, useJoinCircle } from "@/core/circles/queries";
+import {
+  useCircleInvitePreview,
+  useJoinCircle,
+  useMyCircles,
+} from "@/core/circles/queries";
 
 export default function CircleInvite() {
   const { t } = useTranslation();
@@ -30,6 +34,8 @@ export default function CircleInvite() {
     refetch,
   } = useCircleInvitePreview(token);
   const join = useJoinCircle(userId);
+  // A quien ya está dentro no se le ofrece «Unirme»: se le lleva al círculo.
+  const { data: myCircles } = useMyCircles(userId);
   const [joinError, setJoinError] = useState<string | null>(null);
 
   // Same as the shared-plan preview: keep the token across signup so the new
@@ -99,6 +105,10 @@ export default function CircleInvite() {
     );
   }
 
+  const alreadyMember = Boolean(
+    myCircles?.some((mine) => mine.id === circle.circle_id),
+  );
+
   return (
     <DawnBackground
       className="items-center justify-center gap-3 px-8"
@@ -128,7 +138,22 @@ export default function CircleInvite() {
       ) : null}
 
       <View className="mt-8 w-full gap-3">
-        {session ? (
+        {session && alreadyMember ? (
+          <>
+            <Txt variant="bodyMedium" className="text-center">
+              {t("circles.joined")}
+            </Txt>
+            <Button
+              title={t("circles.openCircle")}
+              onPress={() =>
+                router.replace({
+                  pathname: "/circulo/[id]",
+                  params: { id: circle.circle_id },
+                })
+              }
+            />
+          </>
+        ) : session ? (
           <Button
             title={t("circles.join")}
             loading={join.isPending}

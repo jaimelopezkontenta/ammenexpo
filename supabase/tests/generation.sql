@@ -194,6 +194,18 @@ select pg_temp.assert(
       and scope in ('personal', 'circle')) = 3,
   'the ledger keeps exactly the three reservations');
 
+-- La cuota que enseña la app antes del formulario (my_plan_quota) cuenta
+-- exactamente lo que cuenta reserve_generation.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select used = 3 and quota_limit = 3 from public.my_plan_quota()),
+  'my_plan_quota agrees with reserve_generation: three of three used');
+
+commit;
+
 -- Idempotencia: reintentar el MISMO request no reserva dos veces.
 begin;
 set local role authenticated;

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { Button } from "@/components/Button";
 import type { Intercession } from "@/core/intercessions/queries";
 
 import { Tap } from "@/components/ui/Tap";
@@ -13,6 +14,11 @@ type Props = {
   people: Intercession[];
   onReport: (intercessionId: string) => void;
   onBlock: (userId: string) => void;
+  /**
+   * El vacío pedía «Comparte tu plan» sin un botón para hacerlo: compartir, que
+   * es lo que trae a alguien que ore por ti, quedaba a dos toques en el `···`.
+   */
+  onShare?: () => void;
 };
 
 /**
@@ -22,16 +28,25 @@ type Props = {
  * way to report it. Reporting takes two taps rather than a modal — enough to
  * stop a mis-tap, not enough to discourage a real report.
  */
-export const WhoPrayed = ({ people, onReport, onBlock }: Props) => {
+export const WhoPrayed = ({ people, onReport, onBlock, onShare }: Props) => {
   const { t } = useTranslation();
 
   const [confirming, setConfirming] = useState<string | null>(null);
 
   if (people.length === 0) {
     return (
-      <Txt variant="body" tone="secondary">
-        {t("intercession.nobodyYet")}
-      </Txt>
+      <View className="gap-3">
+        <Txt variant="body" tone="secondary">
+          {t("intercession.nobodyYet")}
+        </Txt>
+        {onShare ? (
+          <Button
+            title={t("share.title")}
+            variant="secondary"
+            onPress={onShare}
+          />
+        ) : null}
+      </View>
     );
   }
 

@@ -3,7 +3,9 @@ import {
   useGlobalSearchParams,
   usePathname,
   useSegments,
+  type Href,
 } from "expo-router";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -16,6 +18,11 @@ import { Wordmark } from "@/components/Wordmark";
 import { enterFadeAfter } from "@/theme/motion";
 
 import { useSession } from "./SessionProvider";
+import {
+  clearReturnTo,
+  peekReturnTo,
+  rememberReturnTo,
+} from "@/core/nav/returnTo";
 
 // Esta pantalla se quedó con los grises del scaffold hasta el rediseño, y no por
 // descuido: vive en `core/`, que Tailwind no escaneaba, así que cualquier clase
@@ -75,6 +82,11 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const search = useGlobalSearchParams<{ t?: string }>();
   const group = segments[0];
+
+  // Al llegar al destino que se recordó antes del login, se olvida.
+  useEffect(() => {
+    if (pathname === peekReturnTo()) clearReturnTo();
+  }, [pathname]);
   const correoToken =
     pathname === "/correo" &&
     typeof search.t === "string" &&
@@ -108,7 +120,10 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
     if (correoToken) {
       return <>{children}</>;
     }
-    return group === "(auth)" ? <>{children}</> : <Redirect href="/entrar" />;
+    if (group === "(auth)") return <>{children}</>;
+    // Se recuerda adónde ibas para volver ahí después de entrar.
+    rememberReturnTo(pathname);
+    return <Redirect href="/entrar" />;
   }
 
   // A read that failed and gave up is not a read still in flight. Both left
@@ -181,7 +196,7 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   // no la mandaba aquí, pero tampoco la sacaba—. `legal` no entra: los dos
   // documentos se leen cuando a uno le apetezca, también desde «Acerca de».
   if (group === "(auth)" || group === "(onboarding)" || group === "aceptar") {
-    return <Redirect href="/" />;
+    return <Redirect href={(peekReturnTo() ?? "/") as Href} />;
   }
 
   return <>{children}</>;

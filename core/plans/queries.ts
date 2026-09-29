@@ -348,6 +348,7 @@ export const useGeneratePlan = (userId: string | undefined) => {
       attemptKey.current.clear();
 
       void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
+      void queryClient.invalidateQueries({ queryKey: ["planQuota", userId] });
 
       // A circle's plan is not one of yours, so invalidating `myPlans` alone
       // left the circle screen still offering to create the plan it had just
@@ -639,3 +640,23 @@ export const useContinuePlan = (userId: string | undefined) => {
     },
   });
 };
+
+export type PlanQuota = { used: number; quota_limit: number };
+
+/**
+ * Los planes gratuitos usados y el total, para enseñarlos ANTES del
+ * formulario. Hasta ahora el límite solo se descubría al enviarlo entero.
+ * Cuenta lo mismo que `reserve_generation` (ver my_plan_quota).
+ */
+export const useMyPlanQuota = (userId: string | undefined) =>
+  useQuery({
+    queryKey: ["planQuota", userId],
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<PlanQuota | null> => {
+      const { data, error } = await supabase.rpc("my_plan_quota");
+
+      if (error) throw error;
+
+      return ((data ?? []) as PlanQuota[])[0] ?? null;
+    },
+  });

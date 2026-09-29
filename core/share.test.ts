@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 
-import { buildShareUrl, shareOrCopy } from "./share";
+import { buildShareUrl, canCopyText, copyText, shareOrCopy } from "./share";
 
 const platformMock = vi.hoisted(() => ({
   os: "web",
@@ -81,5 +81,25 @@ describe("buildShareUrl", () => {
     expect(buildShareUrl("p/123", "plan")).toBe(
       "https://ammen.app/p/123?de=plan",
     );
+  });
+});
+
+describe("copyText", () => {
+  it("copies on web when the clipboard exists", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    setNavigator({ clipboard: { writeText } });
+
+    expect(canCopyText()).toBe(true);
+    expect(await copyText("https://ejemplo.com/p/abc")).toBe(true);
+    expect(writeText).toHaveBeenCalledWith("https://ejemplo.com/p/abc");
+  });
+
+  it("says no when it cannot copy, instead of pretending", async () => {
+    expect(canCopyText()).toBe(false);
+    expect(await copyText("x")).toBe(false);
+
+    platformMock.os = "ios";
+    setNavigator({ clipboard: { writeText: vi.fn() } });
+    expect(canCopyText()).toBe(false);
   });
 });

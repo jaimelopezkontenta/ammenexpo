@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
+import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Glass } from "@/components/Glass";
@@ -9,8 +9,10 @@ import type { ToastItem, ToastVariant } from "@/core/toast/ToastProvider";
 import { DURATION } from "@/theme/motion";
 
 /**
- * La cara visible de los avisos: tarjetas de vidrio flotando bajo la isla del
- * reloj, fuera del flujo — el layout de la pantalla no se entera.
+ * La cara visible de los avisos: tarjetas de vidrio flotando abajo, encima de
+ * la barra de pestañas, fuera del flujo — el layout de la pantalla no se
+ * entera. Vivían arriba y durante 4,5 s tapaban el botón de volver y el título
+ * de la pantalla, justo después de una acción que suele llevar a volver.
  *
  * `accessibilityRole="alert"` + liveRegion assertive: el lector de pantalla
  * anuncia el aviso al aparecer, igual que anunciaban los textos `role="alert"`
@@ -39,10 +41,10 @@ const ToastCard = ({
   onDismiss: (id: number) => void;
 }) => (
   <Animated.View
-    entering={FadeInDown.duration(DURATION.enter).withInitialValues({
-      transform: [{ translateY: -16 }],
+    entering={FadeInUp.duration(DURATION.enter).withInitialValues({
+      transform: [{ translateY: 16 }],
     })}
-    exiting={FadeOutUp.duration(DURATION.exit)}
+    exiting={FadeOutDown.duration(DURATION.exit)}
   >
     <Tap
       accessibilityRole="alert"
@@ -62,6 +64,8 @@ const ToastCard = ({
   </Animated.View>
 );
 
+const TOAST_BOTTOM_OFFSET = 76;
+
 export const ToastHost = ({
   items,
   onDismiss,
@@ -76,8 +80,10 @@ export const ToastHost = ({
   return (
     <View
       pointerEvents="box-none"
-      className="absolute inset-x-0 top-0 items-center gap-2 px-6"
-      style={{ paddingTop: insets.top + 8 }}
+      className="absolute inset-x-0 bottom-0 items-center gap-2 px-6"
+      // Por encima de la barra de pestañas (62) y de la zona segura; en las
+      // pantallas sin barra queda un poco más alto, que no estorba.
+      style={{ paddingBottom: insets.bottom + TOAST_BOTTOM_OFFSET }}
     >
       {items.map((item) => (
         <ToastCard key={item.id} item={item} onDismiss={onDismiss} />

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { planIdToOpenAfterRedeem, resolveRedeemOutcome } from "./redeemOutcome";
+import {
+  destinationAfterRedeem,
+  planIdToOpenAfterRedeem,
+  resolveRedeemOutcome,
+} from "./redeemOutcome";
 
 describe("resolveRedeemOutcome", () => {
   it("is ok for a successful redemption", () => {
@@ -76,5 +80,35 @@ describe("planIdToOpenAfterRedeem", () => {
     ).toBeNull();
     expect(planIdToOpenAfterRedeem({ ok: true })).toBeNull();
     expect(planIdToOpenAfterRedeem(null)).toBeNull();
+  });
+});
+
+describe("destinationAfterRedeem", () => {
+  it("opens the plan to pray for", () => {
+    expect(
+      destinationAfterRedeem({ ok: true, scope: "plan", plan_id: "plan-1" }),
+    ).toEqual({ kind: "plan", planId: "plan-1" });
+  });
+
+  it("opens the circle after accepting a circle invitation", () => {
+    expect(
+      destinationAfterRedeem({ ok: true, scope: "circle", circle_id: "c-1" }),
+    ).toEqual({ kind: "circle", circleId: "c-1" });
+  });
+
+  it("opens the circle behind a group link", () => {
+    expect(
+      destinationAfterRedeem({ ok: true, scope: "group", group_id: "g-1" }),
+    ).toEqual({ kind: "circle", circleId: "g-1" });
+  });
+
+  it("goes nowhere for your own plan, a dead link or nothing", () => {
+    expect(
+      destinationAfterRedeem({ ok: true, plan_id: "plan-1", self: true }),
+    ).toBeNull();
+    expect(
+      destinationAfterRedeem({ ok: false, reason: "invalid_or_expired" }),
+    ).toBeNull();
+    expect(destinationAfterRedeem(null)).toBeNull();
   });
 });

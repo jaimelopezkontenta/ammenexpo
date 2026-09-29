@@ -2534,6 +2534,13 @@ export type Database = {
           unlocked: boolean
         }[]
       }
+      my_plan_quota: {
+        Args: never
+        Returns: {
+          quota_limit: number
+          used: number
+        }[]
+      }
       my_profile_data: {
         Args: never
         Returns: {

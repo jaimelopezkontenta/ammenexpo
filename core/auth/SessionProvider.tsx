@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { router, useRootNavigationState } from "expo-router";
 import i18n from "i18next";
 import {
   createContext,
@@ -16,6 +16,7 @@ import { supabase } from "@/utils/supabase";
 
 import { gateStateFrom, type OnboardingRead } from "./onboardingState";
 import { redeemPendingTokens } from "./pendingToken";
+import type { RedeemDestination } from "@/core/plans/redeemOutcome";
 import {
   revokeThisDevicePush,
   usePushRegistration,
@@ -52,6 +53,9 @@ export const SessionProvider = ({
   const [isLoading, setIsLoading] = useState(true);
   /** Who the cache currently belongs to. */
   const lastUserId = useRef<string | null>(null);
+  // Adónde llevar tras canjear un enlace, a la espera de que se pueda navegar.
+  const pendingDestination = useRef<RedeemDestination | null>(null);
+  const [destinationTick, setDestinationTick] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -105,27 +109,50 @@ export const SessionProvider = ({
 
     let active = true;
 
-    void redeemPendingTokens().then((planId) => {
-      if (!active || !planId) return;
+    void redeemPendingTokens().then((destination) => {
+      if (!active || !destination) return;
+      pendingDestination.current = destination;
+      setDestinationTick((tick) => tick + 1);
 
       // Redeeming is what makes that plan visible. Without invalidating, the
       // Orar tab would keep insisting nobody had shared anything — this app
       // never refetches on focus, so it would say so until it was killed.
       void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
       void queryClient.invalidateQueries({ queryKey: ["circles"] });
-
-      // Un share canjeado al entrar debe abrir el día que toca orar, no Hoy:
-      // aterrizar en la pestaña de Hoy dejaba el plan a un tab de distancia y
-      // sin pista de que acababa de llegar. Solo se navega cuando hay planId —
-      // el invite code sigue devolviendo null y no navega. El effect ya depende
-      // de `userId`, así que esto no se dispara en cada render.
-      router.replace({ pathname: "/orar/[planId]", params: { planId } });
     });
 
     return () => {
       active = false;
     };
   }, [userId, queryClient]);
+
+  // Un share canjeado al entrar abre el día que toca orar, y una invitación a
+  // un círculo abre ese círculo — no Hoy, que dejaba a quien llegaba a una
+  // pestaña de distancia y sin pista de qué había pasado. El invite code de
+  // la app no lleva a ningún sitio concreto y no navega.
+  //
+  // Se navega solo con el navegador raíz ya montado: el canje puede resolver
+  // en el arranque en frío, antes, y un `router.replace` en ese momento caía
+  // en `/` arrastrando los parámetros de la ruta anterior (`/?token=…`).
+  const rootNavigation = useRootNavigationState();
+  const navigationReady = Boolean(rootNavigation?.key);
+  useEffect(() => {
+    const destination = pendingDestination.current;
+    if (!destination || !navigationReady) return;
+    pendingDestination.current = null;
+
+    if (destination.kind === "plan") {
+      router.replace({
+        pathname: "/orar/[planId]",
+        params: { planId: destination.planId },
+      });
+    } else {
+      router.replace({
+        pathname: "/circulo/[id]",
+        params: { id: destination.circleId },
+      });
+    }
+  }, [destinationTick, navigationReady]);
 
   // Keyed by user, so signing in as someone else can never inherit the
   // previous account's onboarding state.

@@ -77,26 +77,34 @@ test.describe("círculos — invitación privada, dos contexts", () => {
       await guestPage.getByLabel("Correo electrónico").fill(SEED_B.email);
       await guestPage.getByLabel("Contraseña").fill(SEED_B.password);
       await guestPage.getByRole("button", { name: "Entrar" }).click();
+
+      // El canje al entrar (`redeem_share_token`, scope círculo) mete a B sin
+      // otro toque y le lleva AL CÍRCULO. Antes aterrizaba en Hoy, a una
+      // pestaña del sitio al que le invitaron (Oleada 2a, U6).
+      await expect(guestPage).toHaveURL(new RegExp(`/circulo/${groupId}`), {
+        timeout: 15_000,
+      });
+      await expect
+        .poll(() => memberCount(groupId), { timeout: 10_000 })
+        .toBe(2);
+
+      // Y si vuelve a abrir la invitación ya siendo miembro, no se le ofrece
+      // «Unirme» otra vez: el canje al cargar le lleva a su círculo, o, si
+      // no llegara a canjearse, la pantalla le ofrece abrirlo.
+      await guestPage.goto(inviteUrl!);
+      await expect
+        .poll(
+          async () =>
+            new RegExp(`/circulo/${groupId}`).test(guestPage.url()) ||
+            (await guestPage
+              .getByRole("button", { name: "Abrir el círculo" })
+              .count()) > 0,
+          { timeout: 10_000 },
+        )
+        .toBe(true);
       await expect(
-        guestPage.getByRole("tab", { name: "Hoy" }).first(),
-      ).toBeVisible({ timeout: 15_000 });
-
-      // El canje al entrar (`redeem_share_token`, scope grupo) debería
-      // meter a B sin otro tap. Si el token no se canjeó, Unirme en el
-      // preview autenticado es el mismo join por UI.
-      const redeemed = await expect
-        .poll(() => memberCount(groupId), { timeout: 8_000 })
-        .toBe(2)
-        .then(() => true)
-        .catch(() => false);
-
-      if (!redeemed) {
-        await guestPage.goto(inviteUrl!);
-        await guestPage.getByRole("button", { name: "Unirme" }).click();
-        await expect
-          .poll(() => memberCount(groupId), { timeout: 10_000 })
-          .toBe(2);
-      }
+        guestPage.getByRole("button", { name: "Unirme" }),
+      ).toHaveCount(0);
     } finally {
       if (groupId) {
         runSql(`delete from public.groups where id = '${groupId}';`);

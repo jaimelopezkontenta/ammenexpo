@@ -159,6 +159,29 @@ export default function CircleDetail() {
     }
   };
 
+  // Invitar, en un solo bloque: el botón, el enlace y el correo juntos.
+  const inviteSection = inviteUrl ? (
+    <View className="gap-3">
+      <Button title={t("circles.invite")} onPress={() => void handleInvite()} />
+      <Card className="gap-2">
+        <Txt variant="label" tone="secondary">
+          {t("circles.inviteLink")}
+        </Txt>
+        <Txt variant="caption" selectable>
+          {inviteUrl}
+        </Txt>
+      </Card>
+      {inviteToken ? (
+        <EmailInviteField kind="circle" token={inviteToken} />
+      ) : null}
+    </View>
+  ) : null;
+
+  // En un círculo donde aún estás solo, invitar es lo primero que hay que
+  // hacer, y quedaba debajo del plan, el censo, lo compartido, las peticiones
+  // y el chat. Con gente dentro vuelve a su sitio, después de lo que pasa.
+  const inviteFirst = circle.member_count <= 1;
+
   return (
     <>
       <Stack.Screen options={{ title: circle.name, headerShown: true }} />
@@ -182,6 +205,8 @@ export default function CircleDetail() {
                 : t("circles.visibilityPublic")}
             </Txt>
           </View>
+
+          {inviteFirst ? inviteSection : null}
 
           {/* Above the roster on purpose: what the circle is *doing* matters more
             than who is in it, and this screen used to answer only the second. */}
@@ -324,20 +349,7 @@ export default function CircleDetail() {
             <Button title={t("chat.open")} variant="secondary" />
           </Link>
 
-          {inviteUrl ? (
-            <Card className="gap-2">
-              <Txt variant="label" tone="secondary">
-                {t("circles.inviteLink")}
-              </Txt>
-              <Txt variant="caption" selectable>
-                {inviteUrl}
-              </Txt>
-            </Card>
-          ) : null}
-
-          {inviteToken ? (
-            <EmailInviteField kind="circle" token={inviteToken} />
-          ) : null}
+          {inviteFirst ? null : inviteSection}
 
           {confirmingLeave ? (
             <Txt
@@ -349,13 +361,9 @@ export default function CircleDetail() {
             </Txt>
           ) : null}
 
+          {/* Salir, solo al pie: compartía fila con «Invitar», y es lo único
+            de esta pantalla que no se deshace sin una invitación nueva. */}
           <View className="mt-auto gap-3 pt-6">
-            {inviteUrl ? (
-              <Button
-                title={t("circles.invite")}
-                onPress={() => void handleInvite()}
-              />
-            ) : null}
             <Button
               title={
                 confirmingLeave

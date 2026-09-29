@@ -26,7 +26,11 @@ export type RedeemOutcome =
  */
 export type RedeemShareResult = {
   ok?: boolean;
+  /** `plan`, `circle` (invitación a un círculo) o `group` (enlace de grupo). */
+  scope?: string;
   plan_id?: string;
+  circle_id?: string;
+  group_id?: string;
   self?: boolean;
   reason?: string;
 };
@@ -36,6 +40,30 @@ export const planIdToOpenAfterRedeem = (
 ): string | null => {
   if (!outcome?.ok || outcome.self || !outcome.plan_id) return null;
   return outcome.plan_id;
+};
+
+export type RedeemDestination =
+  { kind: "plan"; planId: string } | { kind: "circle"; circleId: string };
+
+/**
+ * Adónde llevar a alguien después de canjear un enlace.
+ *
+ * Un plan se abre en el día que toca orar. Una invitación a un círculo
+ * (`scope: "circle"`) o un enlace de grupo (`scope: "group"`) abre ese
+ * círculo: antes solo se miraba `plan_id`, así que quien aceptaba una
+ * invitación acababa en Hoy, a una pestaña del sitio al que le invitaron.
+ */
+export const destinationAfterRedeem = (
+  outcome: RedeemShareResult | null | undefined,
+): RedeemDestination | null => {
+  const planId = planIdToOpenAfterRedeem(outcome);
+  if (planId) return { kind: "plan", planId };
+  if (!outcome?.ok) return null;
+  const circleId = outcome.circle_id ?? outcome.group_id;
+  if (circleId && (outcome.scope === "circle" || outcome.scope === "group")) {
+    return { kind: "circle", circleId };
+  }
+  return null;
 };
 
 export const resolveRedeemOutcome = (input: {

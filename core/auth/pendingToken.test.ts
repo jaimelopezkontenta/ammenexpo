@@ -96,8 +96,24 @@ describe("share token redemption", () => {
     });
     await rememberShareToken("tok-1");
 
-    expect(await redeemPendingTokens()).toBe("plan-1");
+    expect(await redeemPendingTokens()).toEqual({
+      kind: "plan",
+      planId: "plan-1",
+    });
     expect(await redeemPendingTokens()).toBeNull();
     expect(rpc).toHaveBeenCalledTimes(1);
+  });
+
+  it("a circle invitation redeemed at sign-in opens that circle", async () => {
+    rpc.mockResolvedValue({
+      data: { ok: true, scope: "circle", circle_id: "circle-9" },
+      error: null,
+    });
+    await rememberShareToken("circle-token");
+
+    expect(await redeemPendingTokens()).toEqual({
+      kind: "circle",
+      circleId: "circle-9",
+    });
   });
 });

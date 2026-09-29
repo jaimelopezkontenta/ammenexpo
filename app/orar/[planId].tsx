@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
@@ -17,6 +17,7 @@ import {
   AlreadyPrayed,
   MESSAGE_MAX,
   QUICK_MESSAGE_KEYS,
+  usePlansSharedWithMe,
   useSharedPlanDay,
   usePrayForSomeone,
 } from "@/core/intercessions/queries";
@@ -32,10 +33,18 @@ import { goBackOr } from "@/core/nav/safeBack";
  * with you, putting the whole day in every card turns the tab into a wall of
  * text where you cannot see who is still waiting.
  */
-export default function PrayForSomeone() {
+export default function PrayForSomeoneRoute() {
+  const { planId } = useLocalSearchParams<{ planId: string }>();
+
+  // Otra persona es otro día que rezar: con `key` la pantalla se remonta con
+  // el estado limpio al pasar a la siguiente (Expo Router reutiliza la misma
+  // instancia si solo cambia el parámetro).
+  return <PrayForSomeone key={planId} planId={planId} />;
+}
+
+function PrayForSomeone({ planId }: { planId: string }) {
   const { t } = useTranslation();
   const { scrollBottom } = useScreenPadding();
-  const { planId } = useLocalSearchParams<{ planId: string }>();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -47,6 +56,13 @@ export default function PrayForSomeone() {
   const [sent, setSent] = useState(false);
 
   const { data: books } = useBibleBooks();
+  const { data: shared } = usePlansSharedWithMe(userId);
+
+  // Quien ora por varias personas iba y volvía a la lista para cada una. Si
+  // tras orar queda alguien pendiente hoy, se le ofrece seguir.
+  const next = sent
+    ? shared?.find((other) => other.plan_id !== planId && !other.already_prayed)
+    : undefined;
 
   // Se llega aquí por un `router.replace` tras canjear un enlace, o en frío
   // desde un deep link: sin historia, `router.back()` no hacía nada y quien
@@ -69,10 +85,11 @@ export default function PrayForSomeone() {
   // Un momento de confirmación y fuera. Con limpieza: si alguien sale antes
   // por su cuenta, el temporizador no puede sacarle después de otra pantalla.
   useEffect(() => {
-    if (!sent) return;
+    // Con alguien más esperando no se sale solo: se ofrece seguir.
+    if (!sent || next) return;
     const timer = setTimeout(() => goBackOr("/orar"), 1400);
     return () => clearTimeout(timer);
-  }, [sent]);
+  }, [sent, next]);
 
   if (isLoading) {
     return (
@@ -165,17 +182,39 @@ export default function PrayForSomeone() {
           ) : null}
 
           {plan.already_prayed || sent ? (
-            <Txt
-              variant="bodyMedium"
-              tone="secondary"
-              className="text-center"
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite"
-            >
-              {sent
-                ? t("intercession.prayedThanks", { name: plan.owner_name })
-                : t("intercession.prayedFor", { name: plan.owner_name })}
-            </Txt>
+            <View className="gap-4 pb-6">
+              <Txt
+                variant="bodyMedium"
+                tone="secondary"
+                className="text-center"
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite"
+              >
+                {sent
+                  ? t("intercession.prayedThanks", { name: plan.owner_name })
+                  : t("intercession.prayedFor", { name: plan.owner_name })}
+              </Txt>
+              {next ? (
+                <View className="gap-3">
+                  <Button
+                    title={t("intercession.nextPerson", {
+                      name: next.owner_name,
+                    })}
+                    onPress={() =>
+                      router.replace({
+                        pathname: "/orar/[planId]",
+                        params: { planId: next.plan_id },
+                      })
+                    }
+                  />
+                  <Button
+                    title={t("common.back")}
+                    variant="ghost"
+                    onPress={leave}
+                  />
+                </View>
+              ) : null}
+            </View>
           ) : (
             <View className="gap-3 pb-6">
               {/* Chips and free text are alternatives, so picking one still

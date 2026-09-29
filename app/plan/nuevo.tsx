@@ -23,6 +23,7 @@ import {
   GenerationUnavailable,
   PlanLimitReached,
   useGeneratePlan,
+  useMyPlanQuota,
   type PlanVisibility,
 } from "@/core/plans/queries";
 
@@ -40,6 +41,11 @@ export default function NewPlan() {
   const { data: circles } = useMyCircles(userId);
   const { data: answers } = useOnboardingAnswers(userId);
   const generate = useGeneratePlan(userId);
+  // La cuota, antes del formulario: descubrirla al enviar castigaba a quien
+  // ya había elegido temas, duración y círculos.
+  const { data: quota } = useMyPlanQuota(userId);
+  const remaining = quota ? Math.max(quota.quota_limit - quota.used, 0) : null;
+  const exhausted = remaining === 0;
 
   // `null` until touched, so the onboarding answers show through as the
   // starting point without freezing: clearing every chip stays cleared.
@@ -138,6 +144,28 @@ export default function NewPlan() {
             contentContainerStyle={{ paddingBottom: scrollBottom }}
             keyboardShouldPersistTaps="handled"
           >
+            {exhausted ? (
+              <Card className="gap-2" accessibilityRole="alert">
+                <Txt variant="subheading">{t("plan.limitTitle")}</Txt>
+                <Txt variant="body" tone="secondary">
+                  {t("plan.limitBody")}
+                </Txt>
+                <Link href="/plus" asChild>
+                  <Button
+                    title={t("plan.limitWaitlistCta")}
+                    variant="secondary"
+                  />
+                </Link>
+              </Card>
+            ) : quota && remaining !== null ? (
+              <Txt variant="caption">
+                {t("newPlan.quotaLeft", {
+                  count: remaining,
+                  total: quota.quota_limit,
+                })}
+              </Txt>
+            ) : null}
+
             <View className="gap-3">
               <Txt variant="subheadingLg">{t("newPlan.topicQuestion")}</Txt>
               <Txt variant="caption">{t("newPlan.topicHint")}</Txt>
@@ -235,7 +263,7 @@ export default function NewPlan() {
               </Txt>
             ) : null}
 
-            {atLimit ? (
+            {atLimit && !exhausted ? (
               <Card className="gap-2" accessibilityRole="alert">
                 <Txt variant="subheading">{t("plan.limitTitle")}</Txt>
                 <Txt variant="body" tone="secondary">
@@ -280,6 +308,7 @@ export default function NewPlan() {
               <Button
                 title={t("newPlan.create")}
                 loading={generate.isPending}
+                disabled={exhausted}
                 onPress={() => void handleCreate()}
               />
             </View>

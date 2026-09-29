@@ -1,8 +1,8 @@
 import { Link, router } from "expo-router";
 import { Check, MoreHorizontal } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { TabHeader } from "@/components/TabHeader";
@@ -128,6 +128,27 @@ export default function Today() {
   const [step, setStep] = useState<JourneyStep>("meaning");
   const [optionsOpen, setOptionsOpen] = useState(false);
   const afterClose = useRef<(() => void) | null>(null);
+
+  // «Ya oré hoy» siempre a la vista. En móvil el journey empuja el CTA bajo
+  // el pliegue (en 390×844 asomaba una franja); mientras no se ve, un gemelo
+  // flota encima de la barra, y desaparece en cuanto el de verdad asoma. Se
+  // mide en coordenadas de ventana, igual en nativo y en web: el centro del
+  // CTA contra el borde de abajo del área que hace scroll.
+  const { width } = useWindowDimensions();
+  const isWide = width >= 1024;
+  const viewportRef = useRef<View>(null);
+  const ctaRef = useRef<View>(null);
+  const [ctaOffscreen, setCtaOffscreen] = useState(false);
+  const checkCta = useCallback(() => {
+    const viewport = viewportRef.current;
+    const cta = ctaRef.current;
+    if (!viewport || !cta) return;
+    viewport.measureInWindow((_vx, viewportY, _vw, viewportHeight) => {
+      cta.measureInWindow((_x, ctaY, _w, ctaHeight) => {
+        setCtaOffscreen(ctaY + ctaHeight / 2 > viewportY + viewportHeight);
+      });
+    });
+  }, []);
 
   // Al cerrar el cajón se desarma lo efímero: ni el archivar queda a un toque
   // de dispararse ni el rename abierto, para que la próxima apertura empiece
@@ -538,6 +559,17 @@ export default function Today() {
     );
   }
 
+  const markToday = () =>
+    markPrayed.mutate(undefined, {
+      onSuccess: () => {
+        setActionError(null);
+        // La háptica de resultado, no la del toque: el amén del día es el
+        // único "hecho" que la app celebra.
+        triggerHaptic("success");
+      },
+      onError: () => setActionError(t("common.errorGeneric")),
+    });
+
   return (
     <DawnBackground>
       {/* `wide`: el contenido de abajo se abre a `max-w-page` en lg y la
@@ -548,263 +580,280 @@ export default function Today() {
         showDate
         wide
       />
-      <ScrollView
-        contentContainerClassName="py-8"
-        keyboardShouldPersistTaps="handled"
-      >
-        <ResponsiveTabContent className="gap-6 lg:max-w-page">
-          {/* El journey es una sola columna de lectura también en tablet; en
+      <View ref={viewportRef} onLayout={checkCta} className="flex-1">
+        <ScrollView
+          contentContainerClassName="py-8"
+          keyboardShouldPersistTaps="handled"
+          onScroll={checkCta}
+          scrollEventThrottle={100}
+        >
+          <ResponsiveTabContent className="gap-6 lg:max-w-page">
+            {/* El journey es una sola columna de lectura también en tablet; en
             escritorio ancho gana una columna de contexto al lado. Lo que
             rodeaba al día vive en el cajón del `···`. */}
-          <View className="w-full gap-6 self-center md:max-w-3xl lg:max-w-none lg:flex-row lg:items-start lg:gap-10">
-            <View className="min-w-0 flex-1 gap-6 lg:max-w-read">
-              {/* La fila meta: dónde estás y cuánto llevas. A la derecha, el
+            <View className="w-full gap-6 self-center md:max-w-3xl lg:max-w-none lg:flex-row lg:items-start lg:gap-10">
+              <View className="min-w-0 flex-1 gap-6 lg:max-w-read">
+                {/* La fila meta: dónde estás y cuánto llevas. A la derecha, el
               `···` que abre el cajón del plan. */}
-              <View className="flex-row items-center justify-between gap-3">
-                <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-3 gap-y-1">
-                  {days > 0 ? (
-                    <StreakRing
-                      days={days}
-                      accessibilityLabel={t("plan.streak", { count: days })}
-                    />
-                  ) : null}
-                  <View className="min-w-0 flex-1 gap-1">
-                    <Txt variant="overline">
-                      {prayed
-                        ? t("plan.captionDone")
-                        : day.day_number > 1
-                          ? t("plan.captionContinue")
-                          : t("plan.captionComingUp")}
-                    </Txt>
-                    <Txt variant="label" tone="secondary">
-                      {t("plan.dayOf", {
-                        current: day.day_number,
-                        total: plan.duration_days,
-                      })}
-                      {plan.status === "generating" && !stuck
-                        ? ` · ${t("plan.stillPreparing")}`
-                        : ""}
-                    </Txt>
-                    {progress && progress.days_total > 0 ? (
-                      <ProgressBar
-                        value={progress.days_prayed}
-                        max={progress.days_total}
-                        accessibilityLabel={t(
-                          "plan.progressDaysAccessibility",
-                          {
-                            prayed: progress.days_prayed,
-                            total: progress.days_total,
-                          },
-                        )}
+                <View className="flex-row items-center justify-between gap-3">
+                  <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-3 gap-y-1">
+                    {days > 0 ? (
+                      <StreakRing
+                        days={days}
+                        accessibilityLabel={t("plan.streak", { count: days })}
                       />
                     ) : null}
+                    <View className="min-w-0 flex-1 gap-1">
+                      <Txt variant="overline">
+                        {prayed
+                          ? t("plan.captionDone")
+                          : day.day_number > 1
+                            ? t("plan.captionContinue")
+                            : t("plan.captionComingUp")}
+                      </Txt>
+                      <Txt variant="label" tone="secondary">
+                        {t("plan.dayOf", {
+                          current: day.day_number,
+                          total: plan.duration_days,
+                        })}
+                        {plan.status === "generating" && !stuck
+                          ? ` · ${t("plan.stillPreparing")}`
+                          : ""}
+                      </Txt>
+                      {/* La barra dice dónde estás, igual que su etiqueta. Medía los
+                      días orados: con «Día 4 de 14» encima y ninguno orado
+                      parecía rota. La constancia ya la cuenta el anillo. */}
+                      {plan.duration_days > 0 ? (
+                        <ProgressBar
+                          value={day.day_number}
+                          max={plan.duration_days}
+                          accessibilityLabel={t("plan.dayOf", {
+                            current: day.day_number,
+                            total: plan.duration_days,
+                          })}
+                        />
+                      ) : null}
+                    </View>
                   </View>
+
+                  <Tap
+                    accessibilityRole="button"
+                    accessibilityLabel={t("plan.planOptions")}
+                    onPress={() => setOptionsOpen(true)}
+                    // 44×44, el mínimo táctil, alrededor de un icono de 22. El
+                    // vidrio es el mismo de los chips sin elegir: sin él el icono
+                    // flotaba como una mancha gris sobre el amanecer.
+                    className="h-11 w-11 items-center justify-center rounded-full border border-glassedge/60 bg-glass/60"
+                  >
+                    <MoreHorizontal
+                      size={icon.md}
+                      color={colors.plum.DEFAULT}
+                      strokeWidth={icon.strokeWidth}
+                    />
+                  </Tap>
                 </View>
 
-                <Tap
-                  accessibilityRole="button"
-                  accessibilityLabel={t("plan.planOptions")}
-                  onPress={() => setOptionsOpen(true)}
-                  // 44×44, el mínimo táctil, alrededor de un icono de 22. El
-                  // vidrio es el mismo de los chips sin elegir: sin él el icono
-                  // flotaba como una mancha gris sobre el amanecer.
-                  className="h-11 w-11 items-center justify-center rounded-full border border-glassedge/60 bg-glass/60"
-                >
-                  <MoreHorizontal
-                    size={icon.md}
-                    color={colors.plum.DEFAULT}
-                    strokeWidth={icon.strokeWidth}
-                  />
-                </Tap>
-              </View>
-
-              {/* El aviso de generación a medias es verdad, pero no puede
+                {/* El aviso de generación a medias es verdad, pero no puede
               sentarse entre la Palabra y el amén: vive aquí, debajo de la
               fila meta y antes del título, para que el journey quede libre
               para rezar. Una línea discreta y no un Card: quien ya tiene día
               hoy viene a orar, no a arreglar la generación. */}
-              {stuck ? (
-                <View className="gap-1.5">
-                  <Txt variant="caption">
-                    {t("plan.stalledBody", {
-                      written: progress?.days_written ?? day.day_number,
-                      total: plan.duration_days,
-                    })}
-                  </Txt>
-                  <Tap
-                    accessibilityRole="button"
-                    accessibilityState={{ busy: continuePlan.isPending }}
-                    aria-busy={continuePlan.isPending}
-                    disabled={continuePlan.isPending}
-                    hitSlop={8}
-                    onPress={() => void resumeGeneration()}
-                    className={`self-start py-1 ${
-                      continuePlan.isPending ? "opacity-50" : ""
-                    }`}
-                  >
-                    {/* El mismo tono que el label del Button ghost: el naranja
-                    que sí se lee, reservado para lo que pide acción. */}
-                    <Txt
-                      variant="label"
-                      tone="accent"
-                      className="font-sans-semibold"
+                {stuck ? (
+                  <View className="gap-1.5">
+                    <Txt variant="caption">
+                      {t("plan.stalledBody", {
+                        written: progress?.days_written ?? day.day_number,
+                        total: plan.duration_days,
+                      })}
+                    </Txt>
+                    <Tap
+                      accessibilityRole="button"
+                      accessibilityState={{ busy: continuePlan.isPending }}
+                      aria-busy={continuePlan.isPending}
+                      disabled={continuePlan.isPending}
+                      hitSlop={8}
+                      onPress={() => void resumeGeneration()}
+                      className={`self-start py-1 ${
+                        continuePlan.isPending ? "opacity-50" : ""
+                      }`}
                     >
-                      {t("plan.stalledCta")}
-                    </Txt>
-                  </Tap>
-                </View>
-              ) : null}
+                      {/* El mismo tono que el label del Button ghost: el naranja
+                    que sí se lee, reservado para lo que pide acción. */}
+                      <Txt
+                        variant="label"
+                        tone="accent"
+                        className="font-sans-semibold"
+                      >
+                        {t("plan.stalledCta")}
+                      </Txt>
+                    </Tap>
+                  </View>
+                ) : null}
 
-              {/* El título es el del día y no el del plan con lápiz: hoy se ora
+                {/* El título es el del día y no el del plan con lápiz: hoy se ora
               esto. Renombrar el plan vive en el cajón, fuera del journey. */}
-              <Txt variant="title">{day.title}</Txt>
+                <Txt variant="title">{day.title}</Txt>
 
-              {/* Los tres pasos del journey, con la misma píldora que usa el
+                {/* Los tres pasos del journey, con la misma píldora que usa el
               switcher: la elegida oscura, las otras de vidrio. */}
-              <View accessibilityRole="tablist" className="flex-row gap-2">
-                {JOURNEY_STEPS.map((journeyStep) => {
-                  const selected = step === journeyStep.key;
+                <View accessibilityRole="tablist" className="flex-row gap-2">
+                  {JOURNEY_STEPS.map((journeyStep) => {
+                    const selected = step === journeyStep.key;
 
-                  return (
-                    <Pill
-                      key={journeyStep.key}
-                      label={t(journeyStep.labelKey)}
-                      selected={selected}
-                      role="tab"
-                      onPress={() => setStep(journeyStep.key)}
-                    />
-                  );
-                })}
-              </View>
-
-              {/* El `key` remonta el contenido al cambiar de chip: el paso
-              elegido entra con un fade en vez de aparecer de golpe. */}
-              <Animated.View key={step} entering={enterFade}>
-                <DayView day={day} books={books ?? []} focus={step} />
-              </Animated.View>
-
-              {/* La única acción primaria del journey. */}
-              <View className="pb-2 pt-2">
-                {prayed ? (
-                  // El orbe con la marca, como en el montaje. Es el único momento
-                  // del día en que la app dice "hecho", y decirlo con una línea de
-                  // texto centrada era desaprovecharlo. Entra con un pequeño
-                  // estallido de muelle — la celebración, junto con la háptica de
-                  // éxito. Sin confetti: no es el tono de esta app.
-                  <Animated.View
-                    entering={enterCelebrate}
-                    className="items-center gap-3"
-                  >
-                    <Orb size={92} halo variant="burst">
-                      <Check
-                        size={icon.lg}
-                        color={colors.plum.DEFAULT}
-                        strokeWidth={icon.strokeWidth}
+                    return (
+                      <Pill
+                        key={journeyStep.key}
+                        label={t(journeyStep.labelKey)}
+                        selected={selected}
+                        role="tab"
+                        onPress={() => setStep(journeyStep.key)}
                       />
-                    </Orb>
-                    <Txt variant="bodyMedium" className="text-center">
-                      {t("plan.markedDone")}
-                    </Txt>
-                    <Txt variant="caption" className="text-center">
-                      {t("plan.seeYouTomorrow")}
-                    </Txt>
-                  </Animated.View>
-                ) : (
-                  <Button
-                    title={t("plan.markDone")}
-                    loading={markPrayed.isPending}
-                    onPress={() =>
-                      markPrayed.mutate(undefined, {
-                        onSuccess: () => {
-                          setActionError(null);
-                          // La háptica de resultado, no la del toque: el amén del
-                          // día es el único "hecho" que la app celebra.
-                          triggerHaptic("success");
-                        },
-                        onError: () => setActionError(t("common.errorGeneric")),
-                      })
-                    }
-                  />
-                )}
-              </View>
+                    );
+                  })}
+                </View>
 
-              {actionError ? (
-                <Txt
-                  variant="caption"
-                  tone="danger"
-                  className="text-center"
-                  accessibilityRole="alert"
-                >
-                  {actionError}
-                </Txt>
-              ) : null}
+                {/* El `key` remonta el contenido al cambiar de chip: el paso
+              elegido entra con un fade en vez de aparecer de golpe. */}
+                <Animated.View key={step} entering={enterFade}>
+                  <DayView day={day} books={books ?? []} focus={step} />
+                </Animated.View>
 
-              {/* Lo social espera al "hecho": primero lo íntimo, después la
+                {/* La única acción primaria del journey. */}
+                <View ref={ctaRef} onLayout={checkCta} className="pb-2 pt-2">
+                  {prayed ? (
+                    // El orbe con la marca, como en el montaje. Es el único momento
+                    // del día en que la app dice "hecho", y decirlo con una línea de
+                    // texto centrada era desaprovecharlo. Entra con un pequeño
+                    // estallido de muelle — la celebración, junto con la háptica de
+                    // éxito. Sin confetti: no es el tono de esta app.
+                    <Animated.View
+                      entering={enterCelebrate}
+                      className="items-center gap-3"
+                    >
+                      <Orb size={92} halo variant="burst">
+                        <Check
+                          size={icon.lg}
+                          color={colors.plum.DEFAULT}
+                          strokeWidth={icon.strokeWidth}
+                        />
+                      </Orb>
+                      <Txt variant="bodyMedium" className="text-center">
+                        {t("plan.markedDone")}
+                      </Txt>
+                      <Txt variant="caption" className="text-center">
+                        {t("plan.seeYouTomorrow")}
+                      </Txt>
+                    </Animated.View>
+                  ) : (
+                    <Button
+                      title={t("plan.markDone")}
+                      loading={markPrayed.isPending}
+                      onPress={markToday}
+                    />
+                  )}
+                </View>
+
+                {actionError ? (
+                  <Txt
+                    variant="caption"
+                    tone="danger"
+                    className="text-center"
+                    accessibilityRole="alert"
+                  >
+                    {actionError}
+                  </Txt>
+                ) : null}
+
+                {/* Lo social espera al "hecho": primero lo íntimo, después la
               comunidad. Antes vivía siempre visible en la columna lateral y le
               quitaba al CTA su momento. */}
-              {prayed === true ? (
-                <>
-                  {/* Seeing who showed up for you is the reason to come back
+                {prayed === true ? (
+                  <>
+                    {/* Seeing who showed up for you is the reason to come back
                   tomorrow, but it stays visually separate from private prayer. */}
-                  <DaySection label={t("intercession.whoPrayed")}>
-                    {prayedForMeFailed ? (
-                      <Txt
-                        variant="body"
-                        tone="secondary"
-                        accessibilityRole="alert"
-                      >
-                        {t("common.errorBody")}
-                      </Txt>
-                    ) : (
-                      <WhoPrayed
-                        people={prayedForMe ?? []}
-                        onReport={(intercessionId) =>
-                          void runOnIntercessor(
-                            () => report.mutateAsync({ intercessionId }),
-                            t("intercession.reported"),
-                          )
-                        }
-                        onBlock={(blockedId) =>
-                          void runOnIntercessor(
-                            () => block.mutateAsync(blockedId),
-                            t("moderation.blockDone"),
-                          )
+                    <DaySection label={t("intercession.whoPrayed")}>
+                      {prayedForMeFailed ? (
+                        <Txt
+                          variant="body"
+                          tone="secondary"
+                          accessibilityRole="alert"
+                        >
+                          {t("common.errorBody")}
+                        </Txt>
+                      ) : (
+                        <WhoPrayed
+                          people={prayedForMe ?? []}
+                          onShare={() =>
+                            router.push({
+                              pathname: "/plan/[id]/compartir",
+                              params: { id: plan.id },
+                            })
+                          }
+                          onReport={(intercessionId) =>
+                            void runOnIntercessor(
+                              () => report.mutateAsync({ intercessionId }),
+                              t("intercession.reported"),
+                            )
+                          }
+                          onBlock={(blockedId) =>
+                            void runOnIntercessor(
+                              () => block.mutateAsync(blockedId),
+                              t("moderation.blockDone"),
+                            )
+                          }
+                        />
+                      )}
+                    </DaySection>
+
+                    {/* "Pray for their plan" needs a real shared plan to target. */}
+                    {prayBackPlanId ? (
+                      <Button
+                        title={t("intercession.prayBack")}
+                        variant="secondary"
+                        onPress={() =>
+                          router.push({
+                            pathname: "/orar/[planId]",
+                            params: { planId: prayBackPlanId },
+                          })
                         }
                       />
-                    )}
-                  </DaySection>
+                    ) : null}
+                  </>
+                ) : null}
 
-                  {/* "Pray for their plan" needs a real shared plan to target. */}
-                  {prayBackPlanId ? (
-                    <Button
-                      title={t("intercession.prayBack")}
-                      variant="secondary"
-                      onPress={() =>
-                        router.push({
-                          pathname: "/orar/[planId]",
-                          params: { planId: prayBackPlanId },
-                        })
-                      }
-                    />
-                  ) : null}
-                </>
-              ) : null}
-
-              {/* En móvil el versículo no tiene columna lateral: va al pie,
+                {/* En móvil el versículo no tiene columna lateral: va al pie,
                 como "una palabra quieta", no encima del journey. */}
-              <View className="lg:hidden">
+                <View className="lg:hidden">
+                  <VerseOfTheDay />
+                </View>
+              </View>
+
+              {/* La columna de contexto del escritorio: el versículo del día
+              acompaña al journey sin robarle su medida de lectura. */}
+              <View className="hidden gap-6 lg:flex lg:w-80">
                 <VerseOfTheDay />
               </View>
             </View>
+          </ResponsiveTabContent>
+        </ScrollView>
 
-            {/* La columna de contexto del escritorio: el versículo del día
-              acompaña al journey sin robarle su medida de lectura. */}
-            <View className="hidden gap-6 lg:flex lg:w-80">
-              <VerseOfTheDay />
-            </View>
-          </View>
-        </ResponsiveTabContent>
-      </ScrollView>
+        {/* El gemelo flotante de «Ya oré hoy» (ver checkCta): solo en móvil,
+        solo mientras el de verdad no asoma y solo cuando ya se sabe que hoy
+        no has orado — no parpadea mientras carga. */}
+        {prayed === false && ctaOffscreen && !isWide ? (
+          <Animated.View
+            entering={enterFade}
+            pointerEvents="box-none"
+            className="absolute inset-x-0 bottom-0 px-7 pb-4"
+          >
+            <Button
+              title={t("plan.markDone")}
+              loading={markPrayed.isPending}
+              onPress={markToday}
+            />
+          </Animated.View>
+        ) : null}
+      </View>
 
       {/* El cajón del plan: todo lo que se quitó del journey sigue a un toque,
         en la hoja que abre el `···` de la fila meta. */}

@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
-  planIdToOpenAfterRedeem,
+  destinationAfterRedeem,
+  type RedeemDestination,
   type RedeemShareResult,
 } from "@/core/plans/redeemOutcome";
 import { supabase } from "@/utils/supabase";
@@ -160,13 +161,13 @@ export const redeemPendingTokens = async () => {
     return null;
   }
 
-  let planId: string | null = null;
+  let destination: RedeemDestination | null = null;
 
   if (shareToken) {
     const { result, error } = await redeemShareToken(shareToken);
 
     if (!error) {
-      planId = planIdToOpenAfterRedeem(result);
+      destination = destinationAfterRedeem(result);
     }
   }
 
@@ -180,7 +181,7 @@ export const redeemPendingTokens = async () => {
     }
   }
 
-  return planId;
+  return destination;
 };
 
 /**

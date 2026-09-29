@@ -101,4 +101,17 @@ test.describe("autenticación — entrar, fallar, recuperar, salir", () => {
       timeout: 15_000,
     });
   });
+
+  // Un enlace de correo o de un aviso abierto sin sesión pasaba por /entrar y
+  // acababa en Hoy: el destino se perdía (core/nav/returnTo.ts).
+  test("tras entrar, vuelve adonde ibas", async ({ page }) => {
+    await page.goto("/avisos");
+    await expect(page).toHaveURL(/\/entrar/, { timeout: 15_000 });
+
+    await page.getByLabel("Correo electrónico").fill(SEED_A.email);
+    await page.getByLabel("Contraseña").fill(SEED_A.password);
+    await page.getByRole("button", { name: "Entrar" }).click();
+
+    await expect(page).toHaveURL(/\/avisos$/, { timeout: 15_000 });
+  });
 });

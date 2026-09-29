@@ -22,12 +22,19 @@ import {
   useSetPlanPublic,
   useTogglePlanCircle,
 } from "@/core/plans/sharing";
-import { buildShareUrl, shareOrCopy } from "@/core/share";
+import {
+  buildShareUrl,
+  canCopyText,
+  copyText,
+  shareOrCopy,
+} from "@/core/share";
+import { useToast } from "@/core/toast/ToastProvider";
 
 import { useThemeColors } from "@/theme";
 
 export default function SharePlan() {
   const { t } = useTranslation();
+  const toast = useToast();
   const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -244,6 +251,23 @@ export default function SharePlan() {
                   disabled={stillWriting}
                   onPress={() => void handleShare()}
                 />
+
+                {/* Copiar, a un toque y sin pasar por la hoja de compartir: el
+                  enlace se pega en un grupo de WhatsApp, un correo, una nota. */}
+                {canCopyText() ? (
+                  <Button
+                    title={t("share.copyLink")}
+                    variant="secondary"
+                    disabled={stillWriting}
+                    onPress={() =>
+                      void copyText(linkUrl).then((copied) =>
+                        copied
+                          ? toast.success(t("share.linkCopied"))
+                          : toast.error(t("common.errorGeneric")),
+                      )
+                    }
+                  />
+                ) : null}
 
                 {link ? (
                   <EmailInviteField kind="plan" token={link.token} />
