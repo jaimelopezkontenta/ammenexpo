@@ -19,7 +19,7 @@ Reglas duras para no romper el sistema de `prototipo/TOKENS.md`. Si un cambio la
 
 ## Navegación
 
-- `router.back()` solo si hay historial; si no, `goBackOr(destinoSeguro)` (`core/nav/safeBack.ts`).
+- `router.back()` solo si hay historial; si no, `goBackOr(destinoSeguro)` (`core/nav/safeBack.ts`). ESLint lo prohíbe fuera de `safeBack.ts`, igual que `Pressable`/`Text` de react-native y el `colors` estático (`eslint.config.js`, con sus excepciones razonadas).
 - Un overlay (sheet, menú) tiene **un** control «Cerrar» anunciado. El scrim no es un segundo botón.
 - Navegar desde un sheet **después** de que el Modal se haya cerrado (`onClosed`), no en el mismo tap.
 

@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { Tap, TapProps } from "@/components/ui/Tap";
-import { Txt } from "@/components/ui/Text";
+import { Txt, type TxtTone } from "@/components/ui/Text";
 import { gradients, useThemeColors } from "@/theme";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
@@ -20,12 +20,16 @@ const CONTAINER: Record<ButtonVariant, string> = {
   ghost: "bg-transparent",
 };
 
-const LABEL: Record<ButtonVariant, string> = {
+// El color del label va por `tone`, nunca por className: en web, una clase de
+// color puesta encima del tono perdía contra él según el orden del CSS, y en
+// oscuro «Ya oré hoy» salía casi blanco sobre el melocotón (visto el
+// 2026-09-29 en la baseline `dark-hoy-escritorio`).
+const LABEL_TONE: Record<ButtonVariant, TxtTone> = {
   // `cta-ink` y no `plum`: el degradado melocotón no cambia con el modo, así
   // que su tinta tampoco — en oscuro, `plum` es claro y sería ilegible aquí.
-  primary: "text-cta-ink",
-  secondary: "text-plum",
-  ghost: "text-ember-ink",
+  primary: "onCta",
+  secondary: "primary",
+  ghost: "accent",
 };
 
 export const Button = forwardRef<View, ButtonProps>(
@@ -46,7 +50,7 @@ export const Button = forwardRef<View, ButtonProps>(
     const content = loading ? (
       <ActivityIndicator color={spinner[variant]} />
     ) : (
-      <Txt variant="subheadingLg" className={LABEL[variant]}>
+      <Txt variant="subheadingLg" tone={LABEL_TONE[variant]}>
         {title}
       </Txt>
     );

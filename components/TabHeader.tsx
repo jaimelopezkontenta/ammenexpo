@@ -52,11 +52,15 @@ export const TabHeader = ({
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const now = new Date();
-  const dateLabel = now.toLocaleDateString(i18n.language, {
+  // Mayúscula solo en la primera letra: `capitalize` de CSS pone todas las
+  // palabras en mayúscula, y en español salía «Martes, 29 De Septiembre».
+  const rawDate = now.toLocaleDateString(i18n.language, {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
+  const dateLabel =
+    rawDate.charAt(0).toLocaleUpperCase(i18n.language) + rawDate.slice(1);
   const { session } = useSession();
   const { data: unread } = useUnreadNotifications(session?.user.id);
   const insets = useSafeAreaInsets();
@@ -89,7 +93,7 @@ export const TabHeader = ({
           </Txt>
         ) : null}
         {showDate ? (
-          <Txt variant="caption" className="mt-0.5 capitalize">
+          <Txt variant="caption" className="mt-0.5">
             {dateLabel}
           </Txt>
         ) : null}
@@ -122,7 +126,10 @@ export const TabHeader = ({
               strokeWidth={icon.strokeWidth}
             />
             {unread ? (
-              <View className="absolute -right-1 top-0 h-2.5 w-2.5 rounded-full bg-ember-accent" />
+              <View
+                testID="unread-dot"
+                className="absolute -right-1 top-0 h-2.5 w-2.5 rounded-full bg-ember-accent"
+              />
             ) : null}
           </Tap>
         </Link>

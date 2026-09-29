@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { runSql } from "./helpers/sql";
 
+import { snapshotOpts } from "./helpers/visual";
+
 /**
  * @visual — la puerta legal y el asistente de bienvenida, con red por fin.
  *
@@ -25,8 +27,6 @@ const VIEWPORTS = [
   { name: "movil", width: 390, height: 844 },
   { name: "escritorio", width: 1280, height: 800 },
 ] as const;
-
-const SNAPSHOT_OPTS = { maxDiffPixelRatio: 0.02, fullPage: false } as const;
 
 for (const viewport of VIEWPORTS) {
   test.describe(`@visual onboarding ${viewport.name}`, () => {
@@ -61,7 +61,7 @@ for (const viewport of VIEWPORTS) {
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `aceptar-${viewport.name}.png`,
-          SNAPSHOT_OPTS,
+          snapshotOpts(page),
         );
         await page.getByRole("button", { name: "Acepto" }).click();
 
@@ -77,7 +77,7 @@ for (const viewport of VIEWPORTS) {
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `onboarding-paso1-${viewport.name}.png`,
-          SNAPSHOT_OPTS,
+          snapshotOpts(page),
         );
         await page.getByRole("button", { name: "Siguiente" }).click();
 
@@ -89,7 +89,7 @@ for (const viewport of VIEWPORTS) {
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `onboarding-paso2-${viewport.name}.png`,
-          SNAPSHOT_OPTS,
+          snapshotOpts(page),
         );
         await page.getByRole("button", { name: "Siguiente" }).click();
 
@@ -99,7 +99,7 @@ for (const viewport of VIEWPORTS) {
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `onboarding-paso3-${viewport.name}.png`,
-          SNAPSHOT_OPTS,
+          snapshotOpts(page),
         );
         await page.getByRole("button", { name: "Siguiente" }).click();
 
@@ -111,7 +111,7 @@ for (const viewport of VIEWPORTS) {
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `onboarding-paso4-${viewport.name}.png`,
-          SNAPSHOT_OPTS,
+          snapshotOpts(page),
         );
       } finally {
         runSql(`delete from auth.users where email = '${email}';`);

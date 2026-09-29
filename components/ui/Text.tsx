@@ -31,7 +31,15 @@ export type TxtVariant =
   | "overline" // el rótulo diminuto en mayúsculas que abre una sección
   | "editorial"; // la itálica de los rótulos de tarjeta
 
-export type TxtTone = "primary" | "secondary" | "accent" | "danger" | "onDark";
+export type TxtTone =
+  | "primary"
+  | "secondary"
+  | "accent"
+  | "danger"
+  | "onDark"
+  // La tinta fija del CTA melocotón: el degradado no cambia con el tema, así
+  // que su texto tampoco (AGENTS.md, marca fija).
+  | "onCta";
 
 type TxtProps = TextProps & {
   variant?: TxtVariant;
@@ -62,6 +70,7 @@ const TONE: Record<TxtTone, string> = {
   accent: "text-ember-ink",
   danger: "text-danger",
   onDark: "text-white",
+  onCta: "text-cta-ink",
 };
 
 /** El tono que cada variante lleva si no se pide otro. */
@@ -90,9 +99,11 @@ export const Txt = ({
   ...textProps
 }: TxtProps) => (
   <RNText
-    // La clase del caller va al final: en NativeWind, ante conflicto gana la
-    // última, así que un `className` puntual puede afinar la variante sin
-    // pelearse con ella.
+    // La clase del caller va al final para afinar tamaño, márgenes o
+    // alineación. El COLOR no se afina así: en nativo gana la última clase,
+    // pero en web NativeWind emite CSS y gana la que va después en la hoja —
+    // un `text-cta-ink` por className perdía contra el `text-plum` del tono y
+    // en oscuro el CTA salía casi blanco. El color va siempre por `tone`.
     className={`${VARIANT[variant]} ${TONE[tone ?? DEFAULT_TONE[variant]]} ${
       className ?? ""
     }`}

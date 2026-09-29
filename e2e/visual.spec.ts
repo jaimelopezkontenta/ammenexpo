@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { snapshotOpts } from "./helpers/visual";
+
 /**
  * @visual — la red de seguridad visual de las fases de UI.
  *
@@ -50,8 +52,6 @@ const SCREENS: { name: string; path: string }[] = [
     path: "/plan/5eed0000-0000-0000-0000-0000000000a1/dias",
   },
 ];
-
-const SNAPSHOT_OPTS = { maxDiffPixelRatio: 0.02, fullPage: false } as const;
 
 /**
  * Las dos fuentes de caducidad que mataban baselines solas:
@@ -109,7 +109,7 @@ for (const viewport of VIEWPORTS) {
       await page.waitForTimeout(1_000);
       await expect(page).toHaveScreenshot(
         `entrar-${viewport.name}.png`,
-        SNAPSHOT_OPTS,
+        snapshotOpts(page),
       );
     });
 
@@ -124,7 +124,7 @@ for (const viewport of VIEWPORTS) {
       await page.waitForTimeout(1_000);
       await expect(page).toHaveScreenshot(
         `crear-cuenta-${viewport.name}.png`,
-        SNAPSHOT_OPTS,
+        snapshotOpts(page),
       );
     });
 
@@ -146,7 +146,7 @@ for (const viewport of VIEWPORTS) {
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `${screen.name}-${viewport.name}.png`,
-          SNAPSHOT_OPTS,
+          snapshotOpts(page),
         );
       }
     });

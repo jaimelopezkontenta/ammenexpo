@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { snapshotOpts } from "./helpers/visual";
+
 /**
  * @dark — la red del anochecer.
  *
@@ -48,8 +50,6 @@ const SCREENS: {
   { name: "lista", path: "/lista", viewports: ["movil"] },
   { name: "notfound", path: "/ruta-inexistente", viewports: ["movil"] },
 ];
-
-const SNAPSHOT_OPTS = { maxDiffPixelRatio: 0.02, fullPage: false } as const;
 
 // Mismas dos fuentes de caducidad que en visual.spec.ts: el saludo por hora y
 // el versículo por fecha de servidor. Misma cura.
@@ -102,7 +102,7 @@ for (const viewport of [
         await page.waitForTimeout(1_000);
         await expect(page).toHaveScreenshot(
           `dark-entrar-movil.png`,
-          SNAPSHOT_OPTS,
+          snapshotOpts(page),
         );
       });
     }
@@ -119,7 +119,7 @@ for (const viewport of [
         await page.waitForTimeout(1_200);
         await expect(page).toHaveScreenshot(
           `dark-${screen.name}-${viewport.name}.png`,
-          SNAPSHOT_OPTS,
+          snapshotOpts(page),
         );
       }
     });
