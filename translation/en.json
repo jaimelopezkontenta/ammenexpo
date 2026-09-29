@@ -270,6 +270,7 @@
     "continueDay": "Continue on day {{number}}",
     "daysHint": "{{count}} day you have already walked.",
     "daysHint_plural": "{{count}} days you have already walked.",
+    "daysEmpty": "There are no days to walk through yet.",
     "dayPrayed": "Prayed",
     "dayNotFound": "That day is not there yet.",
     "seeDays": "See the earlier days",
