@@ -12,6 +12,9 @@ name: verify
 # instancia de Postgres. Si en el futuro se añade una matriz o jobs en
 # paralelo sobre el mismo proyecto Supabase, tendrán que declarar
 # `concurrency` explícito para no romper esta garantía.
+#
+# Los otros jobs de este fichero (`functions-types`, `expo-health`) no levantan
+# Supabase ni tocan una base: corren en paralelo a `verify` sin pisarlo.
 
 on:
   pull_request:
@@ -52,8 +55,14 @@ jobs:
       - name: Proveedor de planes local para e2e
         run: printf 'AI_PROVIDER=fixture\n' >> supabase/functions/.env
 
+      # EXPERIMENTO (commit aparte, fácil de revertir): sin Studio, Vector ni
+      # Logflare, que en CI no sirven para nada y son de las imágenes más
+      # pesadas. NO se excluye imgproxy: Storage lo usa en el reset. No se pudo
+      # probar en local (Docker/Supabase son del dueño de la base): el primer run
+      # de CI decide. Si falla al arrancar (p. ej. un contenedor que espera a
+      # Vector con analytics activado), volver a `npx supabase start`.
       - name: Arrancar Supabase local
-        run: npx supabase start
+        run: npx supabase start -x studio,vector,logflare
 
       # `types/supabase.ts` se genera del esquema (`npm run db:types`). Si una
       # migración cambia el esquema y nadie regenera, el cliente tipado miente.
@@ -71,6 +80,17 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=4096
 
+      # Regresión visual (ADR 0003): solo cuando hay baselines Linux en el repo.
+      # Las de `*-win32.png` no casan aquí; se generan con el workflow
+      # `visual-baselines` (lanzado a mano) y se commitean. Hasta entonces este
+      # paso se salta; desde entonces es bloqueante. Mismo export estático y mismo
+      # Supabase que el paso anterior — globalSetup resetea la base otra vez.
+      - name: Regresión visual (claro y oscuro)
+        if: ${{ hashFiles('e2e/**/*-linux.png') != '' }}
+        run: npm run e2e:visual
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
       - name: Publicar artefactos de Playwright al fallar
         if: failure()
         uses: actions/upload-artifact@v4
@@ -85,3 +105,122 @@ jobs:
       - name: Parar Supabase local
         if: always()
         run: npx supabase stop
+
+  # `npm run typecheck` y ESLint no miran `supabase/functions/` (es Deno, no
+  # React Native): un error de tipos ahí solo aparecía al desplegar. Aquí se
+  # comprueba el `index.ts` de cada función con `deno check`; no hace falta
+  # Supabase ni `npm ci`. Qué versiones y por qué: docs/runbooks/ci.md.
+  functions-types:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # Deno fijo, no `v2.x`: el chequeo de tipos cambia con el TypeScript que
+      # trae cada Deno (con Deno >= 2.5, `svix.ts` ya no compila). 2.1.x es la
+      # línea del edge-runtime que ejecuta las funciones (`deno_version = 2` en
+      # supabase/config.toml); subirlo es una decisión, no un accidente.
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: "2.1.4"
+
+      # `--frozen` contra `supabase/functions/deno.lock`: los `npm:` de las
+      # funciones llevan rangos (`^2.58.0`) y sin el lock cada run resolvería
+      # otra versión. Sin `npm ci` a propósito: `deno.json` fuerza
+      # `nodeModulesDir: none` para que Deno no busque en el `node_modules` de
+      # la app (el `package.json` de la raíz no es de las funciones).
+      - name: deno check de las funciones
+        working-directory: supabase/functions
+        env:
+          NO_COLOR: "1"
+        run: >
+          deno check --frozen
+          send-email/index.ts
+          enqueue-emails/index.ts
+          email-unsubscribe/index.ts
+          resend-webhook/index.ts
+          send-intercession-push/index.ts
+
+      # generate-prayer-plan trae hoy 3 errores de tipos (index.ts:325,
+      # providers/anthropic.ts:104 y :116; detalle en docs/runbooks/ci.md). Este
+      # paso es un trinquete: pasa mientras no haya MÁS errores que esos y avisa
+      # cuando baje el número. Cuando estén arreglados, sale de aquí y se suma a
+      # la lista de arriba.
+      - name: deno check de generate-prayer-plan (deuda conocida, no puede crecer)
+        if: ${{ !cancelled() }}
+        working-directory: supabase/functions
+        shell: bash
+        env:
+          NO_COLOR: "1"
+          KNOWN_ERRORS: "3"
+        run: |
+          status=0
+          out=$(deno check --frozen generate-prayer-plan/index.ts 2>&1) || status=$?
+          echo "$out"
+          if [ "$status" -eq 0 ]; then
+            echo "::notice::generate-prayer-plan ya no tiene errores de tipos: mover su index.ts al paso de arriba y borrar este."
+            exit 0
+          fi
+          found=$(echo "$out" | sed -n 's/^Found \([0-9][0-9]*\) errors\{0,1\}\..*$/\1/p')
+          if [ -z "$found" ]; then
+            echo "::error::deno check falló sin contar errores de tipos (¿lockfile desactualizado, módulo que no resuelve?)."
+            exit 1
+          fi
+          if [ "$found" -gt "$KNOWN_ERRORS" ]; then
+            echo "::error::generate-prayer-plan tiene $found errores de tipos y la deuda conocida son $KNOWN_ERRORS."
+            exit 1
+          fi
+          if [ "$found" -lt "$KNOWN_ERRORS" ]; then
+            echo "::notice::generate-prayer-plan baja a $found errores: bajar KNOWN_ERRORS en verify.yml."
+          else
+            echo "::warning::generate-prayer-plan sigue con $found errores de tipos conocidos (docs/runbooks/ci.md)."
+          fi
+
+  # Salud de las dependencias de Expo: `expo-doctor` (22 comprobaciones) y
+  # `expo install --check` (¿cada paquete de Expo en la versión que pide el SDK?).
+  # Sin Supabase ni Playwright.
+  #
+  # NO bloqueante, a propósito: a 2026-09-29 los dos fallan sobre el repo tal
+  # cual está, y ocultarlo o volver rojo cada PR por ello serían peores:
+  #   - `expo install --check`: 10 paquetes de SDK 56 con parches por detrás de
+  #     lo que pide el SDK (expo 56.0.18 vs ~56.0.23, expo-router 56.2.17 vs
+  #     ~56.2.21…). Se arregla con `npx expo install --fix` (toca package.json y
+  #     el lock: una decisión de dependencias, no de CI).
+  #   - `expo-doctor`: una de sus 22 comprobaciones consulta un aviso remoto
+  #     («Hermes V1 con regresión de memoria» en expo 56.0.18; lo arregla
+  #     expo >= 57.0.9 o React Native >= 0.86.2). Es la parte que cambia sin que
+  #     cambie el repo, y por eso no puede ser un check obligatorio tal cual.
+  # Cuando `npx expo install --fix` deje el repo al día, quitar el
+  # `continue-on-error` de `expo install --check`: ese sí es determinista.
+  expo-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: expo-doctor
+        id: doctor
+        continue-on-error: true
+        run: npx --yes expo-doctor
+
+      # `CI=true` (lo pone GitHub) lo hace no interactivo: informa y sale con 1,
+      # no pregunta ni instala nada.
+      - name: expo install --check
+        id: install-check
+        continue-on-error: true
+        run: npx expo install --check
+
+      # Un paso con `continue-on-error` que falla queda en verde en el job y
+      # pasa desapercibido: la anotación lo sube a la cabecera del PR.
+      - name: Avisar si alguna comprobación de Expo falló
+        if: ${{ steps.doctor.outcome == 'failure' || steps.install-check.outcome == 'failure' }}
+        run: |
+          echo "::warning title=Dependencias de Expo::expo-doctor=${{ steps.doctor.outcome }}, expo install --check=${{ steps.install-check.outcome }}. No bloquea (estado conocido, ver comentario del job en verify.yml y docs/runbooks/ci.md)."

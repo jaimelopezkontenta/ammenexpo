@@ -1,0 +1,110 @@
+name: visual-baselines
+
+# Genera las baselines LINUX de la regresión visual (ADR 0003).
+#
+# Las baselines que hay en `e2e/**-snapshots/` son `*-win32.png`: Playwright
+# añade la plataforma al nombre, así que en un runner Linux ninguna casa y la
+# suite visual no puede correr en CI. Este workflow, que se lanza a mano, las
+# genera en el propio runner de CI (mismo Chromium, mismas fuentes, mismo export
+# estático que verify.yml) y las deja como artefacto. Nadie las escribe en el
+# repo desde aquí: se descargan, se revisan y se commitean a propósito.
+#
+#   gh workflow run visual-baselines.yml --ref <rama>
+#   gh run download <id> -n visual-baselines-linux -D .
+#   # revisar las capturas, `git add e2e` y commit
+#
+# Desde que existe algún `*-linux.png` en el repo, verify.yml ejecuta
+# `npm run e2e:visual` en cada PR. Detalle en docs/runbooks/ci.md.
+#
+# Para que `gh workflow run` (o el botón «Run workflow») lo encuentre, este
+# fichero tiene que estar en la rama por defecto; la rama a probar se elige con
+# `--ref`.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: visual-baselines-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baselines:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar Chromium y dependencias del sistema
+        run: npx playwright install --with-deps chromium
+
+      # Igual que verify.yml: las capturas parten del plan que genera el
+      # fixture, sin llamar a ningún modelo.
+      - name: Proveedor de planes local para e2e
+        run: printf 'AI_PROVIDER=fixture\n' >> supabase/functions/.env
+
+      - name: Arrancar Supabase local
+        run: npx supabase start
+
+      - name: Exportar configuración pública de Supabase local
+        run: node scripts/supabaseCiEnv.mjs
+
+      # Los dos proyectos visuales (claro y oscuro) contra el export estático en
+      # el 8081, como `npm run e2e:visual`. Se llama a `e2eStatic.mjs` en vez de
+      # a `npm run e2e:visual:update -- --update-snapshots=all` porque ese script
+      # ya lleva `--update-snapshots`: aquí el modo va explícito y una sola vez.
+      # `all` y no `missing`: con `missing` Playwright escribe las que faltan pero
+      # da el test por fallado, y aquí no hay baseline previa de Linux.
+      - name: Generar baselines (claro y oscuro)
+        run: node scripts/e2eStatic.mjs --project=visual --project=visual-dark --update-snapshots=all
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      # Se copian con su ruta relativa a la raíz del repo (`e2e/…-snapshots/…`):
+      # así `gh run download -D .` las deja donde tienen que estar. Con un glob
+      # directo, upload-artifact recortaría el prefijo común.
+      - name: Reunir los *-linux.png con su ruta
+        run: |
+          mkdir baselines-linux
+          find e2e -path '*-snapshots/*-linux.png' -exec cp --parents {} baselines-linux/ \;
+          find baselines-linux -type f | sort
+          echo "$(find baselines-linux -type f | wc -l) capturas"
+
+      - name: Subir las baselines Linux como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-linux
+          path: baselines-linux/
+          if-no-files-found: error
+          retention-days: 14
+
+      # Segunda pasada SIN actualizar: unas baselines que no se reproducen a la
+      # primera contra sí mismas volverían rojo verify.yml en cuanto se
+      # commitearan. Si esto falla, el artefacto ya está subido para verlo, pero
+      # no se debe commitear tal cual.
+      - name: Comprobar que las baselines recién generadas son estables
+        run: npm run e2e:visual
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Publicar artefactos de Playwright al fallar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-failure-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Parar Supabase local
+        if: always()
+        run: npx supabase stop
