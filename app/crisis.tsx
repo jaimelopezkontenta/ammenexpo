@@ -1,4 +1,6 @@
+import * as Localization from "expo-localization";
 import { router, Stack } from "expo-router";
+import { useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, ScrollView, View } from "react-native";
 
@@ -7,6 +9,12 @@ import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
 import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
+import {
+  emergencyNumberFor,
+  FIND_A_HELPLINE_URL,
+  selectCrisisLines,
+  telUrl,
+} from "@/core/crisis/resources";
 
 /**
  * B1b — recursos inmediatos, no moderación.
@@ -16,19 +24,51 @@ import { useScreenPadding } from "@/components/useScreenPadding";
  * propio `insert`, así que esto se enseña sin esperar a que nadie del equipo
  * revise nada.
  *
- * **Texto pendiente de revisión por especialista** (§2.9 y RDY-06 del plan):
- * el aviso, el 024 y el fallback internacional son un mínimo defendible, no
- * un protocolo aprobado. No hay diagnóstico, no hay intervención automática y
- * no hay ningún dato de esta pantalla en telemetría — ver
- * `docs/runbooks/crisis-es-en.md`.
+ * **Texto y números pendientes de revisión por especialista** (§2.9 y RDY-06
+ * del plan): la línea del país del dispositivo, España si la app está en
+ * español y, para el resto, un buscador por país y los números de
+ * emergencias. Un mínimo defendible, no un protocolo aprobado. No hay
+ * diagnóstico, no hay intervención automática y no hay ningún dato de esta
+ * pantalla en telemetría — ver `docs/runbooks/crisis-es-en.md` y la tabla
+ * de `core/crisis/resources.ts`.
  */
-const call = (number: string) => {
-  void Linking.openURL(`tel:${number}`);
+const open = (url: string) => {
+  // Sin marcador (una tableta, el escritorio) no hay nada que abrir; no es
+  // un error que haya que enseñar aquí.
+  Linking.openURL(url).catch(() => {});
 };
 
+/**
+ * La región del dispositivo (`ES`, `MX`…), no la del idioma de la app: la app
+ * abre en español en cualquier país. Si no se puede leer, no hay región y la
+ * pantalla sigue con lo demás.
+ *
+ * En web la página se prerenderiza en el build, sin región del visitante:
+ * por eso va por `useSyncExternalStore` con `null` como valor de servidor, y
+ * la región entra justo después de hidratar sin romper la hidratación. En el
+ * teléfono no hay prerender y se lee de entrada.
+ */
+const deviceRegion = (): string | null => {
+  try {
+    return Localization.getLocales()[0]?.regionCode ?? null;
+  } catch {
+    return null;
+  }
+};
+
+// La región no cambia mientras se mira esta pantalla: no hay a qué suscribirse.
+const noSubscription = () => () => {};
+const noRegion = () => null;
+
 export default function CrisisResources() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { scrollBottom } = useScreenPadding();
+
+  const region = useSyncExternalStore(noSubscription, deviceRegion, noRegion);
+
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const lines = selectCrisisLines({ regionCode: region, language });
+  const emergency = emergencyNumberFor(region);
 
   return (
     <>
@@ -70,30 +110,56 @@ export default function CrisisResources() {
           <Card className="gap-4">
             <Txt variant="subheadingLg">{t("crisis.resourcesTitle")}</Txt>
 
+            {lines.map((line, index) => (
+              <View key={line.region} className="gap-2">
+                <Txt variant="bodyMedium">
+                  {t(`crisis.lines.${line.region}.title`)}
+                </Txt>
+                <Txt variant="caption">
+                  {t(`crisis.lines.${line.region}.body`)}
+                </Txt>
+                <Button
+                  title={t("crisis.callNumber", { number: line.display })}
+                  // La primera es la más cercana: la del país, o la de
+                  // España si no hay país. Las demás, un paso por detrás.
+                  variant={index === 0 ? "primary" : "secondary"}
+                  accessibilityRole="link"
+                  onPress={() => open(telUrl(line.phone))}
+                />
+              </View>
+            ))}
+
             <View className="gap-2">
-              <Txt variant="bodyMedium">{t("crisis.resourceEsTitle")}</Txt>
-              <Txt variant="caption">{t("crisis.resourceEsBody")}</Txt>
+              <Txt variant="bodyMedium">
+                {lines.length > 0
+                  ? t("crisis.otherCountriesTitle")
+                  : t("crisis.findYourLineTitle")}
+              </Txt>
+              <Txt variant="caption">{t("crisis.otherCountriesBody")}</Txt>
               <Button
-                title={t("crisis.call024")}
+                title={t("crisis.findHelpline")}
+                variant={lines.length > 0 ? "secondary" : "primary"}
                 accessibilityRole="link"
-                onPress={() => call("024")}
+                onPress={() => open(FIND_A_HELPLINE_URL)}
               />
+              <Txt variant="caption">{t("crisis.emergencyNumbers")}</Txt>
             </View>
 
             <View className="gap-2">
-              <Txt variant="bodyMedium">{t("crisis.resourceIntlTitle")}</Txt>
-              <Txt variant="caption">{t("crisis.resourceIntlBody")}</Txt>
-              <Button
-                title={t("crisis.call112")}
-                variant="secondary"
-                accessibilityRole="link"
-                onPress={() => call("112")}
-              />
+              <Txt variant="label" tone="danger">
+                {t("crisis.resourceEmergency")}
+              </Txt>
+              {/* Solo el número del país del dispositivo: el de otro país
+                podría no existir allí. Sin país, queda el texto de arriba. */}
+              {emergency ? (
+                <Button
+                  title={t("crisis.callEmergency", { number: emergency })}
+                  variant="secondary"
+                  accessibilityRole="link"
+                  onPress={() => open(telUrl(emergency))}
+                />
+              ) : null}
             </View>
-
-            <Txt variant="label" tone="danger">
-              {t("crisis.resourceEmergency")}
-            </Txt>
           </Card>
 
           <Txt variant="caption">{t("crisis.staying")}</Txt>
