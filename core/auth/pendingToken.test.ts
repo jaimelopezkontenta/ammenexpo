@@ -51,7 +51,7 @@ describe("share token redemption", () => {
     await rememberShareToken("tok-1");
     await redeemShareToken("tok-1");
 
-    // El siguiente arranque: `SessionProvider` canjea lo pendiente.
+    // El siguiente arranque: `AppEffects` canjea lo pendiente al entrar.
     const planId = await redeemPendingTokens();
 
     expect(planId).toBeNull();
