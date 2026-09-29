@@ -102,7 +102,7 @@ export const CrisisQueue = () => {
                 );
               }}
             >
-              <Txt variant="label" className="underline">
+              <Txt variant="label" underline>
                 {t("moderation.acknowledge")}
               </Txt>
             </Tap>

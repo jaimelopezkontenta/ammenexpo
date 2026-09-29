@@ -71,7 +71,7 @@ export default function AcceptTerms() {
           <Link
             href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}
           >
-            <Txt variant="bodyMedium" tone="accent" className="underline">
+            <Txt variant="bodyMedium" tone="accent" underline>
               {t("legal.terms")}
             </Txt>
           </Link>
@@ -79,7 +79,7 @@ export default function AcceptTerms() {
           <Link
             href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
           >
-            <Txt variant="bodyMedium" tone="accent" className="underline">
+            <Txt variant="bodyMedium" tone="accent" underline>
               {t("legal.privacy")}
             </Txt>
           </Link>

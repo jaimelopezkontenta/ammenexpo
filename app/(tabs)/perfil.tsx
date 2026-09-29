@@ -269,7 +269,7 @@ export default function Profile() {
                       // debajo de los 44px mínimos.
                       hitSlop={12}
                     >
-                      <Txt variant="caption" className="underline">
+                      <Txt variant="caption" underline>
                         {profile.avatar_url
                           ? t("profile.changePhoto")
                           : t("profile.addPhoto")}
@@ -283,7 +283,7 @@ export default function Profile() {
                         onPress={() => void handleRemovePhoto()}
                         hitSlop={12}
                       >
-                        <Txt variant="caption" className="underline">
+                        <Txt variant="caption" underline>
                           {t("profile.removePhoto")}
                         </Txt>
                       </Tap>

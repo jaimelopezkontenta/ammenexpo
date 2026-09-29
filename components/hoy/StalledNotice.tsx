@@ -37,7 +37,7 @@ export const StalledNotice = ({
       >
         {/* El mismo tono que el label del Button ghost: el naranja
             que sí se lee, reservado para lo que pide acción. */}
-        <Txt variant="label" tone="accent" className="font-sans-semibold">
+        <Txt variant="labelStrong" tone="accent">
           {t("plan.stalledCta")}
         </Txt>
       </Tap>

@@ -87,7 +87,7 @@ export const TabHeader = ({
             variant="editorial"
             tone="primary"
             numberOfLines={1}
-            className="mt-0.5 text-base"
+            className="mt-0.5"
           >
             {t(greetingKey(now.getHours()))}, {name}
           </Txt>

@@ -114,7 +114,7 @@ export const PrayerRequestCard = ({
       <View className="flex-row flex-wrap gap-4">
         {onOpen ? (
           <Tap accessibilityRole="link" onPress={onOpen}>
-            <Txt variant="caption" className="underline">
+            <Txt variant="caption" underline>
               {request.comment_count > 0
                 ? t("feed.commentCount", { count: request.comment_count })
                 : t("feed.comment")}
@@ -130,7 +130,7 @@ export const PrayerRequestCard = ({
           <>
             {request.answered_at ? null : (
               <Tap accessibilityRole="button" onPress={onMarkAnswered}>
-                <Txt variant="caption" className="underline">
+                <Txt variant="caption" underline>
                   {t("feed.markAnswered")}
                 </Txt>
               </Tap>
@@ -162,7 +162,7 @@ export const PrayerRequestCard = ({
         ) : (
           <>
             <Tap accessibilityRole="button" onPress={onReport}>
-              <Txt variant="caption" className="underline">
+              <Txt variant="caption" underline>
                 {t("moderation.report")}
               </Txt>
             </Tap>
@@ -178,7 +178,7 @@ export const PrayerRequestCard = ({
                   onBlock(request.author_id!, request.author_name ?? "")
                 }
               >
-                <Txt variant="caption" className="underline">
+                <Txt variant="caption" underline>
                   {t("moderation.block")}
                 </Txt>
               </Tap>
@@ -186,7 +186,7 @@ export const PrayerRequestCard = ({
 
             {canHide ? (
               <Tap accessibilityRole="button" onPress={onHide}>
-                <Txt variant="caption" className="underline">
+                <Txt variant="caption" underline>
                   {t("moderation.hide")}
                 </Txt>
               </Tap>

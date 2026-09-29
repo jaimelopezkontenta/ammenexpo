@@ -183,11 +183,7 @@ export default function PrayerList() {
                       )
                     }
                   >
-                    <Txt
-                      variant="label"
-                      tone="accent"
-                      className="font-sans-semibold"
-                    >
+                    <Txt variant="labelStrong" tone="accent">
                       {t("list.markAnswered")}
                     </Txt>
                   </Tap>
@@ -252,11 +248,7 @@ export default function PrayerList() {
                           accessibilityRole="link"
                           className="min-h-11 justify-center"
                         >
-                          <Txt
-                            variant="label"
-                            tone="accent"
-                            className="font-sans-semibold"
-                          >
+                          <Txt variant="labelStrong" tone="accent">
                             {t("list.tellIt")}
                           </Txt>
                         </Tap>

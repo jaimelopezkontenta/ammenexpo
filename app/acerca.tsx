@@ -42,7 +42,7 @@ export default function About() {
             entrada: quien quiera releer qué aceptó tiene que poder. */}
       <View className="gap-3">
         <Link href={{ pathname: "/legal/[doc]", params: { doc: "terminos" } }}>
-          <Txt variant="body" tone="accent" className="underline">
+          <Txt variant="body" tone="accent" underline>
             {t("legal.terms")}
           </Txt>
         </Link>
@@ -50,7 +50,7 @@ export default function About() {
         <Link
           href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
         >
-          <Txt variant="body" tone="accent" className="underline">
+          <Txt variant="body" tone="accent" underline>
             {t("legal.privacy")}
           </Txt>
         </Link>
@@ -71,7 +71,7 @@ export default function About() {
             );
           }}
         >
-          <Txt variant="body" tone="accent" className="underline">
+          <Txt variant="body" tone="accent" underline>
             {t("profile.support")}
           </Txt>
         </Tap>

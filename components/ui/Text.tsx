@@ -27,7 +27,9 @@ export type TxtVariant =
   | "bodySerifReading" // el cuerpo serif con leading de lectura (peticiones, testimonios)
   | "reading" // la escritura y la oración: Lora con leading generoso
   | "caption" // la letra pequeña
+  | "captionSm" // la letra pequeña de verdad: fechas, pies, rótulos de cifra
   | "label" // el rótulo de un campo
+  | "labelStrong" // el rótulo en semibold: acciones de texto, el número del badge
   | "overline" // el rótulo diminuto en mayúsculas que abre una sección
   | "editorial"; // la itálica de los rótulos de tarjeta
 
@@ -44,6 +46,11 @@ export type TxtTone =
 type TxtProps = TextProps & {
   variant?: TxtVariant;
   tone?: TxtTone;
+  /**
+   * Subrayado: el enlace o la acción de texto («Reportar», «Términos»).
+   * Ortogonal a la variante — va en caption, label y body por igual.
+   */
+  underline?: boolean;
 };
 
 const VARIANT: Record<TxtVariant, string> = {
@@ -59,7 +66,9 @@ const VARIANT: Record<TxtVariant, string> = {
   bodySerifReading: "font-serif text-base leading-reading",
   reading: "font-serif text-lg leading-reading",
   caption: "font-sans text-sm",
+  captionSm: "font-sans text-xs",
   label: "font-sans-medium text-sm",
+  labelStrong: "font-sans-semibold text-sm",
   overline: "font-sans-semibold text-xs uppercase tracking-wide",
   editorial: "font-editorial text-lg",
 };
@@ -87,7 +96,9 @@ const DEFAULT_TONE: Record<TxtVariant, TxtTone> = {
   bodySerifReading: "primary",
   reading: "primary",
   caption: "secondary",
+  captionSm: "secondary",
   label: "primary",
+  labelStrong: "primary",
   overline: "secondary",
   editorial: "accent",
 };
@@ -95,18 +106,25 @@ const DEFAULT_TONE: Record<TxtVariant, TxtTone> = {
 export const Txt = ({
   variant = "body",
   tone,
+  underline = false,
   className,
   ...textProps
 }: TxtProps) => (
   <RNText
-    // La clase del caller va al final para afinar tamaño, márgenes o
-    // alineación. El COLOR no se afina así: en nativo gana la última clase,
-    // pero en web NativeWind emite CSS y gana la que va después en la hoja —
-    // un `text-cta-ink` por className perdía contra el `text-plum` del tono y
-    // en oscuro el CTA salía casi blanco. El color va siempre por `tone`.
-    className={`${VARIANT[variant]} ${TONE[tone ?? DEFAULT_TONE[variant]]} ${
-      className ?? ""
-    }`}
+    // La clase del caller es para afinar márgenes, alineación o `flex-1`,
+    // y NO pisa a la variante por ir al final: el orden del string no decide
+    // nada. Entre dos clases de la misma familia gana la que va después en la
+    // hoja de Tailwind — en web por la cascada, en nativo porque css-interop
+    // ordena por `appearanceOrder` — y dentro de una familia Tailwind las
+    // emite en orden alfabético. `text-xs` pisa el `text-sm` de caption,
+    // pero `text-base` no puede con el `text-lg` de editorial, ni
+    // `text-cta-ink` con el `text-plum` de un tono (el CTA de Hoy salió
+    // casi blanco en oscuro por eso). El color va siempre por `tone`; el
+    // tamaño que una variante no tiene, con otra variante.
+    // Guard: theme/txt-overrides.test.ts.
+    className={`${VARIANT[variant]} ${TONE[tone ?? DEFAULT_TONE[variant]]}${
+      underline ? " underline" : ""
+    } ${className ?? ""}`}
     {...textProps}
   />
 );

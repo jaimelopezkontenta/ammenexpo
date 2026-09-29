@@ -168,7 +168,7 @@ export default function PrayThrough() {
 
           <Txt
             variant="reading"
-            className="text-center text-2xl leading-reading"
+            className="text-center"
             accessibilityRole={done ? "alert" : undefined}
             accessibilityLiveRegion={done ? "polite" : undefined}
           >
@@ -196,7 +196,7 @@ export default function PrayThrough() {
               onPress={() => goBackOr("/orar")}
               className="items-center"
             >
-              <Txt variant="caption" className="underline">
+              <Txt variant="caption" underline>
                 {t("list.stop")}
               </Txt>
             </Tap>

@@ -80,10 +80,7 @@ export const AuthScreen = ({
           <Wordmark />
           {footer ? (
             // La letra pequeña de verdad: un paso por debajo de `caption`.
-            <Txt
-              variant="caption"
-              className="mt-1 text-center text-xs leading-4"
-            >
+            <Txt variant="captionSm" className="mt-1 text-center">
               {footer}
             </Txt>
           ) : null}

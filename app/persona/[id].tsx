@@ -30,9 +30,7 @@ import { Tap } from "@/components/ui/Tap";
 const Stat = ({ value, label }: { value: number; label: string }) => (
   <View className="items-center gap-0.5">
     <Txt variant="subheadingLg">{value}</Txt>
-    <Txt variant="caption" className="text-xs">
-      {label}
-    </Txt>
+    <Txt variant="captionSm">{label}</Txt>
   </View>
 );
 

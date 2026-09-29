@@ -148,7 +148,7 @@ export const WhoPrayed = ({ people, onReport, onBlock, onShare }: Props) => {
                   )
                 }
               >
-                <Txt variant="caption" className="underline">
+                <Txt variant="caption" underline>
                   {t("moderation.block")}
                 </Txt>
               </Tap>
