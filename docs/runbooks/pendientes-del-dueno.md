@@ -92,6 +92,36 @@ ningún dispositivo** y exige un **binario nuevo** (no llega por OTA). Todo est�
 - El primer run de los workflows nuevos (`functions-types`, `expo-health`,
   `visual-baselines`, Dependabot) es la prueba real; ninguno se había ejecutado.
 
+## 4a. Seguridad de datos: lo que sigue abierto tras el barrido de privilegios
+
+La migración `circle_column_privileges` y sus tres hermanas (`invite_…`, `share_link_…`,
+`post_column_privileges`) cierran las escaladas más graves (un admin que no era dueño podía
+ponerse `owner_id` y echar a la dueña; cualquiera entraba en un círculo público como admin; un
+enlace de plan ajeno se podía crear y canjear; una invitación se podía fabricar ya «aceptada»).
+Lo que el barrido encontró y **no** se arregló, por prioridad:
+
+1. **Decisión de producto:** un admin puede añadir a cualquier persona a su círculo sin su
+   consentimiento, y un admin que no es dueño puede pasar un círculo de privado a público (quien
+   entre lee el historial).
+2. `profile_settings` se puede actualizar entera en la fila propia: permite falsear o antedatar
+   `terms_version`/`terms_accepted_at` sin pasar por la RPC y apuntar `expo_push_token` al token
+   de otro dispositivo. Hay que inventariar las escrituras del cliente antes de cerrarlo.
+3. `testimonies`: `image_url` sin validar (hoy no se muestra) y `post_id`/`plan_id`/`list_item_id`
+   sin comprobar contra el dueño.
+4. `comments` y `messages`: al insertar se pueden fijar `hidden_*`, `held_at`,
+   `crisis_flagged_at` (escalados de crisis falsos). Mismo arreglo que `posts`.
+5. `conversation_members` y `conversations` (el cliente no los escribe; revocar antes de que
+   existan mensajes directos), `plus_waitlist.email` libre, `reports.status`, `notifications`.
+
+**Tras el `db push` a staging**, además de lo del runbook: comprobar los permisos con
+`information_schema.column_privileges` (`grantee = 'authenticated'`) y buscar rastro de abusos
+anteriores: `groups` cuyo `owner_id` no coincide con la fila `role = 'owner'` de
+`group_members`; filas `role = 'admin'` (la app no tiene forma de nombrarlos: todas son
+sospechosas); `member_count`/`prayer_count`/`comment_count` distintos del recuento real; tokens que
+no cumplan `~ '^[0-9a-f]{32}$'` (`invite_token`, `invites.code`, `share_links.token`); `share_links`
+con `scope = 'plan'` cuyo `created_by` no es el dueño del plan, y los `scope = 'group'` sin revocar
+(siguen canjeándose: revisarlos y revocarlos).
+
 ## 4b. Producto: lo que quedó sin pantalla
 
 - **Rotar el enlace de invitación** (RPC `rotate_circle_invite_token` y
