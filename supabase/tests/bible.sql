@@ -866,8 +866,9 @@ select pg_temp.assert(
 
 commit;
 
--- El del correo: sin versión, la RVR1909 de siempre; el payload de hábito no ha
--- cambiado y sigue pidiéndolo así.
+-- El del correo: sin versión, la RVR1909 de siempre. El payload de hábito elige
+-- la versión por el idioma de quien lo recibe (email.sql prueba el inglés);
+-- Ana tiene la app en español.
 begin;
 set local role service_role;
 
@@ -889,7 +890,7 @@ begin;
 select pg_temp.assert(
   (public.email_habit_payload(:ANA) ->> 'verse_ref')
     = (select reference from public.verse_of_the_day_for(:ANA)),
-  'the habit email still carries the RVR1909 verse of the day');
+  'a Spanish speaker''s habit email still carries the RVR1909 verse of the day');
 
 commit;
 

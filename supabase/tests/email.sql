@@ -1041,6 +1041,55 @@ select pg_temp.assert(
   'with the cadence she had before, nudges back on and the sunset cleared');
 
 -- ---------------------------------------------------------------------------
+-- El versículo del correo de hábito, en su idioma (EN-3)
+-- ---------------------------------------------------------------------------
+begin;
+
+update public.profile_settings set locale = 'en' where id = :IRIS;
+update public.profile_settings set locale = 'es' where id = :GABI;
+
+select pg_temp.assert(
+  (select (public.email_habit_payload(:IRIS) ->> 'verse_ref',
+           public.email_habit_payload(:IRIS) ->> 'verse_text'))
+    = (select (reference, text) from public.verse_of_the_day_for(:IRIS, 'web')),
+  'an English speaker''s habit email carries the verse of the day from the WEB');
+
+select pg_temp.assert(
+  (select (public.email_habit_payload(:GABI) ->> 'verse_ref',
+           public.email_habit_payload(:GABI) ->> 'verse_text'))
+    = (select (reference, text) from public.verse_of_the_day_for(:GABI, 'rvr1909')),
+  'a Spanish speaker''s still carries the Reina-Valera 1909');
+
+update public.profile_settings set locale = 'en-GB' where id = :IRIS;
+
+select pg_temp.assert(
+  public.email_habit_payload(:IRIS) ->> 'verse_text'
+    = (select text from public.verse_of_the_day_for(:IRIS, 'web')),
+  'any English locale (en-GB) gets the English Bible, like the template language');
+
+commit;
+
+begin;
+
+update public.email_preferences set cadence = 'daily' where user_id = :IRIS;
+update public.profile_settings
+   set reminder_hours = array[extract(hour from now() at time zone 'UTC')::smallint]
+ where id = :IRIS;
+update public.profiles
+   set last_seen_at = now() - interval '2 days', streak_last_day = null
+ where id = :IRIS;
+
+select public.enqueue_habit_emails();
+
+select pg_temp.assert(
+  (select (locale, payload ->> 'verse_text') from public.email_outbox
+    where user_id = :IRIS and template = 'habit')
+    = (select ('en'::text, text) from public.verse_of_the_day_for(:IRIS, 'web')),
+  'the queued habit email goes in English with the English verse');
+
+rollback;
+
+-- ---------------------------------------------------------------------------
 -- El secreto HMAC, en Vault
 -- ---------------------------------------------------------------------------
 select pg_temp.assert(
