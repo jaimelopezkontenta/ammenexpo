@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Button } from "@/components/Button";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
 import { LoadMore } from "@/components/LoadMore";
@@ -73,6 +74,13 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
     }
   };
 
+  // Bloquear pregunta antes: en la tarjeta estaba al lado de «Reportar» y
+  // bastaba un toque suelto para perder de vista a alguien en toda la app.
+  const blockConfirm = useBlockConfirm(
+    (blockedId) =>
+      void run(() => block.mutateAsync(blockedId), t("moderation.blockDone")),
+  );
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -131,16 +139,11 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
                 t("moderation.reportDone"),
               )
             }
-            onBlock={(blockedId) =>
-              void run(
-                () => block.mutateAsync(blockedId),
-                t("moderation.blockDone"),
-              )
-            }
+            onBlock={blockConfirm.ask}
             onHide={() =>
               void run(
                 () => hide.mutateAsync(request.id),
-                t("moderation.hideDone"),
+                t("moderation.hideContentDone"),
               )
             }
             onMarkAnswered={() =>
@@ -174,6 +177,8 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
           }
         />
       </View>
+
+      {blockConfirm.dialog}
     </>
   );
 };

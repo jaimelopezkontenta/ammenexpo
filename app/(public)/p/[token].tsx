@@ -7,9 +7,12 @@ import { ScrollView, View } from "react-native";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
+import { Orb } from "@/components/Orb";
 import { useScreenPadding } from "@/components/useScreenPadding";
-import { LoadingState } from "@/components/ScreenState";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
+import { Wordmark } from "@/components/Wordmark";
 import {
   redeemShareToken,
   rememberShareToken,
@@ -32,7 +35,8 @@ export default function SharedPlanPreviewScreen() {
     de?: string;
   }>();
   const { session } = useSession();
-  const { data, isLoading, isError, refetch } = useSharedPlanPreview(token);
+  const { data, isLoading, isError, error, refetch } =
+    useSharedPlanPreview(token);
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [redeemError, setRedeemError] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -117,51 +121,144 @@ export default function SharedPlanPreviewScreen() {
   // A failed request is not a dead link, and telling a stranger someone's link
   // is gone when the network hiccuped is both wrong and unrecoverable.
   if (isError) {
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
+  }
+
+  if (!data) {
     return (
-      <DawnBackground className="items-center justify-center gap-3 px-8">
-        <Txt
-          variant="heading"
-          className="text-center"
-          accessibilityRole="alert"
-        >
-          {t("common.errorTitle")}
-        </Txt>
-        <Txt variant="body" tone="secondary" className="text-center">
-          {t("common.errorBody")}
-        </Txt>
-        <View className="mt-4 w-full">
-          <Button title={t("common.retry")} onPress={() => void refetch()} />
+      <DawnBackground
+        className="items-center justify-center px-8"
+        style={{ paddingTop: top, paddingBottom: scrollBottom }}
+      >
+        {/* A todo el ancho (con tope en escritorio): los botones de dentro
+          miden lo que el bloque, y sin esto se quedaban del ancho del texto. */}
+        <View className="w-full md:max-w-md">
+          <EmptyState
+            title={t("share.previewNotFound")}
+            body={t("share.previewNotFoundHint")}
+          >
+            {/* This group has no header, so without a way forward a visitor who
+            opened an expired WhatsApp link was simply stuck on two lines of
+            grey text — on the surface that brings people into the product. */}
+            <View className="gap-3">
+              {session ? (
+                <Button
+                  title={t("share.goHome")}
+                  onPress={() => router.replace("/")}
+                />
+              ) : (
+                <>
+                  <Txt variant="body" tone="secondary" className="text-center">
+                    {t("share.deadLinkInvite")}
+                  </Txt>
+                  <Link href="/crear-cuenta" asChild>
+                    <Button title={t("share.deadLinkCta")} />
+                  </Link>
+                  <Link href="/entrar" asChild>
+                    <Button title={t("share.alreadyMember")} variant="ghost" />
+                  </Link>
+                </>
+              )}
+            </View>
+          </EmptyState>
+        </View>
+
+        {/* La firma: quien llega por un enlace roto ve al menos de qué casa es. */}
+        <View className="pt-4">
+          <Wordmark />
         </View>
       </DawnBackground>
     );
   }
 
-  if (!data) {
-    return (
-      <DawnBackground className="items-center justify-center gap-3 px-8">
-        <Txt variant="heading" className="text-center">
-          {t("share.previewNotFound")}
-        </Txt>
-        <Txt variant="body" tone="secondary" className="text-center">
-          {t("share.previewNotFoundHint")}
+  return (
+    <DawnBackground>
+      <ScrollView
+        contentContainerClassName="flex-grow px-7 py-14 md:w-full md:max-w-read md:self-center"
+        contentContainerStyle={{
+          paddingTop: top,
+          paddingBottom: scrollBottom,
+        }}
+      >
+        {/* La marca en la puerta: esta página es lo primero que ve quien llega
+        de un enlace de WhatsApp sin conocer Ammen, y no decía de quién era.
+        El orbe y el wordmark, como en las pantallas de entrada. */}
+        <View className="flex-row items-center gap-3 pb-8">
+          <Orb size={44} animated={false} />
+          <Wordmark size={32} />
+        </View>
+
+        <Txt variant="label" tone="secondary">
+          {t("common.day", { number: data.day_number })}
         </Txt>
 
-        {/* This group has no header, so without a way forward a visitor who
-            opened an expired WhatsApp link was simply stuck on two lines of
-            grey text — on the surface that brings people into the product. */}
-        <View className="mt-6 w-full gap-3">
+        <Txt variant="display" className="mt-2">
+          {t("share.previewTitle", { name: data.owner_name })}
+        </Txt>
+
+        <View className="mt-8 gap-6">
+          <View className="gap-1.5">
+            <Txt variant="subheadingLg" className="text-xl">
+              {data.day_title}
+            </Txt>
+            {data.plan_theme ? (
+              <Txt variant="body" tone="secondary">
+                {data.plan_theme}
+              </Txt>
+            ) : null}
+          </View>
+
+          {data.scripture_text ? (
+            <Card label={t("plan.scripture")} className="gap-2">
+              <Txt variant="reading">{data.scripture_text}</Txt>
+              {data.scripture_ref ? (
+                <Txt variant="editorial" className="text-base">
+                  {data.scripture_ref}
+                </Txt>
+              ) : null}
+            </Card>
+          ) : null}
+
+          {/* Without this the page was a shop window: someone who cared enough to
+            open the link could read about the person but not actually pray for
+            them without signing up first. */}
+          {data.intercessor_prayer ? (
+            <Card
+              label={t("intercession.prayerFor", { name: data.owner_name })}
+              className="gap-2"
+            >
+              <Txt variant="reading">{data.intercessor_prayer}</Txt>
+            </Card>
+          ) : null}
+        </View>
+
+        <View className="mt-auto gap-3 pt-12">
+          {redeemError ? (
+            <Txt
+              variant="caption"
+              tone="danger"
+              className="text-center"
+              accessibilityRole="alert"
+            >
+              {redeemError}
+            </Txt>
+          ) : null}
+
           {session ? (
             <Button
-              title={t("share.goHome")}
-              onPress={() => router.replace("/")}
+              title={t("share.viewPlan")}
+              loading={isRedeeming}
+              onPress={() => void handleOpenPlan()}
             />
           ) : (
             <>
               <Txt variant="body" tone="secondary" className="text-center">
-                {t("share.deadLinkInvite")}
+                {t("share.previewSignupHint", { name: data.owner_name })}
               </Txt>
               <Link href="/crear-cuenta" asChild>
-                <Button title={t("share.deadLinkCta")} />
+                <Button
+                  title={t("share.previewCta", { name: data.owner_name })}
+                />
               </Link>
               <Link href="/entrar" asChild>
                 <Button title={t("share.alreadyMember")} variant="ghost" />
@@ -169,97 +266,7 @@ export default function SharedPlanPreviewScreen() {
             </>
           )}
         </View>
-      </DawnBackground>
-    );
-  }
-
-  return (
-    <ScrollView
-      className="flex-1 bg-dawn-cream-bg"
-      contentContainerClassName="flex-grow px-7 py-14 md:w-full md:max-w-read md:self-center"
-      contentContainerStyle={{
-        paddingTop: top,
-        paddingBottom: scrollBottom,
-      }}
-    >
-      <Txt variant="label" tone="secondary">
-        {t("common.day", { number: data.day_number })}
-      </Txt>
-
-      <Txt variant="display" className="mt-2">
-        {t("share.previewTitle", { name: data.owner_name })}
-      </Txt>
-
-      <View className="mt-8 gap-6">
-        <View className="gap-1.5">
-          <Txt variant="subheadingLg" className="text-xl">
-            {data.day_title}
-          </Txt>
-          {data.plan_theme ? (
-            <Txt variant="body" tone="secondary">
-              {data.plan_theme}
-            </Txt>
-          ) : null}
-        </View>
-
-        {data.scripture_text ? (
-          <Card label={t("plan.scripture")} className="gap-2">
-            <Txt variant="reading">{data.scripture_text}</Txt>
-            {data.scripture_ref ? (
-              <Txt variant="editorial" className="text-base">
-                {data.scripture_ref}
-              </Txt>
-            ) : null}
-          </Card>
-        ) : null}
-
-        {/* Without this the page was a shop window: someone who cared enough to
-            open the link could read about the person but not actually pray for
-            them without signing up first. */}
-        {data.intercessor_prayer ? (
-          <Card
-            label={t("intercession.prayerFor", { name: data.owner_name })}
-            className="gap-2"
-          >
-            <Txt variant="reading">{data.intercessor_prayer}</Txt>
-          </Card>
-        ) : null}
-      </View>
-
-      <View className="mt-auto gap-3 pt-12">
-        {redeemError ? (
-          <Txt
-            variant="caption"
-            tone="danger"
-            className="text-center"
-            accessibilityRole="alert"
-          >
-            {redeemError}
-          </Txt>
-        ) : null}
-
-        {session ? (
-          <Button
-            title={t("share.viewPlan")}
-            loading={isRedeeming}
-            onPress={() => void handleOpenPlan()}
-          />
-        ) : (
-          <>
-            <Txt variant="body" tone="secondary" className="text-center">
-              {t("share.previewSignupHint", { name: data.owner_name })}
-            </Txt>
-            <Link href="/crear-cuenta" asChild>
-              <Button
-                title={t("share.previewCta", { name: data.owner_name })}
-              />
-            </Link>
-            <Link href="/entrar" asChild>
-              <Button title={t("share.alreadyMember")} variant="ghost" />
-            </Link>
-          </>
-        )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </DawnBackground>
   );
 }

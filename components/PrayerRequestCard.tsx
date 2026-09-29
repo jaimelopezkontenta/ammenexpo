@@ -14,9 +14,14 @@ interface Props {
   /** Circle admins can hide; the open wall has nobody in charge. */
   canHide: boolean;
   onTogglePrayer: () => void;
-  onOpen: () => void;
+  /**
+   * Abrir los comentarios. Sin él la tarjeta está ya dentro de ellos (la
+   * pantalla de comentarios la enseña arriba) y el contador es solo texto.
+   */
+  onOpen?: () => void;
   onReport: () => void;
-  onBlock: (userId: string) => void;
+  /** Con el nombre, para que quien confirme sepa a quién bloquea. */
+  onBlock: (userId: string, name: string) => void;
   onHide: () => void;
   onMarkAnswered: () => void;
   onDelete: () => void;
@@ -107,13 +112,19 @@ export const PrayerRequestCard = ({
       </Tap>
 
       <View className="flex-row flex-wrap gap-4">
-        <Tap accessibilityRole="link" onPress={onOpen}>
-          <Txt variant="caption" className="underline">
-            {request.comment_count > 0
-              ? t("feed.commentCount", { count: request.comment_count })
-              : t("feed.comment")}
+        {onOpen ? (
+          <Tap accessibilityRole="link" onPress={onOpen}>
+            <Txt variant="caption" className="underline">
+              {request.comment_count > 0
+                ? t("feed.commentCount", { count: request.comment_count })
+                : t("feed.comment")}
+            </Txt>
+          </Tap>
+        ) : request.comment_count > 0 ? (
+          <Txt variant="caption">
+            {t("feed.commentCount", { count: request.comment_count })}
           </Txt>
-        </Tap>
+        ) : null}
 
         {request.is_mine ? (
           <>
@@ -163,7 +174,9 @@ export const PrayerRequestCard = ({
               <Tap
                 accessibilityRole="button"
                 accessibilityLabel={`${t("moderation.block")} ${request.author_name ?? ""}`}
-                onPress={() => onBlock(request.author_id!)}
+                onPress={() =>
+                  onBlock(request.author_id!, request.author_name ?? "")
+                }
               >
                 <Txt variant="caption" className="underline">
                   {t("moderation.block")}

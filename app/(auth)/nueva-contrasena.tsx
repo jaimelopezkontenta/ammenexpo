@@ -1,8 +1,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
 
+import { AuthForm } from "@/components/AuthForm";
 import { AuthScreen } from "@/components/AuthScreen";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
@@ -51,7 +51,7 @@ export default function NewPassword() {
       title={t("auth.newPasswordTitle")}
       intro={t("auth.newPasswordBody")}
     >
-      <View className="mt-8 gap-4">
+      <AuthForm className="mt-8 gap-4">
         <TextField
           label={t("auth.password")}
           value={password}
@@ -60,6 +60,8 @@ export default function NewPassword() {
           placeholder={t("auth.passwordPlaceholder")}
           secureTextEntry
           autoComplete="new-password"
+          onSubmitEditing={() => void handleSubmit()}
+          returnKeyType="go"
         />
 
         <Button
@@ -67,7 +69,7 @@ export default function NewPassword() {
           loading={isSubmitting}
           onPress={() => void handleSubmit()}
         />
-      </View>
+      </AuthForm>
     </AuthScreen>
   );
 }

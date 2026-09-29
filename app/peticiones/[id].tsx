@@ -4,31 +4,44 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Txt } from "@/components/ui/Text";
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { PrayerRequestCard } from "@/components/PrayerRequestCard";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleMembers } from "@/core/circles/queries";
 import { useBlockUser } from "@/core/moderation/blocks";
+import { goBackOr } from "@/core/nav/safeBack";
 import {
   COMMENT_MAX,
+  useDeletePrayerRequest,
   useHideComment,
+  useMarkAnswered,
   usePostComments,
+  usePrayerFeed,
   useReportPost,
+  useTogglePostPrayer,
   useWriteComment,
 } from "@/core/posts/queries";
 
 import { Tap } from "@/components/ui/Tap";
 
 /**
- * The words people leave on a request.
+ * The words people leave on a request — with the request above them.
  *
- * The request itself is not repeated here: it is on the card you tapped, and
- * fetching it again would need a second RPC for something already on screen a
- * moment ago.
+ * Solo se enseñaban los comentarios, como si la petición estuviera en la
+ * tarjeta que acabas de tocar: cierto desde el muro, falso al recargar la
+ * página o abrirla desde un enlace, y de todos modos con treinta comentarios
+ * la petición quedaba arriba, fuera de la vista. No hay una RPC para una sola
+ * petición, así que se lee del mismo feed que pinta el muro (misma clave de
+ * caché, así que al venir del muro no cuesta una petición): con `circulo` el
+ * del círculo, sin él el abierto. Si no está entre las páginas cargadas —un
+ * enlace en frío a una petición antigua— la pantalla es la de siempre.
  */
 export default function PrayerRequestComments() {
   const { t } = useTranslation();
@@ -40,7 +53,18 @@ export default function PrayerRequestComments() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: comments, isLoading, isError, refetch } = usePostComments(id);
+  const {
+    data: comments,
+    isLoading,
+    isError,
+    error: loadError,
+    refetch,
+  } = usePostComments(id);
+  const { data: feed } = usePrayerFeed(circulo);
+  const request = (feed ?? []).find((entry) => entry.id === id) ?? null;
+  const togglePrayer = useTogglePostPrayer(userId);
+  const markAnswered = useMarkAnswered();
+  const removeRequest = useDeletePrayerRequest();
   const write = useWriteComment(id, userId);
   const report = useReportPost(userId);
   const block = useBlockUser(userId);
@@ -80,17 +104,23 @@ export default function PrayerRequestComments() {
     }
   };
 
-  const run = async (action: () => Promise<unknown>, done: string) => {
+  const run = async (action: () => Promise<unknown>, done?: string) => {
     setError(null);
     setNotice(null);
 
     try {
       await action();
-      setNotice(done);
+      if (done) setNotice(done);
     } catch {
       setError(t("common.errorGeneric"));
     }
   };
+
+  // Bloquear pregunta antes: estaba junto a «Reportar» y bastaba un toque suelto.
+  const blockConfirm = useBlockConfirm(
+    (blockedId) =>
+      void run(() => block.mutateAsync(blockedId), t("moderation.blockDone")),
+  );
 
   if (isLoading) {
     return (
@@ -109,7 +139,7 @@ export default function PrayerRequestComments() {
         <Stack.Screen
           options={{ title: t("feed.comment"), headerShown: true }}
         />
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState error={loadError} onRetry={() => void refetch()} />
       </>
     );
   }
@@ -137,6 +167,52 @@ export default function PrayerRequestComments() {
             <Txt variant="caption" tone="danger" accessibilityRole="alert">
               {error}
             </Txt>
+          ) : null}
+
+          {/* La petición, con lo que trae la tarjeta del muro. Sin `onOpen`
+            (ya estás en los comentarios) y sin ocultar: en esta pantalla
+            «Ocultar» es de los comentarios, y ocultar la petición entera se
+            hace desde el muro. */}
+          {request ? (
+            <PrayerRequestCard
+              request={request}
+              canHide={false}
+              onTogglePrayer={() =>
+                void run(() =>
+                  togglePrayer.mutateAsync({
+                    postId: request.id,
+                    prayed: request.i_prayed,
+                  }),
+                )
+              }
+              onReport={() =>
+                void run(
+                  () => report.mutateAsync({ id: request.id, kind: "post" }),
+                  t("moderation.reportDone"),
+                )
+              }
+              onBlock={blockConfirm.ask}
+              onHide={() => undefined}
+              onMarkAnswered={() =>
+                void run(() => markAnswered.mutateAsync(request.id))
+              }
+              // Borrada la petición, estos comentarios no cuelgan de nada:
+              // se vuelve.
+              onDelete={() =>
+                void run(async () => {
+                  await removeRequest.mutateAsync(request.id);
+                  goBackOr("/peticiones");
+                })
+              }
+            />
+          ) : null}
+
+          {(comments ?? []).length === 0 ? (
+            <EmptyState
+              size="inline"
+              title={t("feed.commentsEmpty")}
+              body={t("feed.commentsEmptyBody")}
+            />
           ) : null}
 
           {(comments ?? []).map((comment) => (
@@ -184,10 +260,7 @@ export default function PrayerRequestComments() {
                     accessibilityRole="button"
                     accessibilityLabel={`${t("moderation.block")} ${comment.author_name}`}
                     onPress={() =>
-                      void run(
-                        () => block.mutateAsync(comment.author_id),
-                        t("moderation.blockDone"),
-                      )
+                      blockConfirm.ask(comment.author_id, comment.author_name)
                     }
                   >
                     <Txt variant="caption" className="underline">
@@ -204,7 +277,7 @@ export default function PrayerRequestComments() {
                       onPress={() =>
                         void run(
                           () => hide.mutateAsync(comment.id),
-                          t("moderation.hideDone"),
+                          t("moderation.hideContentDone"),
                         )
                       }
                     >
@@ -243,6 +316,7 @@ export default function PrayerRequestComments() {
           </View>
         </ScrollView>
       </DawnBackground>
+      {blockConfirm.dialog}
     </>
   );
 }

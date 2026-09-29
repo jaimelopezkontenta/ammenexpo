@@ -1,21 +1,20 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
+import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useBibleBooks, useReadingPosition } from "@/core/bible/queries";
 import { useSession } from "@/core/auth/SessionProvider";
 
-import { useThemeColors } from "@/theme";
-
 import { Tap } from "@/components/ui/Tap";
 
 export default function BookChapters() {
   const { t } = useTranslation();
-  const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { book } = useLocalSearchParams<{ book: string }>();
   const bookId = Number(book);
@@ -30,7 +29,7 @@ export default function BookChapters() {
 
   // No query of its own: chapter_count travels with the books list, which is
   // already cached from the Biblia tab.
-  const { data: books, isLoading } = useBibleBooks();
+  const { data: books, isLoading, isError, error, refetch } = useBibleBooks();
   const entry = (books ?? []).find((candidate) => candidate.id === bookId);
 
   if (isLoading) {
@@ -39,9 +38,23 @@ export default function BookChapters() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <DawnBackground className="items-center justify-center">
-          <ActivityIndicator color={colors.plum.DEFAULT} />
-        </DawnBackground>
+        <LoadingState />
+      </>
+    );
+  }
+
+  // Un fallo de lectura no es un libro que no existe: con la red caída la
+  // lista de libros no llega, `entry` sale vacío, y esto decía «esta página no
+  // existe» sobre un libro perfectamente válido, sin reintento. Con la lista en
+  // caché (viene de la pestaña Biblia) el fallo de un refetch no estorba: solo
+  // cuenta si no hay libro que enseñar.
+  if (!entry && isError) {
+    return (
+      <>
+        <Stack.Screen
+          options={{ title: t("bible.title"), headerShown: true }}
+        />
+        <ErrorState error={error} onRetry={() => void refetch()} />
       </>
     );
   }
@@ -56,17 +69,14 @@ export default function BookChapters() {
         <Stack.Screen
           options={{ title: t("bible.title"), headerShown: true }}
         />
-        <DawnBackground className="items-center justify-center gap-4 px-8">
-          <Txt variant="body" tone="secondary" className="text-center">
-            {t("common.notFoundTitle")}
-          </Txt>
-          <View className="w-full">
+        <DawnBackground className="items-center justify-center px-8">
+          <EmptyState title={t("common.notFoundTitle")}>
             <Button
               title={t("bible.title")}
               variant="secondary"
               onPress={() => router.replace("/biblia")}
             />
-          </View>
+          </EmptyState>
         </DawnBackground>
       </>
     );

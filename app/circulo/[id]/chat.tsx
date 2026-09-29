@@ -14,6 +14,7 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Avatar } from "@/components/Avatar";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -151,6 +152,15 @@ export default function CircleChat() {
       toast.error(t("common.errorGeneric"));
     }
   };
+
+  // Bloquear pregunta antes de hacerlo (ConfirmDialog): en el menú de un
+  // mensaje estaba pegado a «Reportar» y bastaba un toque suelto.
+  const blockConfirm = useBlockConfirm(
+    (blockedId) =>
+      void runModeration(t("moderation.blockDone"), () =>
+        block.mutateAsync(blockedId),
+      ),
+  );
 
   if (isLoading) {
     return (
@@ -314,12 +324,13 @@ export default function CircleChat() {
 
                           <Tap
                             accessibilityRole="button"
-                            onPress={() =>
-                              void runModeration(
-                                t("moderation.blockDone"),
-                                () => block.mutateAsync(item.sender_id),
-                              )
-                            }
+                            onPress={() => {
+                              setOpenMenu(null);
+                              blockConfirm.ask(
+                                item.sender_id,
+                                item.sender_name,
+                              );
+                            }}
                             className="min-h-11 justify-center"
                           >
                             <Txt variant="caption">{t("moderation.block")}</Txt>
@@ -411,6 +422,7 @@ export default function CircleChat() {
           </View>
         </KeyboardAvoidingView>
       </DawnBackground>
+      {blockConfirm.dialog}
     </>
   );
 }

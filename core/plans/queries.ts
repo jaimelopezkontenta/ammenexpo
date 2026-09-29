@@ -499,7 +499,12 @@ export type PlanDaySummary = {
  * what it says would be the way around the one-day-at-a-time mechanic the whole
  * product rests on.
  */
-export const usePlanDays = (planId: string | undefined) =>
+export const usePlanDays = (
+  planId: string | undefined,
+  // Mientras el plan se escribe, los días van apareciendo: sin sondear, quien
+  // abre la lista a mitad de la generación vería el vacío hasta 30 s después.
+  polling = false,
+) =>
   useQuery({
     queryKey: ["planDays", planId],
     enabled: Boolean(planId),
@@ -512,6 +517,7 @@ export const usePlanDays = (planId: string | undefined) =>
 
       return (data ?? []) as PlanDaySummary[];
     },
+    refetchInterval: polling ? 3000 : false,
   });
 
 export type PublicPlanDay = {

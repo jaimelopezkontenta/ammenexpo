@@ -22,7 +22,7 @@ import { enterStagger } from "@/theme/motion";
 
 /**
  * Orar es un hub de tres bloques siempre visibles, no una bandeja que se
- * vacía cuando nadie te ha compartido nada: Mis planes (crear/compartir),
+ * vacía cuando nadie te ha compartido nada: Mis planes (abrir/crear),
  * Mi lista (a un tap) y Por otros (la intercesión, con su empty local).
  * El plan propio se reza en Hoy; aquí solo se crea y se comparte.
  */
@@ -55,7 +55,6 @@ export default function Pray() {
     return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
-  const myFirstPlan = (myPlans ?? [])[0];
   const hasSharedPlans = (plans ?? []).length > 0;
   const nextPending = prayerProgress.pending[0] ?? null;
   const restPending = prayerProgress.pending.slice(1);
@@ -120,22 +119,24 @@ export default function Pray() {
           puerta que antes solo aparecía dentro del empty-wall. */}
           <Animated.View entering={enterStagger(2)}>
             <Card label={t("pray.sectionMyPlans")} className="gap-3">
-              {myFirstPlan ? (
-                // El plan como contenido, no como pila de botones: la fila
-                // lleva a compartirlo, con su duración de meta.
+              {/* Todos los planes propios, no solo el primero: con tres (la
+              cuota gratuita) los otros dos existían y no se podían abrir
+              desde aquí. El plan como contenido, no como pila de botones: la
+              fila lleva al plan (sus días, para releer lo de ayer) con su
+              duración de meta, y compartirlo queda un toque más adentro. */}
+              {(myPlans ?? []).map((plan) => (
                 <NavRow
-                  label={myFirstPlan.title}
-                  meta={t("pray.planDuration", {
-                    count: myFirstPlan.duration_days,
-                  })}
+                  key={plan.id}
+                  label={plan.title}
+                  meta={t("pray.planDuration", { count: plan.duration_days })}
                   onPress={() =>
                     router.push({
-                      pathname: "/plan/[id]/compartir",
-                      params: { id: myFirstPlan.id },
+                      pathname: "/plan/[id]/dias",
+                      params: { id: plan.id },
                     })
                   }
                 />
-              ) : null}
+              ))}
               <Button
                 title={t("pray.newPlan")}
                 variant={nextPending ? "secondary" : "primary"}

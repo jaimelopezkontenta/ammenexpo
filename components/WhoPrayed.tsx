@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Button } from "@/components/Button";
 import type { Intercession } from "@/core/intercessions/queries";
 
@@ -32,6 +33,9 @@ export const WhoPrayed = ({ people, onReport, onBlock, onShare }: Props) => {
   const { t } = useTranslation();
 
   const [confirming, setConfirming] = useState<string | null>(null);
+  // Bloquear pregunta antes: quien oró por ti puede ser un desconocido llegado
+  // por un enlace público, y perderlo de vista no debe ser un toque suelto.
+  const blockConfirm = useBlockConfirm(onBlock);
 
   if (people.length === 0) {
     return (
@@ -137,7 +141,12 @@ export const WhoPrayed = ({ people, onReport, onBlock, onShare }: Props) => {
               <Tap
                 accessibilityRole="button"
                 accessibilityLabel={`${t("moderation.block")} ${person.intercessor_name}`}
-                onPress={() => onBlock(person.intercessor_id)}
+                onPress={() =>
+                  blockConfirm.ask(
+                    person.intercessor_id,
+                    person.intercessor_name,
+                  )
+                }
               >
                 <Txt variant="caption" className="underline">
                   {t("moderation.block")}
@@ -147,6 +156,7 @@ export const WhoPrayed = ({ people, onReport, onBlock, onShare }: Props) => {
           </View>
         );
       })}
+      {blockConfirm.dialog}
     </View>
   );
 };

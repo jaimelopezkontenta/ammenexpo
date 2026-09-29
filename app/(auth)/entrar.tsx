@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
+import { AuthForm } from "@/components/AuthForm";
 import { AuthScreen } from "@/components/AuthScreen";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
@@ -55,7 +56,7 @@ export default function SignIn() {
   // su registro, así que ese pie sería mentira.
   return (
     <AuthScreen title={t("auth.signInTitle")} intro={t("auth.signInIntro")}>
-      <View className="mt-8 gap-4">
+      <AuthForm className="mt-8 gap-4">
         <TextField
           label={t("auth.email")}
           error={errorField === "email" ? error : null}
@@ -106,7 +107,7 @@ export default function SignIn() {
           onPress={handleSubmit}
           loading={isSubmitting}
         />
-      </View>
+      </AuthForm>
 
       <View className="mt-8 flex-row items-center justify-center gap-2">
         <Txt variant="caption">{t("auth.noAccount")}</Txt>

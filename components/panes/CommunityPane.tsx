@@ -5,6 +5,7 @@ import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Txt } from "@/components/ui/Text";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Button } from "@/components/Button";
 import { LoadMore } from "@/components/LoadMore";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
@@ -12,6 +13,7 @@ import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
+import { useFeatureFlag } from "@/core/flags/useFeatureFlag";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { usePublicProfile } from "@/core/profile/queries";
 import {
@@ -73,6 +75,11 @@ export const CommunityPane = () => {
   const { data: me } = usePublicProfile(userId);
   const following = me?.following_count ?? 0;
 
+  // Con `community_feed` apagado el servidor devuelve vacío en el feed, la
+  // búsqueda y los perfiles: se sabe de antemano y se dice. `unknown`
+  // (cargando, o la lectura falló) no cuenta como apagado.
+  const communityFlag = useFeatureFlag("community_feed");
+
   const feed = useHomeFeed();
   const people = useSearchPeople(query.trim());
   const togglePrayer = useTogglePostPrayer(userId);
@@ -96,6 +103,12 @@ export const CommunityPane = () => {
     }
   };
 
+  // Bloquear pregunta antes, venga de una petición o de un testimonio.
+  const blockConfirm = useBlockConfirm(
+    (blockedId) =>
+      void run(() => block.mutateAsync(blockedId), t("moderation.blockDone")),
+  );
+
   const handleFollow = async (targetId: string, following: boolean) => {
     if (!userId) return;
 
@@ -116,6 +129,23 @@ export const CommunityPane = () => {
       setPending(null);
     }
   };
+
+  // Cerrada, no vacía: sin buscador que no encuentra a nadie ni «Pedir
+  // oración» hacia un muro que nadie ve. El vacío genérico de abajo decía
+  // «sé la primera en pedir oración» en un sitio que aún no abre.
+  if (communityFlag === "off") {
+    return (
+      <ScrollView
+        contentContainerClassName="flex-grow justify-center px-7 py-8 md:w-full md:max-w-read md:self-center md:px-10"
+        contentContainerStyle={{ paddingBottom: scrollBottom }}
+      >
+        <EmptyState
+          title={t("community.closedTitle")}
+          body={t("community.closedBody")}
+        />
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView
@@ -280,12 +310,7 @@ export const CommunityPane = () => {
                       t("moderation.reportDone"),
                     )
                   }
-                  onBlock={(who) =>
-                    void run(
-                      () => block.mutateAsync(who),
-                      t("moderation.blockDone"),
-                    )
-                  }
+                  onBlock={blockConfirm.ask}
                   // En el muro abierto no hay quien administre, así que esta
                   // nunca se llama: `canHide` mantiene el control fuera.
                   onHide={() => undefined}
@@ -321,10 +346,7 @@ export const CommunityPane = () => {
                   onBlock={() => {
                     if (!entry.author_id) return;
 
-                    void run(
-                      () => block.mutateAsync(entry.author_id!),
-                      t("moderation.blockDone"),
-                    );
+                    blockConfirm.ask(entry.author_id, entry.author_name ?? "");
                   }}
                 />
               ),
@@ -338,6 +360,8 @@ export const CommunityPane = () => {
           />
         </>
       )}
+
+      {blockConfirm.dialog}
     </ScrollView>
   );
 };
