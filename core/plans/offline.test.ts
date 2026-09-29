@@ -4,7 +4,6 @@ import type { PlanDay } from "./queries";
 
 import {
   cacheTodayDay,
-  clearCachedDays,
   dropEntry,
   enqueuePrayed,
   flushPrayedQueue,
@@ -16,6 +15,7 @@ import {
   type PrayedEntry,
   type PrayedInsertFn,
 } from "./offline";
+import { STORAGE_KEYS, todayDayKey } from "@/core/storage/keys";
 
 // Mock de AsyncStorage con un mapa en memoria: así los tests de la cola
 // ejercitan el IO real (JSON round-trip incluido) sin tocar el storage nativo.
@@ -123,11 +123,33 @@ describe("cola offline (IO)", () => {
     expect(await readPrayedQueue()).toEqual([]);
 
     await storage.setItem(
-      "ammen.prayedQueue",
+      STORAGE_KEYS.prayedQueue,
       JSON.stringify([entry("d1", "u1"), { dayId: 42 }, "no-soy-un-objeto"]),
     );
 
     expect(await readPrayedQueue()).toEqual([entry("d1", "u1")]);
+  });
+
+  it("drena un «Ya oré» encolado con el nombre de antes de la versión", async () => {
+    // La clave se llamaba `ammen.prayedQueue`: lo que quedó encolado sin red
+    // antes de actualizar la app no puede perderse por el cambio de nombre.
+    storage.store.set("ammen.prayedQueue", JSON.stringify([entry("d1", "u1")]));
+
+    await flushPrayedQueue(async () => ({ error: null }));
+
+    expect(await readPrayedQueue()).toEqual([]);
+    expect(storage.store.has("ammen.prayedQueue")).toBe(false);
+  });
+
+  it("una entrada nueva no pisa la cola vieja: se suman", async () => {
+    storage.store.set("ammen.prayedQueue", JSON.stringify([entry("d1", "u1")]));
+
+    await enqueuePrayed(entry("d2", "u1"));
+
+    expect(await readPrayedQueue()).toEqual([
+      entry("d1", "u1"),
+      entry("d2", "u1"),
+    ]);
   });
 });
 
@@ -202,18 +224,11 @@ describe("today's day cache", () => {
   });
 
   it("ignores the old undated format", async () => {
-    storage.store.set("ammen.todayDay.plan-1", JSON.stringify(day));
+    storage.store.set(todayDayKey("plan-1"), JSON.stringify(day));
 
     expect(await readCachedTodayDay("plan-1", morning)).toBeNull();
   });
 
-  it("clears every cached day on sign-out and leaves the rest", async () => {
-    await cacheTodayDay("plan-1", day, morning);
-    await cacheTodayDay("plan-2", day, morning);
-    storage.store.set("ammen.theme.v1", "dark");
-
-    await clearCachedDays();
-
-    expect([...storage.store.keys()]).toEqual(["ammen.theme.v1"]);
-  });
+  // Borrarlos al cerrar sesión es de `clearUserScopedStorage`
+  // (core/storage/storage.test.ts).
 });

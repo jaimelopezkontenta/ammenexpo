@@ -1,3 +1,5 @@
+import { STORAGE_KEYS } from "@/core/storage/keys";
+
 import {
   BIBLE_VERSIONS,
   bibleVersionForLanguage,
@@ -12,7 +14,7 @@ import {
  * clave lleva versión: si el formato cambiara, la vieja se ignoraría en vez de
  * malinterpretarse.
  */
-export const BIBLE_VERSION_STORAGE_KEY = "ammen.bibleVersion.v1";
+export const BIBLE_VERSION_STORAGE_KEY = STORAGE_KEYS.bibleVersion;
 
 /**
  * Un valor de fuera (el almacén, un parámetro de ruta) como versión, o null si

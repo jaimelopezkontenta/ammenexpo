@@ -5,6 +5,8 @@ import { AppState } from "react-native";
 import { supabase } from "../../utils/supabase";
 
 import type { PlanDay } from "./queries";
+import { STORAGE_KEYS, todayDayKey } from "@/core/storage/keys";
+import { getItemMigrating } from "@/core/storage/storage";
 import { localDateKey } from "@/core/time/midnight";
 
 /**
@@ -26,10 +28,11 @@ import { localDateKey } from "@/core/time/midnight";
  * aquí para poder probarlas sin tocar storage ni red.
  */
 
-// -- Claves ---------------------------------------------------------------
+// -- Claves (core/storage/keys.ts) ----------------------------------------
 
-const todayKey = (planId: string) => `ammen.todayDay.${planId}`;
-const QUEUE_KEY = "ammen.prayedQueue";
+// Antes `ammen.prayedQueue`: la primera lectura la pasa a este nombre, así
+// que un «Ya oré» encolado antes del cambio se drena igual.
+const QUEUE_KEY = STORAGE_KEYS.prayedQueue;
 
 export type PrayedEntry = {
   dayId: string;
@@ -99,7 +102,7 @@ export const cacheTodayDay = async (
 ): Promise<void> => {
   try {
     const entry: CachedDay = { cachedOn: localDateKey(now), day };
-    await AsyncStorage.setItem(todayKey(planId), JSON.stringify(entry));
+    await AsyncStorage.setItem(todayDayKey(planId), JSON.stringify(entry));
   } catch {
     // Best effort: fallar aquí no puede tirar abajo un día que SÍ se leyó.
   }
@@ -110,7 +113,7 @@ export const readCachedTodayDay = async (
   now: Date = new Date(),
 ): Promise<PlanDay | null> => {
   try {
-    const raw = await AsyncStorage.getItem(todayKey(planId));
+    const raw = await AsyncStorage.getItem(todayDayKey(planId));
 
     if (!raw) return null;
 
@@ -126,24 +129,9 @@ export const readCachedTodayDay = async (
   }
 };
 
-/**
- * Borra todos los días guardados. Llevan el texto de oración del día y en web
- * viven en localStorage: al cerrar sesión no pueden quedarse para la
- * siguiente persona que use ese navegador.
- */
-export const clearCachedDays = async (): Promise<void> => {
-  try {
-    const keys = await AsyncStorage.getAllKeys();
-    const days = keys.filter((key) => key.startsWith("ammen.todayDay."));
-    if (days.length > 0) await AsyncStorage.multiRemove(days);
-  } catch {
-    // Nada que hacer: como mucho, caducan solos al día siguiente.
-  }
-};
-
 export const readPrayedQueue = async (): Promise<PrayedEntry[]> => {
   try {
-    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    const raw = await getItemMigrating(QUEUE_KEY);
 
     if (!raw) return [];
 
@@ -235,9 +223,7 @@ export const flushPrayedQueue = async (
 
 /**
  * Drena la cola al montar (o al cambiar de usuario) y al volver a foreground.
- *
- * NO se engancha aquí en SessionProvider: ese fichero lo toca también el
- * asiento de recordatorios. El orquestador llamará a este hook cuando pueda.
+ * Lo monta `AppEffects` (core/auth/AppEffects.ts), con el usuario de la sesión.
  */
 export const useFlushPrayedQueue = (userId: string | null): void => {
   useEffect(() => {

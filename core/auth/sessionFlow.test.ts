@@ -10,33 +10,33 @@ import {
 } from "./sessionFlow";
 
 describe("cleanupOnSessionChange", () => {
-  it("clears the cached days when the app starts without a session", () => {
+  it("clears the user-scoped storage when the app starts without a session", () => {
     // La sesión se perdió con la app cerrada: no hay transición de A a nadie.
     expect(cleanupOnSessionChange(null, null)).toEqual({
       clearQueryCache: false,
-      clearCachedDays: true,
+      clearUserStorage: true,
     });
   });
 
   it("clears everything when the session ends or changes hands", () => {
     expect(cleanupOnSessionChange("user-a", null)).toEqual({
       clearQueryCache: true,
-      clearCachedDays: true,
+      clearUserStorage: true,
     });
     expect(cleanupOnSessionChange("user-a", "user-b")).toEqual({
       clearQueryCache: true,
-      clearCachedDays: true,
+      clearUserStorage: true,
     });
   });
 
   it("leaves a starting or refreshed session alone", () => {
     expect(cleanupOnSessionChange(null, "user-a")).toEqual({
       clearQueryCache: false,
-      clearCachedDays: false,
+      clearUserStorage: false,
     });
     expect(cleanupOnSessionChange("user-a", "user-a")).toEqual({
       clearQueryCache: false,
-      clearCachedDays: false,
+      clearUserStorage: false,
     });
   });
 });

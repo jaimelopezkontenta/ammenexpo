@@ -12,12 +12,13 @@ import type { RedeemDestination } from "@/core/plans/redeemOutcome";
  * otro (o nadie): en el arranque no hay nada que filtrar y vaciarla cancelaría
  * las primeras lecturas.
  *
- * Los días guardados para leer sin red (`ammen.todayDay.*`, el texto de
- * oración del día; en web, en localStorage) se borran además **siempre que no
- * hay sesión**, también en el arranque: si la sesión se perdió con la app
+ * Lo guardado en el dispositivo que es de la persona (`USER_SCOPED_PREFIXES`
+ * en core/storage/keys.ts: los días guardados para leer sin red, con el texto
+ * de oración del día; en web, en localStorage) se borra además **siempre que
+ * no hay sesión**, también en el arranque: si la sesión se perdió con la app
  * cerrada —un token caducado, un cierre desde otro dispositivo—, al abrir no
- * había transición que los limpiara y se quedaban para quien usara después
- * ese navegador.
+ * había transición que lo limpiara y se quedaba para quien usara después ese
+ * navegador.
  */
 export const cleanupOnSessionChange = (
   previousUserId: string | null,
@@ -27,7 +28,7 @@ export const cleanupOnSessionChange = (
 
   return {
     clearQueryCache: userChanged,
-    clearCachedDays: userChanged || nextUserId === null,
+    clearUserStorage: userChanged || nextUserId === null,
   };
 };
 

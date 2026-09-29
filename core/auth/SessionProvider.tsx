@@ -16,7 +16,7 @@ import { gateStateFrom, type OnboardingRead } from "./onboardingState";
 import { cleanupOnSessionChange } from "./sessionFlow";
 import { forgetReturnToOnSignOut, noteSessionUser } from "@/core/nav/returnTo";
 import { revokeThisDevicePush } from "@/core/notifications/push";
-import { clearCachedDays } from "@/core/plans/offline";
+import { clearUserScopedStorage } from "@/core/storage/storage";
 
 import { qk } from "@/core/query/keys";
 
@@ -63,10 +63,11 @@ export const SessionProvider = ({
       const userId = data.session?.user.id ?? null;
       lastUserId.current = userId;
       noteSessionUser(userId);
-      // Arrancar sin sesión también limpia el día guardado: si la sesión se
-      // perdió con la app cerrada, no hubo transición que lo hiciera.
-      if (cleanupOnSessionChange(null, userId).clearCachedDays) {
-        void clearCachedDays();
+      // Arrancar sin sesión también limpia lo guardado de la persona (el día
+      // para leer sin red): si la sesión se perdió con la app cerrada, no
+      // hubo transición que lo hiciera.
+      if (cleanupOnSessionChange(null, userId).clearUserStorage) {
+        void clearUserScopedStorage();
       }
       setSession(data.session);
       setIsLoading(false);
@@ -86,9 +87,10 @@ export const SessionProvider = ({
         // cached to leak, and clearing would cancel the first fetches.
         const cleanup = cleanupOnSessionChange(lastUserId.current, nextUserId);
         if (cleanup.clearQueryCache) queryClient.clear();
-        // Lo mismo con el día guardado para leer sin red: lleva el texto de
-        // oración y en web vive en localStorage.
-        if (cleanup.clearCachedDays) void clearCachedDays();
+        // Lo mismo con lo guardado en el dispositivo que es de la persona: el
+        // día para leer sin red lleva el texto de oración y en web vive en
+        // localStorage (core/storage/keys.ts, `USER_SCOPED_PREFIXES`).
+        if (cleanup.clearUserStorage) void clearUserScopedStorage();
 
         // Antes de que la puerta vuelva a pintar: lo que otra persona dejó
         // en `returnTo` no es destino de quien entra ahora.
