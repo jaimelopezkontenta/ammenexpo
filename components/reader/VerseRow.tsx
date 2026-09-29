@@ -100,8 +100,8 @@ export const VerseRow = memo(function VerseRow({
           {verse}
         </Txt>
         {/* La tipografía del versículo la manda el paso A−/A+ del lector,
-            encima de la variante. */}
-        <Txt variant="reading" className={`flex-1 ${fontClass}`}>
+            encima de la variante (ver FONT_CLASSES: la base es la pequeña). */}
+        <Txt variant="bodySerif" className={`flex-1 ${fontClass}`}>
           {text}
         </Txt>
       </Tap>

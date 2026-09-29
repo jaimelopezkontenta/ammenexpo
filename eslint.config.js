@@ -1,11 +1,12 @@
 const { defineConfig } = require("eslint/config");
 const expoConfig = require("eslint-config-expo/flat");
 
-// El color de un `Txt` va SIEMPRE por `tone`. En web NativeWind emite CSS y
-// gana la clase que va después en la hoja: un `text-cta-ink` por className
-// perdía contra el `text-plum` del tono y el CTA de Hoy salía casi blanco en
-// oscuro (2026-09-29). En nativo gana la última, así que el bug solo se ve en
-// web: por eso se veta aquí y no se deja a la revisión.
+// El color de un `Txt` va SIEMPRE por `tone` (primary, secondary, accent, danger,
+// onDark, onCta, onBadge). NativeWind resuelve el conflicto entre dos clases de la
+// misma familia por el ORDEN DE LA HOJA (Tailwind las ordena por su escala), no
+// por el orden del `className`, en web y en nativo: un `text-cta-ink` por
+// className perdía contra el `text-plum` del tono y el CTA de Hoy salía casi
+// blanco en oscuro (2026-09-29). Por eso se veta aquí y no se deja a la revisión.
 //
 // Una clase de color de texto es `text-` + un color de la paleta
 // (`theme/tokens.js`), con o sin prefijos de variante (`dark:`, `web:`…), `!` y
@@ -20,6 +21,7 @@ const TEXT_COLOR_NAMES = [
   "dawn-[a-z-]+",
   "glass(?:edge)?",
   "cta-ink",
+  "badge-ink",
   "surface",
   "danger",
   // Lo genérico de Tailwind, que también compite con el tono.
@@ -38,7 +40,7 @@ const TXT_COLOR_SELECTORS = [
 ].map((node) => ({
   selector: `JSXOpeningElement[name.name=/^(?:Txt|Button)$/] > JSXAttribute[name.name='className'] ${node}`,
   message:
-    "El color de un Txt va por `tone` (primary, secondary, accent, danger, onDark, onCta), no por className: en web la clase pierde contra el tono según el orden del CSS — AGENTS.md «Tacto y texto».",
+    "El color de un Txt va por `tone` (primary, secondary, accent, danger, onDark, onCta, onBadge), no por className: en web la clase pierde contra el tono según el orden del CSS — AGENTS.md «Tacto y texto».",
 }));
 
 const ROUTER_BACK_SELECTOR = {

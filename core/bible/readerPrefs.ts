@@ -17,11 +17,18 @@ const KEY = STORAGE_KEYS.readerFont;
 export const FONT_STEPS = ["sm", "md", "lg"] as const;
 export type ReaderFontStep = (typeof FONT_STEPS)[number];
 
-/** Las clases del versículo por paso. `md` es la medida de siempre. */
+/**
+ * Las clases del versículo por paso, PARA `variant="bodySerif"` (`text-base
+ * leading-6`, la letra más pequeña). `md` es la medida de siempre (la de la
+ * variante `reading`). Entre dos clases de la misma familia gana la que va después
+ * en la hoja de Tailwind, no en el `className`: por eso la base tiene que ser la
+ * pequeña y los pasos mayores solo la superan. Con `reading` (`text-lg`) de base,
+ * el paso `sm` (`text-base`) no ganaba nunca y A− no hacía nada.
+ */
 export const FONT_CLASSES: Record<ReaderFontStep, string> = {
-  sm: "font-serif text-base leading-7 text-plum",
-  md: "font-serif text-lg leading-reading text-plum",
-  lg: "font-serif text-xl leading-9 text-plum",
+  sm: "leading-7",
+  md: "text-lg leading-reading",
+  lg: "text-xl leading-9",
 };
 
 const isStep = (value: unknown): value is ReaderFontStep =>
