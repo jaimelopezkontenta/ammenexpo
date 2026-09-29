@@ -4,13 +4,13 @@ Todo vive en `.github/`. Nada de CI despliega: los deploys los hace una persona.
 
 ## Qué corre
 
-| Workflow / job               | Cuándo                       | Bloquea | Qué mira                                                                                               |
-| ---------------------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `verify` · `verify`          | PR y push a `main`           | sí      | Guard de migraciones, tipos de la base, `npm run verify`, Playwright funcional y (ver abajo) el visual |
-| `verify` · `functions-types` | ídem, en paralelo            | sí      | `deno check` de las seis edge functions                                                                |
-| `verify` · `expo-health`     | ídem, en paralelo            | no      | `expo-doctor` y `expo install --check` (hoy fallan los dos; ver abajo)                                 |
-| `visual-baselines`           | a mano (`workflow_dispatch`) | —       | Genera las baselines Linux de la regresión visual y las sube como artefacto                            |
-| Dependabot                   | semanal                      | —       | Acciones de GitHub; en npm solo avisos de seguridad                                                    |
+| Workflow / job               | Cuándo                       | Bloquea | Qué mira                                                                                                           |
+| ---------------------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `verify` · `verify`          | PR y push a `main`           | sí      | Guard de migraciones, tipos de la base, `npm run verify`, Playwright funcional bajo la CSP y (ver abajo) el visual |
+| `verify` · `functions-types` | ídem, en paralelo            | sí      | `deno check` de las seis edge functions                                                                            |
+| `verify` · `expo-health`     | ídem, en paralelo            | no      | `expo-doctor` y `expo install --check` (hoy fallan los dos; ver abajo)                                             |
+| `visual-baselines`           | a mano (`workflow_dispatch`) | —       | Genera las baselines Linux de la regresión visual y las sube como artefacto                                        |
+| Dependabot                   | semanal                      | —       | Acciones de GitHub; en npm solo avisos de seguridad                                                                |
 
 El job `verify` corre en un runner efímero con Supabase local, así que serializa
 base y e2e por construcción. Los otros dos no levantan Supabase.
@@ -19,6 +19,30 @@ Pasos de `verify`, en orden: checkout con historia completa → `npm ci` → gua
 migraciones → Chromium → `AI_PROVIDER=fixture` → `supabase start` → tipos de la
 base contra las migraciones → `supabaseCiEnv` → `npm run verify` (typecheck, lint,
 vitest, `db:test`) → Playwright `chromium` → regresión visual (condicionada).
+
+## El e2e estático corre bajo la CSP de producción
+
+`scripts/e2eWebServer.mjs` sirve `dist-e2e` con las cabeceras de `firebase.json`
+(las lee `scripts/webHeaders.mjs`, que las aplica como Firebase: todas las reglas
+que casan con la ruta pedida, y la última gana), CSP incluida. Solo añade, para el
+e2e, el origen de `EXPO_PUBLIC_SUPABASE_URL` (`http://` y `ws://`) a `connect-src`
+e `img-src`, y un `report-uri /__csp-report`. Si falta esa variable, el servidor
+no arranca: sin ella la CSP bloquearía todo sin decir por qué.
+
+- **Una violación** sale en el log de Playwright (el `webServer` enseña su stderr):
+  `[e2e-web] CSP bloqueó connect-src: https://… en http://127.0.0.1:8081/…`.
+  `GET http://127.0.0.1:8081/__csp-report` devuelve la lista entera, para que un
+  test pueda afirmar que está vacía. Un `fetch` bloqueado rompe el flujo que lo
+  usa; una imagen o una fuente bloqueadas solo se ven ahí o en el visual.
+- **Qué no cubre:** el export del e2e es `single` y usa la plantilla de Expo, sin
+  `app/+html.tsx`, así que no lleva los dos `<script>` inline que la CSP permite
+  por hash (el del tema y la bandera de hidratación de Expo Router). Esos los
+  vigilan `scripts/cspHashes.test.ts` (vitest) y `npm run csp:check` sobre el
+  build de staging (`docs/runbooks/staging-web.md`).
+- **Metro** (`npm run e2e`, `npm run web`) no aplica cabeceras: la CSP solo se
+  ejerce contra el export.
+- **Si cambias la CSP** en `firebase.json`, el e2e la hereda sin tocar nada más.
+  Si cambias el script del tema, `npm run csp:hashes` da el hash nuevo.
 
 ## Regenerar las baselines Linux
 
