@@ -35,6 +35,21 @@ export type ResolvedNotification = {
   intercessor_name: string | null;
 } | null;
 
+/**
+ * Los destinos posibles de un tap, y por qué son solo dos (Oleada 6,
+ * 2026-09-29).
+ *
+ * Hoy existen exactamente dos clases de aviso: la intercesión remota (el
+ * único `type` que emite `buildPushMessage` en
+ * `supabase/functions/send-intercession-push/payload.ts`, y la única fila
+ * posible de `push_outbox`) y el recordatorio diario local
+ * (`ammen-reminder-*`). No hay más tipos que resolver, y no se inventan
+ * aquí: un destino nuevo necesita, por este orden, (1) que el servidor emita
+ * ese `type` con un id opaco, (2) una RPC que autorice ese id para
+ * `auth.uid()` y devuelva el destino, y (3) su rama en `destinationForTap`,
+ * que siga navegando solo con lo que devuelva esa RPC. Un `type` desconocido
+ * no navega (`outboxIdFromPayload` devuelve `null`).
+ */
 export type NotificationNavigationTarget = "/" | "/avisos";
 
 /**
