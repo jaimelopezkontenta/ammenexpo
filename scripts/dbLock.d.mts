@@ -14,6 +14,7 @@ export type DbLockHandle = {
   heartbeatIntervalMs: number;
 };
 
+export function parseProjectId(config: string): string | null;
 export const LOCK_PATH: string;
 export const STALE_AFTER_MS: number;
 export const HEARTBEAT_INTERVAL_MS: number;

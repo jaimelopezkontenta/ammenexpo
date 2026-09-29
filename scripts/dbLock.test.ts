@@ -148,6 +148,19 @@ describe("atomic database lock", () => {
     expect(LOCK_PATH).toBe(path.join(tmpdir(), "ammen-db-ammen.lock"));
   });
 
+  it("reads the project_id from config.toml, sanitised for a file name", () => {
+    expect(parseProjectId('[api]\nport = 1\n\nproject_id = "ammen"\n')).toBe(
+      "ammen",
+    );
+    expect(parseProjectId('  project_id   =   "ammenlab"  # lab')).toBe(
+      "ammenlab",
+    );
+    expect(parseProjectId('project_id = "mi proyecto/2"')).toBe(
+      "mi_proyecto_2",
+    );
+    expect(parseProjectId("# sin project_id\n[db]\nport = 1")).toBeNull();
+  });
+
   it("never releases a lock whose token belongs to somebody else", () => {
     const lockPath = lockPathForTest();
     const original = acquireDbLock("original", { lockPath });

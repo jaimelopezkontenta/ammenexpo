@@ -24,14 +24,19 @@ import { randomUUID } from "node:crypto";
  * de otra, y el lock no se enteraba. Por eso vive en el directorio temporal de
  * la máquina y se nombra por `project_id`: quien comparta pila, comparte lock.
  */
+export const parseProjectId = (config) => {
+  const match = /^\s*project_id\s*=\s*"([^"]+)"/mu.exec(config);
+  return match ? match[1].replace(/[^A-Za-z0-9_.-]/gu, "_") : null;
+};
+
 const projectId = () => {
   try {
     const config = readFileSync(
       path.resolve(process.cwd(), "supabase", "config.toml"),
       "utf8",
     );
-    const match = /^s*project_ids*=s*"([^"]+)"/mu.exec(config);
-    if (match) return match[1].replace(/[^A-Za-z0-9_.-]/gu, "_");
+    const parsed = parseProjectId(config);
+    if (parsed) return parsed;
   } catch {
     // Sin config.toml (un test, otra carpeta): el nombre de siempre.
   }
