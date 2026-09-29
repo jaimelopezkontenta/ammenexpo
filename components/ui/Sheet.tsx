@@ -1,5 +1,5 @@
 import { X } from "lucide-react-native";
-import { type ReactNode, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   KeyboardAvoidingView,
@@ -15,11 +15,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated from "react-native-reanimated";
 
 import { Glass } from "@/components/Glass";
+import { useSheetClosed } from "@/components/ui/sheetClose";
 import { SheetGrabHandle, useSheetDrag } from "@/components/ui/sheetDrag";
 import { Tap } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
 import { icon, scrim, useThemeColors } from "@/theme";
-import { DURATION, enterSheet } from "@/theme/motion";
+import { enterSheet } from "@/theme/motion";
 
 /**
  * La hoja que sube desde abajo: Modal + scrim mudo + tarjeta de vidrio, con
@@ -35,14 +36,18 @@ import { DURATION, enterSheet } from "@/theme/motion";
  * - Teclado y scroll: con el teclado abierto en una pantalla pequeña se
  *   recorta el contenido, nunca el «Cerrar» ni el scrim.
  * - `onClosed`: para navegar después de que el Modal se haya ido, no en el
- *   mismo tap (AGENTS.md). En web el Modal no dispara `onDismiss`, así que se
- *   simula con la duración de salida.
+ *   mismo tap (AGENTS.md). `onDismiss` solo existe en iOS; en Android y en
+ *   web lo simula `useSheetClosed` con la duración de salida.
+ * - `showClose={false}`: para la hoja cuyo contenido ya trae su única salida
+ *   anunciada (el «Cancelar» de `ConfirmDialog`). La X encima de un
+ *   «Cancelar» era un segundo control de cerrar.
  */
 export const Sheet = ({
   visible,
   onClose,
   onClosed,
   title,
+  showClose = true,
   children,
 }: {
   visible: boolean;
@@ -50,38 +55,15 @@ export const Sheet = ({
   /** Tras cerrar del todo (el Modal ya no está): para navegar sin el overlay. */
   onClosed?: () => void;
   title: string;
+  /** Sin la X: solo si el contenido ya trae su único control de cerrar. */
+  showClose?: boolean;
   children: ReactNode;
 }) => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const { panGesture, dragStyle } = useSheetDrag(onClose, visible);
-  const closedOnce = useRef(false);
-  const onClosedRef = useRef(onClosed);
-
-  useEffect(() => {
-    onClosedRef.current = onClosed;
-  }, [onClosed]);
-
-  useEffect(() => {
-    if (visible) {
-      closedOnce.current = false;
-      return;
-    }
-    if (Platform.OS !== "web") return;
-    const timer = setTimeout(() => {
-      if (closedOnce.current) return;
-      closedOnce.current = true;
-      onClosedRef.current?.();
-    }, DURATION.exit);
-    return () => clearTimeout(timer);
-  }, [visible]);
-
-  const handleClosed = () => {
-    if (closedOnce.current) return;
-    closedOnce.current = true;
-    onClosedRef.current?.();
-  };
+  const handleClosed = useSheetClosed(visible, onClosed);
 
   return (
     <Modal
@@ -132,20 +114,23 @@ export const Sheet = ({
                     <Txt variant="editorial" className="flex-1 pr-3">
                       {title}
                     </Txt>
-                    <Tap
-                      accessibilityRole="button"
-                      accessibilityLabel={t("common.close")}
-                      onPress={onClose}
-                      // 44×44 de zona táctil; el -mr-2 alinea el icono con el
-                      // filo óptico de la tarjeta, no con el del área clicable.
-                      className="-mr-2 h-11 w-11 items-center justify-center"
-                    >
-                      <X
-                        size={icon.sm}
-                        color={colors.plum.DEFAULT}
-                        strokeWidth={icon.strokeWidth}
-                      />
-                    </Tap>
+                    {showClose ? (
+                      <Tap
+                        accessibilityRole="button"
+                        accessibilityLabel={t("common.close")}
+                        onPress={onClose}
+                        // 44×44 de zona táctil; el -mr-2 alinea el icono con
+                        // el filo óptico de la tarjeta, no con el del área
+                        // clicable.
+                        className="-mr-2 h-11 w-11 items-center justify-center"
+                      >
+                        <X
+                          size={icon.sm}
+                          color={colors.plum.DEFAULT}
+                          strokeWidth={icon.strokeWidth}
+                        />
+                      </Tap>
+                    ) : null}
                   </View>
                 </View>
               </GestureDetector>
