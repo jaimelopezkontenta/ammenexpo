@@ -200,6 +200,18 @@ export type DailyVerse = {
 };
 
 /**
+ * Cuánto dura fresco el versículo del día: hasta la medianoche local **del
+ * día en que se leyó**, no la de hoy.
+ *
+ * `staleTime: msUntilLocalMidnight()` se calculaba al pintar: una pantalla
+ * que se pintaba a las 8:00 con el versículo leído anoche a las 23:00 le daba
+ * dieciséis horas más desde las 23:00, y el de ayer seguía «fresco» hasta
+ * media tarde. Con la función, React Query lo mide desde `dataUpdatedAt`.
+ */
+export const verseOfTheDayStaleTime = (dataUpdatedAt: number): number =>
+  msUntilLocalMidnight(new Date(dataUpdatedAt));
+
+/**
  * El versículo del día.
  *
  * Sin plan activo, la app no tenía nada que darte: abrías y te decía que no
@@ -220,7 +232,7 @@ export const useVerseOfTheDay = () => {
     // Estas lecturas no aportan nada en el login y el 401 asusta en consola:
     // no se disparan sin sesión.
     enabled: Boolean(session),
-    staleTime: msUntilLocalMidnight(),
+    staleTime: (query) => verseOfTheDayStaleTime(query.state.dataUpdatedAt),
     queryFn: async (): Promise<DailyVerse | null> => {
       const { data, error } = await supabase.rpc("verse_of_the_day");
 
