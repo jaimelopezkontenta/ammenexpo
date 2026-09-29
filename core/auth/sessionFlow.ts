@@ -1,8 +1,8 @@
 import type { RedeemDestination } from "@/core/plans/redeemOutcome";
 
 /**
- * Las decisiones de `SessionProvider`, puras para poder probarlas sin montar
- * la app.
+ * Las decisiones de `SessionProvider` y de sus efectos (`AppEffects`), puras
+ * para poder probarlas sin montar la app.
  */
 
 /**
@@ -12,12 +12,13 @@ import type { RedeemDestination } from "@/core/plans/redeemOutcome";
  * otro (o nadie): en el arranque no hay nada que filtrar y vaciarla cancelaría
  * las primeras lecturas.
  *
- * Los días guardados para leer sin red (`ammen.todayDay.*`, el texto de
- * oración del día; en web, en localStorage) se borran además **siempre que no
- * hay sesión**, también en el arranque: si la sesión se perdió con la app
+ * Lo guardado en el dispositivo que es de la persona (`USER_SCOPED_PREFIXES`
+ * en core/storage/keys.ts: los días guardados para leer sin red, con el texto
+ * de oración del día; en web, en localStorage) se borra además **siempre que
+ * no hay sesión**, también en el arranque: si la sesión se perdió con la app
  * cerrada —un token caducado, un cierre desde otro dispositivo—, al abrir no
- * había transición que los limpiara y se quedaban para quien usara después
- * ese navegador.
+ * había transición que lo limpiara y se quedaba para quien usara después ese
+ * navegador.
  */
 export const cleanupOnSessionChange = (
   previousUserId: string | null,
@@ -27,7 +28,7 @@ export const cleanupOnSessionChange = (
 
   return {
     clearQueryCache: userChanged,
-    clearCachedDays: userChanged || nextUserId === null,
+    clearUserStorage: userChanged || nextUserId === null,
   };
 };
 
@@ -64,3 +65,55 @@ export const destinationPath = (destination: RedeemDestination): string =>
   destination.kind === "plan"
     ? `/orar/${encodeURIComponent(destination.planId)}`
     : `/circulo/${encodeURIComponent(destination.circleId)}`;
+
+/**
+ * La ruta tipada a la que se navega con las puertas ya abiertas: el día que
+ * toca orar, o el círculo al que invitaron.
+ */
+export const destinationRoute = (destination: RedeemDestination) =>
+  destination.kind === "plan"
+    ? {
+        pathname: "/orar/[planId]" as const,
+        params: { planId: destination.planId },
+      }
+    : {
+        pathname: "/circulo/[id]" as const,
+        params: { id: destination.circleId },
+      };
+
+/**
+ * `redeemStep` con lo que hay que hacer en cada caso ya resuelto, para que el
+ * efecto que lo ejecuta (core/auth/effects/useRedeemPendingLinks.ts) no
+ * decida nada: solo espera, deja el destino en `returnTo` o navega.
+ */
+export type RedeemAction =
+  | { kind: "wait" }
+  | { kind: "handoff"; path: string }
+  | { kind: "navigate"; route: ReturnType<typeof destinationRoute> };
+
+export const redeemAction = (
+  destination: RedeemDestination,
+  gates: Parameters<typeof redeemStep>[0],
+): RedeemAction => {
+  const step = redeemStep(gates);
+  if (step === "wait") return { kind: "wait" };
+  if (step === "handoff") {
+    return { kind: "handoff", path: destinationPath(destination) };
+  }
+  return { kind: "navigate", route: destinationRoute(destination) };
+};
+
+/**
+ * Lo que se hace «ya dentro de la app» —pedir permiso de push, programar los
+ * recordatorios— espera a una cuenta con las dos puertas cruzadas (RDY-10):
+ * pedirlo en el primer frame, o encima de los términos, es pedirlo fuera de
+ * contexto. `null` (todavía sin leer) cuenta como cerrada.
+ */
+export const insideAppGatesOpen = (input: {
+  userId: string | null;
+  hasOnboarded: boolean | null;
+  termsAccepted: boolean | null;
+}) =>
+  Boolean(input.userId) &&
+  input.hasOnboarded === true &&
+  input.termsAccepted === true;

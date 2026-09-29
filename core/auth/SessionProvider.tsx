@@ -1,7 +1,5 @@
 import type { Session } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { router, useRootNavigationState } from "expo-router";
-import i18n from "i18next";
 import {
   createContext,
   useCallback,
@@ -15,29 +13,13 @@ import {
 import { supabase } from "@/utils/supabase";
 
 import { gateStateFrom, type OnboardingRead } from "./onboardingState";
-import { redeemPendingTokens } from "./pendingToken";
-import {
-  cleanupOnSessionChange,
-  destinationPath,
-  redeemStep,
-} from "./sessionFlow";
-import {
-  forgetReturnToOnSignOut,
-  noteSessionUser,
-  rememberReturnTo,
-} from "@/core/nav/returnTo";
-import type { RedeemDestination } from "@/core/plans/redeemOutcome";
-import {
-  revokeThisDevicePush,
-  usePushRegistration,
-  useNotificationResponseHandler,
-} from "@/core/notifications/push";
-import { syncLocalReminders } from "@/core/notifications/localReminders";
-import { clearCachedDays, useFlushPrayedQueue } from "@/core/plans/offline";
-import { useProfile } from "@/core/profile/queries";
-import { useLastSeenHeartbeat } from "@/core/email/heartbeat";
+import { cleanupOnSessionChange } from "./sessionFlow";
+import { forgetReturnToOnSignOut, noteSessionUser } from "@/core/nav/returnTo";
+import { revokeThisDevicePush } from "@/core/notifications/push";
+import { clearUserScopedStorage } from "@/core/storage/storage";
 
 import { qk } from "@/core/query/keys";
+
 type SessionState = {
   session: Session | null;
   /** True until the stored session has been read. */
@@ -54,6 +36,14 @@ type SessionState = {
 
 const SessionContext = createContext<SessionState | undefined>(undefined);
 
+/**
+ * La sesión y las dos puertas (términos, onboarding), y nada más.
+ *
+ * Lo que la app hace alrededor de la sesión —canjear un enlace pendiente,
+ * pedir push, programar recordatorios, escuchar el tap de una notificación,
+ * drenar la cola offline, el heartbeat— vive en `AppEffects`
+ * (core/auth/AppEffects.ts), que escucha este contexto.
+ */
 export const SessionProvider = ({
   children,
 }: {
@@ -64,9 +54,6 @@ export const SessionProvider = ({
   const [isLoading, setIsLoading] = useState(true);
   /** Who the cache currently belongs to. */
   const lastUserId = useRef<string | null>(null);
-  // Adónde llevar tras canjear un enlace, a la espera de que se pueda navegar.
-  const pendingDestination = useRef<RedeemDestination | null>(null);
-  const [destinationTick, setDestinationTick] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -76,10 +63,11 @@ export const SessionProvider = ({
       const userId = data.session?.user.id ?? null;
       lastUserId.current = userId;
       noteSessionUser(userId);
-      // Arrancar sin sesión también limpia el día guardado: si la sesión se
-      // perdió con la app cerrada, no hubo transición que lo hiciera.
-      if (cleanupOnSessionChange(null, userId).clearCachedDays) {
-        void clearCachedDays();
+      // Arrancar sin sesión también limpia lo guardado de la persona (el día
+      // para leer sin red): si la sesión se perdió con la app cerrada, no
+      // hubo transición que lo hiciera.
+      if (cleanupOnSessionChange(null, userId).clearUserStorage) {
+        void clearUserScopedStorage();
       }
       setSession(data.session);
       setIsLoading(false);
@@ -99,9 +87,10 @@ export const SessionProvider = ({
         // cached to leak, and clearing would cancel the first fetches.
         const cleanup = cleanupOnSessionChange(lastUserId.current, nextUserId);
         if (cleanup.clearQueryCache) queryClient.clear();
-        // Lo mismo con el día guardado para leer sin red: lleva el texto de
-        // oración y en web vive en localStorage.
-        if (cleanup.clearCachedDays) void clearCachedDays();
+        // Lo mismo con lo guardado en el dispositivo que es de la persona: el
+        // día para leer sin red lleva el texto de oración y en web vive en
+        // localStorage (core/storage/keys.ts, `USER_SCOPED_PREFIXES`).
+        if (cleanup.clearUserStorage) void clearUserScopedStorage();
 
         // Antes de que la puerta vuelva a pintar: lo que otra persona dejó
         // en `returnTo` no es destino de quien entra ahora.
@@ -119,39 +108,6 @@ export const SessionProvider = ({
   }, [queryClient]);
 
   const userId = session?.user.id ?? null;
-
-  // The single place every sign-in passes through, which is why the redemption
-  // lives here and not in one of the four screens that can produce one. It is a
-  // no-op once there is nothing stashed, so it costs one AsyncStorage read per
-  // launch.
-  useEffect(() => {
-    if (!userId) {
-      // Un destino de la sesión anterior no es de quien entre después.
-      pendingDestination.current = null;
-      return;
-    }
-
-    let active = true;
-
-    void redeemPendingTokens().then((destination) => {
-      if (!active || !destination) return;
-      pendingDestination.current = destination;
-      setDestinationTick((tick) => tick + 1);
-
-      // Redeeming is what makes that plan visible. Without invalidating, the
-      // Orar tab would keep insisting nobody had shared anything — this app
-      // never refetches on focus, so it would say so until it was killed.
-      void queryClient.invalidateQueries({ queryKey: qk.sharedWithMe.root });
-      void queryClient.invalidateQueries({ queryKey: qk.circles.root });
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [userId, queryClient]);
-
-  const rootNavigation = useRootNavigationState();
-  const navigationReady = Boolean(rootNavigation?.key);
 
   // Keyed by user, so signing in as someone else can never inherit the
   // previous account's onboarding state.
@@ -207,86 +163,6 @@ export const SessionProvider = ({
     read: data,
     readFailed,
   });
-
-  // Un share canjeado al entrar abre el día que toca orar, y una invitación a
-  // un círculo abre ese círculo — no Hoy, que dejaba a quien llegaba a una
-  // pestaña de distancia y sin pista de qué había pasado. El invite code de
-  // la app no lleva a ningún sitio concreto y no navega.
-  //
-  // Se navega solo con el navegador raíz ya montado: el canje puede resolver
-  // en el arranque en frío, antes, y un `router.replace` en ese momento caía
-  // en `/` arrastrando los parámetros de la ruta anterior (`/?token=…`).
-  //
-  // Y solo con las puertas de `AuthGate` cruzadas: en un alta nueva el canje
-  // vuelve mientras faltan los términos y el onboarding, y navegar entonces
-  // era perder el destino. Mientras falten, se le deja a `returnTo`, que es
-  // adonde la puerta lleva al cruzar la última (core/auth/sessionFlow.ts).
-  useEffect(() => {
-    const destination = pendingDestination.current;
-    if (!destination) return;
-
-    const step = redeemStep({ hasOnboarded, termsAccepted, navigationReady });
-    if (step === "wait") return;
-    pendingDestination.current = null;
-
-    if (step === "handoff") {
-      rememberReturnTo(destinationPath(destination));
-      return;
-    }
-
-    if (destination.kind === "plan") {
-      router.replace({
-        pathname: "/orar/[planId]",
-        params: { planId: destination.planId },
-      });
-    } else {
-      router.replace({
-        pathname: "/circulo/[id]",
-        params: { id: destination.circleId },
-      });
-    }
-  }, [destinationTick, navigationReady, hasOnboarded, termsAccepted]);
-
-  // RDY-10: se pide permiso ya dentro de la app, no en el primer frame — de
-  // ahí depender de `hasOnboarded`/`termsAccepted` y no solo de `userId`.
-  usePushRegistration(
-    userId ?? undefined,
-    Boolean(userId) && hasOnboarded === true && termsAccepted === true,
-  );
-
-  // Las horas de recordatorio se programan como notificaciones locales al
-  // entrar con una cuenta que ya las eligió: no dependen de que la persona
-  // vuelva a pasar por el perfil, igual que el push se pide aquí y no en una
-  // pantalla concreta.
-  const { data: profile } = useProfile(userId ?? undefined);
-
-  const syncRemindersEnabled =
-    Boolean(userId) && hasOnboarded === true && termsAccepted === true;
-
-  useEffect(() => {
-    if (!syncRemindersEnabled || !profile) return;
-
-    void syncLocalReminders(profile.reminder_hours ?? [], {
-      // `i18next` también exporta un `t` suelto (sin `this`); el singleton por
-      // defecto es el que `core/i18n/init` dejó inicializado.
-      // eslint-disable-next-line import/no-named-as-default-member
-      title: i18n.t("notifications.reminder"),
-    });
-  }, [syncRemindersEnabled, profile]);
-
-  // El listener del tap no pide permiso ni depende de onboarding: solo
-  // escucha. Si nunca llega una notificación, no hace nada; si llega,
-  // `resolve_push_notification()` decide, nunca el payload por sí solo.
-  useNotificationResponseHandler({
-    isSessionLoading: isLoading,
-    userId,
-  });
-
-  // Un "Ya oré" marcado sin red se queda en cola. Se drena al entrar y
-  // cada vez que la app vuelve a primer plano: si no, la marca local y
-  // el servidor se desalinean hasta el próximo arranque en frío.
-  useFlushPrayedQueue(userId);
-  useLastSeenHeartbeat(userId ?? undefined);
 
   const refreshOnboarding = useCallback(async () => {
     await refetch();

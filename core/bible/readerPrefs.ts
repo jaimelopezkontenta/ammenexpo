@@ -1,6 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 
+import { STORAGE_KEYS } from "@/core/storage/keys";
+import { getItemMigrating } from "@/core/storage/storage";
+
 /**
  * La letra del lector, del dispositivo y no de la cuenta: quien lee con la
  * letra grande en su teléfono no necesita que su portátil lo sepa. En web
@@ -8,7 +11,8 @@ import { useEffect, useState } from "react";
  * privado, permisos), la preferencia vive lo que viva la pantalla y ya.
  */
 
-const KEY = "ammen:reader-font";
+// Antes `ammen:reader-font`: la primera lectura lo pasa a este nombre.
+const KEY = STORAGE_KEYS.readerFont;
 
 export const FONT_STEPS = ["sm", "md", "lg"] as const;
 export type ReaderFontStep = (typeof FONT_STEPS)[number];
@@ -29,7 +33,7 @@ export const useReaderFontStep = () => {
 
   useEffect(() => {
     let alive = true;
-    AsyncStorage.getItem(KEY)
+    getItemMigrating(KEY)
       .then((stored) => {
         if (alive && isStep(stored)) setStep(stored);
       })

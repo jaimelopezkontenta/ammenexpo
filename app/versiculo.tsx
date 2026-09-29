@@ -14,6 +14,8 @@ import { useShareVerseImage } from "@/core/bible/image";
 import { formatReference } from "@/core/bible/reference";
 import { useBibleVersion } from "@/core/bible/useBibleVersion";
 import { parseBibleVersion } from "@/core/bible/versionChoice";
+import { useToast } from "@/core/toast/ToastProvider";
+import { useAction } from "@/core/toast/useAction";
 
 /**
  * La imagen del versículo, antes de mandarla.
@@ -52,8 +54,9 @@ export default function VerseImage() {
   // captura: cambia qué componente está montado bajo la referencia, no cómo se
   // comparte.
   const [format, setFormat] = useState<"square" | "story">("square");
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Compartida, descargada o fallida: se dice con un toast (core/toast).
+  const { run } = useAction();
+  const toast = useToast();
 
   // La versión la dice el enlace (el lector manda la que se estaba leyendo);
   // sin ella, la activa. Un enlace sin versión sigue funcionando.
@@ -82,21 +85,17 @@ export default function VerseImage() {
     version,
   );
 
-  const handleShare = async () => {
-    setNotice(null);
-    setError(null);
-
-    try {
+  // El aviso de éxito depende de cómo salió (en web se descarga), así que va
+  // dentro de la acción y no como el `done` fijo de `run`.
+  const handleShare = () =>
+    run(async () => {
       const outcome = await share.mutateAsync({ reference });
-      setNotice(
+      toast.success(
         outcome === "downloaded"
           ? t("bible.imageDownloaded")
           : t("bible.imageShared"),
       );
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
+    });
 
   // Retornos tempranos y no un `loading` dentro del contenido: así el JSX de
   // abajo solo se evalúa con `row` en la mano, y TypeScript lo sabe.
@@ -181,27 +180,6 @@ export default function VerseImage() {
         loading={share.isPending}
         onPress={() => void handleShare()}
       />
-
-      {notice ? (
-        <Txt
-          variant="caption"
-          className="text-center"
-          accessibilityRole="alert"
-        >
-          {notice}
-        </Txt>
-      ) : null}
-
-      {error ? (
-        <Txt
-          variant="caption"
-          tone="danger"
-          className="text-center"
-          accessibilityRole="alert"
-        >
-          {error}
-        </Txt>
-      ) : null}
     </ScreenScaffold>
   );
 }

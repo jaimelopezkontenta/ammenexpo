@@ -5,11 +5,16 @@ import {
   type RedeemDestination,
   type RedeemShareResult,
 } from "@/core/plans/redeemOutcome";
+import { STORAGE_KEYS } from "@/core/storage/keys";
+import { getItemMigrating, removeItemEverywhere } from "@/core/storage/storage";
 import { supabase } from "@/utils/supabase";
 
-const SHARE_KEY = "ammen.pendingShareToken";
-const INVITE_KEY = "ammen.pendingInviteCode";
-const SOURCE_KEY = "ammen.signupSource";
+// Nacieron sin versión; las lecturas pasan por `getItemMigrating` y los
+// borrados por `removeItemEverywhere`, así que un token guardado antes del
+// cambio de nombre se canjea y se olvida igual (core/storage/keys.ts).
+const SHARE_KEY = STORAGE_KEYS.pendingShareToken;
+const INVITE_KEY = STORAGE_KEYS.pendingInviteCode;
+const SOURCE_KEY = STORAGE_KEYS.signupSource;
 
 /**
  * Someone who opens a shared plan on the web has no account yet, so the token
@@ -58,7 +63,7 @@ export const rememberInviteCode = async (code: string) => {
  */
 export const rememberSource = async (source: string) => {
   try {
-    const already = await AsyncStorage.getItem(SOURCE_KEY);
+    const already = await getItemMigrating(SOURCE_KEY);
     if (already) return;
 
     await AsyncStorage.setItem(SOURCE_KEY, source);
@@ -70,9 +75,9 @@ export const rememberSource = async (source: string) => {
 export const readPendingTokens = async () => {
   try {
     const [shareToken, inviteCode, source] = await Promise.all([
-      AsyncStorage.getItem(SHARE_KEY),
-      AsyncStorage.getItem(INVITE_KEY),
-      AsyncStorage.getItem(SOURCE_KEY),
+      getItemMigrating(SHARE_KEY),
+      getItemMigrating(INVITE_KEY),
+      getItemMigrating(SOURCE_KEY),
     ]);
 
     return { shareToken, inviteCode, source };
@@ -98,7 +103,7 @@ export const attachSignupSource = async (userId: string) => {
       .eq("id", userId)
       .is("signup_source", null);
 
-    await AsyncStorage.removeItem(SOURCE_KEY);
+    await removeItemEverywhere(SOURCE_KEY);
   } catch {
     // Un dato de analítica no puede impedirle a nadie entrar en la app.
   }
@@ -110,8 +115,8 @@ export const attachSignupSource = async (userId: string) => {
  */
 const forgetShareToken = async (token: string) => {
   try {
-    if ((await AsyncStorage.getItem(SHARE_KEY)) === token) {
-      await AsyncStorage.removeItem(SHARE_KEY);
+    if ((await getItemMigrating(SHARE_KEY)) === token) {
+      await removeItemEverywhere(SHARE_KEY);
     }
   } catch {
     // Como mucho se reintenta en el próximo arranque, y el RPC es idempotente.
@@ -142,7 +147,7 @@ export const redeemShareToken = async (token: string) => {
 
 export const clearPendingTokens = async () => {
   try {
-    await AsyncStorage.multiRemove([SHARE_KEY, INVITE_KEY, SOURCE_KEY]);
+    await removeItemEverywhere(SHARE_KEY, INVITE_KEY, SOURCE_KEY);
   } catch {
     // Nothing actionable; the server clears its copy on redeem anyway.
   }
@@ -189,7 +194,7 @@ export const redeemPendingTokens = async () => {
     });
 
     if (!error) {
-      await AsyncStorage.removeItem(INVITE_KEY).catch(() => {});
+      await removeItemEverywhere(INVITE_KEY).catch(() => {});
     }
   }
 

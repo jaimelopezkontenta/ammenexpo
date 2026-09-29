@@ -1,7 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LanguageDetectorAsyncModule, Resource } from "i18next";
 
-export const LANGUAGE_STORAGE_KEY = "ammen.language";
+import { STORAGE_KEYS } from "@/core/storage/keys";
+import { getItemMigrating } from "@/core/storage/storage";
+
+// Antes `ammen.language`: la primera lectura lo pasa a este nombre.
+export const LANGUAGE_STORAGE_KEY = STORAGE_KEYS.language;
 
 type CreateLanguageDetector = {
   resources: Resource;
@@ -22,7 +26,7 @@ export const createLanguageDetector = ({
   async: true,
   detect: async (callback) => {
     try {
-      const stored = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
+      const stored = await getItemMigrating(LANGUAGE_STORAGE_KEY);
 
       if (stored && Object.keys(resources).includes(stored)) {
         callback(stored);

@@ -11,7 +11,7 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useBibleBooks } from "@/core/bible/queries";
 import {
   AlreadyPrayed,
@@ -45,8 +45,7 @@ export default function PrayForSomeoneRoute() {
 function PrayForSomeone({ planId }: { planId: string }) {
   const { t } = useTranslation();
   const { scrollBottom } = useScreenPadding();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const {
     data: plan,

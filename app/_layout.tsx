@@ -15,6 +15,7 @@ import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { AppEffects } from "@/core/auth/AppEffects";
 import { AuthGate } from "@/core/auth/AuthGate";
 import { SessionProvider } from "@/core/auth/SessionProvider";
 import { ToastProvider } from "@/core/toast/ToastProvider";
@@ -165,6 +166,11 @@ function RootLayoutInner() {
                 </Stack>
               </AuthGate>
             </ToastProvider>
+            {/* Último hijo a propósito: sus efectos (canje, push,
+                recordatorios, cola offline…) corren después de los de las
+                pantallas, como cuando vivían en el provider
+                (core/auth/AppEffects.ts). No pinta nada. */}
+            <AppEffects />
           </SessionProvider>
         </SafeAreaProvider>
       </QueryClientProvider>

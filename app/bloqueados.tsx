@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useMyBlocks, useUnblockUser } from "@/core/moderation/blocks";
 
 import { Tap } from "@/components/ui/Tap";
@@ -23,8 +23,7 @@ import { Tap } from "@/components/ui/Tap";
 export default function BlockedPeople() {
   const { t } = useTranslation();
   const { scrollBottom } = useScreenPadding();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const {
     data: blocks,

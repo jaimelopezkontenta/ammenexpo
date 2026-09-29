@@ -6,6 +6,7 @@ import {
   rememberShareToken,
   shouldStashLinkToken,
 } from "./pendingToken";
+import { STORAGE_KEYS } from "@/core/storage/keys";
 
 const storage = vi.hoisted(() => {
   const store = new Map<string, string>();
@@ -33,7 +34,7 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
 
 vi.mock("@/utils/supabase", () => ({ supabase: { rpc } }));
 
-const SHARE_KEY = "ammen.pendingShareToken";
+const SHARE_KEY = STORAGE_KEYS.pendingShareToken;
 
 describe("share token redemption", () => {
   beforeEach(() => {
@@ -51,7 +52,7 @@ describe("share token redemption", () => {
     await rememberShareToken("tok-1");
     await redeemShareToken("tok-1");
 
-    // El siguiente arranque: `SessionProvider` canjea lo pendiente.
+    // El siguiente arranque: `AppEffects` canjea lo pendiente al entrar.
     const planId = await redeemPendingTokens();
 
     expect(planId).toBeNull();
@@ -103,6 +104,44 @@ describe("share token redemption", () => {
     });
     expect(await redeemPendingTokens()).toBeNull();
     expect(rpc).toHaveBeenCalledTimes(1);
+  });
+
+  it("redeems once a token stashed under the name it had before versioning", async () => {
+    // Quien abrió el enlace con la versión anterior de la app y entra con
+    // esta: el token está en `ammen.pendingShareToken`, sin `.v1`.
+    rpc.mockResolvedValue({
+      data: { ok: true, plan_id: "plan-1" },
+      error: null,
+    });
+    storage.store.set("ammen.pendingShareToken", "tok-old");
+
+    expect(await redeemPendingTokens()).toEqual({
+      kind: "plan",
+      planId: "plan-1",
+    });
+    expect(rpc).toHaveBeenCalledWith("redeem_share_token", {
+      p_token: "tok-old",
+    });
+
+    // Y se olvida con los dos nombres: un canje repetido secuestraba la
+    // navegación del siguiente arranque.
+    expect(await redeemPendingTokens()).toBeNull();
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(storage.store.has("ammen.pendingShareToken")).toBe(false);
+    expect(storage.store.has(SHARE_KEY)).toBe(false);
+  });
+
+  it("redeems and forgets an invite code stashed under its old name", async () => {
+    rpc.mockResolvedValue({ data: null, error: null });
+    storage.store.set("ammen.pendingInviteCode", "code-old");
+
+    await redeemPendingTokens();
+
+    expect(rpc).toHaveBeenCalledWith("redeem_invite_code", {
+      p_code: "code-old",
+    });
+    expect(storage.store.has("ammen.pendingInviteCode")).toBe(false);
+    expect(storage.store.has(STORAGE_KEYS.pendingInviteCode)).toBe(false);
   });
 
   it("a circle invitation redeemed at sign-in opens that circle", async () => {

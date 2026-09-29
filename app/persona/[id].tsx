@@ -13,7 +13,7 @@ import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { ActionMenu } from "@/components/ui/ActionMenu";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { useReportProfile } from "@/core/moderation/queue";
 import { usePublicProfile } from "@/core/profile/queries";
@@ -21,6 +21,8 @@ import { buildShareUrl, shareOrCopy } from "@/core/share";
 import { usePersonPlans, usePersonPosts } from "@/core/social/feed";
 import { useFollowUser, useUnfollowUser } from "@/core/social/follows";
 import { useVisibleTestimonies } from "@/core/testimonies/queries";
+import { useToast } from "@/core/toast/ToastProvider";
+import { useAction } from "@/core/toast/useAction";
 import { icon, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
@@ -52,8 +54,7 @@ export default function PersonProfile() {
   const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const {
     data: person,
@@ -69,8 +70,9 @@ export default function PersonProfile() {
   const follow = useFollowUser();
   const unfollow = useUnfollowUser();
 
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Los resultados, por el toast del sistema (core/toast/useAction.ts).
+  const { run } = useAction();
+  const toast = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const theirs = (testimonies ?? []).filter((entry) => entry.author_id === id);
@@ -78,58 +80,33 @@ export default function PersonProfile() {
   const handleFollow = async () => {
     if (!userId || !person) return;
 
-    setError(null);
+    const input = { userId, targetId: id };
 
-    try {
-      const input = { userId, targetId: id };
-
-      if (person.i_follow) {
-        await unfollow.mutateAsync(input);
-      } else {
-        await follow.mutateAsync(input);
-      }
-    } catch {
-      // El caso concreto que la policy rechaza —seguir a quien te bloqueó— no
-      // se dice por su nombre: bloquear es silencioso en toda la app, y un
-      // "no puedes porque te bloquearon" lo dejaría de ser.
-      setError(t("common.errorGeneric"));
-    }
+    // El caso concreto que la policy rechaza —seguir a quien te bloqueó— no
+    // se dice por su nombre: bloquear es silencioso en toda la app, y un
+    // "no puedes porque te bloquearon" lo dejaría de ser. Sale el error de
+    // siempre.
+    await run(() =>
+      person.i_follow ? unfollow.mutateAsync(input) : follow.mutateAsync(input),
+    );
   };
 
-  const handleBlock = async () => {
-    setError(null);
+  const handleBlock = () =>
+    run(() => block.mutateAsync(id), t("moderation.blockDone"));
 
-    try {
-      await block.mutateAsync(id);
-      setNotice(t("moderation.blockDone"));
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
-
-  const handleReport = async () => {
-    setError(null);
-
-    try {
-      await report.mutateAsync(id);
-      setNotice(t("moderation.reportDone"));
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
+  const handleReport = () =>
+    run(() => report.mutateAsync(id), t("moderation.reportDone"));
 
   const handleShare = async () => {
     if (!person) return;
-
-    setError(null);
 
     const outcome = await shareOrCopy(
       t("profile.shareMessage", { name: person.display_name }),
       buildShareUrl(`/persona/${id}`, "invitacion"),
     );
 
-    if (outcome === "copied") setNotice(t("share.linkCopied"));
-    if (outcome === "failed") setError(t("share.shareFailed"));
+    if (outcome === "copied") toast.success(t("share.linkCopied"));
+    if (outcome === "failed") toast.error(t("share.shareFailed"));
   };
 
   if (isLoading) {
@@ -338,18 +315,6 @@ export default function PersonProfile() {
                 </Card>
               ))}
             </View>
-          ) : null}
-
-          {notice ? (
-            <Txt variant="caption" accessibilityRole="alert">
-              {notice}
-            </Txt>
-          ) : null}
-
-          {error ? (
-            <Txt variant="caption" tone="danger" accessibilityRole="alert">
-              {error}
-            </Txt>
           ) : null}
         </ScrollView>
       </DawnBackground>

@@ -5,7 +5,7 @@ import { Txt } from "@/components/ui/Text";
 import { Card } from "@/components/Card";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { EmailInviteField } from "@/components/email/EmailInviteField";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
 import { useCreateInviteCode, useMyInviteCode } from "@/core/social/invites";
 import { useToast } from "@/core/toast/ToastProvider";
@@ -24,8 +24,7 @@ import { useToast } from "@/core/toast/ToastProvider";
  */
 export default function Invite() {
   const { t } = useTranslation();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
   const toast = useToast();
 
   const {

@@ -13,7 +13,7 @@ import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useCircleMembers } from "@/core/circles/queries";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { goBackOr } from "@/core/nav/safeBack";
@@ -28,6 +28,7 @@ import {
   useTogglePostPrayer,
   useWriteComment,
 } from "@/core/posts/queries";
+import { useAction } from "@/core/toast/useAction";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -50,8 +51,7 @@ export default function PrayerRequestComments() {
     id: string;
     circulo?: string;
   }>();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const {
     data: comments,
@@ -78,8 +78,8 @@ export default function PrayerRequestComments() {
     (members ?? []).some((m) => m.user_id === userId && m.role !== "member");
 
   const [draft, setDraft] = useState("");
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Hecho o fallido, cada acción lo dice con un toast (core/toast/useAction.ts).
+  const { run } = useAction();
 
   const canSend = draft.trim().length > 0 && !write.isPending;
 
@@ -87,10 +87,9 @@ export default function PrayerRequestComments() {
     const body = draft.trim();
     if (!body) return;
 
-    setError(null);
     setDraft("");
 
-    try {
+    const sent = await run(async () => {
       const result = await write.mutateAsync(body);
 
       // B1b: igual que la petición, nunca se enseña como comentado con
@@ -98,22 +97,10 @@ export default function PrayerRequestComments() {
       if (result.crisisFlagged) {
         router.replace("/crisis");
       }
-    } catch {
-      setDraft(body);
-      setError(t("common.errorGeneric"));
-    }
-  };
+    });
 
-  const run = async (action: () => Promise<unknown>, done?: string) => {
-    setError(null);
-    setNotice(null);
-
-    try {
-      await action();
-      if (done) setNotice(done);
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
+    // Lo escrito vuelve al campo: se reintenta sin volver a teclearlo.
+    if (!sent) setDraft(body);
   };
 
   // Bloquear pregunta antes: estaba junto a «Reportar» y bastaba un toque suelto.
@@ -153,22 +140,6 @@ export default function PrayerRequestComments() {
           contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
-          {notice ? (
-            <Txt
-              variant="caption"
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite"
-            >
-              {notice}
-            </Txt>
-          ) : null}
-
-          {error ? (
-            <Txt variant="caption" tone="danger" accessibilityRole="alert">
-              {error}
-            </Txt>
-          ) : null}
-
           {/* La petición, con lo que trae la tarjeta del muro. Sin `onOpen`
             (ya estás en los comentarios) y sin ocultar: en esta pantalla
             «Ocultar» es de los comentarios, y ocultar la petición entera se

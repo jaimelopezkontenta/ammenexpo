@@ -1,5 +1,4 @@
 import { Stack, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
@@ -11,7 +10,7 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { EmailInviteField } from "@/components/email/EmailInviteField";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useMyCircles } from "@/core/circles/queries";
 import {
   useCreateShareLink,
@@ -29,6 +28,7 @@ import {
   shareOrCopy,
 } from "@/core/share";
 import { useToast } from "@/core/toast/ToastProvider";
+import { useAction } from "@/core/toast/useAction";
 
 import { useThemeColors } from "@/theme";
 
@@ -38,8 +38,7 @@ export default function SharePlan() {
   const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const { data: plan, isLoading, isLoadingError, refetch } = usePlanSummary(id);
   const { data: circles, isLoadingError: circlesFailed } = useMyCircles(userId);
@@ -51,42 +50,31 @@ export default function SharePlan() {
   const toggleCircle = useTogglePlanCircle(id, userId);
   const setPublic = useSetPlanPublic(id);
 
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Hecho o fallido, cada acción lo dice con un toast (core/toast/useAction.ts).
+  const { run } = useAction();
 
   // The toggle used to be a bare `.mutate()` with no error handling and no
   // pending state, and the chip only reflects `sharedCircles` — so a failed
   // share was completely silent. Someone believed they had shared a prayer
   // request with their family and had not.
-  const handlePublic = async () => {
+  const handlePublic = () => {
     // Se lee aquí y no de una variable de arriba: este manejador vive antes de
     // la guarda que garantiza que el plan ha cargado.
     const publicNow = plan?.visibility === "public";
 
-    setNotice(null);
-    setError(null);
-
-    try {
-      await setPublic.mutateAsync(!publicNow);
-      setNotice(publicNow ? t("share.unpublished") : t("share.published"));
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
+    return run(
+      () => setPublic.mutateAsync(!publicNow),
+      publicNow ? t("share.unpublished") : t("share.published"),
+    );
   };
 
-  const handleToggleCircle = async (circleId: string) => {
-    setError(null);
-    setNotice(null);
-
-    try {
-      await toggleCircle.mutateAsync({
+  const handleToggleCircle = (circleId: string) =>
+    run(() =>
+      toggleCircle.mutateAsync({
         circleId,
         shared: (sharedCircles ?? []).includes(circleId),
-      });
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
+      }),
+    );
 
   if (isLoading) {
     return (
@@ -130,42 +118,23 @@ export default function SharePlan() {
   const handleShare = async () => {
     if (!linkUrl) return;
 
-    setNotice(null);
-    setError(null);
-
     const outcome = await shareOrCopy(invitation, linkUrl);
 
     // Silence on failure is what made the circle invite button feel broken:
     // the link is right there on screen, so say so instead of nothing.
     if (outcome === "copied") {
-      setNotice(t("share.linkCopied"));
+      toast.success(t("share.linkCopied"));
     } else if (outcome === "failed") {
-      setError(t("share.shareFailed"));
+      toast.error(t("share.shareFailed"));
     }
   };
 
-  const handleCreate = async () => {
-    setError(null);
-
-    try {
-      await createLink.mutateAsync(userId!);
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
+  const handleCreate = () => run(() => createLink.mutateAsync(userId!));
 
   const handleRevoke = async () => {
     if (!link) return;
 
-    setNotice(null);
-    setError(null);
-
-    try {
-      await revokeLink.mutateAsync(link.id);
-      setNotice(t("share.linkRevoked"));
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
+    await run(() => revokeLink.mutateAsync(link.id), t("share.linkRevoked"));
   };
 
   return (
@@ -294,18 +263,6 @@ export default function SharePlan() {
               </>
             )}
           </View>
-
-          {notice ? (
-            <Txt variant="caption" accessibilityRole="alert">
-              {notice}
-            </Txt>
-          ) : null}
-
-          {error ? (
-            <Txt variant="caption" tone="danger" accessibilityRole="alert">
-              {error}
-            </Txt>
-          ) : null}
         </ScrollView>
       </DawnBackground>
     </>
