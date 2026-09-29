@@ -190,6 +190,35 @@ describe("el cliente del SDK", () => {
   });
 });
 
+describe("si el SDK no expone sus clases de error", () => {
+  it("se avisa en el registro y se sigue clasificando por status", async () => {
+    const statics = sdk.Anthropic as unknown as Record<string, unknown>;
+    const original = statics.APIConnectionError;
+    statics.APIConnectionError = undefined;
+
+    try {
+      script(overloaded, ok);
+      const { provider: p } = provider();
+
+      expect(lines.map((line) => JSON.parse(line).event)).toContain(
+        "provider.sdk_error_classes_missing",
+      );
+
+      // Un 529 se reintenta igual: no depende de las clases.
+      await p.generate(args);
+      expect(sdk.stream).toHaveBeenCalledTimes(2);
+    } finally {
+      statics.APIConnectionError = original;
+    }
+  });
+
+  it("con las clases presentes no dice nada", () => {
+    provider();
+
+    expect(lines).toEqual([]);
+  });
+});
+
 describe("la petición no cambia", () => {
   it("Sonnet primero, con su razonamiento y el prompt cacheable", async () => {
     script(ok);

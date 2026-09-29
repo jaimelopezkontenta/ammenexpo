@@ -83,6 +83,17 @@ export const createAnthropicProvider = (
     AnthropicError: Anthropic.AnthropicError,
   });
 
+  // La clasificación por tipo depende de que el SDK exponga sus clases de error
+  // como estáticas. Si una versión futura las mueve, no se rompe (se clasifica
+  // solo por status y por el payload del stream), pero los errores de conexión
+  // dejarían de reintentarse sin que nada lo diga: que al menos se vea.
+  if (
+    typeof Anthropic.APIConnectionError !== "function" ||
+    typeof Anthropic.AnthropicError !== "function"
+  ) {
+    logger.warn("provider.sdk_error_classes_missing");
+  }
+
   // `timeout` is the SDK's time to the first byte; the per-attempt `signal`
   // below is what bounds the whole stream. Without either, the default is ten
   // minutes — longer than the edge's own wall clock.
