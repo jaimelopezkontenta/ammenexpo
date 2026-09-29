@@ -10,6 +10,7 @@ import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useCircleMembers } from "@/core/circles/queries";
+import { useFeatureFlag } from "@/core/flags/useFeatureFlag";
 import { useBlockUser } from "@/core/moderation/blocks";
 import {
   useDeletePrayerRequest,
@@ -50,6 +51,11 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
     fetchNextPage,
   } = usePrayerFeed(circulo);
   const { data: members } = useCircleMembers(circulo);
+  // El muro abierto también cuelga de `community_feed`: apagado, el servidor lo
+  // devuelve vacío y «Puedes ser quien empiece» invitaría a escribir en un
+  // sitio cerrado. `unknown` (cargando, o la lectura falló) no cuenta como apagado.
+  const communityFlag = useFeatureFlag("community_feed");
+  const wallClosed = !circulo && communityFlag === "off";
 
   const togglePrayer = useTogglePostPrayer(userId);
   const report = useReportPost(userId);
@@ -106,8 +112,14 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
 
         {(requests ?? []).length === 0 ? (
           <EmptyState
-            title={circulo ? t("feed.emptyCircle") : t("feed.empty")}
-            body={t("feed.emptyBody")}
+            title={
+              circulo
+                ? t("feed.emptyCircle")
+                : wallClosed
+                  ? t("community.closedTitle")
+                  : t("feed.empty")
+            }
+            body={wallClosed ? t("community.closedBody") : t("feed.emptyBody")}
           />
         ) : null}
 
