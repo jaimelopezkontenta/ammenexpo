@@ -904,12 +904,13 @@ select pg_temp.assert(
 
 -- Lo que se puede llamar SIN sesión, cerrado a una lista. Una función nueva
 -- que olvide el `revoke ... from public` hace fallar esto en vez de quedar
--- abierta a cualquiera por PostgREST.
+-- abierta a cualquiera por PostgREST. Los triggers entran también: no
+-- necesitan EXECUTE para dispararse, así que nadie tiene por qué tenerlo
+-- (revisión R1, S7).
 select pg_temp.assert(
   (select coalesce(array_agg(p.proname::text order by p.proname), '{}')
      from pg_proc p
     where p.pronamespace = 'public'::regnamespace
-      and p.prorettype <> 'trigger'::regtype
       and has_function_privilege('anon', p.oid, 'EXECUTE'))
   = array[
       'email_prefs_by_token',
@@ -923,6 +924,52 @@ select pg_temp.assert(
     ],
   'anon can execute exactly the public previews and the email-token RPCs');
 
+-- R1 S7: y fuera de esa lista nada llega por PUBLIC. Un entorno creado con
+-- los privilegios por defecto antiguos da EXECUTE directo a anon, y ahí
+-- `revoke ... from public` no bastaba; la migración
+-- 20260929132703_function_privileges_anon lo normaliza y esto vigila que en
+-- local siga igual.
+select pg_temp.assert(
+  (select count(*)
+     from pg_proc p
+     cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+    where p.pronamespace = 'public'::regnamespace
+      and a.grantee = 0
+      and a.privilege_type = 'EXECUTE'
+      and p.proname not in (
+        'email_prefs_by_token', 'get_circle_invite_preview', 'get_invite_preview',
+        'get_shared_plan_preview', 'plan_today', 'reactivate_email_cadence_by_token',
+        'unsubscribe_email_one_click', 'update_email_prefs_by_token'
+      )) = 0,
+  'no function in public is executable through PUBLIC outside the anon list');
+
+select pg_temp.assert(
+  not exists (
+    select 1
+      from pg_default_acl d
+      cross join lateral aclexplode(d.defaclacl) a
+     where d.defaclrole = 'postgres'::regrole
+       and d.defaclnamespace = 'public'::regnamespace
+       and d.defaclobjtype = 'f'
+       and a.grantee in ('anon'::regrole, 'authenticated'::regrole, 'service_role'::regrole)
+  ),
+  'new functions in public get no direct EXECUTE for the API roles by default');
+
+begin;
+
+create function public.zz_default_privileges_probe()
+returns integer language sql as 'select 1';
+
+revoke execute on function public.zz_default_privileges_probe() from public;
+
+select pg_temp.assert(
+  not has_function_privilege('anon', 'public.zz_default_privileges_probe()', 'EXECUTE')
+    and not has_function_privilege('authenticated', 'public.zz_default_privileges_probe()', 'EXECUTE')
+    and not has_function_privilege('service_role', 'public.zz_default_privileges_probe()', 'EXECUTE'),
+  'so a new function with the usual revoke from public is closed to every API role');
+
+rollback;
+
 -- El filtro de moderación y el de crisis no se pueden sondear sin cuenta.
 select pg_temp.assert(
   not has_function_privilege('anon', 'public.is_objectionable(text)', 'EXECUTE')
@@ -930,25 +977,56 @@ select pg_temp.assert(
     and has_function_privilege('authenticated', 'public.is_objectionable(text)', 'EXECUTE'),
   'the moderation and crisis classifiers are not callable without a session');
 
--- Lo que solo drena colas o administra no se puede llamar con sesión de
--- usuario: devuelven tokens push, direcciones de correo o el secreto de las
--- preferencias, o nombran staff.
+-- Lo que solo drena colas, prepara correo o administra no se puede llamar
+-- con sesión de usuario: devuelven tokens push o direcciones de correo,
+-- firman tokens de baja, nombran staff o mueven las colas. Es la misma lista
+-- que cierra 20260929132703_function_privileges_anon.
 select pg_temp.assert(
   (select count(*)
      from pg_proc p
     where p.pronamespace = 'public'::regnamespace
       and p.proname in (
-        'admin_set_flag', 'admin_set_staff',
+        'admin_set_flag', 'admin_set_staff', 'avatar_url_is_valid',
         'claim_email_outbox_batch', 'claim_push_outbox_batch',
-        'pending_push_outbox', 'mark_push_delivery',
-        'mark_email_delivery', 'record_email_event',
-        'email_hmac_secret', 'issue_email_prefs_token',
-        'email_address_for', 'enqueue_email',
-        'enqueue_all_email_jobs'
+        'clear_foreign_avatar_urls', 'email_address_for', 'email_apply_sunset',
+        'email_cadence_hits_today', 'email_channel_allowed', 'email_habit_payload',
+        'email_hmac_secret', 'email_local_hour', 'email_non_t_taken_today',
+        'email_opened_app_today', 'email_outbox_claimable', 'email_prayed_today',
+        'email_refresh_pause_growth', 'enqueue_all_email_jobs',
+        'enqueue_digest_emails', 'enqueue_drip_emails', 'enqueue_email',
+        'enqueue_habit_emails', 'enqueue_invite_used', 'enqueue_winback_emails',
+        'ensure_follow', 'issue_email_prefs_token', 'mark_email_delivery',
+        'mark_push_delivery', 'pending_push_outbox', 'purge_expired_rows',
+        'push_outbox_claimable', 'record_email_event', 'run_email_jobs',
+        'run_queue_drains', 'skip_stale_queue_rows', 'verify_email_prefs_token',
+        'verse_of_the_day_for'
       )
       and (has_function_privilege('authenticated', p.oid, 'EXECUTE')
         or has_function_privilege('anon', p.oid, 'EXECUTE'))) = 0,
-  'queue drains and admin functions stay out of reach of user sessions');
+  'queue drains, email internals and admin functions stay out of reach of user sessions');
+
+-- Y la lista no se queda vieja en silencio: si una se renombra, esto avisa.
+select pg_temp.assert(
+  (select count(distinct p.proname)
+     from pg_proc p
+    where p.pronamespace = 'public'::regnamespace
+      and p.proname in (
+        'admin_set_flag', 'admin_set_staff', 'avatar_url_is_valid',
+        'claim_email_outbox_batch', 'claim_push_outbox_batch',
+        'clear_foreign_avatar_urls', 'email_address_for', 'email_apply_sunset',
+        'email_cadence_hits_today', 'email_channel_allowed', 'email_habit_payload',
+        'email_hmac_secret', 'email_local_hour', 'email_non_t_taken_today',
+        'email_opened_app_today', 'email_outbox_claimable', 'email_prayed_today',
+        'email_refresh_pause_growth', 'enqueue_all_email_jobs',
+        'enqueue_digest_emails', 'enqueue_drip_emails', 'enqueue_email',
+        'enqueue_habit_emails', 'enqueue_invite_used', 'enqueue_winback_emails',
+        'ensure_follow', 'issue_email_prefs_token', 'mark_email_delivery',
+        'mark_push_delivery', 'pending_push_outbox', 'purge_expired_rows',
+        'push_outbox_claimable', 'record_email_event', 'run_email_jobs',
+        'run_queue_drains', 'skip_stale_queue_rows', 'verify_email_prefs_token',
+        'verse_of_the_day_for'
+      )) = 38,
+  'every function in that list still exists under that name');
 
 \echo ''
 \echo '================================'
