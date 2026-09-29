@@ -20,6 +20,9 @@ type Segment = (typeof SEGMENTS)[number];
  * sitio. Las rutas /comunidad y /peticiones siguen vivas para enlaces y
  * avisos: esta pantalla y aquellas comparten los mismos panes.
  */
+// Si esta pestaña revienta, las demás y la barra siguen en pie.
+export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
+
 export default function Together() {
   const { t } = useTranslation();
   const [segment, setSegment] = useState<Segment>("circles");

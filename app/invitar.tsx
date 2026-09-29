@@ -28,7 +28,13 @@ export default function Invite() {
   const userId = session?.user.id;
   const toast = useToast();
 
-  const { data: code, isLoading, isError, refetch } = useMyInviteCode(userId);
+  const {
+    data: code,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useMyInviteCode(userId);
   const create = useCreateInviteCode(userId);
 
   const handleShare = async () => {
@@ -58,6 +64,7 @@ export default function Invite() {
       <ScreenScaffold
         title={t("invite.title")}
         error
+        cause={error}
         onRetry={() => void refetch()}
       />
     );

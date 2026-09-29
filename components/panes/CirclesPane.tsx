@@ -41,7 +41,13 @@ export const CirclesPane = ({
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: circles, isLoading, isError, refetch } = useMyCircles(userId);
+  const {
+    data: circles,
+    isLoading,
+    isError,
+    error: circlesError,
+    refetch,
+  } = useMyCircles(userId);
   const createCircle = useCreateCircle(userId);
   const { data: unread } = useUnreadCounts(userId);
 
@@ -92,7 +98,7 @@ export const CirclesPane = ({
   // A failed read used to fall through to "you have no circles yet", which is
   // a different and untrue thing to say.
   if (isError) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={circlesError} onRetry={() => void refetch()} />;
   }
 
   if (isCreating) {

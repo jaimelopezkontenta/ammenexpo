@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  captureError,
   devConsoleReporter,
   observability,
   sanitizePayload,
+  toErrorReport,
   track,
   type ObservabilityPayload,
 } from "./track";
@@ -137,5 +139,50 @@ describe("observability allowlist + schema", () => {
     });
 
     spy.mockRestore();
+  });
+});
+
+describe("captureError", () => {
+  beforeEach(() => {
+    observability.reset();
+  });
+
+  it("never lets the message or the error object reach the reporter", () => {
+    const reporter = vi.fn();
+    observability.configureErrors(reporter);
+
+    const error = Object.assign(
+      new Error("violates check: Señor, cuida de mi madre en el hospital"),
+      { code: "23514", status: 400 },
+    );
+    captureError(error, { source: "mutation", key: "prayerRequests" });
+
+    expect(reporter).toHaveBeenCalledWith({
+      source: "mutation",
+      key: "prayerRequests",
+      name: "Error",
+      code: "23514",
+      status: 400,
+    });
+    expect(JSON.stringify(reporter.mock.calls)).not.toContain("madre");
+  });
+
+  it("drops a key or code that is not a plain identifier", () => {
+    const report = toErrorReport(
+      { name: "PostgrestError", code: "nota: mi hermana" },
+      { source: "query", key: "plan e2e10000-0000 texto libre" },
+    );
+
+    expect(report).toEqual({ source: "query", name: "PostgrestError" });
+  });
+
+  it("respects the kill switch", () => {
+    const reporter = vi.fn();
+    observability.configureErrors(reporter);
+    observability.disable();
+
+    captureError(new Error("x"), { source: "render" });
+
+    expect(reporter).not.toHaveBeenCalled();
   });
 });

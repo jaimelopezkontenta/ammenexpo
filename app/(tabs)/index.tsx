@@ -62,6 +62,9 @@ const JOURNEY_STEPS = [
 
 type JourneyStep = (typeof JOURNEY_STEPS)[number]["key"];
 
+// Si esta pestaña revienta, las demás y la barra siguen en pie.
+export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
+
 export default function Today() {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
@@ -72,6 +75,7 @@ export default function Today() {
     data: plans,
     isLoading,
     isError,
+    error: plansError,
     refetch: refetchPlan,
   } = useMyPlans(userId);
   const { data: activePlanId } = useActivePlanId(userId);
@@ -88,6 +92,7 @@ export default function Today() {
   // could already be praying.
   const {
     data: day,
+    error: dayError,
     refetch: refetchDay,
     isPending: dayPending,
   } = useTodayDay(
@@ -270,7 +275,7 @@ export default function Today() {
   }
 
   if (isError) {
-    return <ErrorState onRetry={() => void refetchPlan()} />;
+    return <ErrorState error={plansError} onRetry={() => void refetchPlan()} />;
   }
 
   // Plans and progress can settle before today's day. `stuck && !day` used to
@@ -399,7 +404,7 @@ export default function Today() {
   // The plan is active but no day has come back after the query settled.
   // Pending is handled above: reaching here means get_my_day finished empty.
   if (!day) {
-    return <ErrorState onRetry={() => void refetchDay()} />;
+    return <ErrorState error={dayError} onRetry={() => void refetchDay()} />;
   }
 
   // The day a plan ends.

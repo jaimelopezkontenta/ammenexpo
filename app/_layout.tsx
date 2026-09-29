@@ -3,7 +3,7 @@ import "../translation";
 
 import { CormorantGaramond_400Regular_Italic } from "@expo-google-fonts/cormorant-garamond";
 import { Lora_400Regular, Lora_600SemiBold } from "@expo-google-fonts/lora";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -17,10 +17,12 @@ import { AuthGate } from "@/core/auth/AuthGate";
 import { SessionProvider } from "@/core/auth/SessionProvider";
 import { ToastProvider } from "@/core/toast/ToastProvider";
 import {
+  devConsoleErrorReporter,
   devConsoleReporter,
   observability,
   track,
 } from "@/core/observability/track";
+import { createQueryClient, wireAppFocus } from "@/core/query/client";
 
 import { useTranslation } from "react-i18next";
 
@@ -44,7 +46,12 @@ SplashScreen.setOptions({ fade: true, duration: 220 });
 // ejecutándose igual, simplemente no hay a quién mandarle nada todavía.
 if (__DEV__) {
   observability.configure(devConsoleReporter);
+  observability.configureErrors(devConsoleErrorReporter);
 }
+
+// Un render que revienta ya no deja la app en blanco: Expo Router pinta esto
+// en su lugar, con reintento (components/AppErrorBoundary.tsx).
+export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
 
 // Un evento por arranque en frío, no por cada remontaje del árbol — este
 // módulo se importa una vez por proceso, así que basta con dispararlo aquí
@@ -65,17 +72,10 @@ function RootLayoutInner() {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const isDark = useIsDark();
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 30_000,
-            retry: 1,
-          },
-        },
-      }),
-  );
+  const [queryClient] = useState(createQueryClient);
+
+  // Volver del fondo refresca lo que esté viejo (core/query/client.ts).
+  useEffect(() => wireAppFocus(), []);
 
   // Tres familias, tres trabajos. General Sans lleva la interfaz; Cormorant
   // itálica, lo editorial —el wordmark y los labels—; y Lora se queda con lo

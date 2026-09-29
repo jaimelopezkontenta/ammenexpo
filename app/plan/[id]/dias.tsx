@@ -22,7 +22,7 @@ export default function PlanDays() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { data: plan } = usePlanSummary(id);
-  const { data: days, isLoading, isError, refetch } = usePlanDays(id);
+  const { data: days, isLoading, isError, error, refetch } = usePlanDays(id);
 
   if (isLoading) {
     return <ScreenScaffold title={t("plan.days")} loading />;
@@ -33,6 +33,7 @@ export default function PlanDays() {
       <ScreenScaffold
         title={t("plan.days")}
         error
+        cause={error}
         onRetry={() => void refetch()}
       />
     );

@@ -32,6 +32,7 @@ export default function Notifications() {
     data,
     isLoading,
     isError,
+    error,
     refetch,
     hasNextPage,
     isFetchingNextPage,
@@ -56,6 +57,7 @@ export default function Notifications() {
       <ScreenScaffold
         title={t("notifications.title")}
         error
+        cause={error}
         onRetry={() => void refetch()}
       />
     );

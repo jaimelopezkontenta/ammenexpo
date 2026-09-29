@@ -22,7 +22,7 @@ import {
   useNotificationResponseHandler,
 } from "@/core/notifications/push";
 import { syncLocalReminders } from "@/core/notifications/localReminders";
-import { useFlushPrayedQueue } from "@/core/plans/offline";
+import { clearCachedDays, useFlushPrayedQueue } from "@/core/plans/offline";
 import { useProfile } from "@/core/profile/queries";
 import { useLastSeenHeartbeat } from "@/core/email/heartbeat";
 
@@ -77,6 +77,9 @@ export const SessionProvider = ({
         // cached to leak, and clearing would cancel the first fetches.
         if (lastUserId.current !== null && lastUserId.current !== nextUserId) {
           queryClient.clear();
+          // Lo mismo con el día guardado para leer sin red: lleva el texto de
+          // oración y en web vive en localStorage.
+          void clearCachedDays();
         }
 
         lastUserId.current = nextUserId;

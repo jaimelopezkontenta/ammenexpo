@@ -194,7 +194,63 @@ export const devConsoleReporter: ObservabilityReporter = (event, payload) => {
   console.debug("[observability]", event, payload);
 };
 
+/**
+ * Un error, reducido a lo que no puede llevar nada de la persona: su clase,
+ * un código y de dónde vino. El mensaje no sale nunca de aquí — un error de
+ * PostgREST puede citar el texto de una oración, y eso es categoría especial
+ * (Art. 9 RGPD) viaje a donde viaje.
+ */
+export type ErrorReport = {
+  source: "query" | "mutation" | "render";
+  /** La raíz de la query key (`"todayDay"`), nunca ids ni parámetros. */
+  key?: string;
+  name: string;
+  code?: string;
+  status?: number;
+};
+
+export type ErrorReporter = (report: ErrorReport) => void;
+
+export const noopErrorReporter: ErrorReporter = () => {};
+
+/** En desarrollo, a la consola de quien prueba; nunca sale de su máquina. */
+export const devConsoleErrorReporter: ErrorReporter = (report) => {
+  console.warn("[observability:error]", report);
+};
+
+const SAFE_CODE = /^[A-Za-z0-9_.-]{1,32}$/;
+
+/** Solo nombre, código y status: lo demás se queda fuera por construcción. */
+export const toErrorReport = (
+  error: unknown,
+  context: Pick<ErrorReport, "source" | "key">,
+): ErrorReport => {
+  const raw = (error && typeof error === "object" ? error : {}) as {
+    name?: unknown;
+    code?: unknown;
+    status?: unknown;
+  };
+  const key =
+    typeof context.key === "string" && SAFE_CODE.test(context.key)
+      ? context.key
+      : undefined;
+
+  return {
+    source: context.source,
+    ...(key ? { key } : {}),
+    name:
+      typeof raw.name === "string" && SAFE_CODE.test(raw.name)
+        ? raw.name
+        : "Error",
+    ...(typeof raw.code === "string" && SAFE_CODE.test(raw.code)
+      ? { code: raw.code }
+      : {}),
+    ...(typeof raw.status === "number" ? { status: raw.status } : {}),
+  };
+};
+
 let activeReporter: ObservabilityReporter = noopReporter;
+let activeErrorReporter: ErrorReporter = noopErrorReporter;
 let killSwitch = false;
 
 /**
@@ -206,8 +262,12 @@ export const observability = {
   configure(reporter: ObservabilityReporter) {
     activeReporter = reporter;
   },
+  configureErrors(reporter: ErrorReporter) {
+    activeErrorReporter = reporter;
+  },
   reset() {
     activeReporter = noopReporter;
+    activeErrorReporter = noopErrorReporter;
     killSwitch = false;
   },
   disable() {
@@ -234,4 +294,19 @@ export const track = (
   if (!ALLOWED_EVENTS.includes(event)) return;
 
   activeReporter(event, sanitizePayload(event, payload));
+};
+
+/**
+ * El otro punto de entrada: un error que la app no supo evitar (una query o
+ * una mutación que falla, un render que revienta). Pasa por `toErrorReport`,
+ * así que ningún reporter recibe el mensaje ni el objeto original. Respeta el
+ * mismo kill switch que `track()`.
+ */
+export const captureError = (
+  error: unknown,
+  context: Pick<ErrorReport, "source" | "key">,
+): void => {
+  if (killSwitch) return;
+
+  activeErrorReporter(toErrorReport(error, context));
 };

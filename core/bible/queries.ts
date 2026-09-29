@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/utils/supabase";
 
 import { useSession } from "@/core/auth/SessionProvider";
+import { msUntilLocalMidnight } from "@/core/time/midnight";
 
 import type { BibleBook } from "./navigation";
 
@@ -207,8 +208,9 @@ export type DailyVerse = {
  * referencias— y no depende de nada más.
  *
  * Es **el mismo para todo el mundo el mismo día**, que es lo que permite hablar
- * de él y lo que hace que no cambie si abres la app dos veces. Por eso
- * `staleTime: Infinity`: dentro de una sesión no puede cambiar.
+ * de él y lo que hace que no cambie si abres la app dos veces. Por eso no
+ * caduca en todo el día — pero sí a medianoche: con `staleTime: Infinity`, el
+ * de ayer seguía ahí por la mañana si la app no se había cerrado.
  */
 export const useVerseOfTheDay = () => {
   const { session } = useSession();
@@ -218,7 +220,7 @@ export const useVerseOfTheDay = () => {
     // Estas lecturas no aportan nada en el login y el 401 asusta en consola:
     // no se disparan sin sesión.
     enabled: Boolean(session),
-    staleTime: Infinity,
+    staleTime: msUntilLocalMidnight(),
     queryFn: async (): Promise<DailyVerse | null> => {
       const { data, error } = await supabase.rpc("verse_of_the_day");
 

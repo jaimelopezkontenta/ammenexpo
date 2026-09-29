@@ -41,12 +41,21 @@ import {
 import { NavRow } from "@/components/ui/NavRow";
 import { Tap } from "@/components/ui/Tap";
 
+// Si esta pestaña revienta, las demás y la barra siguen en pie.
+export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
+
 export default function Profile() {
   const { t } = useTranslation();
   const { session, signOut } = useSession();
   const userId = session?.user.id;
 
-  const { data: profile, isLoading, isError, refetch } = useProfile(userId);
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProfile(userId);
   const { data: emailPrefs } = useEmailPreferences(userId);
   const update = useUpdateProfile(userId);
   const updateTimezone = useUpdateTimezone(userId);
@@ -71,7 +80,7 @@ export default function Profile() {
   }
 
   if (isError || !profile) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   const name = draftName ?? profile.display_name;

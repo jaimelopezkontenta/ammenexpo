@@ -152,7 +152,10 @@ export const CommunityPane = () => {
         people.isLoading ? (
           <LoadingState />
         ) : people.isError ? (
-          <ErrorState onRetry={() => void people.refetch()} />
+          <ErrorState
+            error={people.error}
+            onRetry={() => void people.refetch()}
+          />
         ) : (people.data ?? []).length === 0 ? (
           <Txt variant="body" tone="secondary">
             {t("community.nobodyFound")}
@@ -206,7 +209,7 @@ export const CommunityPane = () => {
       ) : feed.isLoading ? (
         <LoadingState />
       ) : feed.isError ? (
-        <ErrorState onRetry={() => void feed.refetch()} />
+        <ErrorState error={feed.error} onRetry={() => void feed.refetch()} />
       ) : (
         <>
           {/* De quién es lo que se ve. Con cero seguidos el servidor sirve

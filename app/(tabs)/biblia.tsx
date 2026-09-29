@@ -59,6 +59,9 @@ const BookRow = ({ book }: { book: BibleBook }) => {
   );
 };
 
+// Si esta pestaña revienta, las demás y la barra siguen en pie.
+export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
+
 export default function Bible() {
   const { t } = useTranslation();
   const { session } = useSession();
@@ -67,7 +70,7 @@ export default function Bible() {
   const [query, setQuery] = useState("");
   const colors = useThemeColors();
 
-  const { data: books, isLoading, isError, refetch } = useBibleBooks();
+  const { data: books, isLoading, isError, error, refetch } = useBibleBooks();
   const { data: position } = useReadingPosition(userId);
   const { data: results, isFetching } = useBibleSearch(query);
   const { data: jump } = useReferenceJump(query);
@@ -77,7 +80,7 @@ export default function Bible() {
   }
 
   if (isError) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   const all = books ?? [];

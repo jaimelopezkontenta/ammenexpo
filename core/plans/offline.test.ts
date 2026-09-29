@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { PlanDay } from "./queries";
+
 import {
+  cacheTodayDay,
+  clearCachedDays,
   dropEntry,
   enqueuePrayed,
   flushPrayedQueue,
   isNetworkError,
   mergeQueue,
+  readCachedTodayDay,
   readPrayedQueue,
   removePrayed,
   type PrayedEntry,
@@ -25,6 +30,10 @@ const storage = vi.hoisted(() => {
     }),
     removeItem: vi.fn(async (key: string) => {
       store.delete(key);
+    }),
+    getAllKeys: vi.fn(async () => [...store.keys()]),
+    multiRemove: vi.fn(async (keys: string[]) => {
+      keys.forEach((key) => store.delete(key));
     }),
   };
 });
@@ -168,5 +177,43 @@ describe("flushPrayedQueue", () => {
     });
 
     expect(await readPrayedQueue()).toEqual([entry("d1", "u1")]);
+  });
+});
+
+describe("today's day cache", () => {
+  const day = { id: "day-4", day_number: 4 } as unknown as PlanDay;
+  const morning = new Date(2026, 8, 29, 8, 0);
+  const nextMorning = new Date(2026, 8, 30, 8, 0);
+
+  beforeEach(() => {
+    storage.store.clear();
+  });
+
+  it("serves the cached day as a fallback on the same local day", async () => {
+    await cacheTodayDay("plan-1", day, morning);
+
+    expect(await readCachedTodayDay("plan-1", morning)).toEqual(day);
+  });
+
+  it("does not pass yesterday's day off as today's", async () => {
+    await cacheTodayDay("plan-1", day, morning);
+
+    expect(await readCachedTodayDay("plan-1", nextMorning)).toBeNull();
+  });
+
+  it("ignores the old undated format", async () => {
+    storage.store.set("ammen.todayDay.plan-1", JSON.stringify(day));
+
+    expect(await readCachedTodayDay("plan-1", morning)).toBeNull();
+  });
+
+  it("clears every cached day on sign-out and leaves the rest", async () => {
+    await cacheTodayDay("plan-1", day, morning);
+    await cacheTodayDay("plan-2", day, morning);
+    storage.store.set("ammen.theme.v1", "dark");
+
+    await clearCachedDays();
+
+    expect([...storage.store.keys()]).toEqual(["ammen.theme.v1"]);
   });
 });

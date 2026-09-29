@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Txt } from "@/components/ui/Text";
+import { classifyError } from "@/core/net/classifyError";
 
 import { useThemeColors } from "@/theme";
 
@@ -105,12 +106,19 @@ type ErrorStateProps = {
   onRetry?: () => void;
   /** Shown instead of the generic line when we can say something specific. */
   message?: string;
+  /**
+   * El error que se va a explicar. Con él se distingue «sin conexión» de
+   * «algo salió mal» en cualquier plataforma; sin él solo queda la pista de
+   * `navigator.onLine`, que en nativo no existe.
+   */
+  error?: unknown;
 };
 
-export const ErrorState = ({ onRetry, message }: ErrorStateProps) => {
+export const ErrorState = ({ onRetry, message, error }: ErrorStateProps) => {
   const { t } = useTranslation();
-  const offline =
+  const browserOffline =
     typeof navigator !== "undefined" && navigator.onLine === false;
+  const offline = classifyError(error, !browserOffline) === "network";
 
   return (
     <DawnBackground className="items-center justify-center gap-3 px-8">

@@ -26,6 +26,9 @@ import { enterStagger } from "@/theme/motion";
  * Mi lista (a un tap) y Por otros (la intercesión, con su empty local).
  * El plan propio se reza en Hoy; aquí solo se crea y se comparte.
  */
+// Si esta pestaña revienta, las demás y la barra siguen en pie.
+export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
+
 export default function Pray() {
   const { t } = useTranslation();
   const { session } = useSession();
@@ -35,6 +38,7 @@ export default function Pray() {
     data: plans,
     isLoading,
     isError,
+    error,
     refetch,
   } = usePlansSharedWithMe(userId);
   const { data: myPlans } = useMyPlans(userId);
@@ -48,7 +52,7 @@ export default function Pray() {
   // people nobody had shared anything with them — a false statement, with no way
   // to find out otherwise.
   if (isError) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   const myFirstPlan = (myPlans ?? [])[0];

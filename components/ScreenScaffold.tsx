@@ -17,6 +17,8 @@ type Props = {
   skeleton?: SkeletonPreset;
   /** La rama de error, con su retry y su mensaje específico si lo hay. */
   error?: boolean;
+  /** El error real, para que ErrorState distinga «sin conexión» (ver classifyError). */
+  cause?: unknown;
   errorMessage?: string;
   onRetry?: () => void;
   /**
@@ -47,6 +49,7 @@ export const ScreenScaffold = ({
   loading = false,
   skeleton,
   error = false,
+  cause,
   errorMessage,
   onRetry,
   scroll = true,
@@ -62,7 +65,7 @@ export const ScreenScaffold = ({
       {loading ? (
         <LoadingState skeleton={skeleton} />
       ) : error ? (
-        <ErrorState onRetry={onRetry} message={errorMessage} />
+        <ErrorState error={cause} onRetry={onRetry} message={errorMessage} />
       ) : (
         <DawnBackground>
           {scroll ? (

@@ -5,6 +5,7 @@ import { AppState } from "react-native";
 import { supabase } from "../../utils/supabase";
 
 import type { PlanDay } from "./queries";
+import { localDateKey } from "@/core/time/midnight";
 
 /**
  * Capa offline del día de hoy.
@@ -84,12 +85,21 @@ const isPrayedEntry = (value: unknown): value is PrayedEntry => {
 
 // -- IO -------------------------------------------------------------------
 
+/**
+ * El día se guarda con la fecha local en que se leyó, y solo vale de respaldo
+ * ese mismo día: sin fecha, sin red por la mañana se enseñaba el día de ayer
+ * como si fuera hoy, y «Ya oré» se apuntaba al día equivocado.
+ */
+type CachedDay = { cachedOn: string; day: PlanDay };
+
 export const cacheTodayDay = async (
   planId: string,
   day: PlanDay,
+  now: Date = new Date(),
 ): Promise<void> => {
   try {
-    await AsyncStorage.setItem(todayKey(planId), JSON.stringify(day));
+    const entry: CachedDay = { cachedOn: localDateKey(now), day };
+    await AsyncStorage.setItem(todayKey(planId), JSON.stringify(entry));
   } catch {
     // Best effort: fallar aquí no puede tirar abajo un día que SÍ se leyó.
   }
@@ -97,16 +107,37 @@ export const cacheTodayDay = async (
 
 export const readCachedTodayDay = async (
   planId: string,
+  now: Date = new Date(),
 ): Promise<PlanDay | null> => {
   try {
     const raw = await AsyncStorage.getItem(todayKey(planId));
 
     if (!raw) return null;
 
-    return JSON.parse(raw) as PlanDay;
+    const entry = JSON.parse(raw) as Partial<CachedDay>;
+
+    // Un día de otra fecha, o del formato viejo sin fecha, no es el de hoy.
+    if (entry.cachedOn !== localDateKey(now) || !entry.day) return null;
+
+    return entry.day;
   } catch {
     // Clave corrupta o storage bloqueado: es como no tener caché.
     return null;
+  }
+};
+
+/**
+ * Borra todos los días guardados. Llevan el texto de oración del día y en web
+ * viven en localStorage: al cerrar sesión no pueden quedarse para la
+ * siguiente persona que use ese navegador.
+ */
+export const clearCachedDays = async (): Promise<void> => {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const days = keys.filter((key) => key.startsWith("ammen.todayDay."));
+    if (days.length > 0) await AsyncStorage.multiRemove(days);
+  } catch {
+    // Nada que hacer: como mucho, caducan solos al día siguiente.
   }
 };
 
