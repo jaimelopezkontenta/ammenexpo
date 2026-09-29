@@ -6,6 +6,7 @@ import { TextField } from "@/components/TextField";
 import { Tap } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
 import { useUserId } from "@/core/auth/useUserId";
+import { useAction } from "@/core/toast/useAction";
 import { useAcknowledgeCrisis, useCrisisQueue } from "@/core/moderation/queue";
 
 import { AuthorProfileLink } from "./AuthorProfileLink";
@@ -22,8 +23,10 @@ export const CrisisQueue = () => {
   const { t } = useTranslation();
   const userId = useUserId();
 
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // El acuse, hecho o fallido, es un toast; la nota que falta se queda en
+  // línea hasta que se escribe (como el motivo de los retenidos).
+  const { run } = useAction();
+  const [invalid, setInvalid] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
 
   const queue = useCrisisQueue(userId);
@@ -32,33 +35,15 @@ export const CrisisQueue = () => {
   const setNoteFor = (id: string, value: string) =>
     setNotes((prev) => ({ ...prev, [id]: value }));
 
-  const run = async (action: () => Promise<unknown>, done: string) => {
-    setError(null);
-    setNotice(null);
-
-    try {
-      await action();
-      setNotice(done);
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
-
   const open = unacknowledged(queue.data);
 
   return (
     <View className="gap-5">
       <Txt variant="caption">{t("moderation.crisisHint")}</Txt>
 
-      {notice ? (
-        <Txt variant="caption" accessibilityRole="alert">
-          {notice}
-        </Txt>
-      ) : null}
-
-      {error ? (
+      {invalid ? (
         <Txt variant="caption" tone="danger" accessibilityRole="alert">
-          {error}
+          {invalid}
         </Txt>
       ) : null}
 
@@ -102,9 +87,10 @@ export const CrisisQueue = () => {
                 const note = requiredText(notes[escalation.id]);
 
                 if (!note) {
-                  setError(t("moderation.noteRequired"));
+                  setInvalid(t("moderation.noteRequired"));
                   return;
                 }
+                setInvalid(null);
 
                 void run(
                   () =>

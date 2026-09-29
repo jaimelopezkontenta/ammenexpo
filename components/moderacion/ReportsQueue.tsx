@@ -7,6 +7,7 @@ import { LoadMore } from "@/components/LoadMore";
 import { Tap } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
 import { useUserId } from "@/core/auth/useUserId";
+import { useAction } from "@/core/toast/useAction";
 import { useBlockUser } from "@/core/moderation/blocks";
 import {
   useHideReportedContent,
@@ -25,25 +26,13 @@ export const ReportsQueue = () => {
   const userId = useUserId();
 
   const [status, setStatus] = useState<ReportStatus>("open");
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Hecho o fallido, el resultado de cada acción es un toast (core/toast).
+  const { run } = useAction();
 
   const queue = useReportQueue(status);
   const resolve = useResolveReport();
   const hideReported = useHideReportedContent();
   const block = useBlockUser(userId);
-
-  const run = async (action: () => Promise<unknown>, done: string) => {
-    setError(null);
-    setNotice(null);
-
-    try {
-      await action();
-      setNotice(done);
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
 
   return (
     <View className="gap-5">
@@ -56,18 +45,6 @@ export const ReportsQueue = () => {
         selected={[status]}
         onToggle={(value) => setStatus(value as ReportStatus)}
       />
-
-      {notice ? (
-        <Txt variant="caption" accessibilityRole="alert">
-          {notice}
-        </Txt>
-      ) : null}
-
-      {error ? (
-        <Txt variant="caption" tone="danger" accessibilityRole="alert">
-          {error}
-        </Txt>
-      ) : null}
 
       <QueueBody
         loading={queue.isLoading}

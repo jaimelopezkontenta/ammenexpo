@@ -13,6 +13,7 @@ import {
   useRemoveHold,
   type HeldContent,
 } from "@/core/moderation/queue";
+import { useAction } from "@/core/toast/useAction";
 
 import { AuthorProfileLink } from "./AuthorProfileLink";
 import { requiredText } from "./moderationView";
@@ -27,26 +28,17 @@ import { QueueBody } from "./QueueBody";
  */
 export const HeldQueue = () => {
   const { t } = useTranslation();
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // El resultado de cada acción es un toast; el motivo que falta, en cambio,
+  // se queda en línea hasta que se escribe: es un campo por rellenar, no un
+  // aviso que pasa (core/toast/ToastProvider.tsx).
+  const { run } = useAction();
+  const [invalid, setInvalid] = useState<string | null>(null);
   const [reasons, setReasons] = useState<Record<string, string>>({});
 
   const queue = useHeldContentQueue();
   const claim = useClaimHold();
   const release = useReleaseHold();
   const remove = useRemoveHold();
-
-  const run = async (action: () => Promise<unknown>, done: string) => {
-    setError(null);
-    setNotice(null);
-
-    try {
-      await action();
-      setNotice(done);
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
 
   const setReasonFor = (holdId: string, value: string) =>
     setReasons((prev) => ({ ...prev, [holdId]: value }));
@@ -55,10 +47,11 @@ export const HeldQueue = () => {
     const reason = requiredText(reasons[holdId]);
 
     if (!reason) {
-      setError(t("moderation.reasonRequired"));
+      setInvalid(t("moderation.reasonRequired"));
       return null;
     }
 
+    setInvalid(null);
     return reason;
   };
 
@@ -93,9 +86,11 @@ export const HeldQueue = () => {
       {hold.status === "pending" ? (
         <Tap
           accessibilityRole="button"
-          onPress={() =>
-            void run(() => claim.mutateAsync(hold.id), t("moderation.claim"))
-          }
+          onPress={() => {
+            // Otra acción ya no es la del motivo que faltaba: se va el aviso.
+            setInvalid(null);
+            void run(() => claim.mutateAsync(hold.id), t("moderation.claim"));
+          }}
         >
           <Txt variant="label" className="underline">
             {t("moderation.claim")}
@@ -155,15 +150,9 @@ export const HeldQueue = () => {
 
   return (
     <View className="gap-5">
-      {notice ? (
-        <Txt variant="caption" accessibilityRole="alert">
-          {notice}
-        </Txt>
-      ) : null}
-
-      {error ? (
+      {invalid ? (
         <Txt variant="caption" tone="danger" accessibilityRole="alert">
-          {error}
+          {invalid}
         </Txt>
       ) : null}
 

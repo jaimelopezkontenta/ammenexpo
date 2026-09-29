@@ -20,6 +20,7 @@ import {
   isValidEmail,
 } from "@/core/auth/validation";
 import { track } from "@/core/observability/track";
+import { useToast } from "@/core/toast/ToastProvider";
 import { supabase } from "@/utils/supabase";
 
 export default function SignUp() {
@@ -30,13 +31,15 @@ export default function SignUp() {
   const [errorField, setErrorField] = useState<"email" | "password" | null>(
     null,
   );
-  const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Los errores del formulario se quedan junto al campo (o debajo) hasta que
+  // se corrigen; el «revisa tu correo» es un aviso que pasa, y va por el
+  // toast del sistema.
+  const toast = useToast();
 
   const handleSubmit = async () => {
     setError(null);
     setErrorField(null);
-    setNotice(null);
 
     if (!isValidEmail(email)) {
       setError(t("auth.emailInvalid"));
@@ -74,7 +77,7 @@ export default function SignUp() {
       track("signup", { source: resolveSignupSource(source) });
     } else {
       // Email confirmation is on: there is no session yet.
-      setNotice(t("auth.checkEmail"));
+      toast.success(t("auth.checkEmail"));
     }
 
     setIsSubmitting(false);
@@ -114,11 +117,6 @@ export default function SignUp() {
         {error && !errorField ? (
           <Txt variant="caption" tone="danger" accessibilityRole="alert">
             {error}
-          </Txt>
-        ) : null}
-        {notice ? (
-          <Txt variant="caption" accessibilityRole="alert">
-            {notice}
           </Txt>
         ) : null}
 
