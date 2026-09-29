@@ -1028,6 +1028,298 @@ select pg_temp.assert(
       )) = 38,
   'every function in that list still exists under that name');
 
+-- ===========================================================================
+-- Qué columnas escribe el cliente
+--
+-- Las policies dicen QUIÉN puede escribir una fila; el GRANT dice QUÉ columnas.
+-- Con `grant insert, update on <tabla>` de tabla entera, quien pasaba la policy
+-- escribía también lo que solo debe poner el servidor: dueños, contadores,
+-- rachas, tokens, marcas de moderación, quién aceptó una invitación. Cada
+-- bloque comprueba primero que lo que la app hace de verdad (core/**) sigue
+-- funcionando, y después que lo demás ya no.
+-- ===========================================================================
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data) values
+  ('c1c10000-0000-0000-0000-000000000001', 'olga@test.local',   'authenticated', 'authenticated', '{"display_name":"Olga"}'),
+  ('c1c10000-0000-0000-0000-000000000002', 'adan@test.local',   'authenticated', 'authenticated', '{"display_name":"Adan"}'),
+  ('c1c10000-0000-0000-0000-000000000003', 'moises@test.local', 'authenticated', 'authenticated', '{"display_name":"Moises"}'),
+  ('c1c10000-0000-0000-0000-000000000004', 'ester@test.local',  'authenticated', 'authenticated', '{"display_name":"Ester"}');
+
+-- Olga tiene un círculo público y uno privado. Adán administra el público: ese
+-- rol lo pone el servidor (la app no tiene pantalla para darlo). Moisés es
+-- miembro de los dos; Ester, de ninguno.
+insert into public.groups (id, owner_id, name, visibility) values
+  ('c1c1c000-0000-0000-0000-000000000001', 'c1c10000-0000-0000-0000-000000000001', 'El abierto de Olga', 'public'),
+  ('c1c1c000-0000-0000-0000-000000000002', 'c1c10000-0000-0000-0000-000000000001', 'El cerrado de Olga', 'private');
+
+insert into public.group_members (group_id, user_id, role) values
+  ('c1c1c000-0000-0000-0000-000000000001', 'c1c10000-0000-0000-0000-000000000002', 'admin'),
+  ('c1c1c000-0000-0000-0000-000000000001', 'c1c10000-0000-0000-0000-000000000003', 'member'),
+  ('c1c1c000-0000-0000-0000-000000000002', 'c1c10000-0000-0000-0000-000000000003', 'member');
+
+insert into public.prayer_plans (id, owner_id, title, theme, duration_days, start_date, visibility)
+values ('c1c1f000-0000-0000-0000-000000000001', 'c1c10000-0000-0000-0000-000000000001',
+        'El plan de Olga', 'paz', 3, current_date, 'private');
+
+commit;
+
+-- ---------------------------------------------------------------------------
+-- groups: crear y editar, sí; dueño, censo, racha y token, no
+--
+-- Un admin que no era el dueño podía ponerse `owner_id`, y con eso echar a la
+-- dueña (`protect_group_owner` se fía de esa columna) y borrar el círculo.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000001","role":"authenticated"}';
+
+-- useCreateCircle, con sus columnas exactas.
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.groups (owner_id, name, description, visibility)
+    values ('c1c10000-0000-0000-0000-000000000001', 'El nuevo de Olga',
+            'Para orar juntos', 'private')
+  $q$),
+  'creating a circle with the columns the app sends still works');
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('id',              $v$'c1c1c000-0000-0000-0000-0000000000ff'$v$),
+      ('member_count',    '5000'),
+      ('streak_count',    '365'),
+      ('streak_last_day', 'current_date'),
+      ('invite_token',    $v$'hola'$v$),
+      ('avatar_url',      $v$'https://example.com/pixel.png'$v$),
+      ('created_at',      $v$'2000-01-01'$v$),
+      ('updated_at',      $v$'2000-01-01'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.raises(format(
+      'insert into public.groups (owner_id, name, %I) values (%L, %L, %s)',
+      forced.col, 'c1c10000-0000-0000-0000-000000000001', 'Con trampa', forced.val))
+    then
+      raise exception 'FAIL  a new circle cannot choose its own %', forced.col;
+    end if;
+    raise notice 'PASS  a new circle cannot choose its own %', forced.col;
+  end loop;
+end;
+$$;
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.groups (owner_id, name)
+    values ('c1c10000-0000-0000-0000-000000000004', 'A nombre de Ester')
+  $q$),
+  'nor be created in somebody else''s name');
+
+commit;
+
+select pg_temp.assert(
+  (select member_count = 1 and streak_count = 0 and invite_token ~ '^[0-9a-f]{32}$'
+     from public.groups where name = 'El nuevo de Olga'),
+  'the server fills in the new circle''s count, streak and invite token');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+with changed as (
+  update public.groups
+     set name = 'El abierto (renombrado)',
+         description = 'Ahora con descripción',
+         visibility = 'private'
+   where id = 'c1c1c000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1,
+  'an admin still edits the circle''s name, description and visibility')
+  from changed;
+
+with changed as (
+  update public.groups set visibility = 'public'
+   where id = 'c1c1c000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1,
+  'and back')
+  from changed;
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('owner_id',        $v$'c1c10000-0000-0000-0000-000000000002'$v$),
+      ('member_count',    '9999'),
+      ('streak_count',    '1000'),
+      ('streak_last_day', 'current_date'),
+      ('invite_token',    $v$'elegido-a-mano'$v$),
+      ('avatar_url',      $v$'https://example.com/pixel.png'$v$),
+      ('created_at',      $v$'1999-01-01'$v$),
+      ('updated_at',      $v$'1999-01-01'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.raises(format(
+      'update public.groups set %I = %s where id = %L',
+      forced.col, forced.val, 'c1c1c000-0000-0000-0000-000000000001'))
+    then
+      raise exception 'FAIL  an admin cannot rewrite the circle''s %', forced.col;
+    end if;
+    raise notice 'PASS  an admin cannot rewrite the circle''s %', forced.col;
+  end loop;
+end;
+$$;
+
+select pg_temp.assert(
+  public.rotate_circle_invite_token('c1c1c000-0000-0000-0000-000000000001') ~ '^[0-9a-f]{32}$',
+  'the invite link still changes, through the one RPC meant for it');
+
+commit;
+
+select pg_temp.assert(
+  (select owner_id = 'c1c10000-0000-0000-0000-000000000001' and member_count = 3
+     from public.groups where id = 'c1c1c000-0000-0000-0000-000000000001'),
+  'Olga still owns the circle, and its count is the real one');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000003","role":"authenticated"}';
+
+with changed as (
+  update public.groups set name = 'Ahora es mío'
+   where id = 'c1c1c000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 0,
+  'a plain member still cannot edit the circle')
+  from changed;
+
+commit;
+
+-- ---------------------------------------------------------------------------
+-- group_members: el rol no se elige al entrar, y la fila de la dueña no se toca
+--
+-- La policy de INSERT deja a cualquiera unirse a un círculo público, pero no
+-- miraba `role`: se entraba como admin. Y un admin podía degradar a la dueña
+-- (`is_group_admin` solo mira el rol) o coronar a otro.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+with changed as (
+  update public.group_members set role = 'member'
+   where group_id = 'c1c1c000-0000-0000-0000-000000000001'
+     and user_id = 'c1c10000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 0,
+  'an admin cannot demote the circle''s owner')
+  from changed;
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.group_members set role = 'owner'
+     where group_id = 'c1c1c000-0000-0000-0000-000000000001'
+       and user_id = 'c1c10000-0000-0000-0000-000000000003'
+  $q$),
+  'nor crown somebody else owner');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.group_members set user_id = 'c1c10000-0000-0000-0000-000000000004'
+     where group_id = 'c1c1c000-0000-0000-0000-000000000001'
+       and user_id = 'c1c10000-0000-0000-0000-000000000003'
+  $q$),
+  'nor hand a membership over to somebody who never joined');
+
+with changed as (
+  update public.group_members set role = 'admin'
+   where group_id = 'c1c1c000-0000-0000-0000-000000000001'
+     and user_id = 'c1c10000-0000-0000-0000-000000000003'
+  returning 1)
+select pg_temp.assert(count(*) = 1,
+  'but still makes a member admin')
+  from changed;
+
+with changed as (
+  update public.group_members set role = 'member'
+   where group_id = 'c1c1c000-0000-0000-0000-000000000001'
+     and user_id = 'c1c10000-0000-0000-0000-000000000003'
+  returning 1)
+select pg_temp.assert(count(*) = 1,
+  'and a plain member again')
+  from changed;
+
+commit;
+
+select pg_temp.assert(
+  (select role = 'owner' from public.group_members
+    where group_id = 'c1c1c000-0000-0000-0000-000000000001'
+      and user_id = 'c1c10000-0000-0000-0000-000000000001'),
+  'Olga is still the owner on the roster too');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000004","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.group_members (group_id, user_id, role)
+    values ('c1c1c000-0000-0000-0000-000000000001',
+            'c1c10000-0000-0000-0000-000000000004', 'admin')
+  $q$),
+  'nobody walks into a public circle as its admin');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.group_members (group_id, user_id, role)
+    values ('c1c1c000-0000-0000-0000-000000000001',
+            'c1c10000-0000-0000-0000-000000000004', 'owner')
+  $q$),
+  'or as its owner');
+
+-- useJoinPublicCircle
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.group_members (group_id, user_id)
+    values ('c1c1c000-0000-0000-0000-000000000001',
+            'c1c10000-0000-0000-0000-000000000004')
+  $q$),
+  'joining a public circle the way the app does still works');
+
+select pg_temp.assert(
+  (select role = 'member' from public.group_members
+    where group_id = 'c1c1c000-0000-0000-0000-000000000001'
+      and user_id = 'c1c10000-0000-0000-0000-000000000004'),
+  'and lands as a plain member');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.group_members (group_id, user_id)
+    values ('c1c1c000-0000-0000-0000-000000000002',
+            'c1c10000-0000-0000-0000-000000000004')
+  $q$),
+  'a private circle still needs an invitation');
+
+commit;
+
+select invite_token as cerrado_token from public.groups
+ where id = 'c1c1c000-0000-0000-0000-000000000002' \gset
+
+-- useJoinCircle
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000004","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.join_group_with_token(:'cerrado_token') = 'c1c1c000-0000-0000-0000-000000000002',
+  'and the invitation still lets her in');
+
+commit;
+
 \echo ''
 \echo '================================'
 \echo ' ALL RLS ASSERTIONS PASSED'
