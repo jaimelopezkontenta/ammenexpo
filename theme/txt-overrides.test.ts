@@ -1,9 +1,15 @@
 import { readdirSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { join, relative } from "node:path";
 
-import postcss from "postcss";
 import tailwind from "tailwindcss";
 import { describe, expect, it } from "vitest";
+
+// postcss no es dependencia directa: se toma el que usa el propio Tailwind.
+const requireFromTailwind = createRequire(require.resolve("tailwindcss"));
+const postcss = requireFromTailwind(
+  "postcss",
+) as typeof import("postcss").default;
 
 /**
  * Los overrides de `Txt` que no se aplican nunca, ejecutable (pareja de
