@@ -215,6 +215,22 @@ test.describe("share-loop — del enlace a la intercesión, idempotente", () => 
       // dice, y el doble toque nunca puede dejar dos filas.
       await expect.poll(intercessionCount, { timeout: 10_000 }).toBe(1);
       await expect.poll(notificationCount, { timeout: 10_000 }).toBe(1);
+
+      // --- y sale: tras un canje no hay historia, y `router.back()` le dejaba
+      // atrapado en el día que acababa de orar ---
+      await expect(guestPage).not.toHaveURL(new RegExp(`/orar/${PLAN_ID}`), {
+        timeout: 10_000,
+      });
+
+      // --- un deep link en frío también tiene salida, antes de orar o después.
+      // Adónde da igual: con `initialRouteName: "(tabs)"` la pila trae Hoy
+      // debajo; lo que no puede pasar es quedarse en el día ---
+      const coldPage = await guestContext.newPage();
+      await coldPage.goto(`/orar/${PLAN_ID}`);
+      await coldPage.getByRole("button", { name: "Atrás" }).click();
+      await expect(coldPage).not.toHaveURL(new RegExp(`/orar/${PLAN_ID}`), {
+        timeout: 10_000,
+      });
     } finally {
       // El share que este test crea de verdad (link + redención) se limpia
       // aparte del `afterAll`: la fila del enlace no pertenece al plan en sí.

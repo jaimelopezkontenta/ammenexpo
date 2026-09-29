@@ -264,9 +264,14 @@ export default function ChapterReader() {
                   es tocar la frase que te ha parado. */}
                         <Tap
                           accessibilityRole="button"
-                          accessibilityLabel={t("bible.markVerse", {
+                          // El label es el versículo: con «Versículo 16:
+                          // subrayar o anotar» un lector de pantalla leía la
+                          // acción y nunca la Escritura. La acción va de pista.
+                          accessibilityLabel={t("bible.verseLabel", {
                             verse: row.verse,
+                            text: row.text,
                           })}
+                          accessibilityHint={t("bible.markVerseHint")}
                           accessibilityState={{ expanded: isOpen }}
                           onPress={() => openMarks(row.verse)}
                           className={`flex-row gap-3 rounded-input px-2 py-1 ${

@@ -1,5 +1,5 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 
@@ -22,6 +22,8 @@ import {
 } from "@/core/intercessions/queries";
 
 import { Pill } from "@/components/ui/Pill";
+import { Tap } from "@/components/ui/Tap";
+import { goBackOr } from "@/core/nav/safeBack";
 
 /**
  * Someone else's day, and a prayer written for you to pray over them.
@@ -46,10 +48,38 @@ export default function PrayForSomeone() {
 
   const { data: books } = useBibleBooks();
 
+  // Se llega aquí por un `router.replace` tras canjear un enlace, o en frío
+  // desde un deep link: sin historia, `router.back()` no hacía nada y quien
+  // acababa de orar se quedaba atrapado. Salir siempre lleva a algún sitio;
+  // sin historia, a Orar, donde vive la lista de «Por otros».
+  const leave = () => goBackOr("/orar");
+
+  const headerLeft = () => (
+    <Tap
+      accessibilityRole="button"
+      accessibilityLabel={t("common.back")}
+      onPress={leave}
+      hitSlop={8}
+      className="min-h-11 min-w-11 items-center justify-center px-2"
+    >
+      <Txt variant="subheading">{t("common.back")}</Txt>
+    </Tap>
+  );
+
+  // Un momento de confirmación y fuera. Con limpieza: si alguien sale antes
+  // por su cuenta, el temporizador no puede sacarle después de otra pantalla.
+  useEffect(() => {
+    if (!sent) return;
+    const timer = setTimeout(() => goBackOr("/orar"), 1400);
+    return () => clearTimeout(timer);
+  }, [sent]);
+
   if (isLoading) {
     return (
       <>
-        <Stack.Screen options={{ title: t("tabs.pray"), headerShown: true }} />
+        <Stack.Screen
+          options={{ title: t("tabs.pray"), headerShown: true, headerLeft }}
+        />
         <LoadingState />
       </>
     );
@@ -58,7 +88,9 @@ export default function PrayForSomeone() {
   if (isError || !plan) {
     return (
       <>
-        <Stack.Screen options={{ title: t("pray.title"), headerShown: true }} />
+        <Stack.Screen
+          options={{ title: t("pray.title"), headerShown: true, headerLeft }}
+        />
         <ErrorState
           onRetry={isError ? () => void refetch() : undefined}
           message={isError ? undefined : t("pray.planGone")}
@@ -79,12 +111,11 @@ export default function PrayForSomeone() {
       // a double press were pixel-identical, on the one gesture the whole
       // product rests on. A beat of confirmation, then out.
       setSent(true);
-      setTimeout(() => router.back(), 1400);
     } catch (caught) {
       // Pressing twice means the same as pressing once, so it is not worth an
       // alarm — the list behind this screen refreshes either way.
       if (caught instanceof AlreadyPrayed) {
-        router.back();
+        leave();
         return;
       }
 
@@ -94,7 +125,9 @@ export default function PrayForSomeone() {
 
   return (
     <>
-      <Stack.Screen options={{ title: plan.owner_name, headerShown: true }} />
+      <Stack.Screen
+        options={{ title: plan.owner_name, headerShown: true, headerLeft }}
+      />
       <DawnBackground>
         <ScrollView
           contentContainerClassName="gap-7 px-7 py-8 md:w-full md:max-w-read md:self-center"

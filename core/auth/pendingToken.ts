@@ -1,6 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { planIdToOpenAfterRedeem } from "@/core/plans/redeemOutcome";
+import {
+  planIdToOpenAfterRedeem,
+  type RedeemShareResult,
+} from "@/core/plans/redeemOutcome";
 import { supabase } from "@/utils/supabase";
 
 const SHARE_KEY = "ammen.pendingShareToken";
@@ -88,6 +91,42 @@ export const attachSignupSource = async (userId: string) => {
   }
 };
 
+/**
+ * Olvida el token guardado, pero solo si es el mismo que se acaba de canjear:
+ * quien abrió dos enlaces seguidos conserva el segundo.
+ */
+const forgetShareToken = async (token: string) => {
+  try {
+    if ((await AsyncStorage.getItem(SHARE_KEY)) === token) {
+      await AsyncStorage.removeItem(SHARE_KEY);
+    }
+  } catch {
+    // Como mucho se reintenta en el próximo arranque, y el RPC es idempotente.
+  }
+};
+
+/**
+ * Canjea un token de plan compartido y lo olvida en cuanto el servidor
+ * responde. Es la única puerta al RPC: la pantalla `/p/[token]` guardaba el
+ * token al abrirse y lo canjeaba, pero no lo borraba, así que el siguiente
+ * arranque lo volvía a canjear y secuestraba la navegación hacia `/orar/…`.
+ *
+ * Un token revocado o caducado responde `{ok:false}` sin error: reintentarlo en
+ * cada arranque no sirve, así que también se olvida. Un fallo de red sí da
+ * error, y ese se conserva para la próxima.
+ */
+export const redeemShareToken = async (token: string) => {
+  const { data, error } = await supabase.rpc("redeem_share_token", {
+    p_token: token,
+  });
+
+  if (!error) {
+    await forgetShareToken(token);
+  }
+
+  return { result: data as RedeemShareResult | null, error };
+};
+
 export const clearPendingTokens = async () => {
   try {
     await AsyncStorage.multiRemove([SHARE_KEY, INVITE_KEY, SOURCE_KEY]);
@@ -124,19 +163,10 @@ export const redeemPendingTokens = async () => {
   let planId: string | null = null;
 
   if (shareToken) {
-    const { data, error } = await supabase.rpc("redeem_share_token", {
-      p_token: shareToken,
-    });
+    const { result, error } = await redeemShareToken(shareToken);
 
-    // A revoked or expired token answers `{ok:false}` *without* raising, and
-    // retrying it every launch forever would be pointless. A network failure
-    // does raise, and that one is worth keeping for next time.
     if (!error) {
-      await AsyncStorage.removeItem(SHARE_KEY).catch(() => {});
-
-      planId = planIdToOpenAfterRedeem(
-        data as { ok?: boolean; plan_id?: string; self?: boolean } | null,
-      );
+      planId = planIdToOpenAfterRedeem(result);
     }
   }
 

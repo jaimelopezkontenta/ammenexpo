@@ -10,7 +10,11 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { LoadingState } from "@/components/ScreenState";
 import { Txt } from "@/components/ui/Text";
-import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
+import {
+  redeemShareToken,
+  rememberShareToken,
+  rememberSource,
+} from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import { track } from "@/core/observability/track";
 import {
@@ -18,7 +22,6 @@ import {
   resolveRedeemOutcome,
 } from "@/core/plans/redeemOutcome";
 import { useSharedPlanPreview } from "@/core/plans/sharePreview";
-import { supabase } from "@/utils/supabase";
 
 export default function SharedPlanPreviewScreen() {
   const { t } = useTranslation();
@@ -59,18 +62,11 @@ export default function SharedPlanPreviewScreen() {
     setIsRedeeming(true);
     setRedeemError(null);
 
-    const { data: outcome, error } = await supabase.rpc("redeem_share_token", {
-      p_token: token,
-    });
+    // El canje también olvida el token guardado al abrir la página: sin eso,
+    // el siguiente arranque lo volvía a canjear y te llevaba a `/orar/…`.
+    const { result, error } = await redeemShareToken(token);
 
     setIsRedeeming(false);
-
-    const result = outcome as {
-      ok?: boolean;
-      reason?: string;
-      plan_id?: string;
-      self?: boolean;
-    } | null;
 
     // The RPC answers `{ok:false, reason}` for a revoked or expired token
     // *without* raising, so ignoring both the error and the payload made a dead

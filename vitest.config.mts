@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 /**
@@ -10,6 +11,11 @@ import { defineConfig } from "vitest/config";
  * called here" — un error de framework, no del código bajo prueba.
  */
 export default defineConfig({
+  // El mismo alias que tsconfig: sin él, los módulos de core/ que importan con
+  // `@/` no se podían probar y acababan sin test (pendingToken, por ejemplo).
+  resolve: {
+    alias: { "@": fileURLToPath(new URL("./", import.meta.url)) },
+  },
   test: {
     exclude: ["**/node_modules/**", "**/e2e/**"],
   },
