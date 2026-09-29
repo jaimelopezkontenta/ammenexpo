@@ -13,6 +13,7 @@ import { msUntilLocalMidnight } from "@/core/time/midnight";
 import type { BibleBook } from "./navigation";
 import { type BibleVersion, DEFAULT_BIBLE_VERSION } from "./versions";
 
+import { qk } from "@/core/query/keys";
 export type Verse = {
   verse: number;
   text: string;
@@ -47,7 +48,7 @@ export const useBibleBooks = () => {
   const { session } = useSession();
 
   return useQuery({
-    queryKey: ["bibleBooks"],
+    queryKey: qk.bibleBooks.root,
     // Estas lecturas no aportan nada en el login y el 401 asusta en consola:
     // no se disparan sin sesión.
     enabled: Boolean(session),
@@ -78,7 +79,7 @@ export const useChapter = (
   version: BibleVersion = DEFAULT_BIBLE_VERSION,
 ) =>
   useQuery({
-    queryKey: ["bibleChapter", version, bookId, chapter],
+    queryKey: qk.bibleChapter(version, bookId, chapter),
     enabled: Boolean(bookId) && Boolean(chapter),
     staleTime: Infinity,
     gcTime: Infinity,
@@ -99,7 +100,7 @@ export const useChapter = (
 
 export const useBibleSearch = (query: string) =>
   useQuery({
-    queryKey: ["bibleSearch", query],
+    queryKey: qk.bibleSearch(query),
     enabled: query.trim().length >= MIN_SEARCH_LENGTH,
     // Keeping the previous page on screen while the next loads stops the list
     // flashing empty on every keystroke.
@@ -121,7 +122,7 @@ export const useBibleSearch = (query: string) =>
  */
 export const useReferenceJump = (query: string) =>
   useQuery({
-    queryKey: ["bibleReference", query],
+    queryKey: qk.bibleReference(query),
     enabled: query.trim().length > 0,
     staleTime: Infinity,
     queryFn: async () => {
@@ -143,7 +144,7 @@ export const useReferenceJump = (query: string) =>
 
 export const useReadingPosition = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["readingPosition", userId],
+    queryKey: qk.readingPosition(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<ReadingPosition | null> => {
       const { data, error } = await supabase
@@ -189,7 +190,7 @@ export const useSaveReadingPosition = (userId: string | undefined) => {
       return position;
     },
     onSuccess: (position) => {
-      queryClient.setQueryData<ReadingPosition>(["readingPosition", userId], {
+      queryClient.setQueryData<ReadingPosition>(qk.readingPosition(userId), {
         last_read_book_id: position.bookId,
         last_read_chapter: position.chapter,
         last_read_verse: position.verse,
@@ -236,7 +237,7 @@ export const useVerseOfTheDay = () => {
   const { session } = useSession();
 
   return useQuery({
-    queryKey: ["verseOfTheDay"],
+    queryKey: qk.verseOfTheDay.root,
     // Estas lecturas no aportan nada en el login y el 401 asusta en consola:
     // no se disparan sin sesión.
     enabled: Boolean(session),

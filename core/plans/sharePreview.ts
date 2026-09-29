@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type SharedPlanPreview = {
   plan_id: string;
   plan_title: string;
@@ -24,7 +25,7 @@ export type SharedPlanPreview = {
  */
 export const useSharedPlanPreview = (token: string | undefined) =>
   useQuery({
-    queryKey: ["sharePreview", token],
+    queryKey: qk.sharePreview(token),
     enabled: Boolean(token),
     queryFn: async (): Promise<SharedPlanPreview | null> => {
       const { data, error } = await supabase.rpc("get_shared_plan_preview", {

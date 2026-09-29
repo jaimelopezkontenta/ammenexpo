@@ -8,6 +8,7 @@ import {
   type EmailPreferences,
 } from "./cadence";
 
+import { qk } from "@/core/query/keys";
 const parsePrefs = (
   row: {
     cadence?: string;
@@ -25,7 +26,7 @@ const parsePrefs = (
 
 export const useEmailPreferences = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["emailPreferences", userId],
+    queryKey: qk.emailPreferences(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<EmailPreferences | null> => {
       const { data, error } = await supabase
@@ -41,7 +42,7 @@ export const useEmailPreferences = (userId: string | undefined) =>
 
 export const useEmailPreferencesByToken = (token: string | undefined) =>
   useQuery({
-    queryKey: ["emailPreferencesToken", token],
+    queryKey: qk.emailPreferencesToken(token),
     enabled: Boolean(token),
     queryFn: async (): Promise<EmailPreferences | null> => {
       const { data, error } = await supabase.rpc("email_prefs_by_token", {
@@ -70,7 +71,7 @@ export const useUpdateEmailPreferences = (userId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["emailPreferences", userId],
+        queryKey: qk.emailPreferences(userId),
       });
     },
   });
@@ -97,7 +98,7 @@ export const useUpdateEmailPreferencesByToken = (token: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["emailPreferencesToken", token],
+        queryKey: qk.emailPreferencesToken(token),
       });
     },
   });
@@ -118,7 +119,7 @@ export const useReactivateEmailCadence = (token: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["emailPreferencesToken", token],
+        queryKey: qk.emailPreferencesToken(token),
       });
     },
   });

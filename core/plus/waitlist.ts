@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // `vitest.config.mts`).
 import { supabase } from "../../utils/supabase";
 
+import { qk } from "@/core/query/keys";
 /** Una fila de la lista de espera. Una por usuario. */
 export type WaitlistEntry = {
   user_id: string;
@@ -38,7 +39,7 @@ export const waitlistInputError = (
  */
 export const useMyWaitlistEntry = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["plusWaitlist", userId],
+    queryKey: qk.plusWaitlist(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<WaitlistEntry | null> => {
       const { data, error } = await supabase
@@ -80,7 +81,7 @@ export const useJoinWaitlist = (userId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["plusWaitlist", userId],
+        queryKey: qk.plusWaitlist(userId),
       });
     },
   });

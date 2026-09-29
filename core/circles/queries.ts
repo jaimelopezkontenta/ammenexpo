@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type CircleVisibility = "private" | "public";
 
 export type Circle = {
@@ -32,7 +33,7 @@ const CIRCLE_COLUMNS =
 /** RLS returns only circles the caller belongs to (plus public ones). */
 export const useMyCircles = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["circles", userId],
+    queryKey: qk.circles(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<Circle[]> => {
       const { data, error } = await supabase
@@ -50,7 +51,7 @@ export const useMyCircles = (userId: string | undefined) =>
 
 export const useCircle = (circleId: string | undefined) =>
   useQuery({
-    queryKey: ["circle", circleId],
+    queryKey: qk.circle(circleId),
     enabled: Boolean(circleId),
     queryFn: async (): Promise<Circle | null> => {
       const { data, error } = await supabase
@@ -67,7 +68,7 @@ export const useCircle = (circleId: string | undefined) =>
 
 export const useCircleMembers = (circleId: string | undefined) =>
   useQuery({
-    queryKey: ["circleMembers", circleId],
+    queryKey: qk.circleMembers(circleId),
     enabled: Boolean(circleId),
     queryFn: async (): Promise<CircleMember[]> => {
       const { data, error } = await supabase
@@ -119,7 +120,7 @@ export const useCreateCircle = (userId: string | undefined) => {
       return data as Circle;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["circles", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.circles(userId) });
     },
   });
 };
@@ -127,7 +128,7 @@ export const useCreateCircle = (userId: string | undefined) => {
 /** Reads an invite before the visitor has an account. */
 export const useCircleInvitePreview = (token: string | undefined) =>
   useQuery({
-    queryKey: ["circleInvite", token],
+    queryKey: qk.circleInvite(token),
     enabled: Boolean(token),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_circle_invite_preview", {
@@ -169,13 +170,13 @@ export const useJoinCircle = (userId: string | undefined) => {
       // so refreshing only the circle list left the Orar tab insisting nobody
       // had shared anything — with a button sending you back to circles. That
       // dead end was the end of the acquisition loop.
-      void queryClient.invalidateQueries({ queryKey: ["circles", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.circles(userId) });
       void queryClient.invalidateQueries({
-        queryKey: ["sharedWithMe", userId],
+        queryKey: qk.sharedWithMe(userId),
       });
-      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+      void queryClient.invalidateQueries({ queryKey: qk.circle(circleId) });
       void queryClient.invalidateQueries({
-        queryKey: ["circleMembers", circleId],
+        queryKey: qk.circleMembers(circleId),
       });
     },
   });
@@ -204,13 +205,13 @@ export const useLeaveCircle = (userId: string | undefined) => {
     onSuccess: (_result, circleId) => {
       // The mirror of joining: those plans are no longer readable, so leaving
       // them listed would show a live "Oré por ti" that fails on tap.
-      void queryClient.invalidateQueries({ queryKey: ["circles", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.circles(userId) });
       void queryClient.invalidateQueries({
-        queryKey: ["sharedWithMe", userId],
+        queryKey: qk.sharedWithMe(userId),
       });
-      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+      void queryClient.invalidateQueries({ queryKey: qk.circle(circleId) });
       void queryClient.invalidateQueries({
-        queryKey: ["circleMembers", circleId],
+        queryKey: qk.circleMembers(circleId),
       });
     },
   });
@@ -243,7 +244,7 @@ export const useSearchPublicCircles = (query: string) => {
   }, [query]);
 
   return useQuery({
-    queryKey: ["publicCircles", debounced],
+    queryKey: qk.publicCircles(debounced),
     // Keeps the previous results on screen while the next ones land, instead
     // of blinking through an empty list on every pause in typing.
     placeholderData: (previous) => previous,
@@ -272,12 +273,12 @@ export const useJoinPublicCircle = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: (_result, circleId) => {
-      void queryClient.invalidateQueries({ queryKey: ["circles", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.circles(userId) });
       void queryClient.invalidateQueries({
-        queryKey: ["sharedWithMe", userId],
+        queryKey: qk.sharedWithMe(userId),
       });
-      void queryClient.invalidateQueries({ queryKey: ["publicCircles"] });
-      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+      void queryClient.invalidateQueries({ queryKey: qk.publicCircles.root });
+      void queryClient.invalidateQueries({ queryKey: qk.circle(circleId) });
     },
   });
 };
@@ -285,7 +286,7 @@ export const useJoinPublicCircle = (userId: string | undefined) => {
 /** The invite token, which no longer travels with the circle row. */
 export const useCircleInviteToken = (circleId: string | undefined) =>
   useQuery({
-    queryKey: ["circleInviteToken", circleId],
+    queryKey: qk.circleInviteToken(circleId),
     enabled: Boolean(circleId),
     staleTime: Infinity,
     queryFn: async (): Promise<string | null> => {
@@ -326,9 +327,9 @@ export const useRemoveMember = (circleId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["circleMembers", circleId],
+        queryKey: qk.circleMembers(circleId),
       });
-      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+      void queryClient.invalidateQueries({ queryKey: qk.circle(circleId) });
     },
   });
 };
@@ -361,7 +362,7 @@ export type CirclePlan = {
  */
 export const useCirclePlan = (circleId: string | undefined) =>
   useQuery({
-    queryKey: ["circlePlan", circleId],
+    queryKey: qk.circlePlan(circleId),
     enabled: Boolean(circleId),
     queryFn: async (): Promise<CirclePlan | null> => {
       const { data, error } = await supabase.rpc("circle_plan", {
@@ -379,7 +380,7 @@ export const useCirclePlan = (circleId: string | undefined) =>
 /** Whether this person may start the circle's plan: admin, and none running. */
 export const useCanCreateCirclePlan = (circleId: string | undefined) =>
   useQuery({
-    queryKey: ["canCreateCirclePlan", circleId],
+    queryKey: qk.canCreateCirclePlan(circleId),
     enabled: Boolean(circleId),
     queryFn: async (): Promise<boolean> => {
       const { data, error } = await supabase.rpc("can_create_circle_plan", {
@@ -420,11 +421,11 @@ export const useMarkCircleDay = (
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["circlePlan", circleId],
+        queryKey: qk.circlePlan(circleId),
       });
-      void queryClient.invalidateQueries({ queryKey: ["circle", circleId] });
+      void queryClient.invalidateQueries({ queryKey: qk.circle(circleId) });
       // It counts as praying, so the personal streak moved too.
-      void queryClient.invalidateQueries({ queryKey: ["streak", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.streak(userId) });
     },
   });
 };
@@ -447,7 +448,7 @@ export type CircleSharedPlan = {
  */
 export const useCircleSharedPlans = (circleId: string | undefined) =>
   useQuery({
-    queryKey: ["circleSharedPlans", circleId],
+    queryKey: qk.circleSharedPlans(circleId),
     enabled: Boolean(circleId),
     queryFn: async (): Promise<CircleSharedPlan[]> => {
       const { data, error } = await supabase.rpc("circle_shared_plans", {
@@ -470,7 +471,7 @@ export const useCircleSharedPlans = (circleId: string | undefined) =>
  */
 export const useUnreadCounts = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["unreadCounts", userId],
+    queryKey: qk.unreadCounts(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<Record<string, number>> => {
       const { data, error } = await supabase.rpc("my_unread_counts");
@@ -506,7 +507,7 @@ export const useMarkConversationRead = (
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["unreadCounts", userId],
+        queryKey: qk.unreadCounts(userId),
       });
     },
   });

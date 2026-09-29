@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type FeedKind = "request" | "testimony" | "plan";
 
 export type FeedEntry = {
@@ -44,7 +45,7 @@ export type FeedEntry = {
  */
 export const useHomeFeed = () =>
   usePagedQuery<FeedEntry>({
-    queryKey: ["homeFeed"],
+    queryKey: qk.homeFeed.root,
     // Une tres fuentes en una lista, así que un `id` puede repetirse entre
     // clases: la clave es la pareja.
     keyOf: (row) => `${row.kind}-${row.id}`,
@@ -95,7 +96,7 @@ export const useSearchPeople = (query: string) => {
   }, [query]);
 
   return useQuery({
-    queryKey: ["searchPeople", debounced],
+    queryKey: qk.searchPeople(debounced),
     // La consulta vacía sí se manda: devuelve el directorio, y "cero
     // resultados" antes de escribir nada se lee como "no hay nadie".
     queryFn: async (): Promise<PersonSearchResult[]> => {
@@ -124,7 +125,7 @@ export type PersonPost = {
 /** Lo que esa persona pidió en el muro abierto. Nunca lo anónimo. */
 export const usePersonPosts = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["personPosts", userId],
+    queryKey: qk.personPosts(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<PersonPost[]> => {
       const { data, error } = await supabase.rpc("person_posts", {
@@ -147,7 +148,7 @@ export type PersonPlan = {
 
 export const usePersonPlans = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["personPlans", userId],
+    queryKey: qk.personPlans(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<PersonPlan[]> => {
       const { data, error } = await supabase.rpc("person_plans", {

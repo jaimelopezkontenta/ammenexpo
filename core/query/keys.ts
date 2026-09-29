@@ -20,6 +20,9 @@
 
 type Part = string | number | boolean | null | undefined;
 
+/** Un id que puede faltar mientras carga la sesión (`undefined` o `null`): la query queda deshabilitada. */
+type Id = string | null | undefined;
+
 /** Una clave con raíz: `qk.x(a, b)` da la clave entera, `qk.x.root` el prefijo. */
 const key = <Args extends Part[]>(root: string) =>
   Object.assign((...args: Args) => [root, ...args] as const, {
@@ -27,22 +30,23 @@ const key = <Args extends Part[]>(root: string) =>
   });
 
 export const qk = {
+  // -- Configuración remota ---------------------------------------------------
+  featureFlag: key<[flag: string]>("featureFlag"),
+
   // -- Cuenta y perfil -------------------------------------------------------
-  activePlan: key<[userId: string | undefined]>("activePlan"),
-  blocks: key<[userId: string | undefined]>("blocks"),
-  emailPreferences: key<[userId: string | undefined]>("emailPreferences"),
-  emailPreferencesToken: key<[token: string | undefined]>(
-    "emailPreferencesToken",
-  ),
-  inviteCode: key<[userId: string | undefined]>("inviteCode"),
-  invitePreview: key<[code: string | undefined]>("invitePreview"),
-  onboarding: key<[userId: string | undefined]>("onboarding"),
-  onboardingAnswers: key<[userId: string | undefined]>("onboardingAnswers"),
-  plusWaitlist: key<[userId: string | undefined]>("plusWaitlist"),
-  profile: key<[userId: string | undefined]>("profile"),
-  publicProfile: key<[userId: string | undefined]>("publicProfile"),
+  activePlan: key<[userId: Id]>("activePlan"),
+  blocks: key<[userId: Id]>("blocks"),
+  emailPreferences: key<[userId: Id]>("emailPreferences"),
+  emailPreferencesToken: key<[token: Id]>("emailPreferencesToken"),
+  inviteCode: key<[userId: Id]>("inviteCode"),
+  invitePreview: key<[code: Id]>("invitePreview"),
+  onboarding: key<[userId: Id]>("onboarding"),
+  onboardingAnswers: key<[userId: Id]>("onboardingAnswers"),
+  plusWaitlist: key<[userId: Id]>("plusWaitlist"),
+  profile: key<[userId: Id]>("profile"),
+  publicProfile: key<[userId: Id]>("publicProfile"),
   pushPermission: key<[]>("pushPermission"),
-  streak: key<[userId: string | undefined]>("streak"),
+  streak: key<[userId: Id]>("streak"),
 
   // -- Biblia ----------------------------------------------------------------
   bibleBooks: key<[]>("bibleBooks"),
@@ -53,66 +57,59 @@ export const qk = {
   bibleReference: key<[query: string]>("bibleReference"),
   bibleSearch: key<[query: string]>("bibleSearch"),
   chapterMarks:
-    key<
-      [
-        userId: string | undefined,
-        bookId: number | undefined,
-        chapter: number | undefined,
-      ]
-    >("chapterMarks"),
-  readingPosition: key<[userId: string | undefined]>("readingPosition"),
+    key<[userId: Id, bookId: number | undefined, chapter: number | undefined]>(
+      "chapterMarks",
+    ),
+  readingPosition: key<[userId: Id]>("readingPosition"),
   verseOfTheDay: key<[]>("verseOfTheDay"),
 
   // -- Planes ----------------------------------------------------------------
-  myPlans: key<[userId: string | undefined]>("myPlans"),
-  planCircles: key<[planId: string | undefined]>("planCircles"),
-  planDay:
-    key<[planId: string | undefined, dayNumber: number | undefined]>("planDay"),
-  planDays: key<[planId: string | undefined]>("planDays"),
-  planProgress: key<[planId: string | undefined]>("planProgress"),
-  planQuota: key<[userId: string | undefined]>("planQuota"),
-  planShareLink: key<[planId: string | undefined]>("planShareLink"),
-  planSummary: key<[planId: string | undefined]>("planSummary"),
-  prayedToday: key<[dayId: string | undefined]>("prayedToday"),
-  publicPlanDay: key<[planId: string | undefined]>("publicPlanDay"),
-  sharePreview: key<[token: string | undefined]>("sharePreview"),
-  sharedPlanDay: key<[planId: string | undefined]>("sharedPlanDay"),
-  sharedWithMe: key<[userId: string | undefined]>("sharedWithMe"),
-  todayDay: key<[planId: string | undefined]>("todayDay"),
-  whoPrayedForMe: key<[userId: string | undefined]>("whoPrayedForMe"),
-  prayerList: key<[userId: string | undefined]>("prayerList"),
-  personPlans: key<[userId: string | undefined]>("personPlans"),
+  myPlans: key<[userId: Id]>("myPlans"),
+  planCircles: key<[planId: Id]>("planCircles"),
+  planDay: key<[planId: Id, dayNumber: number | undefined]>("planDay"),
+  planDays: key<[planId: Id]>("planDays"),
+  planProgress: key<[planId: Id]>("planProgress"),
+  planQuota: key<[userId: Id]>("planQuota"),
+  planShareLink: key<[planId: Id]>("planShareLink"),
+  planSummary: key<[planId: Id]>("planSummary"),
+  prayedToday: key<[dayId: Id]>("prayedToday"),
+  publicPlanDay: key<[planId: Id]>("publicPlanDay"),
+  sharePreview: key<[token: Id]>("sharePreview"),
+  sharedPlanDay: key<[planId: Id]>("sharedPlanDay"),
+  sharedWithMe: key<[userId: Id]>("sharedWithMe"),
+  todayDay: key<[planId: Id]>("todayDay"),
+  whoPrayedForMe: key<[userId: Id]>("whoPrayedForMe"),
+  prayerList: key<[userId: Id]>("prayerList"),
+  personPlans: key<[userId: Id]>("personPlans"),
 
   // -- Círculos y chat -------------------------------------------------------
-  canCreateCirclePlan: key<[circleId: string | undefined]>(
-    "canCreateCirclePlan",
-  ),
-  circle: key<[circleId: string | undefined]>("circle"),
-  circleConversation: key<[circleId: string | undefined]>("circleConversation"),
-  circleInvite: key<[token: string | undefined]>("circleInvite"),
-  circleInviteToken: key<[circleId: string | undefined]>("circleInviteToken"),
-  circleMembers: key<[circleId: string | undefined]>("circleMembers"),
-  circleMessages: key<[circleId: string | undefined]>("circleMessages"),
-  circlePlan: key<[circleId: string | undefined]>("circlePlan"),
-  circleSharedPlans: key<[circleId: string | undefined]>("circleSharedPlans"),
-  circles: key<[userId: string | undefined]>("circles"),
+  canCreateCirclePlan: key<[circleId: Id]>("canCreateCirclePlan"),
+  circle: key<[circleId: Id]>("circle"),
+  circleConversation: key<[circleId: Id]>("circleConversation"),
+  circleInvite: key<[token: Id]>("circleInvite"),
+  circleInviteToken: key<[circleId: Id]>("circleInviteToken"),
+  circleMembers: key<[circleId: Id]>("circleMembers"),
+  circleMessages: key<[circleId: Id]>("circleMessages"),
+  circlePlan: key<[circleId: Id]>("circlePlan"),
+  circleSharedPlans: key<[circleId: Id]>("circleSharedPlans"),
+  circles: key<[userId: Id]>("circles"),
   publicCircles: key<[search: string]>("publicCircles"),
-  unreadCounts: key<[userId: string | undefined]>("unreadCounts"),
+  unreadCounts: key<[userId: Id]>("unreadCounts"),
 
   // -- Comunidad -------------------------------------------------------------
   homeFeed: key<[]>("homeFeed"),
-  personPosts: key<[userId: string | undefined]>("personPosts"),
-  postComments: key<[postId: string | undefined]>("postComments"),
+  personPosts: key<[userId: Id]>("personPosts"),
+  postComments: key<[postId: Id]>("postComments"),
   searchPeople: key<[search: string]>("searchPeople"),
-  testimonies: key<[userId: string | undefined]>("testimonies"),
+  testimonies: key<[userId: Id]>("testimonies"),
 
   // -- Avisos ----------------------------------------------------------------
-  notifications: key<[userId: string | undefined]>("notifications"),
-  unreadNotifications: key<[userId: string | undefined]>("unreadNotifications"),
+  notifications: key<[userId: Id]>("notifications"),
+  unreadNotifications: key<[userId: Id]>("unreadNotifications"),
 
   // -- Moderación ------------------------------------------------------------
-  crisisQueue: key<[userId: string | undefined]>("crisisQueue"),
-  openReports: key<[userId: string | undefined]>("openReports"),
+  crisisQueue: key<[userId: Id]>("crisisQueue"),
+  openReports: key<[userId: Id]>("openReports"),
   reportQueue: key<[status: string]>("reportQueue"),
 
   // -- Claves con una forma propia --------------------------------------------

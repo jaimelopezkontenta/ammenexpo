@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export const ITEM_MAX = 280;
 export const TAG_MAX = 40;
 
@@ -25,7 +26,7 @@ export type ListItem = {
  */
 export const usePrayerList = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["prayerList", userId],
+    queryKey: qk.prayerList(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<ListItem[]> => {
       const { data, error } = await supabase
@@ -59,7 +60,7 @@ export const useAddListItem = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayerList", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerList(userId) });
     },
   });
 };
@@ -89,7 +90,7 @@ export const useSetItemAnswered = (userId: string | undefined) => {
       if (!data?.length) throw new Error("list_update_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayerList", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerList(userId) });
     },
   });
 };
@@ -109,7 +110,7 @@ export const useDeleteListItem = (userId: string | undefined) => {
       if (!data?.length) throw new Error("list_delete_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayerList", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerList(userId) });
     },
   });
 };

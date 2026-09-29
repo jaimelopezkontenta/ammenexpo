@@ -8,6 +8,7 @@ import {
 import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export const POST_MAX = 2000;
 export const COMMENT_MAX = 1000;
 
@@ -18,8 +19,8 @@ export const COMMENT_MAX = 1000;
  * listas se ponen al día: si no, al volver enseñaban el estado de antes.
  */
 const invalidateFeeds = (queryClient: QueryClient) => {
-  void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
-  void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
+  void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
+  void queryClient.invalidateQueries({ queryKey: qk.homeFeed.root });
 };
 
 export type PrayerRequest = {
@@ -75,7 +76,7 @@ export type PostComment = {
  */
 export const usePrayerFeed = (circleId?: string) =>
   usePagedQuery<PrayerRequest>({
-    queryKey: ["prayerFeed", circleId ?? "wall"],
+    queryKey: qk.prayerFeed(circleId),
     keyOf: (row) => row.id,
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("prayer_feed_page", {
@@ -119,7 +120,7 @@ export const useWritePrayerRequest = (userId: string | undefined) => {
       return { crisisFlagged: data.crisis_flagged_at !== null };
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
     },
   });
 };
@@ -161,7 +162,7 @@ export const useTogglePostPrayer = (userId: string | undefined) => {
 
 export const usePostComments = (postId: string | undefined) =>
   useQuery({
-    queryKey: ["postComments", postId],
+    queryKey: qk.postComments(postId),
     enabled: Boolean(postId),
     queryFn: async (): Promise<PostComment[]> => {
       const { data, error } = await supabase.rpc("post_comments", {
@@ -201,7 +202,7 @@ export const useWriteComment = (
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["postComments", postId],
+        queryKey: qk.postComments(postId),
       });
       invalidateFeeds(queryClient);
     },
@@ -268,7 +269,7 @@ export const useHidePost = () => {
       if (data !== true) throw new Error("hide_post_refused");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
     },
   });
 };
@@ -298,11 +299,11 @@ export const useHideComment = (postId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["postComments", postId],
+        queryKey: qk.postComments(postId),
       });
       // El contador de comentarios vive en la tarjeta de la petición.
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
-      void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
+      void queryClient.invalidateQueries({ queryKey: qk.homeFeed.root });
     },
   });
 };

@@ -15,6 +15,7 @@ import {
   type NotificationResponseLike,
 } from "./responseCoordinator";
 
+import { qk } from "@/core/query/keys";
 /**
  * RDY-10/RDY-11 — un token por instalación, no por perfil.
  *
@@ -274,7 +275,7 @@ export const useNotificationResponseHandler = ({
  */
 export const usePushPermissionStatus = () =>
   useQuery({
-    queryKey: ["pushPermission"],
+    queryKey: qk.pushPermission.root,
     enabled: Platform.OS !== "web",
     ...PUSH_PERMISSION_REFRESH,
     queryFn: async () => (await Notifications.getPermissionsAsync()).status,

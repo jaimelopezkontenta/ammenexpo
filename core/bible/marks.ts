@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export const NOTE_MAX = 2000;
 
 export type ChapterMarks = {
@@ -26,7 +27,7 @@ export const useChapterMarks = (
   chapter: number | undefined,
 ) =>
   useQuery({
-    queryKey: ["chapterMarks", userId, bookId, chapter],
+    queryKey: qk.chapterMarks(userId, bookId, chapter),
     enabled: Boolean(userId && bookId && chapter),
     queryFn: async (): Promise<ChapterMarks> => {
       const [{ data: highlights, error }, { data: notes, error: notesError }] =
@@ -100,7 +101,7 @@ export const useToggleHighlight = (
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["chapterMarks", userId, bookId, chapter],
+        queryKey: qk.chapterMarks(userId, bookId, chapter),
       });
     },
   });
@@ -147,7 +148,7 @@ export const useSaveNote = (
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["chapterMarks", userId, bookId, chapter],
+        queryKey: qk.chapterMarks(userId, bookId, chapter),
       });
     },
   });

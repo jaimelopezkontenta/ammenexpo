@@ -21,6 +21,7 @@ import {
 } from "@/core/plans/stuckDetection";
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type PlanStatus =
   "generating" | "failed" | "active" | "completed" | "archived";
 
@@ -83,7 +84,7 @@ const PLAN_COLUMNS =
  */
 export const useMyPlans = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["myPlans", userId],
+    queryKey: qk.myPlans(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<OwnPlan[]> => {
       const { data, error } = await supabase
@@ -112,7 +113,7 @@ export const useMyPlans = (userId: string | undefined) =>
  */
 export const useActivePlanId = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["activePlan", userId],
+    queryKey: qk.activePlan(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<string | null> => {
       const { data, error } = await supabase
@@ -148,7 +149,7 @@ export const useSetActivePlan = (userId: string | undefined) => {
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["activePlan", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.activePlan(userId) });
     },
   });
 };
@@ -156,7 +157,7 @@ export const useSetActivePlan = (userId: string | undefined) => {
 /** How far along a plan is, and whether it is over. */
 export const usePlanProgress = (planId: string | undefined) =>
   useQuery({
-    queryKey: ["planProgress", planId],
+    queryKey: qk.planProgress(planId),
     enabled: Boolean(planId),
     queryFn: async (): Promise<PlanProgress | null> => {
       const { data, error } = await supabase.rpc("plan_progress", {
@@ -182,7 +183,7 @@ export const usePlanProgress = (planId: string | undefined) =>
  */
 export const useTodayDay = (planId: string | undefined, isGenerating = false) =>
   useQuery({
-    queryKey: ["todayDay", planId],
+    queryKey: qk.todayDay(planId),
     enabled: Boolean(planId),
     refetchInterval: (query) =>
       isGenerating && !query.state.data ? 3000 : false,
@@ -223,7 +224,7 @@ export const useTodayDay = (planId: string | undefined, isGenerating = false) =>
 
 export const usePrayedToday = (dayId: string | undefined) =>
   useQuery({
-    queryKey: ["prayedToday", dayId],
+    queryKey: qk.prayedToday(dayId),
     enabled: Boolean(dayId),
     queryFn: async () => {
       try {
@@ -347,8 +348,8 @@ export const useGeneratePlan = (userId: string | undefined) => {
       // create must mint a fresh key (reusing it would return the old plan).
       attemptKey.current.clear();
 
-      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
-      void queryClient.invalidateQueries({ queryKey: ["planQuota", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.myPlans(userId) });
+      void queryClient.invalidateQueries({ queryKey: qk.planQuota(userId) });
 
       // A circle's plan is not one of yours, so invalidating `myPlans` alone
       // left the circle screen still offering to create the plan it had just
@@ -356,10 +357,10 @@ export const useGeneratePlan = (userId: string | undefined) => {
       // have survived until the app was killed.
       if (input.group_id) {
         void queryClient.invalidateQueries({
-          queryKey: ["circlePlan", input.group_id],
+          queryKey: qk.circlePlan(input.group_id),
         });
         void queryClient.invalidateQueries({
-          queryKey: ["canCreateCirclePlan", input.group_id],
+          queryKey: qk.canCreateCirclePlan(input.group_id),
         });
       }
     },
@@ -399,7 +400,7 @@ export const useRenamePlan = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.myPlans(userId) });
     },
   });
 };
@@ -421,8 +422,8 @@ export const useArchivePlan = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
-      void queryClient.invalidateQueries({ queryKey: ["activePlan", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.myPlans(userId) });
+      void queryClient.invalidateQueries({ queryKey: qk.activePlan(userId) });
     },
   });
 };
@@ -456,26 +457,23 @@ export const useMarkPrayed = (dayId: string | undefined, userId?: string) => {
       // Fijar "orado" antes de que vuelva la red: invalidar prayedToday
       // dispara un refetch que sin red conserva el false anterior y el
       // orbe nunca aparece.
-      await queryClient.cancelQueries({ queryKey: ["prayedToday", dayId] });
-      const previous = queryClient.getQueryData<boolean>([
-        "prayedToday",
-        dayId,
-      ]);
-      queryClient.setQueryData(["prayedToday", dayId], true);
+      await queryClient.cancelQueries({ queryKey: qk.prayedToday(dayId) });
+      const previous = queryClient.getQueryData<boolean>(qk.prayedToday(dayId));
+      queryClient.setQueryData(qk.prayedToday(dayId), true);
       return { previous };
     },
     onError: (_error, _variables, context) => {
       if (context) {
-        queryClient.setQueryData(["prayedToday", dayId], context.previous);
+        queryClient.setQueryData(qk.prayedToday(dayId), context.previous);
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayedToday", dayId] });
+      void queryClient.invalidateQueries({ queryKey: qk.prayedToday(dayId) });
       // The streak is bumped by a trigger, so the cached value is stale the
       // moment this succeeds.
-      void queryClient.invalidateQueries({ queryKey: ["streak", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.streak(userId) });
       // And the closing summary counts the days you prayed.
-      void queryClient.invalidateQueries({ queryKey: ["planProgress"] });
+      void queryClient.invalidateQueries({ queryKey: qk.planProgress.root });
     },
   });
 };
@@ -506,7 +504,7 @@ export const usePlanDays = (
   polling = false,
 ) =>
   useQuery({
-    queryKey: ["planDays", planId],
+    queryKey: qk.planDays(planId),
     enabled: Boolean(planId),
     queryFn: async (): Promise<PlanDaySummary[]> => {
       const { data, error } = await supabase.rpc("my_plan_days", {
@@ -543,7 +541,7 @@ export type PublicPlanDay = {
  */
 export const usePublicPlanDay = (planId: string | undefined) =>
   useQuery({
-    queryKey: ["publicPlanDay", planId],
+    queryKey: qk.publicPlanDay(planId),
     enabled: Boolean(planId),
     queryFn: async (): Promise<PublicPlanDay | null> => {
       const { data, error } = await supabase.rpc("get_public_plan_day", {
@@ -562,7 +560,7 @@ export const usePlanDay = (
   dayNumber: number | undefined,
 ) =>
   useQuery({
-    queryKey: ["planDay", planId, dayNumber],
+    queryKey: qk.planDay(planId, dayNumber),
     enabled: Boolean(planId) && Number.isInteger(dayNumber),
     queryFn: async (): Promise<PlanDay | null> => {
       const { data, error } = await supabase.rpc("get_my_day", {
@@ -640,9 +638,9 @@ export const useContinuePlan = (userId: string | undefined) => {
       // gets a fresh key.
       continueKeys.current.get(planId)?.clear();
 
-      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
-      void queryClient.invalidateQueries({ queryKey: ["todayDay"] });
-      void queryClient.invalidateQueries({ queryKey: ["planProgress"] });
+      void queryClient.invalidateQueries({ queryKey: qk.myPlans(userId) });
+      void queryClient.invalidateQueries({ queryKey: qk.todayDay.root });
+      void queryClient.invalidateQueries({ queryKey: qk.planProgress.root });
     },
   });
 };
@@ -656,7 +654,7 @@ export type PlanQuota = { used: number; quota_limit: number };
  */
 export const useMyPlanQuota = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["planQuota", userId],
+    queryKey: qk.planQuota(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<PlanQuota | null> => {
       const { data, error } = await supabase.rpc("my_plan_quota");

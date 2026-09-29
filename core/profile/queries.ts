@@ -12,6 +12,7 @@ import {
 
 import type { Streak } from "./streak";
 
+import { qk } from "@/core/query/keys";
 export { liveStreak, type Streak } from "./streak";
 
 export type Profile = {
@@ -26,7 +27,7 @@ export type Profile = {
 
 export const useStreak = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["streak", userId],
+    queryKey: qk.streak(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<Streak | null> => {
       const { data, error } = await supabase
@@ -53,7 +54,7 @@ export const useStreak = (userId: string | undefined) =>
 /** Nombre y cara en `profiles`; el bit de staff en `my_profile_data()`; el resto, solo del dueño, en `profile_settings`. */
 export const useProfile = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["profile", userId],
+    queryKey: qk.profile(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<Profile | null> => {
       const [
@@ -129,13 +130,13 @@ export const useUpdateProfile = (userId: string | undefined) => {
       // Lo guardado entra en la caché ya: Perfil guarda al terminar de editar
       // y suelta el borrador al acabar, así que sin esto el campo enseñaba un
       // instante el valor viejo hasta que volvía el refetch.
-      queryClient.setQueryData<Profile | null>(["profile", userId], (cached) =>
+      queryClient.setQueryData<Profile | null>(qk.profile(userId), (cached) =>
         cached ? applyProfileChanges(cached, variables) : cached,
       );
-      void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.profile(userId) });
       // The name is stamped into plans and shown to everyone praying for you.
-      void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
-      void queryClient.invalidateQueries({ queryKey: ["whoPrayedForMe"] });
+      void queryClient.invalidateQueries({ queryKey: qk.sharedWithMe.root });
+      void queryClient.invalidateQueries({ queryKey: qk.whoPrayedForMe.root });
 
       // Las horas elegidas son las horas del recordatorio local: se
       // reprograman al guardar, sin esperar al refetch que el SessionProvider
@@ -205,7 +206,7 @@ export {
  */
 export const useOnboardingAnswers = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["onboardingAnswers", userId],
+    queryKey: qk.onboardingAnswers(userId),
     enabled: Boolean(userId),
     staleTime: Infinity,
     queryFn: async (): Promise<OnboardingAnswers | null> => {
@@ -251,7 +252,7 @@ export type PublicProfile = {
  */
 export const usePublicProfile = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["publicProfile", userId],
+    queryKey: qk.publicProfile(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<PublicProfile | null> => {
       const { data, error } = await supabase.rpc("public_profile", {
@@ -288,12 +289,12 @@ export const useUpdateTimezone = (userId: string | undefined) => {
       if (!data?.length) throw new Error("timezone_update_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.profile(userId) });
       // El día de hoy y la racha se calculan con la zona: con la vieja en caché
       // seguirías viendo el día de tu país anterior.
-      void queryClient.invalidateQueries({ queryKey: ["todayDay"] });
-      void queryClient.invalidateQueries({ queryKey: ["myPlans", userId] });
-      void queryClient.invalidateQueries({ queryKey: ["streak", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.todayDay.root });
+      void queryClient.invalidateQueries({ queryKey: qk.myPlans(userId) });
+      void queryClient.invalidateQueries({ queryKey: qk.streak(userId) });
     },
   });
 };

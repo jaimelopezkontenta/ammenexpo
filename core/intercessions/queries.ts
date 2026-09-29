@@ -4,6 +4,7 @@ import { track } from "@/core/observability/track";
 import { supabase } from "@/utils/supabase";
 import type { Database } from "@/types/supabase";
 
+import { qk } from "@/core/query/keys";
 /** A plan someone else shared with me, showing their day for today. */
 export type SharedPlan = {
   plan_id: string;
@@ -47,7 +48,7 @@ export const QUICK_MESSAGE_KEYS = [
 
 export const usePlansSharedWithMe = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["sharedWithMe", userId],
+    queryKey: qk.sharedWithMe(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<SharedPlan[]> => {
       const { data, error } = await supabase.rpc("plans_shared_with_me");
@@ -73,7 +74,7 @@ export const usePlansSharedWithMe = (userId: string | undefined) =>
  */
 export const useSharedPlanDay = (planId: string | undefined) =>
   useQuery({
-    queryKey: ["sharedPlanDay", planId],
+    queryKey: qk.sharedPlanDay(planId),
     enabled: Boolean(planId),
     queryFn: async (): Promise<SharedPlan | null> => {
       const { data, error } = await supabase.rpc("get_shared_plan_day", {
@@ -88,7 +89,7 @@ export const useSharedPlanDay = (planId: string | undefined) =>
 
 export const useWhoPrayedForMe = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["whoPrayedForMe", userId],
+    queryKey: qk.whoPrayedForMe(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<Intercession[]> => {
       const { data, error } = await supabase.rpc("who_prayed_for_me");
@@ -145,10 +146,10 @@ export const usePrayForSomeone = (userId: string | undefined) => {
     // visible — indistinguishable from a broken button.
     onSettled: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["sharedWithMe", userId],
+        queryKey: qk.sharedWithMe(userId),
       });
       void queryClient.invalidateQueries({
-        queryKey: ["sharedPlanDay"],
+        queryKey: qk.sharedPlanDay.root,
       });
     },
     onSuccess: () => {
@@ -204,7 +205,7 @@ export const useReportIntercession = (userId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["whoPrayedForMe", userId],
+        queryKey: qk.whoPrayedForMe(userId),
       });
     },
   });

@@ -48,6 +48,17 @@ const ROUTER_BACK_SELECTOR = {
     "router.back() sin historial deja atrapado a quien entró en frío: usa goBackOr(destino) de core/nav/safeBack.ts — AGENTS.md.",
 };
 
+// Las claves de React Query salen de `qk` (core/query/keys.ts). Una clave escrita a
+// mano en un `invalidateQueries` y otra distinta en el `useQuery` que debía
+// refrescar fallan en silencio: había 184 sueltas y dos invalidaciones que no
+// refrescaban nada porque ninguna query las usaba.
+const QUERY_KEY_MESSAGE =
+  "Las claves de React Query salen de `qk` (core/query/keys.ts), no de un array a mano: una clave distinta en la query y en su invalidación falla en silencio.";
+const QUERY_KEY_SELECTORS = [
+  "Property[key.name='queryKey'] > ArrayExpression",
+  "CallExpression[callee.property.name=/^(?:setQueryData|getQueryData|setQueriesData|getQueriesData|ensureQueryData|prefetchQuery|fetchQuery)$/] > ArrayExpression:first-child",
+].map((selector) => ({ selector, message: QUERY_KEY_MESSAGE }));
+
 module.exports = defineConfig([
   expoConfig,
   {
@@ -130,6 +141,7 @@ module.exports = defineConfig([
         "error",
         ROUTER_BACK_SELECTOR,
         ...TXT_COLOR_SELECTORS,
+        ...QUERY_KEY_SELECTORS,
       ],
     },
   },

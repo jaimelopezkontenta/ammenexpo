@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type AppNotification = {
   id: string;
   type: string;
@@ -27,7 +28,7 @@ export type AppNotification = {
  */
 export const useNotifications = (userId: string | undefined) =>
   usePagedQuery<AppNotification>({
-    queryKey: ["notifications", userId],
+    queryKey: qk.notifications(userId),
     enabled: Boolean(userId),
     keyOf: (row) => row.id,
     fetchPage: async (cursor) => {
@@ -52,7 +53,7 @@ export const useNotifications = (userId: string | undefined) =>
  */
 export const useUnreadNotifications = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["unreadNotifications", userId],
+    queryKey: qk.unreadNotifications(userId),
     enabled: Boolean(userId),
     refetchInterval: 60_000,
     queryFn: async (): Promise<number> => {
@@ -81,12 +82,12 @@ export const useMarkNotificationsRead = (userId: string | undefined) => {
       // acaba de cargarla es un viaje de más en cada visita.
       if (changed > 0) {
         void queryClient.invalidateQueries({
-          queryKey: ["notifications", userId],
+          queryKey: qk.notifications(userId),
         });
       }
 
       void queryClient.invalidateQueries({
-        queryKey: ["unreadNotifications", userId],
+        queryKey: qk.unreadNotifications(userId),
       });
     },
   });

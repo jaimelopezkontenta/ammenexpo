@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type ShareLink = {
   id: string;
   token: string;
@@ -22,7 +23,7 @@ export type PlanShare = {
  */
 export const usePlanShareLink = (planId: string | undefined) =>
   useQuery({
-    queryKey: ["planShareLink", planId],
+    queryKey: qk.planShareLink(planId),
     enabled: Boolean(planId),
     queryFn: async (): Promise<ShareLink | null> => {
       const { data, error } = await supabase
@@ -59,7 +60,7 @@ export const useCreateShareLink = (planId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["planShareLink", planId],
+        queryKey: qk.planShareLink(planId),
       });
     },
   });
@@ -93,7 +94,7 @@ export const useRevokeShareLink = (planId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["planShareLink", planId],
+        queryKey: qk.planShareLink(planId),
       });
     },
   });
@@ -102,7 +103,7 @@ export const useRevokeShareLink = (planId: string | undefined) => {
 /** Which circles this plan is currently shared with. */
 export const usePlanCircles = (planId: string | undefined) =>
   useQuery({
-    queryKey: ["planCircles", planId],
+    queryKey: qk.planCircles(planId),
     enabled: Boolean(planId),
     queryFn: async (): Promise<string[]> => {
       const { data, error } = await supabase
@@ -151,7 +152,7 @@ export const useTogglePlanCircle = (
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["planCircles", planId] });
+      void queryClient.invalidateQueries({ queryKey: qk.planCircles(planId) });
     },
   });
 };
@@ -159,7 +160,7 @@ export const useTogglePlanCircle = (
 /** Just enough of a plan to title the share screen and write the invitation. */
 export const usePlanSummary = (planId: string | undefined) =>
   useQuery({
-    queryKey: ["planSummary", planId],
+    queryKey: qk.planSummary(planId),
     enabled: Boolean(planId),
     queryFn: async () => {
       const { data, error } = await supabase
@@ -213,10 +214,10 @@ export const useSetPlanPublic = (planId: string | undefined) => {
       if (!data?.length) throw new Error("visibility_update_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["planSummary", planId] });
+      void queryClient.invalidateQueries({ queryKey: qk.planSummary(planId) });
       // Y las dos superficies donde el plan sale o deja de salir.
-      void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
-      void queryClient.invalidateQueries({ queryKey: ["personPlans"] });
+      void queryClient.invalidateQueries({ queryKey: qk.homeFeed.root });
+      void queryClient.invalidateQueries({ queryKey: qk.personPlans.root });
     },
   });
 };

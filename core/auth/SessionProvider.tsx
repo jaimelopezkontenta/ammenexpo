@@ -37,6 +37,7 @@ import { clearCachedDays, useFlushPrayedQueue } from "@/core/plans/offline";
 import { useProfile } from "@/core/profile/queries";
 import { useLastSeenHeartbeat } from "@/core/email/heartbeat";
 
+import { qk } from "@/core/query/keys";
 type SessionState = {
   session: Session | null;
   /** True until the stored session has been read. */
@@ -140,8 +141,8 @@ export const SessionProvider = ({
       // Redeeming is what makes that plan visible. Without invalidating, the
       // Orar tab would keep insisting nobody had shared anything — this app
       // never refetches on focus, so it would say so until it was killed.
-      void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
-      void queryClient.invalidateQueries({ queryKey: ["circles"] });
+      void queryClient.invalidateQueries({ queryKey: qk.sharedWithMe.root });
+      void queryClient.invalidateQueries({ queryKey: qk.circles.root });
     });
 
     return () => {
@@ -159,7 +160,7 @@ export const SessionProvider = ({
     isLoadingError: readFailed,
     refetch,
   } = useQuery({
-    queryKey: ["onboarding", userId],
+    queryKey: qk.onboarding(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<OnboardingRead> => {
       const { data: settings, error } = await supabase

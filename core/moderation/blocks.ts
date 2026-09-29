@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type Block = {
   blocked_id: string;
   display_name: string;
@@ -19,7 +20,7 @@ export type Block = {
  */
 export const useMyBlocks = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["blocks", userId],
+    queryKey: qk.blocks(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<Block[]> => {
       const { data, error } = await supabase
@@ -57,22 +58,22 @@ const invalidateBlockedSurfaces = (
   queryClient: ReturnType<typeof useQueryClient>,
   userId: string | undefined,
 ) => {
-  void queryClient.invalidateQueries({ queryKey: ["blocks", userId] });
-  void queryClient.invalidateQueries({ queryKey: ["circleMessages"] });
-  void queryClient.invalidateQueries({ queryKey: ["whoPrayedForMe"] });
-  void queryClient.invalidateQueries({ queryKey: ["sharedWithMe", userId] });
+  void queryClient.invalidateQueries({ queryKey: qk.blocks(userId) });
+  void queryClient.invalidateQueries({ queryKey: qk.circleMessages.root });
+  void queryClient.invalidateQueries({ queryKey: qk.whoPrayedForMe.root });
+  void queryClient.invalidateQueries({ queryKey: qk.sharedWithMe(userId) });
   // Added when the wall and the testimonies arrived. Missing them meant the
   // person you had just blocked stayed on screen — the block *had* worked
   // server-side, so it was a lie that only a restart would clear.
-  void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
-  void queryClient.invalidateQueries({ queryKey: ["postComments"] });
-  void queryClient.invalidateQueries({ queryKey: ["testimonies"] });
-  void queryClient.invalidateQueries({ queryKey: ["unreadCounts", userId] });
-  void queryClient.invalidateQueries({ queryKey: ["circleSharedPlans"] });
+  void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
+  void queryClient.invalidateQueries({ queryKey: qk.postComments.root });
+  void queryClient.invalidateQueries({ queryKey: qk.testimonies.root });
+  void queryClient.invalidateQueries({ queryKey: qk.unreadCounts(userId) });
+  void queryClient.invalidateQueries({ queryKey: qk.circleSharedPlans.root });
   // Y el perfil de la persona, que a partir del bloqueo deja de existir para
   // ti — y cuyos contadores acaban de cambiar, porque bloquear deshace el
   // seguimiento en los dos sentidos.
-  void queryClient.invalidateQueries({ queryKey: ["publicProfile"] });
+  void queryClient.invalidateQueries({ queryKey: qk.publicProfile.root });
 };
 
 export const useBlockUser = (userId: string | undefined) => {

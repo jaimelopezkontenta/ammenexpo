@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useSession } from "@/core/auth/SessionProvider";
+import { qk } from "@/core/query/keys";
 import { supabase } from "@/utils/supabase";
 
 import { type FlagState, toFlagState } from "./flagState";
@@ -28,7 +29,7 @@ export const useFeatureFlag = (key: string): FlagState => {
   const { session } = useSession();
 
   const { data } = useQuery({
-    queryKey: ["featureFlag", key],
+    queryKey: qk.featureFlag(key),
     enabled: Boolean(session),
     staleTime: FLAG_STALE_MS,
     queryFn: async (): Promise<boolean | null> => {

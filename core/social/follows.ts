@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 /**
  * Seguir a alguien.
  *
@@ -22,9 +23,9 @@ const invalidateFollowSurfaces = (
   // El perfil de esa persona (el botón y su contador de seguidores) y el tuyo
   // (el de "siguiendo"). Nada en esta app refresca al enfocar, así que una
   // invalidación que falta se queda mal hasta que se mata la app.
-  void queryClient.invalidateQueries({ queryKey: ["publicProfile", targetId] });
-  void queryClient.invalidateQueries({ queryKey: ["publicProfile"] });
-  void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
+  void queryClient.invalidateQueries({ queryKey: qk.publicProfile(targetId) });
+  void queryClient.invalidateQueries({ queryKey: qk.publicProfile.root });
+  void queryClient.invalidateQueries({ queryKey: qk.homeFeed.root });
 };
 
 export const useFollowUser = () => {

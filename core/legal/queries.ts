@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TERMS_VERSION } from "@/core/legal/documents";
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 /**
  * Aceptar los términos.
  *
@@ -24,7 +25,7 @@ export const useAcceptTerms = () => {
     onSuccess: () => {
       // La consulta que mira la puerta de entrada. Sin invalidarla, aceptar
       // dejaría a alguien mirando la misma pantalla que acaba de despachar.
-      void queryClient.invalidateQueries({ queryKey: ["onboarding"] });
+      void queryClient.invalidateQueries({ queryKey: qk.onboarding.root });
     },
   });
 };

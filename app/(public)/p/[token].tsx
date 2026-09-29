@@ -27,6 +27,7 @@ import {
 } from "@/core/plans/redeemOutcome";
 import { useSharedPlanPreview } from "@/core/plans/sharePreview";
 
+import { qk } from "@/core/query/keys";
 export default function SharedPlanPreviewScreen() {
   const { t } = useTranslation();
   const { top, scrollBottom } = useScreenPadding();
@@ -100,8 +101,8 @@ export default function SharedPlanPreviewScreen() {
     // Navigating without refreshing landed people on a Hoy and an Orar tab that
     // still believed nothing had been shared with them.
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] }),
-      queryClient.invalidateQueries({ queryKey: ["circles"] }),
+      queryClient.invalidateQueries({ queryKey: qk.sharedWithMe.root }),
+      queryClient.invalidateQueries({ queryKey: qk.circles.root }),
     ]);
 
     // Con `plan_id` el canje abre el día que toca orar, no Hoy: aterrizar en la

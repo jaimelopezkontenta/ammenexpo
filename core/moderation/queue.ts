@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type ReportStatus = "open" | "reviewed" | "dismissed";
 
 export type QueuedReport = {
@@ -31,7 +32,7 @@ export type QueuedReport = {
  */
 export const useReportQueue = (status: ReportStatus) =>
   usePagedQuery<QueuedReport>({
-    queryKey: ["reportQueue", status],
+    queryKey: qk.reportQueue(status),
     keyOf: (row) => row.id,
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("report_queue_page", {
@@ -49,7 +50,7 @@ export const useReportQueue = (status: ReportStatus) =>
 
 export const useOpenReportCount = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["openReports", userId],
+    queryKey: qk.openReports(userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<number> => {
       const { data, error } = await supabase.rpc("open_report_count");
@@ -81,8 +82,8 @@ export const useResolveReport = () => {
       if (data !== true) throw new Error("resolve_report_refused");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["reportQueue"] });
-      void queryClient.invalidateQueries({ queryKey: ["openReports"] });
+      void queryClient.invalidateQueries({ queryKey: qk.reportQueue.root });
+      void queryClient.invalidateQueries({ queryKey: qk.openReports.root });
     },
   });
 };
@@ -108,11 +109,11 @@ export const useHideReportedContent = () => {
       if (data !== true) throw new Error("hide_reported_content_refused");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["reportQueue"] });
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
-      void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
-      void queryClient.invalidateQueries({ queryKey: ["postComments"] });
-      void queryClient.invalidateQueries({ queryKey: ["circleMessages"] });
+      void queryClient.invalidateQueries({ queryKey: qk.reportQueue.root });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
+      void queryClient.invalidateQueries({ queryKey: qk.homeFeed.root });
+      void queryClient.invalidateQueries({ queryKey: qk.postComments.root });
+      void queryClient.invalidateQueries({ queryKey: qk.circleMessages.root });
     },
   });
 };
@@ -143,7 +144,7 @@ export const useHeldContentQueue = (
   statuses: HoldStatus[] = ["pending", "claimed"],
 ) =>
   usePagedQuery<HeldContent>({
-    queryKey: ["heldContentQueue", statuses.join(",")],
+    queryKey: qk.heldContentQueue(statuses),
     keyOf: (row) => row.id,
     // Más antiguo primero y el cursor hacia delante: es la cola de un SLA. La
     // RPC vieja ordenaba así pero paginaba con `created_at <`, y la segunda
@@ -165,9 +166,9 @@ export const useHeldContentQueue = (
 const invalidateHoldQueue = (
   queryClient: ReturnType<typeof useQueryClient>,
 ) => {
-  void queryClient.invalidateQueries({ queryKey: ["heldContentQueue"] });
-  void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
-  void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
+  void queryClient.invalidateQueries({ queryKey: qk.heldContentQueue.root });
+  void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
+  void queryClient.invalidateQueries({ queryKey: qk.homeFeed.root });
 };
 
 export const useClaimHold = () => {
@@ -252,7 +253,7 @@ const CRISIS_MAX_PAGES = 40;
  */
 export const useCrisisQueue = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["crisisQueue", userId],
+    queryKey: qk.crisisQueue(userId),
     enabled: Boolean(userId),
     // El deber de guardia no espera a que alguien vuelva a abrir la pantalla.
     refetchInterval: 30_000,
@@ -293,7 +294,7 @@ export const useAcknowledgeCrisis = () => {
       if (data !== true) throw new Error("acknowledge_crisis_refused");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["crisisQueue"] });
+      void queryClient.invalidateQueries({ queryKey: qk.crisisQueue.root });
     },
   });
 };

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export const TESTIMONY_MAX = 2000;
 
 export type TestimonyVisibility = "private" | "circles" | "public";
@@ -32,7 +33,7 @@ export type Testimony = {
  */
 export const useVisibleTestimonies = (userId: string | undefined) =>
   usePagedQuery<Testimony>({
-    queryKey: ["testimonies", userId],
+    queryKey: qk.testimonies(userId),
     enabled: Boolean(userId),
     keyOf: (row) => row.id,
     fetchPage: async (cursor) => {
@@ -70,7 +71,7 @@ export const useWriteTestimony = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["testimonies", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.testimonies(userId) });
     },
   });
 };
@@ -102,7 +103,7 @@ export const useSetTestimonyVisibility = (userId: string | undefined) => {
       if (!data?.length) throw new Error("testimony_update_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["testimonies", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.testimonies(userId) });
     },
   });
 };
@@ -123,7 +124,7 @@ export const useDeleteTestimony = (userId: string | undefined) => {
       if (!data?.length) throw new Error("testimony_delete_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["testimonies", userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.testimonies(userId) });
     },
   });
 };

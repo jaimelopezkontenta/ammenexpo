@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 export type ChatMessage = {
   id: string;
   sender_id: string;
@@ -16,7 +17,7 @@ export type ChatMessage = {
 /** The circle's conversation, created by a trigger when the circle is. */
 export const useCircleConversation = (circleId: string | undefined) =>
   useQuery({
-    queryKey: ["circleConversation", circleId],
+    queryKey: qk.circleConversation(circleId),
     enabled: Boolean(circleId),
     staleTime: Infinity,
     queryFn: async (): Promise<string | null> => {
@@ -39,7 +40,7 @@ export const useCircleConversation = (circleId: string | undefined) =>
  */
 export const useCircleMessages = (circleId: string | undefined) =>
   useQuery({
-    queryKey: ["circleMessages", circleId],
+    queryKey: qk.circleMessages(circleId),
     enabled: Boolean(circleId),
     queryFn: async (): Promise<ChatMessage[]> => {
       const { data, error } = await supabase.rpc("circle_messages", {
@@ -83,7 +84,7 @@ export const useCircleChatRealtime = (
         },
         () => {
           void queryClient.invalidateQueries({
-            queryKey: ["circleMessages", circleId],
+            queryKey: qk.circleMessages(circleId),
           });
         },
       )
@@ -120,7 +121,7 @@ export const useSendMessage = (
     // sent reads as broken.
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["circleMessages", circleId],
+        queryKey: qk.circleMessages(circleId),
       });
     },
   });
@@ -144,7 +145,7 @@ export const useHideMessage = (circleId: string | undefined) => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["circleMessages", circleId],
+        queryKey: qk.circleMessages(circleId),
       });
     },
   });

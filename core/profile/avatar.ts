@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 /**
  * `expo-image-picker` no reescala: solo recomprime. Con el recorte cuadrado y
  * esta calidad, una foto de móvil se queda muy por debajo del tope de 2 MiB del
@@ -99,12 +100,12 @@ export const useUploadAvatar = (userId: string | undefined) => {
     onSuccess: () => {
       // La cara sale en todas las superficies sociales, y ninguna de ellas
       // refresca al enfocar.
-      void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
-      void queryClient.invalidateQueries({ queryKey: ["whoPrayedForMe"] });
-      void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
-      void queryClient.invalidateQueries({ queryKey: ["circleMessages"] });
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
-      void queryClient.invalidateQueries({ queryKey: ["testimonies"] });
+      void queryClient.invalidateQueries({ queryKey: qk.profile(userId) });
+      void queryClient.invalidateQueries({ queryKey: qk.whoPrayedForMe.root });
+      void queryClient.invalidateQueries({ queryKey: qk.sharedWithMe.root });
+      void queryClient.invalidateQueries({ queryKey: qk.circleMessages.root });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
+      void queryClient.invalidateQueries({ queryKey: qk.testimonies.root });
     },
   });
 };
@@ -129,12 +130,12 @@ export const useRemoveAvatar = (userId: string | undefined) => {
       if (!data?.length) throw new Error("avatar_update_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
-      void queryClient.invalidateQueries({ queryKey: ["whoPrayedForMe"] });
-      void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
-      void queryClient.invalidateQueries({ queryKey: ["circleMessages"] });
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
-      void queryClient.invalidateQueries({ queryKey: ["testimonies"] });
+      void queryClient.invalidateQueries({ queryKey: qk.profile(userId) });
+      void queryClient.invalidateQueries({ queryKey: qk.whoPrayedForMe.root });
+      void queryClient.invalidateQueries({ queryKey: qk.sharedWithMe.root });
+      void queryClient.invalidateQueries({ queryKey: qk.circleMessages.root });
+      void queryClient.invalidateQueries({ queryKey: qk.prayerFeed.root });
+      void queryClient.invalidateQueries({ queryKey: qk.testimonies.root });
     },
   });
 };

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { qk } from "@/core/query/keys";
 /**
  * Invitar a alguien a Ammen.
  *
@@ -14,7 +15,7 @@ import { supabase } from "@/utils/supabase";
  */
 export const useMyInviteCode = (userId: string | undefined) =>
   useQuery({
-    queryKey: ["inviteCode", userId],
+    queryKey: qk.inviteCode(userId),
     enabled: Boolean(userId),
     // El código no cambia nunca: pedirlo otra vez es un viaje regalado.
     staleTime: Infinity,
@@ -54,7 +55,7 @@ export const useCreateInviteCode = (userId: string | undefined) => {
       return (data as { code: string }).code;
     },
     onSuccess: (code) => {
-      queryClient.setQueryData(["inviteCode", userId], code);
+      queryClient.setQueryData(qk.inviteCode(userId), code);
     },
   });
 };
@@ -62,7 +63,7 @@ export const useCreateInviteCode = (userId: string | undefined) => {
 /** De quién es el enlace, para quien todavía no tiene cuenta. */
 export const useInvitePreview = (code: string | undefined) =>
   useQuery({
-    queryKey: ["invitePreview", code],
+    queryKey: qk.invitePreview(code),
     enabled: Boolean(code),
     queryFn: async (): Promise<string | null> => {
       const { data, error } = await supabase.rpc("get_invite_preview", {
