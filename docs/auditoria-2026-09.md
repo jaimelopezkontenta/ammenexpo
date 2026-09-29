@@ -23,8 +23,9 @@ ejecutarlo.
 | 1a | Puertas de seguridad: topes de invitación, avatares, 36 índices FK, privilegios, fail-closed | `24bb036` | ✅ (3 puntos esperan decisión) |
 | 1b | Programador de colas (pg_cron + pg_net), retención, borrado de cuenta completo | `043b80c` | ✅ (encender en staging: paso de Jaime) |
 | 1c | ErrorBoundary, canal de errores, red vs error, frescura, caché offline con fecha | `a14cc72` | ✅ |
-| pre-2 | ESLint del contrato, harness visual, primitivas compartidas | — | Pendiente |
-| 2a–2c | UX crítica (bucle central, onboarding/generación, pantallas secundarias, contenido en inglés) | — | Pendiente |
+| pre-2 | ESLint del contrato, red visual que detecta texto, primitivas compartidas; CTA ilegible en oscuro y fecha mal capitalizada | `259a40b` | ✅ |
+| 2a | Bucle central: CTA siempre visible, cuota antes del formulario, invitación que lleva al círculo, `returnTo`, siguiente persona, copiar enlace | `c4499d1` | ✅ |
+| 2b–2c | Onboarding y generación, contenido en inglés, pantallas secundarias | — | Pendiente |
 | 3a–3d | Arquitectura del frontend | — | Pendiente |
 | 4a–4d | Backend, edge functions y velocidad de tests | — | Pendiente |
 | 5 | Sistema visual | — | Pendiente |

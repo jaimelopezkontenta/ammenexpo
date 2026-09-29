@@ -14,12 +14,12 @@ import { describe, expect, it } from "vitest";
  * Esta prueba es la mitad que sí puede quedarse: una regresión automatizada
  * y reproducible que falla en el momento en que alguien quite el ignore de
  * `eslint.config.js` o de `.prettierignore` — antes de que haga falta volver
- * a fallar un E2E de verdad para descubrirlo. Vive en la raíz, no en `e2e/`:
+ * a fallar un E2E de verdad para descubrirlo. Vive en `scripts/`, no en `e2e/`:
  * `vitest.config.mts` excluye ese directorio entero porque es territorio de
  * Playwright.
  */
 
-const root = path.resolve(__dirname);
+const root = path.resolve(__dirname, "..");
 
 describe("lint/verify no se envenena con artefactos de Playwright", () => {
   it("eslint.config.js ignora los directorios de artefactos de Playwright", () => {
