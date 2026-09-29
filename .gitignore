@@ -52,6 +52,8 @@ diseno/
 # Herramientas de agente y scratch de sesiones locales.
 .opencode/
 .playwright-mcp/
+.swarm/
+.cursor/*.log
 concurrency.out
 concurrency.err
 verify.out
