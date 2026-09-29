@@ -9,9 +9,7 @@ import { LEGAL_DOCUMENTS, legalDocument, TERMS_VERSION } from "./documents";
  * No se compara el texto (son idiomas distintos), sí la ESTRUCTURA: mismos
  * párrafos, mismos apartados en negrita, mismas cifras y mismas direcciones.
  */
-const keys = Object.keys(LEGAL_DOCUMENTS) as Array<
-  keyof typeof LEGAL_DOCUMENTS
->;
+const keys = Object.keys(LEGAL_DOCUMENTS) as (keyof typeof LEGAL_DOCUMENTS)[];
 
 const boldCount = (paragraph: string) =>
   (paragraph.match(/\*\*[^*]+\*\*/gu) ?? []).length;
