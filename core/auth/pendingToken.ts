@@ -21,6 +21,18 @@ const SOURCE_KEY = "ammen.signupSource";
  * while quietly dropping every new user on the floor.
  */
 
+/**
+ * Guardar el token de un enlace solo tiene sentido para quien **no** tiene
+ * cuenta abierta: es lo que sobrevive al alta. Con sesión, el token guardado
+ * se canjeaba solo en el siguiente arranque —unía al círculo sin haber
+ * pulsado «Unirme»— y secuestraba la navegación hacia él. Mientras la sesión
+ * se lee todavía no se sabe, y tampoco se guarda.
+ */
+export const shouldStashLinkToken = (input: {
+  sessionLoading: boolean;
+  hasSession: boolean;
+}) => !input.sessionLoading && !input.hasSession;
+
 export const rememberShareToken = async (token: string) => {
   try {
     await AsyncStorage.setItem(SHARE_KEY, token);
