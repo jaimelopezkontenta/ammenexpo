@@ -20,6 +20,23 @@ import {
 } from "./retry.ts";
 
 /**
+ * `output_config` (salida estructurada y `effort`), `thinking: adaptive` y
+ * `stop_details` son de la API actual; el SDK fijado (0.70) todavía no los tipa, pero los pasa tal cual
+ * en el cuerpo de la petición y deja la respuesta sin tocar. Se declaran aquí, en vez
+ * de callar el compilador, para que `deno check` vigile el resto de la llamada.
+ * Al subir el SDK a una versión que los traiga, estos tipos sobran.
+ */
+type OutputConfig = {
+  effort?: string;
+  format: { type: "json_schema"; schema: unknown };
+};
+type StreamParams = Omit<Anthropic.MessageStreamParams, "thinking"> & {
+  thinking?: { type: "adaptive" } | Anthropic.ThinkingConfigParam;
+  output_config: OutputConfig;
+};
+type RefusalDetails = { stop_details?: { category?: string | null } | null };
+
+/**
  * Tried in order. Overload is per-model capacity, not per-account, so when
  * Sonnet is busy Haiku very often is not — and it is the *same* API, the same
  * schema and the same cached system prompt, so nothing about the contract
@@ -115,27 +132,33 @@ export const createAnthropicProvider = (
       // Streaming is not optional here: a 30-day plan is a lot of output
       // tokens, and a non-streaming request at this max_tokens risks an HTTP
       // timeout well before the model is done.
-      const stream = client.messages.stream(
-        {
-          model: model.id,
-          max_tokens: 64000,
-          // Identical for every user, so it caches. Volatile content lives in
-          // the user turn, after this breakpoint.
-          system: [
-            {
-              type: "text",
-              text: system,
-              cache_control: { type: "ephemeral" },
-            },
-          ],
-          ...(model.thinking ? { thinking: model.thinking } : {}),
-          output_config: {
-            ...(model.effort ? { effort: model.effort } : {}),
-            format: { type: "json_schema", schema },
+      const params: StreamParams = {
+        model: model.id,
+        max_tokens: 64000,
+        // Identical for every user, so it caches. Volatile content lives in
+        // the user turn, after this breakpoint.
+        system: [
+          {
+            type: "text",
+            text: system,
+            cache_control: { type: "ephemeral" },
           },
-          messages,
+        ],
+        ...(model.thinking ? { thinking: model.thinking } : {}),
+        output_config: {
+          ...(model.effort ? { effort: model.effort } : {}),
+          format: { type: "json_schema", schema },
         },
-        { signal, timeout: timeoutMs, maxRetries: 0 },
+        messages,
+      };
+      // El único punto donde se afirma el tipo del SDK: ver StreamParams arriba.
+      const stream = client.messages.stream(
+        params as Anthropic.MessageStreamParams,
+        {
+          signal,
+          timeout: timeoutMs,
+          maxRetries: 0,
+        },
       );
 
       message = await stream.finalMessage();
@@ -152,7 +175,10 @@ export const createAnthropicProvider = (
     // Check before touching content: a refusal can come back with an empty
     // content array, and indexing into it blindly throws.
     if (message.stop_reason === "refusal") {
-      throw new ProviderRefusal(message.stop_details?.category ?? null);
+      throw new ProviderRefusal(
+        (message as typeof message & RefusalDetails).stop_details?.category ??
+          null,
+      );
     }
 
     const text = message.content.find((block) => block.type === "text");

@@ -109,23 +109,15 @@ un error de tipos ahí solo aparecía al desplegar. El job hace `deno check
   a la caché de npx (no a `node_modules`) y sirve para comprobar antes de subir.
 - Los `*.test.ts` no se chequean aquí: son de Vitest.
 
-### Deuda conocida (a fecha 2026-09-29)
+### Estado de los tipos (a fecha 2026-09-29)
 
-`generate-prayer-plan` trae 3 errores de tipos; su paso es un **trinquete**
-(`KNOWN_ERRORS: "3"` en `verify.yml`): pasa con 3 o menos, falla con más y avisa
-si baja. Cuando lleguen a 0, su `index.ts` pasa al paso bloqueante y se borra el
-trinquete.
-
-| Dónde                                             | Error                                                                                        |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `generate-prayer-plan/index.ts:325`               | TS2322: `days` tiene `title: string \| null` y `DayPayload` pide `string`                    |
-| `generate-prayer-plan/providers/anthropic.ts:104` | TS2353: `output_config` no existe en `MessageCreateParamsBase` de `@anthropic-ai/sdk@0.70.1` |
-| `generate-prayer-plan/providers/anthropic.ts:116` | TS2339: `stop_details` no existe en `Message` (mismo SDK)                                    |
-
-Los dos de `anthropic.ts` sugieren que el código está escrito para un SDK más
-nuevo que el que permite `^0.70.0`: o se sube el especificador (y el lock), o se
-adaptan los tipos. En ejecución los campos viajan igual (el edge-runtime no
-comprueba tipos): no se ha probado contra la API.
+Las seis funciones pasan `deno check --frozen` y todas son bloqueantes. Antes,
+`generate-prayer-plan` traía 3 errores y su paso era un trinquete (`KNOWN_ERRORS`);
+se arreglaron: uno con el tipo de `title` y dos declarando en
+`providers/anthropic.ts` los tipos de `output_config`, `thinking: adaptive` y
+`stop_details`, que el SDK fijado (`@anthropic-ai/sdk@0.70.1`) aún no conoce pero
+la API sí (viajan en el cuerpo y en la respuesta tal cual; no se ha probado contra
+la API real). Al subir el SDK a una versión que los tipe, esos tipos locales sobran.
 
 **Latente con un Deno más nuevo:** con Deno ≥ 2.5 (TypeScript 5.9)
 `resend-webhook/svix.ts:55` deja de compilar (TS2769: `Uint8Array<ArrayBufferLike>`
