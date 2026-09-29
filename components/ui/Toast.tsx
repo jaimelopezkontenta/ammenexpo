@@ -1,10 +1,18 @@
-import { View } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { Keyboard, Platform, View } from "react-native";
 import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Glass } from "@/components/Glass";
 import { Tap, triggerHaptic } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
+import {
+  raiseToasts,
+  subscribeToastLift,
+  toastBottomOffset,
+  toastLift,
+} from "@/components/ui/toastPlacement";
 import type { ToastItem, ToastVariant } from "@/core/toast/ToastProvider";
 import { DURATION } from "@/theme/motion";
 
@@ -13,6 +21,9 @@ import { DURATION } from "@/theme/motion";
  * la barra de pestañas, fuera del flujo — el layout de la pantalla no se
  * entera. Vivían arriba y durante 4,5 s tapaban el botón de volver y el título
  * de la pantalla, justo después de una acción que suele llevar a volver.
+ *
+ * Suben con el teclado de iOS y con lo que una pantalla ponga flotando abajo
+ * (`useToastLift`; la cuenta está en `toastPlacement.ts`).
  *
  * `accessibilityRole="alert"` + liveRegion assertive: el lector de pantalla
  * anuncia el aviso al aparecer, igual que anunciaban los textos `role="alert"`
@@ -64,7 +75,39 @@ const ToastCard = ({
   </Animated.View>
 );
 
-const TOAST_BOTTOM_OFFSET = 76;
+/**
+ * La altura del teclado, solo en iOS: es el único que no empuja la ventana
+ * (el mismo criterio que `KeyboardScreen`). Los `Will` para moverse a la
+ * vez que él y no después.
+ */
+const useIosKeyboardHeight = () => {
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    const show = Keyboard.addListener("keyboardWillShow", (event) =>
+      setHeight(event.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener("keyboardWillHide", () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  return height;
+};
+
+/**
+ * Para una pantalla con algo flotando abajo: los avisos suben `px` mientras
+ * está enfocada (las pestañas siguen montadas al cambiar de una a otra, y el
+ * hueco no debe seguirlas). Con 0 no sube nada.
+ */
+export const useToastLift = (px: number) => {
+  useFocusEffect(
+    useCallback(() => (px > 0 ? raiseToasts(px) : undefined), [px]),
+  );
+};
 
 export const ToastHost = ({
   items,
@@ -74,6 +117,8 @@ export const ToastHost = ({
   onDismiss: (id: number) => void;
 }) => {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useIosKeyboardHeight();
+  const lift = useSyncExternalStore(subscribeToastLift, toastLift, toastLift);
 
   if (items.length === 0) return null;
 
@@ -83,7 +128,13 @@ export const ToastHost = ({
       className="absolute inset-x-0 bottom-0 items-center gap-2 px-6"
       // Por encima de la barra de pestañas (62) y de la zona segura; en las
       // pantallas sin barra queda un poco más alto, que no estorba.
-      style={{ paddingBottom: insets.bottom + TOAST_BOTTOM_OFFSET }}
+      style={{
+        paddingBottom: toastBottomOffset({
+          safeBottom: insets.bottom,
+          keyboardHeight,
+          lift,
+        }),
+      }}
     >
       {items.map((item) => (
         <ToastCard key={item.id} item={item} onDismiss={onDismiss} />
