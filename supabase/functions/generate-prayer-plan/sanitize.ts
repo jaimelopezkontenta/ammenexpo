@@ -5,7 +5,8 @@
  * interpretation with "...resolverlo todo hoy.},{", which would have been shown
  * to the user verbatim in the middle of their prayer.
  *
- * None of these sequences occur in Spanish prose, so cutting at them is safe.
+ * None of these sequences occur in Spanish or English prose, so cutting at them
+ * is safe.
  */
 const GARBAGE_MARKERS = ["},{", '"},', '",{', '"}]', "}]", "},"];
 

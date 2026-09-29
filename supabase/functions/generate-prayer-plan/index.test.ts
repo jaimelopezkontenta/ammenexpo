@@ -8,6 +8,9 @@ import {
   vi,
 } from "vitest";
 
+import { SYSTEM_PROMPT, SYSTEM_PROMPT_EN } from "./prompt.ts";
+import { PLAN_JSON_SCHEMA, PLAN_JSON_SCHEMA_EN } from "./schema.ts";
+
 /**
  * El handler de `index.ts` sin Deno: se sustituyen `Deno.serve`/`Deno.env`, el
  * cliente de Supabase, el proveedor y el `waitUntil` del edge. Prueba lo que
@@ -794,5 +797,190 @@ describe("los logs: ids, contadores y códigos, nunca lo que la persona escribi�
       input_tokens: 1,
       output_tokens: 2,
     });
+  });
+});
+
+/**
+ * EN-3: el plan se escribe en el idioma de quien lo crea, y lo conserva. El
+ * cliente manda `locale`; la reserva lo guarda en `source_prompt`; cada tramo
+ * lo lee del plan y con él elige prompt, esquema y Biblia.
+ */
+describe("el idioma del plan", () => {
+  type Args = Record<string, unknown>;
+
+  /** Registra los argumentos de cada llamada a una RPC, sin cambiar su respuesta. */
+  const spyRpc = (name: string) => {
+    const calls: Args[] = [];
+    const original = world.rpc[name];
+
+    world.rpc[name] = (args) => {
+      calls.push(args);
+      return original(args);
+    };
+
+    return calls;
+  };
+
+  const planIn = (locale?: string) =>
+    ok({
+      ...PLAN_ROW,
+      source_prompt: {
+        answers: PLAN_ROW.source_prompt.answers,
+        ...(locale ? { locale } : {}),
+      },
+    });
+
+  const englishVerse = () => {
+    world.rpc.resolve_scripture = () =>
+      ok([{ canonical_ref: "John 14:27", text: "Peace I leave with you" }]);
+  };
+
+  const firstGeneration = () =>
+    h.generate.mock.calls[0][0] as {
+      system: string;
+      schema: unknown;
+      locale?: string;
+      messages: { content: string }[];
+    };
+
+  it("un plan nuevo en inglés guarda el idioma y se escribe en inglés, con la WEB", async () => {
+    const reserve = spyRpc("reserve_generation");
+    englishVerse();
+    const lookups = spyRpc("resolve_scripture");
+    const complete = spyRpc("complete_generation_chunk");
+    // La fila que la reserva creó y el tramo relee: con el idioma guardado.
+    world.tables.prayer_plans = planIn("en");
+
+    const { response } = await call({ locale: "en" });
+
+    expect(response.status).toBe(202);
+    expect(reserve[0].p_source_prompt).toMatchObject({ locale: "en" });
+
+    const generation = firstGeneration();
+    expect(generation.system).toBe(SYSTEM_PROMPT_EN);
+    expect(generation.schema).toBe(PLAN_JSON_SCHEMA_EN);
+    expect(generation.locale).toBe("en");
+    expect(generation.messages[0].content).toContain(
+      "Create a 7-day prayer plan for Marta.",
+    );
+
+    expect(lookups.map((args) => args.p_version)).toEqual(["web"]);
+
+    const [day] = complete[0].p_days as Args[];
+    expect(day).toMatchObject({
+      scripture_ref: "John 14:27",
+      scripture_text: "Peace I leave with you",
+    });
+    expect(complete[0].p_source_prompt).toMatchObject({ locale: "en" });
+  });
+
+  it("sin locale, como un cliente de antes: español y RVR, como siempre", async () => {
+    const reserve = spyRpc("reserve_generation");
+    const lookups = spyRpc("resolve_scripture");
+
+    await call({});
+
+    expect(reserve[0].p_source_prompt).toMatchObject({ locale: "es" });
+
+    const generation = firstGeneration();
+    expect(generation.system).toBe(SYSTEM_PROMPT);
+    expect(generation.schema).toBe(PLAN_JSON_SCHEMA);
+    expect(generation.locale).toBe("es");
+    expect(lookups.map((args) => args.p_version)).toEqual(["rvr1909"]);
+  });
+
+  it("una continuación usa el idioma del plan, no el de la petición", async () => {
+    world.tables.prayer_plans = planIn("en");
+    englishVerse();
+    const lookups = spyRpc("resolve_scripture");
+
+    await call({ continue_plan_id: PLAN, locale: "es" });
+
+    expect(firstGeneration().system).toBe(SYSTEM_PROMPT_EN);
+    expect(lookups.map((args) => args.p_version)).toEqual(["web"]);
+  });
+
+  it("un plan de antes de EN-3 (sin idioma) sigue en español aunque la petición diga inglés", async () => {
+    world.tables.prayer_plans = planIn();
+    const lookups = spyRpc("resolve_scripture");
+    const complete = spyRpc("complete_generation_chunk");
+
+    await call({ continue_plan_id: PLAN, locale: "en" });
+
+    expect(firstGeneration().system).toBe(SYSTEM_PROMPT);
+    expect(lookups.map((args) => args.p_version)).toEqual(["rvr1909"]);
+    // El primer tramo deja escrito el idioma que ha usado.
+    expect(complete[0].p_source_prompt).toMatchObject({ locale: "es" });
+  });
+
+  it("el siguiente tramo recibe el idioma del plan, junto con su request_id", async () => {
+    world.tables.prayer_plans = planIn("en");
+    englishVerse();
+    world.rpc.complete_generation_chunk = () =>
+      ok([{ ok: true, is_complete: false }]);
+
+    await call({ locale: "en" });
+
+    const fetchMock = vi.mocked(globalThis.fetch);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+
+    expect(body).toMatchObject({ continue_plan_id: PLAN, locale: "en" });
+    expect(body.request_id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it("también cuando el servidor pide otro intento tras un fallo", async () => {
+    world.tables.prayer_plans = planIn("en");
+    world.rpc.plan_written_days = () => failed();
+    world.rpc.fail_generation_chunk = () =>
+      ok([{ ok: true, plan_failed: false, retry: true }]);
+
+    await call({ continue_plan_id: PLAN, locale: "en" });
+
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    expect(JSON.parse(init.body as string)).toMatchObject({ locale: "en" });
+  });
+
+  it("un idioma fuera de la lista es 400 antes de tocar nada", async () => {
+    const { response, body } = await call({ locale: "fr" });
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: "invalid_locale", reason: "not_allowed" });
+    expect(world.calls.rpc).toEqual([]);
+    expect(world.calls.from).toEqual([]);
+    expect(h.generate).not.toHaveBeenCalled();
+  });
+
+  it("quien no tiene nombre es «this person» en un plan en inglés", async () => {
+    world.tables.profiles = ok({ display_name: null });
+    world.tables.prayer_plans = planIn("en");
+    englishVerse();
+
+    await call({ locale: "en" });
+
+    expect(firstGeneration().messages[0].content).toContain(
+      "prayer plan for this person.",
+    );
+  });
+
+  it("request.accepted y chunk.claimed dicen el idioma", async () => {
+    world.tables.prayer_plans = planIn("en");
+    englishVerse();
+
+    await call({ locale: "en" });
+
+    const entries = lines.map((line) => JSON.parse(line));
+
+    expect(
+      entries.find((entry) => entry.event === "request.accepted"),
+    ).toMatchObject({ locale: "en" });
+    expect(
+      entries.find((entry) => entry.event === "chunk.claimed"),
+    ).toMatchObject({ locale: "en" });
   });
 });

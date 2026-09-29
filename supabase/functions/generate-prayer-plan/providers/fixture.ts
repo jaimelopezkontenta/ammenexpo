@@ -1,10 +1,15 @@
-import { type GenerateResult, type PlanProvider } from "./types.ts";
+import { DEFAULT_PLAN_LOCALE, type PlanLocale } from "../locale.ts";
+import {
+  type GenerateArgs,
+  type GenerateResult,
+  type PlanProvider,
+} from "./types.ts";
 
 /**
  * Deterministic days for local/CI. Not a quality fallback: scripture refs are
  * real RVR1909 rows so the resolver accepts them. Production stays Anthropic.
  */
-const FIXTURE_PLAN = {
+const FIXTURE_PLAN_ES = {
   title: "Paz para este tramo",
   theme: "Paz",
   days: [
@@ -96,11 +101,116 @@ const FIXTURE_PLAN = {
   ],
 };
 
+/**
+ * El mismo plan para un plan en inglés: los mismos pasajes, con el nombre de
+ * libro de la WEB («John», «Psalms»), que es contra la que se verifican. Todos
+ * existen en la WEB (`fixture.test.ts` comprueba los nombres de libro).
+ */
+const FIXTURE_PLAN_EN = {
+  title: "Peace for this stretch",
+  theme: "Peace",
+  days: [
+    {
+      day_number: 1,
+      title: "A peace the world does not give",
+      scripture_ref: "John 14:27",
+      interpretation:
+        "Jesus does not promise that the noise will simply stop. He promises a peace that holds while the day is still the day. Today you do not have to solve everything; it is enough to receive what He gives.",
+      daily_action:
+        "Sit in silence for one minute and say quietly: “your peace, not mine.”",
+      prayer_body:
+        "Father, today I bring the knot I do not know how to untie. I want your peace, not the one the world sells. Stay with me in the details of this day. Amen.",
+      intercessor_prayer:
+        "Lord, I pray for this person. Give them your peace in what they are living through, and do not let them be alone with the knot. Amen.",
+    },
+    {
+      day_number: 2,
+      title: "Trusting with the heart",
+      scripture_ref: "Proverbs 3:5",
+      interpretation:
+        "Trusting God is not the same as no longer thinking. It is not carrying the day as if everything depended on getting it right the first time.",
+      daily_action: "Write down one thing you do not have to decide yet today.",
+      prayer_body:
+        "Lord, I trust you with what I do not understand. Loosen my need to control everything. Amen.",
+      intercessor_prayer:
+        "God, hold this person up so they do not lean only on their own understanding. Amen.",
+    },
+    {
+      day_number: 3,
+      title: "Come to me",
+      scripture_ref: "Matthew 11:28",
+      interpretation:
+        "The invitation is for whoever is truly tired. You do not have to arrive rested to deserve rest.",
+      daily_action: "Pause one task for five minutes and breathe slowly.",
+      prayer_body:
+        "Jesus, I come to you tired. Receive me as I am. Teach me to let go of the weight that is not mine to carry. Amen.",
+      intercessor_prayer:
+        "Lord, may this person find rest in you and not in more effort. Amen.",
+    },
+    {
+      day_number: 4,
+      title: "The Lord is my shepherd",
+      scripture_ref: "Psalms 23:1",
+      interpretation:
+        "If the Lord is the shepherd, what is essential does not run out today, even if what we wanted does. There is a care that does not depend on how well we perform.",
+      daily_action: "Say out loud one thing you do have today.",
+      prayer_body:
+        "Lord, you shepherd this day. In what I lack, remind me of what I do not lack: you. Amen.",
+      intercessor_prayer:
+        "Father, shepherd this person today. May they not feel unprotected. Amen.",
+    },
+    {
+      day_number: 5,
+      title: "God is our refuge",
+      scripture_ref: "Psalms 46:1",
+      interpretation:
+        "A refuge does not mean nothing shakes. It means there is someone to run to when it does.",
+      daily_action:
+        "When the rush shows up, stop and say: “You are my refuge.”",
+      prayer_body:
+        "God, when I am pressed I want to come to you first, not to the noise. Be my refuge now. Amen.",
+      intercessor_prayer:
+        "Lord, be a refuge for this person in whatever is pressing on them today. Amen.",
+    },
+    {
+      day_number: 6,
+      title: "Do not be afraid",
+      scripture_ref: "Isaiah 41:10",
+      interpretation:
+        "“Don’t be afraid” does not deny the fear. It names who holds you up when the fear comes.",
+      daily_action:
+        "Put a hand on your chest and ask for help in one short sentence.",
+      prayer_body:
+        "Lord, I am afraid, and even so I put myself in your hands. Hold me up. Amen.",
+      intercessor_prayer:
+        "God, hold this person up. May they not be left alone with the fear. Amen.",
+    },
+    {
+      day_number: 7,
+      title: "Peace once more",
+      scripture_ref: "John 14:27",
+      interpretation:
+        "The plan ends where it began: not as the world gives. Today you can close this stretch without having solved everything.",
+      daily_action: "Give thanks in one sentence for what did hold these days.",
+      prayer_body:
+        "Father, thank you for walking with me. I leave in your hands what is still open. Amen.",
+      intercessor_prayer:
+        "Lord, keep this person as they close this stretch, and open what comes next for them. Amen.",
+    },
+  ],
+};
+
+/** El plan de pruebas de cada idioma (exportado para sus tests). */
+export const FIXTURE_PLANS: Record<PlanLocale, typeof FIXTURE_PLAN_ES> = {
+  es: FIXTURE_PLAN_ES,
+  en: FIXTURE_PLAN_EN,
+};
+
 export const createFixtureProvider = (): PlanProvider => ({
   name: "fixture",
-  generate: (): Promise<GenerateResult> =>
+  generate: ({ locale }: GenerateArgs): Promise<GenerateResult> =>
     Promise.resolve({
-      json: JSON.stringify(FIXTURE_PLAN),
+      json: JSON.stringify(FIXTURE_PLANS[locale ?? DEFAULT_PLAN_LOCALE]),
       model: "fixture",
     }),
 });

@@ -40,8 +40,8 @@ type RefusalDetails = { stop_details?: { category?: string | null } | null };
  * Tried in order. Overload is per-model capacity, not per-account, so when
  * Sonnet is busy Haiku very often is not — and it is the *same* API, the same
  * schema and the same cached system prompt, so nothing about the contract
- * changes: still Spanish, still a reference and never the verse text, still
- * every prohibition in the prompt. A cheaper day beats no day.
+ * changes: still the plan's language, still a reference and never the verse
+ * text, still every prohibition in the prompt. A cheaper day beats no day.
  *
  * Falling back to a different vendor would mean a second prompt to maintain and
  * re-validate on every change, no prompt cache, and quality drift nobody could

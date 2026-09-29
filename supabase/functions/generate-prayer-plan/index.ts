@@ -10,11 +10,16 @@ import {
   type Logger,
   requestIdFrom,
 } from "../_shared/log.ts";
-import { buildRepairPrompt, buildUserPrompt, SYSTEM_PROMPT } from "./prompt.ts";
+import {
+  buildRepairPrompt,
+  buildUserPrompt,
+  systemPromptFor,
+} from "./prompt.ts";
 import { MAX_DAYS, MIN_DAYS } from "./bounds.ts";
 import { deriveChunkRequestId } from "./chunkRequestId.ts";
 import { isTransientAuthError } from "./authErrors.ts";
 import { parseGenerateBody, readJsonBody } from "./input.ts";
+import { type PlanLocale, planLocaleFrom } from "./locale.ts";
 import { createAnthropicProvider } from "./providers/anthropic.ts";
 import { createFixtureProvider } from "./providers/fixture.ts";
 import {
@@ -31,7 +36,7 @@ import {
 } from "./providers/types.ts";
 import { promptAnswersFrom, sanitizeDisplayName } from "./promptInputs.ts";
 import { sanitizeGeneratedText } from "./sanitize.ts";
-import { isGeneratedPlan, PLAN_JSON_SCHEMA } from "./schema.ts";
+import { isGeneratedPlan, planJsonSchemaFor } from "./schema.ts";
 import {
   resolveDays,
   ScriptureLookupError,
@@ -121,9 +126,10 @@ type PlanRow = {
   status: string;
   /**
    * Un jsonb que nadie validó al guardarlo: `answers` se lee siempre a través de
-   * `promptAnswersFrom`, nunca por campo.
+   * `promptAnswersFrom` y `locale` a través de `planLocaleFrom`, nunca por
+   * campo.
    */
-  source_prompt: { answers?: unknown } | null;
+  source_prompt: { answers?: unknown; locale?: unknown } | null;
 };
 
 // A client-supplied `request_id` is an idempotency key. `parseGenerateBody`
@@ -140,12 +146,15 @@ const idempotencyKeyFrom = (requestId: string | null): string =>
  * tiene y la persona sigue pudiendo orar hoy (el cliente ofrece «Continuar»).
  * Por eso un fallo aquí se registra y no se propaga — pero se registra, con el
  * status si el siguiente tramo lo rechazó. Reenvía el `x-request-id` para que
- * los logs de todos los tramos de un plan compartan id de correlación.
+ * los logs de todos los tramos de un plan compartan id de correlación, y el
+ * idioma del plan: el siguiente tramo lo vuelve a leer del plan (manda el
+ * guardado), pero así la petición dice lo mismo que el plan.
  */
 const requestNextChunk = async (
   planId: string,
   authHeader: string,
   logger: Logger,
+  locale: PlanLocale,
 ) => {
   try {
     const response = await fetch(
@@ -161,6 +170,7 @@ const requestNextChunk = async (
         body: JSON.stringify({
           continue_plan_id: planId,
           request_id: crypto.randomUUID(),
+          locale,
         }),
         signal: AbortSignal.timeout(NEXT_CHUNK_TIMEOUT_MS),
       },
@@ -187,6 +197,8 @@ type ChunkArgs = {
   supabase: SupabaseClient;
   provider: PlanProvider;
   plan: PlanRow;
+  /** El del plan (`planLocaleFrom`), nunca el de la petición. */
+  locale: PlanLocale;
   displayName: string;
   fromDay: number;
   toDay: number;
@@ -256,7 +268,7 @@ const failChunk = async (args: ChunkArgs, reason: string) => {
   // whether the first stretch deserves another isolate. A later stretch just
   // keeps the days it already has; nothing is thrown away.
   if (fail?.ok && fail.retry) {
-    await requestNextChunk(plan.id, authHeader, logger);
+    await requestNextChunk(plan.id, authHeader, logger, args.locale);
   }
 };
 
@@ -265,6 +277,7 @@ const generateChunk = async (args: ChunkArgs) => {
     supabase,
     provider,
     plan,
+    locale,
     displayName,
     fromDay,
     toDay,
@@ -317,7 +330,13 @@ const generateChunk = async (args: ChunkArgs) => {
       title: string;
       scripture_ref: string | null;
     }[],
+    locale,
   });
+
+  // El prompt del sistema y el esquema, en el idioma del plan: los dos los lee
+  // el modelo, y uno en cada idioma le daría órdenes contrarias.
+  const system = systemPromptFor(locale);
+  const schema = planJsonSchemaFor(locale);
 
   const messages: ProviderMessage[] = [{ role: "user", content: userPrompt }];
 
@@ -330,10 +349,11 @@ const generateChunk = async (args: ChunkArgs) => {
 
   try {
     result = await provider.generate({
-      system: SYSTEM_PROMPT,
+      system,
       messages,
-      schema: PLAN_JSON_SCHEMA,
+      schema,
       deadline,
+      locale,
     });
   } catch (error) {
     logger.error("chunk.generation_failed", {
@@ -383,9 +403,9 @@ const generateChunk = async (args: ChunkArgs) => {
   }
 
   // Scripture validation: the gate that keeps invented verses out. Anything
-  // that does not resolve against the real RVR1909 text gets one repair
-  // attempt; if it still fails the day ships WITHOUT a verse rather than with
-  // a fabricated one.
+  // that does not resolve against the real Bible text — in the version of the
+  // plan's language, RVR1909 or WEB — gets one repair attempt; if it still
+  // fails the day ships WITHOUT a verse rather than with a fabricated one.
   //
   // Una búsqueda que NO PUDO responder no es una referencia que no existe: se
   // falla el tramo (recuperable) en vez de mandar una pasada de reparación por
@@ -393,7 +413,7 @@ const generateChunk = async (args: ChunkArgs) => {
   let days: ResolvedDay[];
 
   try {
-    days = await resolveDays(supabase, generated.days);
+    days = await resolveDays(supabase, generated.days, locale);
   } catch (error) {
     if (!(error instanceof ScriptureLookupError)) throw error;
 
@@ -430,20 +450,25 @@ const generateChunk = async (args: ChunkArgs) => {
 
     try {
       const repaired = await provider.generate({
-        system: SYSTEM_PROMPT,
+        system,
         messages: [
           ...messages,
           { role: "assistant", content: result.json },
-          { role: "user", content: buildRepairPrompt(bad) },
+          { role: "user", content: buildRepairPrompt(bad, locale) },
         ],
-        schema: PLAN_JSON_SCHEMA,
+        schema,
         deadline,
+        locale,
       });
 
       const repairedPlan = JSON.parse(repaired.json);
 
       if (isGeneratedPlan(repairedPlan)) {
-        const rechecked = await resolveDays(supabase, repairedPlan.days);
+        const rechecked = await resolveDays(
+          supabase,
+          repairedPlan.days,
+          locale,
+        );
 
         if (unresolved(rechecked).length < bad.length) {
           days = rechecked;
@@ -472,7 +497,8 @@ const generateChunk = async (args: ChunkArgs) => {
         title: sanitizeGeneratedText(day.title),
         // Canonical spelling from our own Bible table, not the model's.
         scripture_ref: day.canonical_ref,
-        // Straight from the RVR1909 table, so it needs no cleaning.
+        // Straight from the Bible table (the plan's version), so it needs no
+        // cleaning.
         scripture_text: day.scripture_text,
         interpretation: sanitizeGeneratedText(day.interpretation),
         daily_action: sanitizeGeneratedText(day.daily_action),
@@ -497,9 +523,12 @@ const generateChunk = async (args: ChunkArgs) => {
       p_theme: isFirstChunk
         ? (sanitizeGeneratedText(generated.theme)?.slice(0, 140) ?? null)
         : null,
+      // `locale` se escribe con el que se ha usado: en un plan de antes de EN-3
+      // deja dicho que es español, en vez de que lo deduzca el siguiente.
       p_source_prompt: isFirstChunk
         ? {
             ...(plan.source_prompt ?? {}),
+            locale,
             model: result.model,
             provider: provider.name,
           }
@@ -543,7 +572,7 @@ const generateChunk = async (args: ChunkArgs) => {
   // returns nothing cannot spin this forever. `is_complete` comes from the
   // database (days written vs. promised), not from what the model returned.
   if (!complete.is_complete) {
-    await requestNextChunk(plan.id, authHeader, logger);
+    await requestNextChunk(plan.id, authHeader, logger, locale);
   }
 };
 
@@ -641,9 +670,10 @@ const handle = async (req: Request, requestLogger: Logger) => {
   logger.info(
     "request.accepted",
     request.kind === "continue"
-      ? { kind: request.kind, plan_id: request.planId }
+      ? { kind: request.kind, plan_id: request.planId, locale: request.locale }
       : {
           kind: request.kind,
+          locale: request.locale,
           duration_days: request.durationDays,
           visibility: request.visibility,
           topics: request.topics.length,
@@ -673,8 +703,11 @@ const handle = async (req: Request, requestLogger: Logger) => {
     return json({ error: "profile_unavailable" }, 500);
   }
 
-  // A name is data on its way into a prompt, not an instruction.
-  const displayName = sanitizeDisplayName(profile?.display_name);
+  // A name is data on its way into a prompt, not an instruction. Lo único que
+  // espera al plan es el respaldo para quien no tiene nombre, que va en el
+  // idioma del plan.
+  const nameFor = (locale: PlanLocale) =>
+    sanitizeDisplayName(profile?.display_name, locale);
 
   // --- Continuation: write the next stretch of an existing plan ------------
   if (request.kind === "continue") {
@@ -764,10 +797,15 @@ const handle = async (req: Request, requestLogger: Logger) => {
     }
 
     if (claim?.reason === "claimed") {
+      // Manda el idioma del plan, no el de esta petición: un plan no cambia de
+      // idioma a mitad (`locale.ts`).
+      const locale = planLocaleFrom(plan.source_prompt);
+
       logger.info("chunk.claimed", {
         plan_id: plan.id,
         from_day: claim.from_day,
         to_day: claim.to_day,
+        locale,
       });
 
       runInBackground(
@@ -775,7 +813,8 @@ const handle = async (req: Request, requestLogger: Logger) => {
           supabase,
           provider,
           plan: plan as PlanRow,
-          displayName,
+          locale,
+          displayName: nameFor(locale),
           fromDay: claim.from_day,
           toDay: claim.to_day,
           leaseId: claim.lease_id,
@@ -862,7 +901,8 @@ const handle = async (req: Request, requestLogger: Logger) => {
       p_duration_days: durationDays,
       p_group_id: groupId ?? null,
       p_visibility: planVisibility,
-      p_source_prompt: { answers },
+      // El idioma se guarda con el plan: de ahí lo leen todos sus tramos.
+      p_source_prompt: { answers, locale: request.locale },
       p_circle_ids: visibility === "circles" ? circleIds : null,
     },
   );
@@ -992,10 +1032,15 @@ const handle = async (req: Request, requestLogger: Logger) => {
   const claim = (claimRows ?? [])[0];
 
   if (claim?.reason === "claimed") {
+    // El de la fila, que es el de esta petición salvo en un reintento de una
+    // reserva anterior: entonces manda el que se guardó con ella.
+    const locale = planLocaleFrom(created.source_prompt);
+
     logger.info("chunk.claimed", {
       plan_id: createdId,
       from_day: claim.from_day,
       to_day: claim.to_day,
+      locale,
     });
 
     runInBackground(
@@ -1003,7 +1048,8 @@ const handle = async (req: Request, requestLogger: Logger) => {
         supabase,
         provider,
         plan: created as PlanRow,
-        displayName,
+        locale,
+        displayName: nameFor(locale),
         fromDay: claim.from_day,
         toDay: claim.to_day,
         leaseId: claim.lease_id,
