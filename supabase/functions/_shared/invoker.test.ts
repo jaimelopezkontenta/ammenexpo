@@ -7,12 +7,9 @@ import {
 } from "./invoker.ts";
 
 /**
- * `isLocalSupabaseUrl` es una HEURÍSTICA sobre el esquema de `SUPABASE_URL`, y
- * estos tests fijan lo que hace HOY con las URL raras — incluidos los casos en
- * que es discutible. Que un caso esté aquí con su resultado actual no significa
- * que ese resultado sea el deseable: los marcados «HOY» documentan un hueco.
- * Hay una revisión aparte de la heurística; cuando cambie, estos son los tests
- * que deben cambiar con ella.
+ * `isLocalSupabaseUrl` parsea la URL y solo da «local» a `http:` en un host de la
+ * máquina de desarrollo. Cualquier otra cosa —un http:// público, credenciales
+ * que disfrazan el host, subdominios que empiezan como uno local— es remoto.
  */
 describe("isLocalSupabaseUrl", () => {
   it.each([
@@ -50,7 +47,6 @@ describe("isLocalSupabaseUrl", () => {
     ["sin esquema", "kong:8000"],
     ["solo host", "localhost"],
     ["esquema relativo", "//kong:8000"],
-    ["un solo slash", "http:/kong:8000"],
     ["otro esquema", "ws://kong:8000"],
     ["ftp", "ftp://kong"],
     ["esquema pegado", "httpx://kong"],
@@ -60,32 +56,32 @@ describe("isLocalSupabaseUrl", () => {
     expect(isLocalSupabaseUrl(url)).toBe(false);
   });
 
-  it("con un puerto, o con ruta, o con credenciales, sigue mirando solo el esquema", () => {
+  it("un solo slash lo normaliza el parser de URL: sigue siendo Kong", () => {
+    expect(isLocalSupabaseUrl("http:/kong:8000")).toBe(true);
+  });
+
+  it("un puerto o una ruta no cambian el veredicto", () => {
     expect(isLocalSupabaseUrl("http://kong:8000/functions/v1")).toBe(true);
     expect(isLocalSupabaseUrl("https://kong:8000/http://x")).toBe(false);
   });
 
-  // ------------------------------------------------------------------------
-  // HOY: los huecos de la heurística. Se documentan, no se defienden.
-  // ------------------------------------------------------------------------
-
-  it("HOY: el esquema en MAYÚSCULAS no se reconoce como http (y cae en el lado seguro)", () => {
-    // Los esquemas de URL no distinguen mayúsculas; `startsWith` sí. Aquí es
-    // inocuo (un local con «HTTP://» pediría secreto), pero delata que no se
-    // está parseando la URL.
-    expect(isLocalSupabaseUrl("HTTP://kong:8000")).toBe(false);
-    expect(isLocalSupabaseUrl("Http://localhost:54321")).toBe(false);
+  it("el esquema y el host no distinguen mayúsculas (URL los normaliza)", () => {
+    expect(isLocalSupabaseUrl("HTTP://kong:8000")).toBe(true);
+    expect(isLocalSupabaseUrl("Http://LOCALHOST:54321")).toBe(true);
   });
 
-  it("HOY: CUALQUIER host por http se toma por local, también uno público", () => {
-    // Es el hueco: una `SUPABASE_URL` http:// en un despliegue real (un
-    // Supabase autoalojado detrás de un proxy TLS suele dársela así a las edge
-    // functions: `http://kong:8000`) dejaría el invocador abierto sin secreto.
-    expect(isLocalSupabaseUrl("http://example.com")).toBe(true);
-    expect(isLocalSupabaseUrl("http://203.0.113.9:8000")).toBe(true);
-    expect(isLocalSupabaseUrl("http://localhost.evil.example")).toBe(true);
-    expect(isLocalSupabaseUrl("http://user:pass@evil.example")).toBe(true);
-    expect(isLocalSupabaseUrl("http://")).toBe(true);
+  it("un http:// de un host PÚBLICO ya no es local", () => {
+    expect(isLocalSupabaseUrl("http://example.com")).toBe(false);
+    expect(isLocalSupabaseUrl("http://203.0.113.9:8000")).toBe(false);
+    expect(isLocalSupabaseUrl("http://localhost.evil.example")).toBe(false);
+    expect(isLocalSupabaseUrl("http://kong.evil.example:8000")).toBe(false);
+    expect(isLocalSupabaseUrl("http://")).toBe(false);
+  });
+
+  it("unas credenciales no disfrazan el host", () => {
+    expect(isLocalSupabaseUrl("http://kong:8000@evil.example")).toBe(false);
+    expect(isLocalSupabaseUrl("http://user:pass@evil.example")).toBe(false);
+    expect(isLocalSupabaseUrl("http://user:pass@kong:8000")).toBe(true);
   });
 });
 
@@ -158,7 +154,6 @@ describe("authorizeInvoker", () => {
     it.each([
       ["sin esquema", "kong:8000"],
       ["https con puerto", "https://kong:8000"],
-      ["esquema en mayúsculas", "HTTP://kong:8000"],
       ["vacía", ""],
       ["solo espacios", "   "],
       ["ws", "ws://kong:8000"],
@@ -172,14 +167,12 @@ describe("authorizeInvoker", () => {
       );
     });
 
-    it("HOY: un http:// de un host PÚBLICO se abre sin secreto", () => {
-      // Consecuencia directa del hueco de `isLocalSupabaseUrl`: no es un
-      // comportamiento a preservar, es lo que la heurística da hoy.
+    it("un http:// de un host PÚBLICO ya no se abre sin secreto", () => {
       expect(authorizeInvoker(null, undefined, "http://example.com")).toBe(
-        "not_required",
+        "unauthorized",
       );
       expect(authorizeInvoker(null, undefined, "http://203.0.113.9:8000")).toBe(
-        "not_required",
+        "unauthorized",
       );
     });
   });

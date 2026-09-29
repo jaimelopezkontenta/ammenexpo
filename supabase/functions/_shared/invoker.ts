@@ -27,13 +27,38 @@ export const timingSafeEqualString = (left: string, right: string): boolean => {
 };
 
 /**
- * Supabase remoto siempre sirve por https; el local, por http (Kong en el
- * host o `kong:8000` dentro de la red de Docker). Sin URL no se presume nada:
- * cuenta como remoto, que es el lado seguro.
+ * Hosts que solo existen en la máquina de quien desarrolla: Kong dentro de la
+ * red de Docker de `supabase start`, el propio host y el alias de Docker Desktop.
+ */
+const LOCAL_HOSTS = new Set([
+  "kong",
+  "localhost",
+  "127.0.0.1",
+  "[::1]",
+  "host.docker.internal",
+]);
+
+/**
+ * Supabase remoto siempre sirve por https; el local, por http en uno de los
+ * hosts de arriba. Se PARSEA la URL y se mira el host, no solo el esquema: con
+ * `startsWith("http://")` un `http://ejemplo.com` (o un autoalojado con TLS
+ * delante, que da `http://kong:8000` a las funciones) dejaba el invocador
+ * abierto sin secreto. Sin URL, o con una que no se entiende, no se presume
+ * nada: cuenta como remoto, que es el lado seguro.
+ *
+ * Un despliegue real que use `http://kong:8000` sigue contando como local:
+ * ahí hay que configurar el secreto (con secreto, la URL no importa).
  */
 export const isLocalSupabaseUrl = (url: string | undefined): boolean => {
   const trimmed = url?.trim() ?? "";
-  return trimmed.startsWith("http://");
+  if (!trimmed) return false;
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" && LOCAL_HOSTS.has(parsed.hostname);
+  } catch {
+    return false;
+  }
 };
 
 /**
