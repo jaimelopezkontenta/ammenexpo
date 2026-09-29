@@ -25,7 +25,7 @@ export const Wordmark = ({
 }) => (
   <Txt
     variant="editorial"
-    tone="primary"
+    tone={onDark ? "onDark" : "primary"}
     accessibilityRole="text"
     // El tamaño es del caller (logo grande en la puerta, firma pequeña al
     // pie); el estilo inline gana a la escala de la variante.
@@ -34,7 +34,7 @@ export const Wordmark = ({
       lineHeight: size * 1.25,
       ...(brand ? { color: colors.plum.DEFAULT } : null),
     }}
-    className={onDark ? "text-white/90" : ""}
+    className={onDark ? "opacity-90" : ""}
   >
     ammen
   </Txt>

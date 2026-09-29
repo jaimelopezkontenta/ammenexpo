@@ -153,15 +153,15 @@ module.exports = defineConfig([
     ],
     rules: { "no-restricted-imports": "off" },
   },
-  // DEUDA (2026-09-29): dos sitios ya coloreaban un Txt por className cuando se
-  // añadió la regla. Ninguno tiene su `tone` equivalente porque quieren opacidad
-  // (`text-white/70`, `text-white/90`): el arreglo es `tone="onDark"` más una
-  // clase `opacity-70`/`opacity-90`. Se exentan por FICHERO y solo del color, en
-  // vez de bajar la regla entera a `warn` — un `warn` no falla CI y dejaría pasar
-  // el siguiente, y compartiría severidad con `router.back()`. Al arreglarlos,
-  // borrar este bloque. Los corchetes de la ruta se escapan como `[[]`/`[]]`.
+  // DEUDA (2026-09-29): un sitio sigue coloreando un Txt por className
+  // (`text-white/70` en el chat del círculo). No tiene `tone` equivalente porque
+  // quiere opacidad: el arreglo es `tone="onDark"` más `opacity-70`. Se exenta por
+  // FICHERO y solo del color, en vez de bajar la regla entera a `warn` — un
+  // `warn` no falla CI y dejaría pasar el siguiente, y compartiría severidad con
+  // `router.back()`. Al arreglarlo, borrar este bloque. Los corchetes de la ruta
+  // se escapan como `[[]`/`[]]`.
   {
-    files: ["app/circulo/[[]id[]]/chat.tsx", "components/Wordmark.tsx"],
+    files: ["app/circulo/[[]id[]]/chat.tsx"],
     rules: { "no-restricted-syntax": ["error", ROUTER_BACK_SELECTOR] },
   },
   {

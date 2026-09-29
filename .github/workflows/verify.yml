@@ -23,7 +23,10 @@ on:
 
 concurrency:
   group: verify-${{ github.ref }}
-  cancel-in-progress: true
+  # Solo se cancelan runs de PR. En `main` cada push se comprueba entero: un run
+  # cancelado dejaba un tramo sin guard (el siguiente solo mira desde el commit
+  # anterior a él).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
