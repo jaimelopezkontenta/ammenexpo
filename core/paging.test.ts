@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { flattenUnique, nextPageCursor, PAGE_SIZE } from "./paging";
+import {
+  flattenUnique,
+  nextPageCursor,
+  PAGE_SIZE,
+  rowId,
+  shouldLoadMore,
+} from "./paging";
 
 describe("nextPageCursor", () => {
   const row = (ts: string, id = ts) => ({ created_at: ts, id });
@@ -130,5 +136,42 @@ describe("flattenUnique", () => {
       { id: 2, name: "b" },
       { id: 3, name: "c" },
     ]);
+  });
+});
+
+describe("rowId", () => {
+  it("deduplica por id, que es lo que usan las listas de una sola fuente", () => {
+    const page1 = [{ id: "a", v: 1 }];
+    const page2 = [
+      { id: "a", v: 2 },
+      { id: "b", v: 1 },
+    ];
+
+    expect(flattenUnique([page1, page2], rowId)).toEqual([
+      { id: "a", v: 1 },
+      { id: "b", v: 1 },
+    ]);
+  });
+});
+
+describe("shouldLoadMore", () => {
+  it("pide la siguiente cuando hay más y no hay otra en vuelo", () => {
+    expect(
+      shouldLoadMore({ hasNextPage: true, isFetchingNextPage: false }),
+    ).toBe(true);
+  });
+
+  it("no pide otra mientras la anterior sigue en vuelo", () => {
+    // `onEndReached` puede llegar dos veces seguidas: la segunda cancelaría
+    // la primera y pediría la misma página otra vez.
+    expect(
+      shouldLoadMore({ hasNextPage: true, isFetchingNextPage: true }),
+    ).toBe(false);
+  });
+
+  it("no pide nada cuando la lista ya llegó al fondo", () => {
+    expect(
+      shouldLoadMore({ hasNextPage: false, isFetchingNextPage: false }),
+    ).toBe(false);
   });
 });

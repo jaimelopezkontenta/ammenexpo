@@ -1,9 +1,8 @@
 import { Link, Stack } from "expo-router";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { FlatList, type ListRenderItem, View } from "react-native";
 
-import { Avatar } from "@/components/Avatar";
 import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -12,17 +11,32 @@ import { LoadMore } from "@/components/LoadMore";
 import { DawnBackground } from "@/components/DawnBackground";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
+import {
+  TestimonyCard,
+  type TestimonyActions,
+} from "@/components/TestimonyCard";
 import { useSession } from "@/core/auth/SessionProvider";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
 import { useBlockUser } from "@/core/moderation/blocks";
+import { END_REACHED_THRESHOLD, rowId, useLoadMoreOnEnd } from "@/core/paging";
 import {
+  type Testimony,
   useDeleteTestimony,
   useReportTestimony,
   useSetTestimonyVisibility,
   useVisibleTestimonies,
 } from "@/core/testimonies/queries";
+import { useToast } from "@/core/toast/ToastProvider";
+import { useAction } from "@/core/toast/useAction";
 
-import { Tap } from "@/components/ui/Tap";
+const NO_TESTIMONIES: Testimony[] = [];
+
+/**
+ * El botón de escribir va al fondo aunque la lista sea corta: el contenedor
+ * crece hasta la pantalla y este margen lo empuja abajo. En una `FlatList` el
+ * pie va dentro de su propia celda, así que el margen va en la celda.
+ */
+const FOOTER_AT_BOTTOM = { marginTop: "auto" } as const;
 
 /**
  * What was answered — yours, and your circles'.
@@ -47,46 +61,69 @@ export default function Testimonies() {
     fetchNextPage,
   } = useVisibleTestimonies(userId);
 
-  const setVisibility = useSetTestimonyVisibility(userId);
-  const remove = useDeleteTestimony(userId);
-  const report = useReportTestimony(userId);
-  const block = useBlockUser(userId);
+  // `mutateAsync` es estable entre renders; el objeto de la mutación no.
+  const { mutateAsync: setVisibility } = useSetTestimonyVisibility(userId);
+  const { mutateAsync: remove } = useDeleteTestimony(userId);
+  const { mutateAsync: report } = useReportTestimony(userId);
+  const { mutateAsync: block } = useBlockUser(userId);
 
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Lo que sale bien y lo que falla, por el toast del sistema: el aviso en
+  // línea encima de la lista la empujaba hacia abajo justo al tocar.
+  const toast = useToast();
+  const { run } = useAction();
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
-  const handleShare = async (body: string) => {
-    setError(null);
-
-    // El enlace va a la app, no al testimonio: no hay pantalla pública de un
-    // testimonio, y mandar a alguien a una que no existe es peor que no mandarlo.
-    const outcome = await shareOrCopy(
-      t("testimony.shareMessage", { body }),
-      buildShareUrl("/", "invitacion"),
-    );
-
-    if (outcome === "copied") setNotice(t("share.linkCopied"));
-    if (outcome === "failed") setError(t("share.shareFailed"));
-  };
-
-  const run = async (action: () => Promise<unknown>, done: string) => {
-    setError(null);
-    setNotice(null);
-
-    try {
-      await action();
-      setNotice(done);
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
-
   // Bloquear pregunta antes: estaba junto a «Reportar» y bastaba un toque suelto.
-  const blockConfirm = useBlockConfirm(
-    (blockedId) =>
-      void run(() => block.mutateAsync(blockedId), t("moderation.blockDone")),
+  const { ask: askBlock, dialog: blockDialog } = useBlockConfirm(
+    (blockedId) => void run(() => block(blockedId), t("moderation.blockDone")),
   );
+
+  const actions = useMemo<TestimonyActions>(
+    () => ({
+      share: (body) => {
+        // El enlace va a la app, no al testimonio: no hay pantalla pública de
+        // un testimonio, y mandar a alguien a una que no existe es peor que no
+        // mandarlo.
+        void shareOrCopy(
+          t("testimony.shareMessage", { body }),
+          buildShareUrl("/", "invitacion"),
+        ).then((outcome) => {
+          if (outcome === "copied") toast.success(t("share.linkCopied"));
+          if (outcome === "failed") toast.error(t("share.shareFailed"));
+        });
+      },
+      makePrivate: (id) =>
+        void run(
+          () => setVisibility({ id, visibility: "private" }),
+          t("testimony.saved"),
+        ),
+      askDelete: (id) => setConfirmingDelete(id),
+      confirmDelete: (id) => {
+        setConfirmingDelete(null);
+        void run(() => remove(id), t("testimony.saved"));
+      },
+      report: (id) => void run(() => report(id), t("moderation.reportDone")),
+      block: askBlock,
+    }),
+    [t, toast, run, setVisibility, remove, report, askBlock],
+  );
+
+  const renderItem = useCallback<ListRenderItem<Testimony>>(
+    ({ item }) => (
+      <TestimonyCard
+        entry={item}
+        confirmingDelete={confirmingDelete === item.id}
+        actions={actions}
+      />
+    ),
+    [confirmingDelete, actions],
+  );
+
+  const loadMore = useLoadMoreOnEnd({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   if (isLoading) {
     return (
@@ -116,187 +153,43 @@ export default function Testimonies() {
         options={{ title: t("testimony.title"), headerShown: true }}
       />
       <DawnBackground>
-        <ScrollView
+        <FlatList
+          data={testimonies ?? NO_TESTIMONIES}
+          keyExtractor={rowId}
+          renderItem={renderItem}
           contentContainerClassName="flex-grow gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
           contentContainerStyle={{ paddingBottom: scrollBottom }}
-        >
-          <Txt variant="body" tone="secondary">
-            {t("testimony.subtitle")}
-          </Txt>
-
-          {notice ? (
-            <Txt
-              variant="caption"
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite"
-            >
-              {notice}
+          onEndReached={loadMore}
+          onEndReachedThreshold={END_REACHED_THRESHOLD}
+          ListHeaderComponent={
+            <Txt variant="body" tone="secondary">
+              {t("testimony.subtitle")}
             </Txt>
-          ) : null}
-
-          {error ? (
-            <Txt variant="caption" tone="danger" accessibilityRole="alert">
-              {error}
-            </Txt>
-          ) : null}
-
-          {(testimonies ?? []).length === 0 ? (
+          }
+          ListEmptyComponent={
             <EmptyState
               title={t("testimony.empty")}
               body={t("testimony.emptyBody")}
             />
-          ) : null}
-
-          {(testimonies ?? []).map((entry) => (
-            <View
-              key={entry.id}
-              className="gap-2 rounded-card border border-glassedge/65 bg-glass/60 p-5 shadow-soft"
-            >
-              <View className="flex-row items-center gap-2">
-                <Avatar
-                  name={entry.author_name}
-                  url={entry.author_avatar_url}
-                  seed={entry.author_id}
-                  size={28}
-                />
-                <Txt variant="label" tone="secondary">
-                  {entry.author_name}
-                </Txt>
+          }
+          ListFooterComponentStyle={FOOTER_AT_BOTTOM}
+          ListFooterComponent={
+            <View className="gap-5">
+              <View className="pt-6">
+                <Link href="/testimonios/nuevo" asChild>
+                  <Button title={t("testimony.markAnswered")} />
+                </Link>
               </View>
-
-              <Txt variant="bodySerifReading">{entry.body}</Txt>
-
-              {entry.plan_title ? (
-                <Txt variant="caption">
-                  {t("testimony.duringPlan", { title: entry.plan_title })}
-                </Txt>
-              ) : null}
-
-              {/* Yours carries the way back: somebody who shared and regretted it
-                needs a door, not a support email. Everyone else's carries the
-                same two controls as any other text one person wrote for
-                another. */}
-              <View className="flex-row flex-wrap gap-4 pt-1">
-                {entry.is_mine ? (
-                  <>
-                    {/* Lo más contable que tiene el producto —«oramos un mes y
-                      pasó esto»— y solo se podía leer aquí dentro. Un testimonio
-                      que no sale de la app es una historia que no le llega a
-                      nadie que aún no esté. */}
-                    <Tap
-                      accessibilityRole="button"
-                      onPress={() => void handleShare(entry.body)}
-                    >
-                      <Txt
-                        variant="caption"
-                        tone="accent"
-                        className="underline"
-                      >
-                        {t("testimony.share")}
-                      </Txt>
-                    </Tap>
-
-                    {entry.visibility !== "private" ? (
-                      <Tap
-                        accessibilityRole="button"
-                        onPress={() =>
-                          void run(
-                            () =>
-                              setVisibility.mutateAsync({
-                                id: entry.id,
-                                visibility: "private",
-                              }),
-                            t("testimony.saved"),
-                          )
-                        }
-                      >
-                        <Txt variant="caption" className="underline">
-                          {t("testimony.makePrivate")}
-                        </Txt>
-                      </Tap>
-                    ) : null}
-
-                    <Tap
-                      accessibilityRole="button"
-                      onPress={() => {
-                        if (confirmingDelete !== entry.id) {
-                          setConfirmingDelete(entry.id);
-                          return;
-                        }
-
-                        setConfirmingDelete(null);
-                        void run(
-                          () => remove.mutateAsync(entry.id),
-                          t("testimony.saved"),
-                        );
-                      }}
-                    >
-                      <Txt
-                        variant="caption"
-                        tone={
-                          confirmingDelete === entry.id ? "danger" : "secondary"
-                        }
-                        className={
-                          confirmingDelete === entry.id
-                            ? "font-sans-semibold"
-                            : "underline"
-                        }
-                        accessibilityLiveRegion={
-                          confirmingDelete === entry.id ? "polite" : "none"
-                        }
-                      >
-                        {confirmingDelete === entry.id
-                          ? t("testimony.deleteConfirm")
-                          : t("testimony.delete")}
-                      </Txt>
-                    </Tap>
-                  </>
-                ) : (
-                  <>
-                    <Tap
-                      accessibilityRole="button"
-                      onPress={() =>
-                        void run(
-                          () => report.mutateAsync(entry.id),
-                          t("moderation.reportDone"),
-                        )
-                      }
-                    >
-                      <Txt variant="caption" className="underline">
-                        {t("moderation.report")}
-                      </Txt>
-                    </Tap>
-
-                    <Tap
-                      accessibilityRole="button"
-                      accessibilityLabel={`${t("moderation.block")} ${entry.author_name}`}
-                      onPress={() =>
-                        blockConfirm.ask(entry.author_id, entry.author_name)
-                      }
-                    >
-                      <Txt variant="caption" className="underline">
-                        {t("moderation.block")}
-                      </Txt>
-                    </Tap>
-                  </>
-                )}
-              </View>
+              <LoadMore
+                hasMore={hasNextPage}
+                loading={isFetchingNextPage}
+                onPress={() => void fetchNextPage()}
+              />
             </View>
-          ))}
-
-          <View className="mt-auto pt-6">
-            <Link href="/testimonios/nuevo" asChild>
-              <Button title={t("testimony.markAnswered")} />
-            </Link>
-          </View>
-          <LoadMore
-            hasMore={hasNextPage}
-            loading={isFetchingNextPage}
-            onPress={() => void fetchNextPage()}
-          />
-        </ScrollView>
+          }
+        />
       </DawnBackground>
-      {blockConfirm.dialog}
+      {blockDialog}
     </>
   );
 }

@@ -1,17 +1,65 @@
 import { Link } from "expo-router";
-import { useEffect } from "react";
+import { memo, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { FlatList, type ListRenderItem } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListRow } from "@/components/ui/ListRow";
 import { LoadMore } from "@/components/LoadMore";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
+import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
+  type AppNotification,
   useMarkNotificationsRead,
   useNotifications,
 } from "@/core/notifications/queries";
+import { END_REACHED_THRESHOLD, rowId, useLoadMoreOnEnd } from "@/core/paging";
+
+const NO_NOTIFICATIONS: AppNotification[] = [];
+
+/**
+ * Un aviso. Memorizado: la lista se vuelve a pintar al llegar cada página y al
+ * marcarse todo como leído, y solo deben repintarse las filas que cambian.
+ */
+const NotificationRow = memo(function NotificationRow({
+  entry,
+}: {
+  entry: AppNotification;
+}) {
+  const { t, i18n } = useTranslation();
+  const name = entry.payload.intercessor_name ?? "";
+  const who = entry.payload.intercessor_id;
+  const props = {
+    leading: <Avatar name={name} seed={who ?? entry.id} size={36} />,
+    title: t("notifications.prayedForYou", {
+      name,
+      planTitle: entry.payload.plan_title ?? "",
+    }),
+    meta: new Date(entry.created_at).toLocaleDateString(i18n.language, {
+      day: "numeric",
+      month: "long",
+    }),
+    // Sin leer, y sin contarlo: el número exacto no ayuda a nadie
+    // dentro de una lista que se acaba de marcar entera.
+    dot: !entry.read_at,
+  };
+
+  // A dónde lleva un aviso: al perfil de quien oró. Sin autor (aviso
+  // anónimo o borrado) la fila es informativa: sin chevron y sin tap.
+  return who ? (
+    <Link href={{ pathname: "/persona/[id]", params: { id: who } }} asChild>
+      <ListRow accessibilityRole="link" {...props} />
+    </Link>
+  ) : (
+    <ListRow disabled chevron={false} {...props} />
+  );
+});
+
+const renderNotification: ListRenderItem<AppNotification> = ({ item }) => (
+  <NotificationRow entry={item} />
+);
 
 /**
  * Los avisos.
@@ -24,7 +72,8 @@ import {
  * cada medianoche el producto olvidaba a todos los de ayer.
  */
 export default function Notifications() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const { scrollBottom } = useScreenPadding();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -48,6 +97,16 @@ export default function Notifications() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  const loadMore = useLoadMoreOnEnd({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
+  const loadMorePressed = useCallback(
+    () => void fetchNextPage(),
+    [fetchNextPage],
+  );
+
   if (isLoading) {
     return <ScreenScaffold title={t("notifications.title")} loading />;
   }
@@ -63,52 +122,29 @@ export default function Notifications() {
     );
   }
 
+  // `scroll={false}`: la lista es virtualizada y trae su propio scroll. Las
+  // clases del contenedor son las mismas que el andamio pone a su ScrollView.
   return (
-    <ScreenScaffold
-      title={t("notifications.title")}
-      contentClassName="flex-grow gap-4"
-    >
-      {(data ?? []).length === 0 ? (
-        <EmptyState title={t("notifications.empty")} />
-      ) : (
-        (data ?? []).map((entry) => {
-          const name = entry.payload.intercessor_name ?? "";
-          const who = entry.payload.intercessor_id;
-          const props = {
-            leading: <Avatar name={name} seed={who ?? entry.id} size={36} />,
-            title: t("notifications.prayedForYou", {
-              name,
-              planTitle: entry.payload.plan_title ?? "",
-            }),
-            meta: new Date(entry.created_at).toLocaleDateString(i18n.language, {
-              day: "numeric",
-              month: "long",
-            }),
-            // Sin leer, y sin contarlo: el número exacto no ayuda a nadie
-            // dentro de una lista que se acaba de marcar entera.
-            dot: !entry.read_at,
-          };
-
-          // A dónde lleva un aviso: al perfil de quien oró. Sin autor (aviso
-          // anónimo o borrado) la fila es informativa: sin chevron y sin tap.
-          return who ? (
-            <Link
-              key={entry.id}
-              href={{ pathname: "/persona/[id]", params: { id: who } }}
-              asChild
-            >
-              <ListRow accessibilityRole="link" {...props} />
-            </Link>
-          ) : (
-            <ListRow key={entry.id} disabled chevron={false} {...props} />
-          );
-        })
-      )}
-
-      <LoadMore
-        hasMore={hasNextPage}
-        loading={isFetchingNextPage}
-        onPress={() => void fetchNextPage()}
+    <ScreenScaffold title={t("notifications.title")} scroll={false}>
+      <FlatList
+        data={data ?? NO_NOTIFICATIONS}
+        keyExtractor={rowId}
+        renderItem={renderNotification}
+        contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center flex-grow gap-4"
+        contentContainerStyle={{ paddingBottom: scrollBottom }}
+        onEndReached={loadMore}
+        onEndReachedThreshold={END_REACHED_THRESHOLD}
+        ListEmptyComponent={<EmptyState title={t("notifications.empty")} />}
+        // Sin más páginas no hay pie: una celda vacía se llevaría su hueco.
+        ListFooterComponent={
+          hasNextPage ? (
+            <LoadMore
+              hasMore={hasNextPage}
+              loading={isFetchingNextPage}
+              onPress={loadMorePressed}
+            />
+          ) : null
+        }
       />
     </ScreenScaffold>
   );

@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
+import { PAGE_SIZE, rowId, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
 import { qk } from "@/core/query/keys";
@@ -77,7 +77,7 @@ export type PostComment = {
 export const usePrayerFeed = (circleId?: string) =>
   usePagedQuery<PrayerRequest>({
     queryKey: qk.prayerFeed(circleId),
-    keyOf: (row) => row.id,
+    keyOf: rowId,
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("prayer_feed_page", {
         p_group_id: circleId,

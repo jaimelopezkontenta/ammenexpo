@@ -43,19 +43,27 @@ export type FeedEntry = {
  * Un feed en blanco el primer día es la forma más rápida de no volver, y es
  * justo el día en que no sigues a nadie.
  */
+/**
+ * Une tres fuentes en una lista, así que un `id` puede repetirse entre clases:
+ * la clave es la pareja. La misma sirve de `key` de fila en pantalla.
+ */
+export const feedEntryKey = (row: FeedEntry): string => `${row.kind}-${row.id}`;
+
+/**
+ * Por la misma razón el cursor lleva la clase: `home_feed_page` desempata por
+ * (created_at, id, kind), y sin `kind` no devuelve nada.
+ */
+const feedEntryCursor = (row: FeedEntry) => ({
+  created_at: row.created_at,
+  id: row.id,
+  kind: row.kind,
+});
+
 export const useHomeFeed = () =>
   usePagedQuery<FeedEntry>({
     queryKey: qk.homeFeed.root,
-    // Une tres fuentes en una lista, así que un `id` puede repetirse entre
-    // clases: la clave es la pareja.
-    keyOf: (row) => `${row.kind}-${row.id}`,
-    // Por la misma razón el cursor lleva la clase: `home_feed_page` desempata
-    // por (created_at, id, kind), y sin `kind` no devuelve nada.
-    cursorOf: (row) => ({
-      created_at: row.created_at,
-      id: row.id,
-      kind: row.kind,
-    }),
+    keyOf: feedEntryKey,
+    cursorOf: feedEntryCursor,
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("home_feed_page", {
         p_before: cursor?.created_at,
