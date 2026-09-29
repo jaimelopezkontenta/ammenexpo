@@ -50,7 +50,13 @@ El id en Secret Manager **es** el nombre de la variable de la Edge Function.
 | `PUSH_SENDER_ENABLED` | `PUSH_SENDER_ENABLED` |
 | `AMMEN_PUSH_INVOKE_SECRET` | `AMMEN_PUSH_INVOKE_SECRET` |
 
-No se sincronizan (solo local): `LMSTUDIO_URL`, `LMSTUDIO_MODEL`.
+No se sincronizan (solo local): `UNSLOTH_URL`, `UNSLOTH_MODEL`, `UNSLOTH_API_KEY`.
+
+**`AMMEN_EMAIL_INVOKE_SECRET` y `AMMEN_PUSH_INVOKE_SECRET` son obligatorios
+fuera de local** (desde el 2026-09-29): sin ellos, `send-email`,
+`enqueue-emails` y `send-intercession-push` rechazan toda llamada con 401
+(fail-closed, `supabase/functions/_shared/invoker.ts`). Antes, sin secreto,
+no exigían el header y quedaban abiertas a cualquiera.
 Supabase inyecta solo `SUPABASE_URL` / `ANON` / `SERVICE_ROLE`; no van aquí.
 
 Valores típicos de staging (no son secretos de marca; sí pasan por Secret
@@ -111,7 +117,7 @@ npm run secrets:push -- --env-file supabase/functions/.env.staging.local
 ```
 
 El fichero no se commitea. Tras un push correcto se puede borrar; GCP queda
-como fuente de verdad. `LMSTUDIO_*` en ese fichero se omite.
+como fuente de verdad. `UNSLOTH_*` en ese fichero se omite.
 
 ## Fallos esperables
 

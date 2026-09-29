@@ -92,9 +92,14 @@ module.exports = ({ config }) => {
         backgroundColor: "#FFF6EA",
       },
       package: "app.ammen.ammen",
-      // Supabase local es http://. Sin esto Android 9+ bloquea el login
-      // en el emulador. En producción la URL es https y no se usa.
-      usesCleartextTraffic: true,
+      // Sin `usesCleartextTraffic`: estaba a true y llegaba al manifest de
+      // release. El http:// de Supabase local ya lo permite el manifest de
+      // debug que genera Expo (`tools:replace`), que es el único que lo necesita.
+      //
+      // Sin copia de seguridad de Android: AsyncStorage guarda la sesión y el
+      // texto de oración del día (`ammen.todayDay.*`), y con `allowBackup` todo
+      // eso acabaría en las copias de Google de la cuenta.
+      allowBackup: false,
     },
     // Solo se declara `extra.eas` cuando hay un projectId de verdad que
     // poner — un objeto `{ eas: { projectId: undefined } }` no es lo mismo

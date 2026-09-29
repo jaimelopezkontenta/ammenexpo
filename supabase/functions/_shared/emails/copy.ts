@@ -49,7 +49,7 @@ const vocative = (name?: string | null): string => {
   return trimmed ? `${trimmed}, ` : "";
 };
 
-const alone = (locale: EmailLocale, gender: EmailGender): string => {
+const alone = (locale: EmailLocale, gender?: EmailGender): string => {
   if (locale === "en") return "alone";
   if (gender === "feminine") return "sola";
   if (gender === "masculine") return "solo";

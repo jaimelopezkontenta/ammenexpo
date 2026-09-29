@@ -192,6 +192,8 @@ export default function Onboarding() {
                   placeholder={t("onboarding.namePlaceholder")}
                   autoCapitalize="words"
                   autoComplete="name"
+                  // El mismo techo que Perfil y que la base (profiles_display_name_length).
+                  maxLength={80}
                 />
 
                 {/* El nombre y el género van juntos y no en dos pantallas como el

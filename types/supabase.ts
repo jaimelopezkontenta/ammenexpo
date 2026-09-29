@@ -524,6 +524,7 @@ export type Database = {
           created_at: string
           id: string
           idempotency_key: string
+          invited_by: string | null
           last_error: string | null
           leased_until: string | null
           locale: string
@@ -543,6 +544,7 @@ export type Database = {
           created_at?: string
           id?: string
           idempotency_key: string
+          invited_by?: string | null
           last_error?: string | null
           leased_until?: string | null
           locale?: string
@@ -562,6 +564,7 @@ export type Database = {
           created_at?: string
           id?: string
           idempotency_key?: string
+          invited_by?: string | null
           last_error?: string | null
           leased_until?: string | null
           locale?: string
@@ -576,6 +579,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "email_outbox_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "email_outbox_user_id_fkey"
             columns: ["user_id"]

@@ -881,6 +881,75 @@ select pg_temp.assert(
 
 commit;
 
+-- ===========================================================================
+-- El catálogo, entero (Oleada 1a, 2026-09-29)
+--
+-- Estas no miran una tabla sino el esquema completo, para que lo que se
+-- arregló no vuelva a entrar por una migración nueva.
+-- ===========================================================================
+
+-- Toda clave foránea con un índice que empiece por su columna: sin él, cada
+-- borrado en cascada y cada «lo de esta persona» recorre la tabla entera.
+select pg_temp.assert(
+  (select count(*)
+     from pg_constraint c
+    where c.contype = 'f'
+      and c.connamespace = 'public'::regnamespace
+      and not exists (
+        select 1 from pg_index i
+         where i.indrelid = c.conrelid
+           and (i.indkey::int2[])[0:array_length(c.conkey, 1) - 1] = c.conkey
+      )) = 0,
+  'every foreign key in public has an index that starts with its columns');
+
+-- Lo que se puede llamar SIN sesión, cerrado a una lista. Una función nueva
+-- que olvide el `revoke ... from public` hace fallar esto en vez de quedar
+-- abierta a cualquiera por PostgREST.
+select pg_temp.assert(
+  (select coalesce(array_agg(p.proname::text order by p.proname), '{}')
+     from pg_proc p
+    where p.pronamespace = 'public'::regnamespace
+      and p.prorettype <> 'trigger'::regtype
+      and has_function_privilege('anon', p.oid, 'EXECUTE'))
+  = array[
+      'email_prefs_by_token',
+      'get_circle_invite_preview',
+      'get_invite_preview',
+      'get_shared_plan_preview',
+      'plan_today',
+      'reactivate_email_cadence_by_token',
+      'unsubscribe_email_one_click',
+      'update_email_prefs_by_token'
+    ],
+  'anon can execute exactly the public previews and the email-token RPCs');
+
+-- El filtro de moderación y el de crisis no se pueden sondear sin cuenta.
+select pg_temp.assert(
+  not has_function_privilege('anon', 'public.is_objectionable(text)', 'EXECUTE')
+    and not has_function_privilege('anon', 'public.is_crisis_text(text)', 'EXECUTE')
+    and has_function_privilege('authenticated', 'public.is_objectionable(text)', 'EXECUTE'),
+  'the moderation and crisis classifiers are not callable without a session');
+
+-- Lo que solo drena colas o administra no se puede llamar con sesión de
+-- usuario: devuelven tokens push, direcciones de correo o el secreto de las
+-- preferencias, o nombran staff.
+select pg_temp.assert(
+  (select count(*)
+     from pg_proc p
+    where p.pronamespace = 'public'::regnamespace
+      and p.proname in (
+        'admin_set_flag', 'admin_set_staff',
+        'claim_email_outbox_batch', 'claim_push_outbox_batch',
+        'pending_push_outbox', 'mark_push_delivery',
+        'mark_email_delivery', 'record_email_event',
+        'email_hmac_secret', 'issue_email_prefs_token',
+        'email_address_for', 'enqueue_email',
+        'enqueue_all_email_jobs'
+      )
+      and (has_function_privilege('authenticated', p.oid, 'EXECUTE')
+        or has_function_privilege('anon', p.oid, 'EXECUTE'))) = 0,
+  'queue drains and admin functions stay out of reach of user sessions');
+
 \echo ''
 \echo '================================'
 \echo ' ALL RLS ASSERTIONS PASSED'

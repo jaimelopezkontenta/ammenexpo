@@ -119,13 +119,14 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: CORS });
   }
 
-  // Si el secret está definido, el header tiene que coincidir. Si no lo
-  // está, se sigue con el fail-closed de siempre (URL/key + kill switch).
+  // Si el secret está definido, el header tiene que coincidir. Sin secret,
+  // solo se deja pasar en local; fuera de local es fail-closed.
   // Nunca se loguea el secret ni el valor del header.
   if (
     authorizeInvoker(
       req.headers.get("x-ammen-invoker"),
       Deno.env.get("AMMEN_PUSH_INVOKE_SECRET") ?? undefined,
+      Deno.env.get("SUPABASE_URL") ?? undefined,
     ) === "unauthorized"
   ) {
     return json({ ok: false, error: "unauthorized" }, 401);

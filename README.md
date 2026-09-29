@@ -176,7 +176,9 @@ que más importa es `AI_PROVIDER`, que decide quién escribe los planes:
 - `fixture`: días fijos. Es lo que usan CI y los e2e; nunca en producción.
 
 Los avisos push y los correos tienen interruptor propio (`PUSH_SENDER_ENABLED`,
-`EMAIL_SENDER_ENABLED`). En local puede no haber `pg_cron`, así que las colas se
+`EMAIL_SENDER_ENABLED`), y quien los drena tiene que presentar su secreto
+(`AMMEN_PUSH_INVOKE_SECRET`, `AMMEN_EMAIL_INVOKE_SECRET`): fuera de local es
+obligatorio, y sin él las funciones rechazan toda llamada. En local puede no haber `pg_cron`, así que las colas se
 drenan a mano con `npm run push:drain` y `npm run email:drain`.
 
 En remoto no hay fichero: las claves viven en Google Cloud Secret Manager

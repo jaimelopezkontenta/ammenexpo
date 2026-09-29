@@ -38,7 +38,11 @@ describe("secretsSync catalog", () => {
   });
 
   it("keeps LM Studio out of the remote catalog", () => {
-    expect(LOCAL_ONLY_KEYS).toEqual(["LMSTUDIO_URL", "LMSTUDIO_MODEL"]);
+    expect(LOCAL_ONLY_KEYS).toEqual([
+      "UNSLOTH_URL",
+      "UNSLOTH_MODEL",
+      "UNSLOTH_API_KEY",
+    ]);
     for (const key of LOCAL_ONLY_KEYS) {
       expect(EDGE_SECRETS).not.toContain(key);
     }
@@ -84,7 +88,7 @@ describe("secretsSync env files", () => {
         "# comentario",
         "export RESEND_API_KEY=re_test",
         'EMAIL_ALLOWLIST="jaime@ammen.app"',
-        "LMSTUDIO_URL=http://host.docker.internal:1234/v1",
+        "UNSLOTH_URL=http://host.docker.internal:8888/v1",
         "IGNORED_LINE",
         "",
       ].join("\n"),
@@ -92,14 +96,14 @@ describe("secretsSync env files", () => {
 
     expect(parsed.get("RESEND_API_KEY")).toBe("re_test");
     expect(parsed.get("EMAIL_ALLOWLIST")).toBe("jaime@ammen.app");
-    expect(parsed.get("LMSTUDIO_URL")).toContain("host.docker.internal");
+    expect(parsed.get("UNSLOTH_URL")).toContain("host.docker.internal");
   });
 
   it("refuses empty catalog values and skips local-only keys", () => {
     const parsed = parseEnvFile(
       [
         "RESEND_API_KEY=re_test",
-        "LMSTUDIO_MODEL=qwen/qwen3.8-27b",
+        "UNSLOTH_MODEL=unsloth/Qwen3.8-27B-GGUF",
         "ANTHROPIC_API_KEY=",
       ].join("\n"),
     );
@@ -110,7 +114,7 @@ describe("secretsSync env files", () => {
 
     const { selected, skipped } = valuesForCatalog(parsed, ["RESEND_API_KEY"]);
     expect([...selected.keys()]).toEqual(["RESEND_API_KEY"]);
-    expect(skipped).toContain("LMSTUDIO_MODEL");
+    expect(skipped).toContain("UNSLOTH_MODEL");
   });
 
   it("round-trips values without printing them", () => {
@@ -125,8 +129,8 @@ describe("secretsSync env files", () => {
 });
 
 describe("secretsSync selectSecrets", () => {
-  it("rejects LM Studio and unknown names", () => {
-    expect(() => selectSecrets("LMSTUDIO_URL")).toThrow(/solo local/);
+  it("rejects the local Unsloth keys and unknown names", () => {
+    expect(() => selectSecrets("UNSLOTH_URL")).toThrow(/solo local/);
     expect(() => selectSecrets("NOT_A_SECRET")).toThrow(/catálogo/);
   });
 

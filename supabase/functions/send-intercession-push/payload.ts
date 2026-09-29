@@ -200,51 +200,13 @@ export const resolveSenderConfig = (
 // Guard del invocador local
 // ---------------------------------------------------------------------------
 //
-// Si `AMMEN_PUSH_INVOKE_SECRET` está definido, el sender exige el header
-// `x-ammen-invoker` con comparación de tiempo constante. Si el secret NO
-// está definido (o es solo espacios), el guard no interviene: se conserva
-// el fail-closed por URL/key + kill switch, para no romper tests ni el
-// drenaje local sin secret. Esta función nunca recibe ni devuelve el
-// secret para loguearlo — solo una etiqueta fija.
+// El header `x-ammen-invoker` contra `AMMEN_PUSH_INVOKE_SECRET`, en tiempo
+// constante. Sin secreto, solo pasa en local: fuera de local es fail-closed
+// (ver `_shared/invoker.ts`, compartido con los drenajes de correo).
 
-export type InvokerAuth = "ok" | "not_required" | "unauthorized";
-
-/**
- * Comparación de tiempo constante entre dos cadenas. Longitudes distintas
- * siguen recorriendo el máximo para no filtrar el tamaño por el early
- * return; el resultado es false en ese caso.
- */
-export const timingSafeEqualString = (left: string, right: string): boolean => {
-  const encoder = new TextEncoder();
-  const a = encoder.encode(left);
-  const b = encoder.encode(right);
-  const len = Math.max(a.length, b.length);
-  let mismatch = a.length === b.length ? 0 : 1;
-
-  for (let i = 0; i < len; i += 1) {
-    mismatch |= (a[i] ?? 0) ^ (b[i] ?? 0);
-  }
-
-  return mismatch === 0;
-};
-
-/**
- * Autoriza al invocador del sender. `secret` ausente o vacío = el header
- * no se exige. Nunca incluye el secret en el resultado.
- */
-export const authorizeInvoker = (
-  header: string | null | undefined,
-  secret: string | undefined,
-): InvokerAuth => {
-  const expected = secret?.trim() ?? "";
-
-  if (!expected) {
-    return "not_required";
-  }
-
-  if (!timingSafeEqualString(header ?? "", expected)) {
-    return "unauthorized";
-  }
-
-  return "ok";
-};
+export {
+  authorizeInvoker,
+  type InvokerAuth,
+  isLocalSupabaseUrl,
+  timingSafeEqualString,
+} from "../_shared/invoker.ts";

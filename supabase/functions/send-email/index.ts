@@ -157,6 +157,7 @@ Deno.serve(async (req: Request) => {
     authorizeInvoker(
       req.headers.get("x-ammen-invoker"),
       Deno.env.get("AMMEN_EMAIL_INVOKE_SECRET") ?? undefined,
+      Deno.env.get("SUPABASE_URL") ?? undefined,
     ) === "unauthorized"
   ) {
     return json({ ok: false, error: "unauthorized" }, 401);

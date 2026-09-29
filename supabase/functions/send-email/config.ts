@@ -51,38 +51,12 @@ export const resolveEmailSenderConfig = (
   };
 };
 
-export type InvokerAuth = "ok" | "not_required" | "unauthorized";
-
-export const timingSafeEqualString = (left: string, right: string): boolean => {
-  const encoder = new TextEncoder();
-  const a = encoder.encode(left);
-  const b = encoder.encode(right);
-  const len = Math.max(a.length, b.length);
-  let mismatch = a.length === b.length ? 0 : 1;
-
-  for (let i = 0; i < len; i += 1) {
-    mismatch |= (a[i] ?? 0) ^ (b[i] ?? 0);
-  }
-
-  return mismatch === 0;
-};
-
-export const authorizeInvoker = (
-  header: string | null | undefined,
-  secret: string | undefined,
-): InvokerAuth => {
-  const expected = secret?.trim() ?? "";
-
-  if (!expected) {
-    return "not_required";
-  }
-
-  if (!timingSafeEqualString(header ?? "", expected)) {
-    return "unauthorized";
-  }
-
-  return "ok";
-};
+export {
+  authorizeInvoker,
+  type InvokerAuth,
+  isLocalSupabaseUrl,
+  timingSafeEqualString,
+} from "../_shared/invoker.ts";
 
 export const isAllowlisted = (
   email: string,

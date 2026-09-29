@@ -55,11 +55,22 @@ describe("allowlist", () => {
 });
 
 describe("authorizeInvoker", () => {
-  it("does not require a header when the secret is empty", () => {
-    expect(authorizeInvoker(null, "  ")).toBe("not_required");
+  const LOCAL = "http://kong:8000";
+  const REMOTE = "https://syprzdjznuppckenuaua.supabase.co";
+
+  it("does not require a header locally when the secret is empty", () => {
+    expect(authorizeInvoker(null, "  ", LOCAL)).toBe("not_required");
+  });
+
+  it("fails closed outside local when the secret is missing", () => {
+    expect(authorizeInvoker(null, "  ", REMOTE)).toBe("unauthorized");
+    expect(authorizeInvoker("anything", undefined, REMOTE)).toBe(
+      "unauthorized",
+    );
+    expect(authorizeInvoker(null, undefined, undefined)).toBe("unauthorized");
   });
 
   it("rejects a mismatch without echoing the secret", () => {
-    expect(authorizeInvoker("nope", "secret")).toBe("unauthorized");
+    expect(authorizeInvoker("nope", "secret", REMOTE)).toBe("unauthorized");
   });
 });

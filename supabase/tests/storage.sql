@@ -104,13 +104,13 @@ select pg_temp.assert(
   $q$),
   'and nobody can delete a face that is not theirs');
 
--- Público de verdad: el avatar se pinta en la lista de quién oró por ti, en el
--- chat y en el muro, y firmar una URL por cada cara sería mucha latencia para
--- una foto que la persona eligió enseñar.
+-- Pintar la cara no pasa por aquí: el bucket es público y su URL se sirve sin
+-- RLS. Lo que esta policy decide es quién puede LISTAR el bucket, y listarlo
+-- era leer el UUID de cada persona con foto (Oleada 1a, 2026-09-29).
 select pg_temp.assert(
   (select count(*) from storage.objects
-    where name = '11111111-1111-1111-1111-111111111111/avatar.png') = 1,
-  'but anybody can see it');
+    where name = '11111111-1111-1111-1111-111111111111/avatar.png') = 0,
+  'and nobody else can list it — the public URL serves it without RLS');
 
 commit;
 
@@ -149,6 +149,32 @@ select pg_temp.assert(
      where id = '11111111-1111-1111-1111-111111111111'
   $q$),
   'nor somebody else''s folder');
+
+-- El host también cuenta: un servidor propio con la misma ruta registraba la
+-- IP de cada persona que viera la cara (Oleada 1a, 2026-09-29).
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.profiles
+       set avatar_url = 'https://rastreo.example/storage/v1/object/public/avatars/11111111-1111-1111-1111-111111111111/avatar.png'
+     where id = '11111111-1111-1111-1111-111111111111'
+  $q$),
+  'a foreign host that only copies the path is not');
+
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    update public.profiles
+       set avatar_url = 'https://abcdefghijklmnop.supabase.co/storage/v1/object/public/avatars/11111111-1111-1111-1111-111111111111/avatar.jpg?v=1727600000000'
+     where id = '11111111-1111-1111-1111-111111111111'
+  $q$),
+  'a hosted Supabase URL with the client cache-busting ?v= is accepted');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    update public.profiles
+       set avatar_url = 'http://127.0.0.1:54321/storage/v1/object/public/avatars/11111111-1111-1111-1111-111111111111/avatar.png?track=1'
+     where id = '11111111-1111-1111-1111-111111111111'
+  $q$),
+  'any other query string is not');
 
 -- Quitarse la foto tiene que poder hacerse.
 select pg_temp.assert(

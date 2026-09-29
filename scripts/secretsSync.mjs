@@ -35,7 +35,7 @@ import { fileURLToPath } from "node:url";
 const NPX = process.platform === "win32" ? "npx.cmd" : "npx";
 const GCLOUD = process.platform === "win32" ? "gcloud.cmd" : "gcloud";
 
-/** Secretos de Edge en remoto. LMSTUDIO_* es solo local y no entra. */
+/** Secretos de Edge en remoto. UNSLOTH_* es solo local y no entra. */
 export const EDGE_SECRETS = Object.freeze([
   "RESEND_API_KEY",
   "RESEND_WEBHOOK_SECRET",
@@ -49,8 +49,9 @@ export const EDGE_SECRETS = Object.freeze([
 ]);
 
 export const LOCAL_ONLY_KEYS = Object.freeze([
-  "LMSTUDIO_URL",
-  "LMSTUDIO_MODEL",
+  "UNSLOTH_URL",
+  "UNSLOTH_MODEL",
+  "UNSLOTH_API_KEY",
 ]);
 
 export const ENVIRONMENTS = Object.freeze({
@@ -96,7 +97,10 @@ export const parseArgs = (argv) => {
     const token = argv[index];
     const next = argv[index + 1];
     const [flag, inline] = token.includes("=")
-      ? [token.slice(0, token.indexOf("=")), token.slice(token.indexOf("=") + 1)]
+      ? [
+          token.slice(0, token.indexOf("=")),
+          token.slice(token.indexOf("=") + 1),
+        ]
       : [token, undefined];
 
     const takeValue = () => {
@@ -356,7 +360,9 @@ const run = (command, args, { input, allowFailure = false } = {}) => {
   if (!allowFailure && result.status !== 0) {
     const stderr = (result.stderr ?? "").trim();
     const stdout = (result.stdout ?? "").trim();
-    throw new Error(stderr || stdout || `${command} salió con ${result.status}`);
+    throw new Error(
+      stderr || stdout || `${command} salió con ${result.status}`,
+    );
   }
 
   return result;
@@ -394,12 +400,7 @@ const requireGcloudAuth = (gcpProject) => {
 const listGcpSecretIds = (gcpProject) => {
   const result = run(
     GCLOUD,
-    [
-      "secrets",
-      "list",
-      `--project=${gcpProject}`,
-      "--format=value(name)",
-    ],
+    ["secrets", "list", `--project=${gcpProject}`, "--format=value(name)"],
     { allowFailure: true },
   );
   if (result.status !== 0) {
@@ -445,7 +446,9 @@ const accessGcpSecret = (gcpProject, name) => {
           `Créalo una vez (docs/runbooks/secrets-sync.md) y vuelve a correr pull.`,
       );
     }
-    throw new Error(`no se pudo leer ${name} en ${gcpProject}. ${detail}`.trim());
+    throw new Error(
+      `no se pudo leer ${name} en ${gcpProject}. ${detail}`.trim(),
+    );
   }
   return (result.stdout ?? "").replace(/^\uFEFF/u, "").trim();
 };
@@ -536,7 +539,9 @@ const pullFromGcp = (gcpProject, keys) => {
 
 const runList = (gcpProject, keys) => {
   const existing = listGcpSecretIds(gcpProject);
-  console.log(`secretsSync: catálogo → GCP ${gcpProject} (nombres, sin valores)\n`);
+  console.log(
+    `secretsSync: catálogo → GCP ${gcpProject} (nombres, sin valores)\n`,
+  );
   for (const key of keys) {
     const gcpName = gcpSecretName(key);
     const mark = existing.has(gcpName) ? "presente" : "AUSENTE";
@@ -655,7 +660,8 @@ export const main = (argv = process.argv.slice(2)) => {
 
 const isMain =
   process.argv[1] &&
-  path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+  path.resolve(process.argv[1]) ===
+    path.resolve(fileURLToPath(import.meta.url));
 
 if (isMain) {
   try {

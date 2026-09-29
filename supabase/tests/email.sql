@@ -375,3 +375,105 @@ select pg_temp.assert(
   'win-back D7 is enqueued on the seventh idle day');
 
 commit;
+
+
+-- ===========================================================================
+-- Topes de invitación por correo (Oleada 1a, 2026-09-29)
+--
+-- Sin tope por remitente, una cuenta recién creada podía mandar correo con la
+-- marca de ammen a cualquier dirección. Ahora: solo con onboarding hecho, 10
+-- al día (3 si la cuenta tiene menos de 24 h) y el nombre, acotado.
+-- ===========================================================================
+\set CARLA '''33333333-3333-3333-3333-333333333333'''
+\set DANI  '''44444444-4444-4444-4444-444444444444'''
+
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values
+  (:CARLA, 'carla-mail@test.local', 'authenticated', 'authenticated', '{"display_name":"Carla"}'),
+  (:DANI,  'dani-mail@test.local',  'authenticated', 'authenticated', '{"display_name":"Dani"}')
+on conflict (id) do nothing;
+
+-- Ana: cuenta de hace dos días, con onboarding. Carla: recién llegada, con
+-- onboarding. Dani: sin onboarding.
+update public.profiles set created_at = now() - interval '2 days' where id = :ANA;
+update public.profile_settings set onboarding_answers = '{}'::jsonb
+ where id in (:ANA, :CARLA);
+update public.profile_settings set onboarding_answers = null where id = :DANI;
+
+insert into public.groups (owner_id, name, visibility)
+values (:ANA, 'Círculo de Ana', 'private'),
+       (:CARLA, 'Círculo de Carla', 'private'),
+       (:DANI, 'Círculo de Dani', 'private');
+
+commit;
+
+select invite_token as ana_token from public.groups where owner_id = '11111111-1111-1111-1111-111111111111' \gset
+select invite_token as carla_token from public.groups where owner_id = '33333333-3333-3333-3333-333333333333' \gset
+select invite_token as dani_token from public.groups where owner_id = '44444444-4444-4444-4444-444444444444' \gset
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select bool_and((public.enqueue_invite_email('circle', 'amiga' || n || '@test.local', :'ana_token')) ->> 'ok' = 'true')
+     from generate_series(1, 10) n),
+  'an established account sends ten invitation emails in a day');
+
+select pg_temp.assert(
+  public.enqueue_invite_email('circle', 'amiga11@test.local', :'ana_token') ->> 'reason'
+    = 'sender_rate_limited',
+  'the eleventh invitation email in a day is refused');
+
+select pg_temp.assert(
+  public.enqueue_invite_email('circle', 'amiga1@test.local', :'ana_token') ->> 'reason'
+    = 'rate_limited',
+  'the same recipient is still limited to one invitation a week');
+
+commit;
+
+select pg_temp.assert(
+  (select count(*) from public.email_outbox
+    where invited_by = :ANA and template = 'invite_circle') = 10,
+  'each queued invitation records who sent it');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select bool_and((public.enqueue_invite_email('circle', 'primo' || n || '@test.local', :'carla_token')) ->> 'ok' = 'true')
+     from generate_series(1, 3) n),
+  'a brand-new account can still invite its own people');
+
+select pg_temp.assert(
+  public.enqueue_invite_email('circle', 'primo4@test.local', :'carla_token') ->> 'reason'
+    = 'sender_rate_limited',
+  'a brand-new account stops at three invitation emails in its first day');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.enqueue_invite_email('circle', 'alguien@test.local', :'dani_token') ->> 'reason'
+    = 'not_onboarded',
+  'an account that has not finished onboarding cannot send invitation emails');
+
+commit;
+
+select pg_temp.assert(
+  pg_temp.raises(format(
+    'update public.profiles set display_name = %L where id = %L',
+    repeat('x', 81), :DANI)),
+  'a display name longer than 80 characters is refused');
+
+select pg_temp.assert(
+  not pg_temp.raises(format(
+    'update public.profiles set display_name = %L where id = %L',
+    repeat('x', 80), :DANI)),
+  'a display name of 80 characters is accepted');

@@ -415,32 +415,44 @@ describe("timingSafeEqualString", () => {
 });
 
 describe("authorizeInvoker", () => {
-  it("does not require a header when the secret is absent", () => {
-    expect(authorizeInvoker(null, undefined)).toBe("not_required");
-    expect(authorizeInvoker("anything", undefined)).toBe("not_required");
+  const LOCAL = "http://127.0.0.1:54421";
+  const REMOTE = "https://syprzdjznuppckenuaua.supabase.co";
+
+  it("does not require a header locally when the secret is absent", () => {
+    expect(authorizeInvoker(null, undefined, LOCAL)).toBe("not_required");
+    expect(authorizeInvoker("anything", undefined, LOCAL)).toBe("not_required");
   });
 
-  it("does not require a header when the secret is blank", () => {
-    expect(authorizeInvoker(null, "   ")).toBe("not_required");
-    expect(authorizeInvoker(undefined, "")).toBe("not_required");
+  it("does not require a header locally when the secret is blank", () => {
+    expect(authorizeInvoker(null, "   ", LOCAL)).toBe("not_required");
+    expect(authorizeInvoker(undefined, "", LOCAL)).toBe("not_required");
+  });
+
+  it("fails closed outside local when the secret is absent or blank", () => {
+    expect(authorizeInvoker(null, undefined, REMOTE)).toBe("unauthorized");
+    expect(authorizeInvoker("anything", "  ", REMOTE)).toBe("unauthorized");
   });
 
   it("accepts an exact header match when the secret is set", () => {
-    expect(authorizeInvoker("local-invoke-secret", "local-invoke-secret")).toBe(
-      "ok",
-    );
+    expect(
+      authorizeInvoker("local-invoke-secret", "local-invoke-secret", REMOTE),
+    ).toBe("ok");
   });
 
   it("rejects a missing or wrong header when the secret is set", () => {
-    expect(authorizeInvoker(null, "local-invoke-secret")).toBe("unauthorized");
-    expect(authorizeInvoker("", "local-invoke-secret")).toBe("unauthorized");
-    expect(authorizeInvoker("nope", "local-invoke-secret")).toBe(
+    expect(authorizeInvoker(null, "local-invoke-secret", REMOTE)).toBe(
+      "unauthorized",
+    );
+    expect(authorizeInvoker("", "local-invoke-secret", REMOTE)).toBe(
+      "unauthorized",
+    );
+    expect(authorizeInvoker("nope", "local-invoke-secret", REMOTE)).toBe(
       "unauthorized",
     );
   });
 
   it("never echoes the secret in the result", () => {
-    const result = authorizeInvoker("wrong", "super-secret-value");
+    const result = authorizeInvoker("wrong", "super-secret-value", REMOTE);
 
     expect(result).toBe("unauthorized");
     expect(JSON.stringify(result)).not.toContain("super-secret-value");
