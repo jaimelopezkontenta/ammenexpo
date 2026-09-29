@@ -17,6 +17,7 @@ import {
   redeemShareToken,
   rememberShareToken,
   rememberSource,
+  shouldStashLinkToken,
 } from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import { track } from "@/core/observability/track";
@@ -34,7 +35,7 @@ export default function SharedPlanPreviewScreen() {
     /** Por dónde llegó: lo pone `buildShareUrl` al repartir el enlace. */
     de?: string;
   }>();
-  const { session } = useSession();
+  const { session, isLoading: sessionLoading } = useSession();
   const { data, isLoading, isLoadingError, error, refetch } =
     useSharedPlanPreview(token);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -43,14 +44,20 @@ export default function SharedPlanPreviewScreen() {
 
   // Stash the token before anything else: if this visitor signs up, onboarding
   // redeems it and they end up genuinely connected to whoever shared the plan.
+  // Solo sin sesión: con la cuenta abierta se canjea con «Abrir el plan», y un
+  // token guardado se canjeaba solo en el siguiente arranque.
+  const stash = shouldStashLinkToken({
+    sessionLoading,
+    hasSession: Boolean(session),
+  });
   useEffect(() => {
-    if (token) {
+    if (token && stash) {
       void rememberShareToken(token);
       // La etiqueta viaja con el enlace y se guarda **una sola vez**: quien
       // abre tres antes de decidirse entró por el primero.
       if (de) void rememberSource(de);
     }
-  }, [token, de]);
+  }, [token, de, stash]);
 
   // Un evento por lectura resuelta, no por cada remontaje: solo cuando la
   // preview ya trajo datos reales, nunca en el estado de carga o de error.
