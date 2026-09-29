@@ -722,6 +722,8 @@
     "searchPlaceholder": "Search for people",
     "nobodyFound": "We couldn't find anybody by that name.",
     "empty": "Nothing here yet. Be the first to ask for prayer.",
+    "closedTitle": "The community opens soon",
+    "closedBody": "We are getting it ready with care. Meanwhile, your circles and your prayer list are right where you left them.",
     "followers": "{{count}} follower",
     "followers_plural": "{{count}} followers",
     "openPlan": "See the plan",

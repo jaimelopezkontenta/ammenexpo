@@ -13,6 +13,7 @@ import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSession } from "@/core/auth/SessionProvider";
+import { useFeatureFlag } from "@/core/flags/useFeatureFlag";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { usePublicProfile } from "@/core/profile/queries";
 import {
@@ -74,6 +75,11 @@ export const CommunityPane = () => {
   const { data: me } = usePublicProfile(userId);
   const following = me?.following_count ?? 0;
 
+  // Con `community_feed` apagado el servidor devuelve vacío en el feed, la
+  // búsqueda y los perfiles: se sabe de antemano y se dice. `unknown`
+  // (cargando, o la lectura falló) no cuenta como apagado.
+  const communityFlag = useFeatureFlag("community_feed");
+
   const feed = useHomeFeed();
   const people = useSearchPeople(query.trim());
   const togglePrayer = useTogglePostPrayer(userId);
@@ -123,6 +129,23 @@ export const CommunityPane = () => {
       setPending(null);
     }
   };
+
+  // Cerrada, no vacía: sin buscador que no encuentra a nadie ni «Pedir
+  // oración» hacia un muro que nadie ve. El vacío genérico de abajo decía
+  // «sé la primera en pedir oración» en un sitio que aún no abre.
+  if (communityFlag === "off") {
+    return (
+      <ScrollView
+        contentContainerClassName="flex-grow justify-center px-7 py-8 md:w-full md:max-w-read md:self-center md:px-10"
+        contentContainerStyle={{ paddingBottom: scrollBottom }}
+      >
+        <EmptyState
+          title={t("community.closedTitle")}
+          body={t("community.closedBody")}
+        />
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView

@@ -722,6 +722,8 @@
     "searchPlaceholder": "Buscar personas",
     "nobodyFound": "No encontramos a nadie con ese nombre.",
     "empty": "Todavía no hay nada aquí. Sé la primera en pedir oración.",
+    "closedTitle": "La comunidad abre pronto",
+    "closedBody": "La estamos preparando con cuidado. Mientras tanto, tus círculos y tu lista de oración siguen donde estaban.",
     "followers": "{{count}} seguidor",
     "followers_plural": "{{count}} seguidores",
     "openPlan": "Ver el plan",
