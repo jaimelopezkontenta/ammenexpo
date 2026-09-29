@@ -639,6 +639,7 @@
     "reportDone": "Gracias. Lo revisaremos.",
     "hide": "Ocultar para todos",
     "hideDone": "Mensaje oculto para todo el círculo.",
+    "hideContentDone": "Oculto para todo el círculo.",
     "hideReportedDone": "Oculto para todos.",
     "blockedTitle": "Personas bloqueadas",
     "blockedEmpty": "No has bloqueado a nadie.",

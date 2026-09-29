@@ -208,7 +208,7 @@ export default function PrayerRequestComments() {
                       onPress={() =>
                         void run(
                           () => hide.mutateAsync(comment.id),
-                          t("moderation.hideDone"),
+                          t("moderation.hideContentDone"),
                         )
                       }
                     >

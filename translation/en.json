@@ -639,6 +639,7 @@
     "reportDone": "Thank you. We'll look into it.",
     "hide": "Hide for everyone",
     "hideDone": "Message hidden for the whole circle.",
+    "hideContentDone": "Hidden for the whole circle.",
     "hideReportedDone": "Hidden for everyone.",
     "blockedTitle": "Blocked people",
     "blockedEmpty": "You haven't blocked anyone.",

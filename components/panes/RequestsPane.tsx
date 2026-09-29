@@ -143,7 +143,7 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
             onHide={() =>
               void run(
                 () => hide.mutateAsync(request.id),
-                t("moderation.hideDone"),
+                t("moderation.hideContentDone"),
               )
             }
             onMarkAnswered={() =>
