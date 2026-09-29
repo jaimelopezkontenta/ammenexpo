@@ -1,10 +1,26 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
 export const POST_MAX = 2000;
 export const COMMENT_MAX = 1000;
+
+/**
+ * Las peticiones se pintan desde dos listas —el muro (`prayerFeed`) y la
+ * comunidad (`homeFeed`)— y desde la pantalla de comentarios, donde ya se
+ * puede rezar, marcar o borrar. Tras cualquiera de esos gestos, las dos
+ * listas se ponen al día: si no, al volver enseñaban el estado de antes.
+ */
+const invalidateFeeds = (queryClient: QueryClient) => {
+  void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+  void queryClient.invalidateQueries({ queryKey: ["homeFeed"] });
+};
 
 export type PrayerRequest = {
   id: string;
@@ -138,7 +154,7 @@ export const useTogglePostPrayer = (userId: string | undefined) => {
       if (error && error.code !== "23505") throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+      invalidateFeeds(queryClient);
     },
   });
 };
@@ -187,7 +203,7 @@ export const useWriteComment = (
       void queryClient.invalidateQueries({
         queryKey: ["postComments", postId],
       });
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+      invalidateFeeds(queryClient);
     },
   });
 };
@@ -210,7 +226,7 @@ export const useMarkAnswered = () => {
       if (!data?.length) throw new Error("mark_answered_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+      invalidateFeeds(queryClient);
     },
   });
 };
@@ -230,7 +246,7 @@ export const useDeletePrayerRequest = () => {
       if (!data?.length) throw new Error("delete_post_no_rows");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["prayerFeed"] });
+      invalidateFeeds(queryClient);
     },
   });
 };

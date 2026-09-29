@@ -442,6 +442,8 @@
     "prayCount_plural": "{{count}} personas están orando",
     "commentCount": "{{count}} comentario",
     "commentCount_plural": "{{count}} comentarios",
+    "commentsEmpty": "Todavía nadie ha comentado.",
+    "commentsEmptyBody": "Sé el primero en dejar unas palabras.",
     "anonymousName": "Alguien",
     "answered": "Respondida",
     "markAnswered": "Marcar como respondida",
