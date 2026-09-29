@@ -21,6 +21,19 @@ const SOCIAL_URL = (
 ).replace(/\/$/, "");
 const IS_STAGING = process.env.EXPO_PUBLIC_DEPLOY_ENV === "staging";
 
+/**
+ * Lee `ammen.theme.v1` antes del JS de la app para no pintar el amanecer
+ * claro un frame cuando alguien forzó Oscuro (o al revés). El default es
+ * Sistema: sin clave, no se pone clase y gana el media.
+ *
+ * La CSP de `firebase.json` deja correr este script por su hash, no por ser
+ * inline: cambiar un carácter lo bloquea en producción. Tras tocarlo,
+ * `npm run csp:hashes` da el hash nuevo para `script-src` (y
+ * `scripts/cspHashes.test.ts` falla hasta que se copia). Texto literal, sin
+ * `${…}` ni escapes: el hash se calcula sobre lo que se lee aquí.
+ */
+const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("ammen.theme.v1")||"system";document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.classList.toggle("light",t==="light");}catch(e){}})();`;
+
 // This file is web-only and used to configure the root HTML for every
 // web page during static rendering.
 // The contents of this function only run in Node.js environments and
@@ -110,16 +123,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
           content={colorsDark.dawn.sky}
         />
         <title>{SOCIAL_TITLE}</title>
-        {/*
-          Lee `ammen.theme.v1` antes del JS de la app para no pintar el
-          amanecer claro un frame cuando alguien forzó Oscuro (o al revés).
-          El default es Sistema: sin clave, no se pone clase y gana el media.
-        */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("ammen.theme.v1")||"system";document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.classList.toggle("light",t==="light");}catch(e){}})();`,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
 
         <ScrollViewStyleReset />
 

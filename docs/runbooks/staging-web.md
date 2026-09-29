@@ -121,13 +121,40 @@ No inventar, imprimir ni versionar `ANTHROPIC_API_KEY`.
 ```powershell
 npm run verify
 npm run build:web:staging
+npm run csp:check
 npx firebase-tools deploy --only hosting --project ammen-staging
 ```
 
-`npm run deploy:web:staging` agrupa los dos últimos pasos. Antes del deploy,
+`npm run deploy:web:staging` agrupa el build y el deploy, **sin** `csp:check`:
+si se usa, lanzar `npm run csp:check` entre medias. Antes del deploy,
 buscar en `dist` que no haya `localhost:54421` ni el fallback
 `https://ammen.app`, y comprobar que sí aparezcan la ref de Supabase y
 `https://ammen-staging.web.app`.
+
+### Content-Security-Policy (Oleada 4d, 2026-09-29)
+
+`firebase.json` manda una CSP estricta a todo lo que sirve, junto con
+`Strict-Transport-Security` y `Cross-Origin-Opener-Policy: same-origin`. El
+porqué de cada directiva está comentado en el propio fichero (firebase-tools
+lo lee con comentarios). Lo que hay que saber antes de desplegar:
+
+- `script-src` no admite inline: solo los dos `<script>` del export estático,
+  por hash (el del tema de `app/+html.tsx` y la bandera de hidratación de
+  Expo Router). `npm run csp:check` recorre cada HTML de `dist` y falla si
+  alguno lleva un script inline cuyo hash no está en la CSP; tras subir Expo
+  o tocar el script del tema, `npm run csp:hashes` da los hashes nuevos.
+- `connect-src` e `img-src` admiten `https://*.supabase.co` (y `wss://` para
+  Realtime). **Si la API de Supabase pasa a un dominio propio**, hay que
+  añadirlo aquí además de en `project_settings.api_urls`: sin eso la app no
+  habla con la base. Igual con cualquier servicio de terceros nuevo
+  (analítica, errores, fuentes remotas).
+- El e2e de CI sirve el export con estas mismas cabeceras
+  (`docs/runbooks/ci.md`, «El e2e estático corre bajo la CSP de producción»),
+  pero en modo `single`, sin los scripts inline: los hashes solo se prueban de
+  verdad aquí, contra `dist`, y en el smoke.
+
+Rollback de la CSP sin rebuild: quitar la cabecera de `firebase.json` y
+desplegar solo hosting (o volver a la release anterior, ver «Rollback»).
 
 ## Smoke remoto
 
@@ -143,6 +170,15 @@ Esperado: HTTP 200 en las cuatro rutas, `X-Robots-Tag` con
 `noindex, nofollow`, `robots.txt` con `Disallow: /`, HTML sin cache y assets
 fingerprinted con cache immutable. En navegador, Network debe mostrar tráfico
 a `syprzdjznuppckenuaua.supabase.co` y ningún request a la instancia local.
+
+CSP: las cuatro rutas traen `Content-Security-Policy`,
+`Strict-Transport-Security` y `Cross-Origin-Opener-Policy`. En navegador, con
+la consola abierta, ningún «Refused to …» mientras se prueba lo que la CSP
+toca: entrar, forzar Oscuro en Perfil → Apariencia y recargar (el script del
+tema, sin parpadeo claro), cambiar la foto de perfil (`fetch` de un `blob:` y
+subida a Storage), ver avatares, abrir el chat de un círculo (Realtime por
+`wss://`), generar un plan (Edge Function) y descargar un versículo como
+imagen (html2canvas).
 
 ## Migraciones rescatadas (2026-09-29) — antes del próximo `db push`
 

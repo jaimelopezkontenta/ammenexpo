@@ -45,6 +45,8 @@
     "e2e:static": "node scripts/e2eStatic.mjs",
     "e2e:visual": "node scripts/e2eStatic.mjs --project=visual --project=visual-dark",
     "e2e:visual:update": "node scripts/e2eStatic.mjs --project=visual --project=visual-dark --update-snapshots",
+    "csp:hashes": "node scripts/cspHashes.mjs",
+    "csp:check": "node scripts/cspHashes.mjs --html dist",
     "doctor": "node scripts/doctor.mjs",
     "secrets:sync": "node scripts/secretsSync.mjs",
     "secrets:pull": "node scripts/secretsSync.mjs pull",
