@@ -65,9 +65,10 @@ export const LEGACY_EDITS = new Map([
   ["20260730100100_groups.sql", 1],
   ["20260730100200_plans.sql", 1],
   ["20260730100300_social.sql", 1],
-  // Troceada el 2026-09-29, antes de aplicarse en ningún entorno remoto (ver la
+  // Troceada el 2026-09-29 (dos ediciones: el troceado y la etiqueta del dollar-quote
+  // fuera de los comentarios), antes de aplicarse en ningún entorno remoto (ver la
   // cabecera de la propia migración e IMMUTABILITY_EXCEPTIONS).
-  ["20260929125011_bible_web_data.sql", 1],
+  ["20260929125011_bible_web_data.sql", 2],
 ]);
 
 const normalize = (content) => content.replace(/\r\n/gu, "\n");
