@@ -112,9 +112,16 @@ type ErrorStateProps = {
    * `navigator.onLine`, que en nativo no existe.
    */
   error?: unknown;
+  /** Una salida además de reintentar (el «Ir a Hoy» de AppErrorBoundary). */
+  secondaryAction?: { title: string; onPress: () => void };
 };
 
-export const ErrorState = ({ onRetry, message, error }: ErrorStateProps) => {
+export const ErrorState = ({
+  onRetry,
+  message,
+  error,
+  secondaryAction,
+}: ErrorStateProps) => {
   const { t } = useTranslation();
   const browserOffline =
     typeof navigator !== "undefined" && navigator.onLine === false;
@@ -129,9 +136,18 @@ export const ErrorState = ({ onRetry, message, error }: ErrorStateProps) => {
         {message ??
           (offline ? t("common.errorNetwork") : t("common.errorBody"))}
       </Txt>
-      {onRetry ? (
-        <View className="mt-4 w-full">
-          <Button title={t("common.retry")} onPress={onRetry} />
+      {onRetry || secondaryAction ? (
+        <View className="mt-4 w-full gap-3">
+          {onRetry ? (
+            <Button title={t("common.retry")} onPress={onRetry} />
+          ) : null}
+          {secondaryAction ? (
+            <Button
+              title={secondaryAction.title}
+              variant="ghost"
+              onPress={secondaryAction.onPress}
+            />
+          ) : null}
         </View>
       ) : null}
     </DawnBackground>

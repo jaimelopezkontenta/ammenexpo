@@ -50,8 +50,9 @@ if (__DEV__) {
 }
 
 // Un render que revienta ya no deja la app en blanco: Expo Router pinta esto
-// en su lugar, con reintento (components/AppErrorBoundary.tsx).
-export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
+// en su lugar, con reintento (components/AppErrorBoundary.tsx). La del raíz
+// no ofrece «Ir a Hoy»: sin el layout montado no hay navegador al que ir.
+export { RootErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
 
 // Un evento por arranque en frío, no por cada remontaje del árbol — este
 // módulo se importa una vez por proceso, así que basta con dispararlo aquí

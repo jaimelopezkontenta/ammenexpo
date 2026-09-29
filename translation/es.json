@@ -22,7 +22,8 @@
     "greetingMorning": "Buenos días",
     "greetingAfternoon": "Buenas tardes",
     "greetingEvening": "Buenas noches",
-    "greetingNight": "Buenas noches"
+    "greetingNight": "Buenas noches",
+    "goToday": "Ir a Hoy"
   },
   "tabs": {
     "today": "Hoy",
