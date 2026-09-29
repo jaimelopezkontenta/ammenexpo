@@ -28,6 +28,10 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Historia completa: el guard de migraciones compara contra la base
+          # del PR o contra el commit anterior al push.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -37,6 +41,11 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      # Antes de levantar nada: una migración publicada editada o dos con la
+      # misma versión no se arreglan en la base, se arreglan en el repo.
+      - name: Guard de migraciones
+        run: node scripts/checkMigrations.mjs --base "${{ github.event.pull_request.base.sha || github.event.before }}"
+
       - name: Instalar Chromium y dependencias del sistema
         run: npx playwright install --with-deps chromium
 
@@ -45,6 +54,11 @@ jobs:
 
       - name: Arrancar Supabase local
         run: npx supabase start
+
+      # `types/supabase.ts` se genera del esquema (`npm run db:types`). Si una
+      # migración cambia el esquema y nadie regenera, el cliente tipado miente.
+      - name: Tipos de la base al día con las migraciones
+        run: npx supabase gen types typescript --local --schema public | diff -u types/supabase.ts -
 
       - name: Exportar configuración pública de Supabase local
         run: node scripts/supabaseCiEnv.mjs

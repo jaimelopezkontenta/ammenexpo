@@ -116,7 +116,7 @@ envoltorio distingue ese fallo cosmético de uno real.
 ### Las cuentas de prueba
 
 `supabase/seed.sql` se ejecuta después de cada `db reset` —y `npm run verify`
-hace trece—, así que las cuentas siempre están ahí:
+hace catorce—, así que las cuentas siempre están ahí:
 
 ```
 prueba@ammen.local  ·  ammen1234
@@ -142,10 +142,10 @@ npm run verify
 ```
 
 Encadena, en este orden: `typecheck`, `lint` (eslint y prettier), los tests de
-JavaScript (Vitest) y **trece suites de assertions SQL** que se ejecutan cada
+JavaScript (Vitest) y **catorce suites de assertions SQL** que se ejecutan cada
 una contra una base recién reseteada — `rls`, `flows`, `streak`, `timezone`,
-`bible`, `circles`, `plans`, `storage`, `social`, `flags`, `push`, `generation`
-y `email`. Las suites SQL van en serie detrás de un lock (`.tmp/db.lock`) para
+`bible`, `circles`, `plans`, `storage`, `social`, `flags`, `push`, `generation`,
+`email` y `rescued`. Las suites SQL van en serie detrás de un lock (`.tmp/db.lock`) para
 que dos corridas no reseteen la misma base, y tardan unos ocho minutos.
 
 Nada se commitea sin esto en verde. CI (`.github/workflows/verify.yml`) corre
@@ -207,7 +207,9 @@ core/         Las consultas, el estado y la lógica pura — agrupado por domini
 theme/        Tokens, degradados y movimiento, en claro y en oscuro.
 translation/  es.json y en.json. Las dos tienen que tener exactamente las mismas claves.
 supabase/
-  migrations/ El esquema. Nunca se edita una migración ya aplicada: se añade otra.
+  migrations/ El esquema. Nunca se edita una migración ya aplicada: se añade otra,
+              con `npx supabase migration new`. `npm run migrations:check` lo vigila.
+  rescue/     SQL rescatado de una base local, como referencia; el CLI no lo aplica.
   functions/  Las Edge Functions, en Deno: el plan, los avisos push y los correos.
   templates/  Los correos de Auth (alta, recuperación, cambio de contraseña).
   tests/      Las assertions SQL.

@@ -21,3 +21,7 @@ test-results/
 blob-report/
 playwright/.cache/
 .tmp/
+
+# Generado por `npm run db:types` (supabase gen types) y comparado tal cual en
+# CI: reformatearlo lo haría divergir de lo que escupe el CLI.
+types/supabase.ts

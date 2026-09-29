@@ -49,6 +49,13 @@ Encendido con Amanecer 4.0 (2026-08-28). **El default es Sistema** (sigue al OS)
 
 Nada de `npm run deploy:web:staging` ni `firebase deploy`: los deploys los hace el usuario.
 
+## Migraciones
+
+- Una migración nueva sale **siempre** de `npx supabase migration new <nombre>`: timestamp real, nunca un número puesto a mano.
+- Lo ya publicado en `origin/main` no se edita ni se borra: se añade otra migración. `npm run migrations:check` lo comprueba (y CI también, contra la base del PR o el commit anterior).
+- Nada de SQL aplicado a mano en la base local sin su fichero: `npm run doctor` falla si hay migraciones aplicadas sin fichero, porque el próximo reset las borra (`supabase/rescue/2026-09-29/README.md` cuenta por qué).
+- Cada migración trae su test SQL en `supabase/tests/` (y su script `db:test:*` dentro de `db:test`).
+
 ## Tipos en `supabase/functions` (Deno)
 
 `npm run typecheck` no mira `supabase/functions/` (está excluido del `tsconfig`: lo compila Deno) y eslint tampoco, así que un error de tipos ahí solo aparece al desplegar. Tras tocar un fichero de esa carpeta, compruébalo aparte:

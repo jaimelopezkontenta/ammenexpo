@@ -14,6 +14,8 @@ module.exports = defineConfig([
       ".expo/*",
       "supabase/.temp/*",
       "supabase/.branches/*",
+      // Generado por `npm run db:types`; CI lo compara con lo que escupe el CLI.
+      "types/supabase.ts",
       // Deno, not React Native: different runtime, different module resolution.
       // The Deno toolchain validates these when the functions are served.
       "supabase/functions/*",

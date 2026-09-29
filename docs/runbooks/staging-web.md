@@ -144,6 +144,39 @@ Esperado: HTTP 200 en las cuatro rutas, `X-Robots-Tag` con
 fingerprinted con cache immutable. En navegador, Network debe mostrar tráfico
 a `syprzdjznuppckenuaua.supabase.co` y ningún request a la instancia local.
 
+## Migraciones rescatadas (2026-09-29) — antes del próximo `db push`
+
+El 2026-09-29 se rescataron ocho migraciones que solo existían aplicadas en
+una base local (`supabase/rescue/2026-09-29/README.md`). Entraron al repo como
+`20260929062117_…` a `20260929062124_…`, **idempotentes** (`create or replace`,
+`if exists` / `if not exists`), para que valgan tanto si staging nunca las vio
+como si alguna vez se le aplicaron con sus versiones originales
+(`20260908100000` a `20260915100000`).
+
+Ese día staging estaba **pausado** (`INACTIVE`, plan gratuito) y no se pudo
+leer su historial. El próximo push, en este orden:
+
+1. Restaurar el proyecto desde el dashboard si sigue pausado.
+2. Copia antes de tocar nada: `pg_dump` de staging (el plan gratuito no tiene
+   restauración a un punto en el tiempo).
+3. `npx supabase migration list --linked` y mirar la columna remota:
+   - **Sin nada posterior a `20260907100000`**: caso normal, seguir al paso 4.
+   - **Con `20260909100000`–`20260915100000`** (las versiones originales de las
+     rescatadas): marcarlas como revertidas, porque las sustituyen las
+     `20260929…` idempotentes:
+     `npx supabase migration repair --linked --status reverted 20260909100000 20260910100000 20260911100000 20260912100000 20260913100000 20260914100000 20260915100000`
+   - **Con `20260908100000` pero sin la tabla `email_preferences`** (era la
+     `export_personal_collections` original, no `email_lifecycle`): revertirla
+     también, o `db push` daría por aplicada `email_lifecycle` sin ejecutarla:
+     `npx supabase migration repair --linked --status reverted 20260908100000`
+4. `npx supabase db push --linked --dry-run`, revisar la lista y después sin
+   `--dry-run`.
+5. Anotar aquí la última versión aplicada en staging:
+   _(pendiente: primer push tras el rescate)_.
+
+Hasta ese push, la fuga del chat de círculos (quien sale sigue leyendo) sigue
+abierta en staging. Siempre la base primero y la web después.
+
 ## Rollback
 
 - **Hosting:** Firebase Console → proyecto `ammen-staging` → Hosting → Release

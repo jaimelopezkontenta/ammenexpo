@@ -19,7 +19,7 @@
  */
 
 import { execSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { connect } from "node:net";
 
 const DB_CONTAINER = "supabase_db_ammen";
@@ -195,6 +195,69 @@ const checkSeed = () => {
   }
 };
 
+/**
+ * La base local frente a `supabase/migrations/`. El 2026-09-29 aparecieron
+ * ocho migraciones aplicadas sin fichero —su SQL solo vivía en
+ * `schema_migrations.statements`— y cualquier reset del harness las habría
+ * borrado sin avisar (supabase/rescue/2026-09-29). Por eso lo aplicado sin
+ * fichero es un chequeo DURO; un fichero sin aplicar es solo base atrasada.
+ */
+const checkAppliedMigrations = () => {
+  let applied;
+  try {
+    applied = run(
+      `docker exec ${DB_CONTAINER} psql -U postgres -d postgres -t -A -F "|" ` +
+        `-c "select version, coalesce(name, '') from supabase_migrations.schema_migrations order by version"`,
+    )
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => line.split("|"));
+  } catch {
+    warn("no se pudo leer supabase_migrations.schema_migrations");
+    return;
+  }
+
+  const files = new Map(
+    readdirSync("supabase/migrations")
+      .map((file) => /^(\d{14})_(.+)\.sql$/u.exec(file))
+      .filter(Boolean)
+      .map(([, version, name]) => [version, name]),
+  );
+  const appliedVersions = new Set(applied.map(([version]) => version));
+
+  const orphans = applied.filter(([version]) => !files.has(version));
+  const renamed = applied.filter(
+    ([version, name]) =>
+      files.has(version) && name !== "" && files.get(version) !== name,
+  );
+  const pending = [...files.keys()].filter((v) => !appliedVersions.has(v));
+
+  for (const [version, name] of orphans) {
+    fail(
+      `migración aplicada en la base SIN fichero: ${version}_${name} — su SQL ` +
+        "solo vive en schema_migrations.statements y el próximo reset la " +
+        "borra. Vuélcala antes (ver supabase/rescue/2026-09-29/README.md)",
+    );
+  }
+  for (const [version, name] of renamed) {
+    fail(
+      `la versión ${version} está aplicada como «${name}» pero el fichero es ` +
+        `«${files.get(version)}»: dos migraciones con el mismo número`,
+    );
+  }
+  if (pending.length > 0) {
+    warn(
+      `${pending.length} migración(es) del repo sin aplicar en local ` +
+        `(${pending.slice(0, 3).join(", ")}${pending.length > 3 ? "…" : ""}) — ` +
+        "`npm run db:reset` pone la base al día",
+    );
+  }
+  if (orphans.length === 0 && renamed.length === 0 && pending.length === 0) {
+    ok(`base local al día con supabase/migrations (${files.size} migraciones)`);
+  }
+};
+
 /** Los dos .env con trampa conocida. */
 const checkEnvFiles = () => {
   if (existsSync(".env.local")) {
@@ -228,6 +291,7 @@ checkHeavyNodeProcesses();
 await checkPort8081();
 if (checkDocker()) {
   checkSeed();
+  checkAppliedMigrations();
 }
 await checkAuthHealth();
 checkEnvFiles();
