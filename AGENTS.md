@@ -15,7 +15,7 @@ Reglas duras para no romper el sistema de `prototipo/TOKENS.md`. Si un cambio la
 - Todo lo tocable pasa por **`Tap`** (o `Button`, que ya lo usa). Nada de `Pressable` crudo.
 - Iconos: escala `icon.sm` / `icon.md` / `icon.lg` y `icon.strokeWidth` (1.7). No `size={21}` ni `strokeWidth={2}`.
 - Copy de UI siempre con **`t()`**. Claves nuevas en `translation/es.json` y `translation/en.json` en la misma ola.
-- **Todo texto pasa por `Txt`** (`components/ui/Text.tsx`), con su `variant`/`tone`. Nada de `<Text>` crudo de React Native con la tripleta `font-* text-*` a mano; el `className` de `Txt` es para afinar (centrado, márgenes, `flex-1`), no para reconstruir variantes. Guard: `theme/txt-adoption.test.ts`. Referencias bíblicas en editorial / ember-ink.
+- **Todo texto pasa por `Txt`** (`components/ui/Text.tsx`), con su `variant`/`tone`. Nada de `<Text>` crudo de React Native con la tripleta `font-* text-*` a mano; el `className` de `Txt` es para afinar (centrado, márgenes, `flex-1`), no para reconstruir variantes. Guard: `theme/txt-adoption.test.ts`. ESLint hace cumplir además que el **color** de un `Txt`/`Button` va por `tone`, nunca por `className` (en web la clase perdía contra el tono según el orden del CSS). Referencias bíblicas en editorial / ember-ink.
 
 ## Navegación
 

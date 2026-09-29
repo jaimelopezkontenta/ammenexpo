@@ -85,7 +85,11 @@ nunca seeds. Los despliegues los hace una persona, no CI.
 | SQL       | `npm run db:test`    | Quince suites de aserciones, cada una sobre una base recién reseteada      |
 | Flujos    | `npm run e2e`        | Playwright (Chromium) contra Metro; `e2e:static` contra el export, como CI |
 | Visual    | `npm run e2e:visual` | Capturas en claro y oscuro contra el export estático (ADR 0003)            |
-| Todo      | `npm run verify`     | typecheck + lint + vitest + db:test                                        |
+| Todo      | `npm run verify`     | typecheck + lint + vitest + migrations:check + db:test + db:types:check    |
 
-CI (`.github/workflows/verify.yml`) corre lo anterior menos la suite visual, en
-cada PR y en cada push a `main`.
+CI (`.github/workflows/verify.yml`) corre lo anterior, en cada PR y en cada push
+a `main`, más dos jobs sin base de datos: `functions-types` (`deno check` de las
+edge functions) y `expo-health` (`expo-doctor` y `expo install --check`, no
+bloqueante). La suite visual solo corre en CI cuando hay baselines `*-linux.png`
+commiteadas (las genera el workflow manual `visual-baselines`); hasta entonces,
+en local. Detalle en `docs/runbooks/ci.md`.
