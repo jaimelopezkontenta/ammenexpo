@@ -19,10 +19,12 @@
 #      ledger y el lease nuevo sobrevive.
 #
 # Requisitos: el stack local levantado (`supabase start`) y `docker` accesible.
-# No forma parte de `npm run verify` ni de `db:test`.
+# No forma parte de `npm run verify` ni de `db:test`: es una suite opcional
+# de `scripts/dbTest.mjs`, que resetea la base antes.
 #
-#   bash supabase/tests/generation-races.sh
-#   R=20 bash supabase/tests/generation-races.sh   # más iteraciones
+#   npm run db:test:generation-races
+#   R=20 npm run db:test:generation-races         # más iteraciones
+#   bash supabase/tests/generation-races.sh       # sin reset ni lock
 #
 # Cada worker borra y recrea sus usuarios (id fijo, cascada limpia el ledger),
 # así que el harness es re-ejecutable sin reset.

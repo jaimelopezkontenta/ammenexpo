@@ -311,6 +311,18 @@ export const releaseDbLock = (handle) => {
   return true;
 };
 
+/**
+ * ¿El lock vigente es el de este token? Lo usa quien corre DENTRO de
+ * `with-db-lock.mjs` (que exporta `DB_LOCK_TOKEN` y `DB_LOCK_PATH` a su hijo)
+ * para no intentar cogerlo otra vez: el dueño está vivo y el segundo intento
+ * fallaría con «ya está en uso».
+ */
+export const dbLockHeldBy = (token, options = {}) => {
+  if (!token) return false;
+  const snapshot = readSnapshot(configFor(options).lockPath);
+  return snapshot?.metadata?.token === token;
+};
+
 export const isDbLockHeld = (options = {}) => {
   const config = configFor(options);
   const snapshot = readSnapshot(config.lockPath);
