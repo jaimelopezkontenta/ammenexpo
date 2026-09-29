@@ -156,6 +156,22 @@ export const useUpdateProfile = (userId: string | undefined) => {
 export const useDeleteAccount = () =>
   useMutation({
     mutationFn: async () => {
+      // La foto va antes: Storage no se puede borrar desde SQL (trigger
+      // `storage.protect_delete`), y sin sesión ya no habría quién la quitara.
+      // Si falla no se para el borrado: la cuenta importa más que un fichero.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const uid = sessionData.session?.user.id;
+      if (uid) {
+        const { data: files } = await supabase.storage
+          .from("avatars")
+          .list(uid);
+        if (files?.length) {
+          await supabase.storage
+            .from("avatars")
+            .remove(files.map((file) => `${uid}/${file.name}`));
+        }
+      }
+
       const { error } = await supabase.rpc("delete_my_account");
 
       if (error) throw error;

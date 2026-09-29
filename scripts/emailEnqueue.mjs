@@ -8,7 +8,7 @@
 const supabaseUrl = (
   process.env.SUPABASE_URL ||
   process.env.EXPO_PUBLIC_SUPABASE_URL ||
-  "http://127.0.0.1:54321"
+  "http://127.0.0.1:54421"
 ).replace(/\/$/u, "");
 
 const apiKey =

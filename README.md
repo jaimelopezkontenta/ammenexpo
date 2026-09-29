@@ -116,7 +116,7 @@ envoltorio distingue ese fallo cosmético de uno real.
 ### Las cuentas de prueba
 
 `supabase/seed.sql` se ejecuta después de cada `db reset` —y `npm run verify`
-hace catorce—, así que las cuentas siempre están ahí:
+hace quince—, así que las cuentas siempre están ahí:
 
 ```
 prueba@ammen.local  ·  ammen1234
@@ -142,10 +142,10 @@ npm run verify
 ```
 
 Encadena, en este orden: `typecheck`, `lint` (eslint y prettier), los tests de
-JavaScript (Vitest) y **catorce suites de assertions SQL** que se ejecutan cada
+JavaScript (Vitest) y **quince suites de assertions SQL** que se ejecutan cada
 una contra una base recién reseteada — `rls`, `flows`, `streak`, `timezone`,
 `bible`, `circles`, `plans`, `storage`, `social`, `flags`, `push`, `generation`,
-`email` y `rescued`. Las suites SQL van en serie detrás de un lock (`.tmp/db.lock`) para
+`email`, `rescued` y `scheduler`. Las suites SQL van en serie detrás de un lock (`.tmp/db.lock`) para
 que dos corridas no reseteen la misma base, y tardan unos ocho minutos.
 
 Nada se commitea sin esto en verde. CI (`.github/workflows/verify.yml`) corre
@@ -178,8 +178,15 @@ que más importa es `AI_PROVIDER`, que decide quién escribe los planes:
 Los avisos push y los correos tienen interruptor propio (`PUSH_SENDER_ENABLED`,
 `EMAIL_SENDER_ENABLED`), y quien los drena tiene que presentar su secreto
 (`AMMEN_PUSH_INVOKE_SECRET`, `AMMEN_EMAIL_INVOKE_SECRET`): fuera de local es
-obligatorio, y sin él las funciones rechazan toda llamada. En local puede no haber `pg_cron`, así que las colas se
-drenan a mano con `npm run push:drain` y `npm run email:drain`.
+obligatorio, y sin él las funciones rechazan toda llamada.
+
+Quien drena las colas es la propia base: pg_cron llama cada minuto a
+`run_queue_drains()`, que invoca `send-email` o `send-intercession-push` solo si
+hay algo pendiente. Todo cuelga de `public.scheduler_settings.enabled`, que en
+local viene **apagado** para que las suites y los e2e no tengan un cron moviendo
+las colas. Para probarlo: `update public.scheduler_settings set enabled = true;`.
+A mano siguen valiendo `npm run push:drain` y `npm run email:drain`. En staging se
+enciende según `docs/runbooks/staging-web.md`.
 
 En remoto no hay fichero: las claves viven en Google Cloud Secret Manager
 (`ammen-staging`) y se copian a las Edge Functions con

@@ -202,3 +202,14 @@ update public.feature_flags
    set enabled = true,
        updated_at = now()
  where key = 'community_feed';
+
+-- El programador de colas (20260929074610_queue_scheduler): en local apunta al
+-- Kong de la red de Docker —desde la base, 127.0.0.1 es la propia base— pero
+-- se queda APAGADO, porque las suites y los e2e no pueden tener un cron
+-- moviendo las colas por debajo. Para probarlo a mano:
+--   update public.scheduler_settings set enabled = true;
+update public.scheduler_settings
+   set functions_url = 'http://kong:8000/functions/v1',
+       enabled = false,
+       updated_at = now()
+ where id;

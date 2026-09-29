@@ -177,6 +177,49 @@ leer su historial. El próximo push, en este orden:
 Hasta ese push, la fuga del chat de círculos (quien sale sigue leyendo) sigue
 abierta en staging. Siempre la base primero y la web después.
 
+## Programador de colas (Oleada 1b, 2026-09-29)
+
+`20260929074610_queue_scheduler.sql` crea pg_cron, tres trabajos
+(`ammen-queue-drains` cada minuto, `ammen-email-jobs` cada 15, `ammen-retention`
+a diario) y el interruptor `public.scheduler_settings`, **apagado**. Nada se
+envía hasta encenderlo. Tras el `db push`:
+
+1. Si la migración falla por permisos al crear `pg_cron`, activarlo antes en
+   Dashboard → Database → Extensions y repetir el push.
+2. Desplegar las funciones: `send-intercession-push` pasa a `verify_jwt =
+   false` (la protege `x-ammen-invoker`, obligatorio fuera de local).
+   ```powershell
+   npx supabase functions deploy send-email --project-ref syprzdjznuppckenuaua --use-api
+   npx supabase functions deploy enqueue-emails --project-ref syprzdjznuppckenuaua --use-api
+   npx supabase functions deploy send-intercession-push --project-ref syprzdjznuppckenuaua --use-api
+   ```
+3. Los secretos de invocación en Vault, con los **mismos valores** que
+   `AMMEN_EMAIL_INVOKE_SECRET` / `AMMEN_PUSH_INVOKE_SECRET` de Secret Manager.
+   En el SQL Editor del dashboard, sin guardarlos en ningún fichero:
+   ```sql
+   select vault.create_secret('<valor>', 'ammen_email_invoke_secret');
+   select vault.create_secret('<valor>', 'ammen_push_invoke_secret');
+   ```
+4. Encender:
+   ```sql
+   update public.scheduler_settings
+      set functions_url = 'https://syprzdjznuppckenuaua.supabase.co/functions/v1',
+          enabled = true,
+          updated_at = now()
+    where id;
+   ```
+5. Comprobar al minuto siguiente:
+   ```sql
+   select jobname, status, start_time from cron.job_run_details
+     join cron.job using (jobid) order by start_time desc limit 5;
+   select status_code, left(content, 200) from net._http_response
+    order by created desc limit 5;
+   ```
+   Un 401 es un secreto de Vault que no coincide con el de la función.
+
+Apagarlo todo (colas, trabajos de correo y retención) sin redeploy:
+`update public.scheduler_settings set enabled = false where id;`
+
 ## Rollback
 
 - **Hosting:** Firebase Console → proyecto `ammen-staging` → Hosting → Release

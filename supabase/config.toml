@@ -436,8 +436,10 @@ enabled = true
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
 
-# Correo: el cliente Expo no llama a Resend. Estas funciones no exigen JWT de
-# usuario; el drain y el enqueue llevan `x-ammen-invoker` si hay secret.
+# Drenajes y correo: el cliente Expo no los llama. No exigen JWT de usuario:
+# los protege `x-ammen-invoker`, obligatorio fuera de local
+# (supabase/functions/_shared/invoker.ts). El programador de colas los llama
+# desde la base con ese header y sin JWT.
 [functions.send-email]
 verify_jwt = false
 
@@ -448,4 +450,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.enqueue-emails]
+verify_jwt = false
+
+[functions.send-intercession-push]
 verify_jwt = false

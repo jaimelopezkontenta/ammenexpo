@@ -15,7 +15,7 @@
  *   node scripts/pushDrain.mjs
  *
  * Entorno (ninguno se imprime):
- *   SUPABASE_URL / EXPO_PUBLIC_SUPABASE_URL  — default http://127.0.0.1:54321
+ *   SUPABASE_URL / EXPO_PUBLIC_SUPABASE_URL  — default http://127.0.0.1:54421 (Kong de este proyecto)
  *   SUPABASE_ANON_KEY / EXPO_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
  *   AMMEN_PUSH_INVOKE_SECRET                 — si el sender lo exige
  */
@@ -23,7 +23,7 @@
 const supabaseUrl = (
   process.env.SUPABASE_URL ||
   process.env.EXPO_PUBLIC_SUPABASE_URL ||
-  "http://127.0.0.1:54321"
+  "http://127.0.0.1:54421"
 ).replace(/\/$/u, "");
 
 const apiKey =

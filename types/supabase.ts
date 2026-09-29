@@ -1850,6 +1850,27 @@ export type Database = {
           },
         ]
       }
+      scheduler_settings: {
+        Row: {
+          enabled: boolean
+          functions_url: string | null
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          functions_url?: string | null
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          functions_url?: string | null
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       share_links: {
         Row: {
           created_at: string
@@ -2692,6 +2713,7 @@ export type Database = {
           streak: number
         }[]
       }
+      purge_expired_rows: { Args: never; Returns: Json }
       reactivate_email_cadence_by_token: {
         Args: { p_token: string }
         Returns: boolean
@@ -2807,6 +2829,8 @@ export type Database = {
       }
       revoke_all_my_push_devices: { Args: never; Returns: number }
       revoke_push_device: { Args: { p_token: string }; Returns: boolean }
+      run_email_jobs: { Args: never; Returns: Json }
+      run_queue_drains: { Args: never; Returns: Json }
       search_bible: {
         Args: { p_limit?: number; p_offset?: number; p_query: string }
         Returns: {

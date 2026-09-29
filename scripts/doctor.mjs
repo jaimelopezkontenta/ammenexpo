@@ -258,6 +258,51 @@ const checkAppliedMigrations = () => {
   }
 };
 
+/**
+ * El runtime local de edge functions solo sirve las funciones que existían
+ * cuando se creó su contenedor (`SUPABASE_INTERNAL_FUNCTIONS_CONFIG`). El
+ * 2026-09-29 llevaba desde el 28-08 sin recrearse: `send-email` y
+ * `enqueue-emails` respondían 404 en local y nadie lo había notado. Reiniciar
+ * el contenedor no basta; hay que recrear la pila.
+ */
+const checkEdgeRuntimeFunctions = () => {
+  let served;
+  try {
+    const env = run(
+      'docker inspect supabase_edge_runtime_ammen --format "{{range .Config.Env}}{{println .}}{{end}}"',
+    );
+    const line = env
+      .split("\n")
+      .find((entry) => entry.startsWith("SUPABASE_INTERNAL_FUNCTIONS_CONFIG="));
+    if (!line) throw new Error("sin config");
+    served = Object.keys(
+      JSON.parse(line.slice("SUPABASE_INTERNAL_FUNCTIONS_CONFIG=".length)),
+    );
+  } catch {
+    warn("no se pudo leer qué funciones sirve el edge runtime local");
+    return;
+  }
+
+  const inRepo = readdirSync("supabase/functions", { withFileTypes: true })
+    .filter(
+      (entry) =>
+        entry.isDirectory() &&
+        !entry.name.startsWith("_") &&
+        existsSync(`supabase/functions/${entry.name}/index.ts`),
+    )
+    .map((entry) => entry.name);
+  const missing = inRepo.filter((name) => !served.includes(name));
+
+  if (missing.length > 0) {
+    warn(
+      `el edge runtime local no sirve ${missing.join(", ")} (responden 404): ` +
+        "`npx supabase stop && npx supabase start` lo recrea con las de ahora",
+    );
+  } else {
+    ok(`edge runtime local con las ${inRepo.length} funciones del repo`);
+  }
+};
+
 /** Los dos .env con trampa conocida. */
 const checkEnvFiles = () => {
   if (existsSync(".env.local")) {
@@ -292,6 +337,7 @@ await checkPort8081();
 if (checkDocker()) {
   checkSeed();
   checkAppliedMigrations();
+  checkEdgeRuntimeFunctions();
 }
 await checkAuthHealth();
 checkEnvFiles();
