@@ -5,8 +5,9 @@ import {
 
 import { CORS_USER, jsonWith, preflight } from "../_shared/http.ts";
 import { buildRepairPrompt, buildUserPrompt, SYSTEM_PROMPT } from "./prompt.ts";
-import { checkDuration, MAX_DAYS, MIN_DAYS } from "./bounds.ts";
+import { MAX_DAYS, MIN_DAYS } from "./bounds.ts";
 import { deriveChunkRequestId } from "./chunkRequestId.ts";
+import { parseGenerateBody, readJsonBody } from "./input.ts";
 import { createAnthropicProvider } from "./providers/anthropic.ts";
 import { createFixtureProvider } from "./providers/fixture.ts";
 import { createUnslothProvider } from "./providers/unsloth.ts";
@@ -15,6 +16,7 @@ import {
   type ProviderMessage,
   ProviderRefusal,
 } from "./providers/types.ts";
+import { promptAnswersFrom, sanitizeDisplayName } from "./promptInputs.ts";
 import { sanitizeGeneratedText } from "./sanitize.ts";
 import { isGeneratedPlan, PLAN_JSON_SCHEMA } from "./schema.ts";
 import { resolveDays, unresolved, type ResolvedDay } from "./scripture.ts";
@@ -95,17 +97,12 @@ type PlanRow = {
   } | null;
 };
 
-type Visibility = "private" | "circles" | "link" | "public";
-
-// A client-supplied request id is an idempotency key; anything that is not a
-// UUID is ignored and replaced, so a malformed value can never collide.
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const requestIdFrom = (value: unknown): string =>
-  typeof value === "string" && UUID_RE.test(value)
-    ? value
-    : crypto.randomUUID();
+// A client-supplied `request_id` is an idempotency key. `parseGenerateBody`
+// keeps it only if it is a UUID; anything else is replaced here, so a malformed
+// value can never collide. (It is not the correlation id of the logs: that one
+// is `x-request-id`.)
+const idempotencyKeyFrom = (requestId: string | null): string =>
+  requestId ?? crypto.randomUUID();
 
 /** Asks this same function to write the next stretch, in a fresh isolate. */
 const requestNextChunk = async (planId: string, authHeader: string) => {
@@ -206,18 +203,20 @@ const writeChunk = async ({
     p_plan_id: plan.id,
   });
 
-  const answers = plan.source_prompt?.answers ?? {};
+  // The answers are a jsonb nobody validated when it was stored: everything
+  // that reaches the prompt goes through `promptAnswersFrom` first (known keys
+  // only, the free topic fenced and bounded). Plans written before the
+  // onboarding went multi-select carry a single `season`; it reads both.
+  const answers = promptAnswersFrom(plan.source_prompt?.answers);
 
   const userPrompt = buildUserPrompt({
     displayName,
     durationDays: plan.duration_days,
-    // Plans written before the onboarding went multi-select carry a single
-    // `season`; reading both keeps them generating as they always did.
-    seasons: answers.seasons ?? (answers.season ? [answers.season] : []),
-    topics: answers.topics ?? [],
-    gender: answers.gender ?? null,
-    customTopic: answers.custom_topic ?? null,
-    minutes: answers.minutes ?? null,
+    seasons: answers.seasons,
+    topics: answers.topics,
+    gender: answers.gender,
+    customTopic: answers.customTopic,
+    minutes: answers.minutes,
     fromDay,
     toDay,
     previousDays: (existing ?? []) as {
@@ -411,7 +410,22 @@ Deno.serve(async (req) => {
     return json({ error: "unauthorized" }, 401);
   }
 
-  const body = await req.json().catch(() => ({}));
+  // Shape and bounds of everything the caller sent, decided before any read
+  // of the database or any call to the model. A rejection is a clean 400 with
+  // a stable reason, never a 500 from Postgres choking on a malformed value.
+  const read = await readJsonBody(req);
+
+  if (!read.ok) {
+    return json(read.rejection, 400);
+  }
+
+  const parsed = parseGenerateBody(read.body);
+
+  if (!parsed.ok) {
+    return json(parsed.rejection, 400);
+  }
+
+  const request = parsed.value;
 
   let provider: PlanProvider;
 
@@ -433,14 +447,15 @@ Deno.serve(async (req) => {
     return json({ error: "profile_unavailable" }, 500);
   }
 
-  const displayName = profile?.display_name?.trim() || "esta persona";
+  // A name is data on its way into a prompt, not an instruction.
+  const displayName = sanitizeDisplayName(profile?.display_name);
 
   // --- Continuation: write the next stretch of an existing plan ------------
-  if (typeof body?.continue_plan_id === "string") {
+  if (request.kind === "continue") {
     const { data: plan } = await supabase
       .from("prayer_plans")
       .select("id, owner_id, duration_days, start_date, status, source_prompt")
-      .eq("id", body.continue_plan_id)
+      .eq("id", request.planId)
       .maybeSingle();
 
     // RLS already limits this to plans the caller can read; the ownership check
@@ -453,7 +468,7 @@ Deno.serve(async (req) => {
       "claim_generation_chunk",
       {
         p_plan_id: plan.id,
-        p_request_id: requestIdFrom(body?.request_id),
+        p_request_id: idempotencyKeyFrom(request.requestId),
         p_lease_seconds: LEASE_SECONDS,
       },
     );
@@ -535,16 +550,10 @@ Deno.serve(async (req) => {
   }
 
   // --- New plan ------------------------------------------------------------
-  const durationCheck = checkDuration(body?.duration_days ?? 7);
-
-  if (!durationCheck.ok) {
-    return json(
-      { error: "invalid_duration", min: MIN_DAYS, max: MAX_DAYS },
-      400,
-    );
-  }
-
-  const durationDays = durationCheck.days;
+  // Duration, visibility, topics, the free topic and the ids were already
+  // checked by `parseGenerateBody`; what is left here is what needs the
+  // database.
+  const { durationDays, visibility, groupId, circleIds } = request;
 
   // The onboarding answers are the baseline; anything chosen for this specific
   // plan overrides them, which is what stops a second plan from reading like a
@@ -565,45 +574,15 @@ Deno.serve(async (req) => {
     unknown
   >;
 
-  const requestedTopics = Array.isArray(body?.topics)
-    ? (body.topics as unknown[]).filter(
-        (topic): topic is string => typeof topic === "string",
-      )
-    : null;
-
-  const customTopic =
-    typeof body?.custom_topic === "string"
-      ? body.custom_topic.trim().slice(0, 200)
-      : null;
-
   const answers = {
     ...onboarding,
-    ...(requestedTopics?.length ? { topics: requestedTopics } : {}),
-    ...(customTopic ? { custom_topic: customTopic } : {}),
+    ...(request.topics.length ? { topics: request.topics } : {}),
+    ...(request.customTopic ? { custom_topic: request.customTopic } : {}),
   };
 
-  const visibility: Visibility =
-    body?.visibility === "circles" ||
-    body?.visibility === "link" ||
-    body?.visibility === "public"
-      ? body.visibility
-      : "private";
-
-  // A circle's own plan: one shared walk everybody reads, rather than a
-  // personal plan shared outward. `prayer_plans.group_id` has carried the
-  // policies for it since the first migration.
-  const groupId =
-    typeof body?.group_id === "string" ? (body.group_id as string) : null;
-
-  const circleIds = Array.isArray(body?.circle_ids)
-    ? (body.circle_ids as unknown[]).filter(
-        (id): id is string => typeof id === "string",
-      )
-    : [];
-
-  if (visibility === "circles" && circleIds.length === 0) {
-    return json({ error: "no_circles_selected" }, 400);
-  }
+  // A circle's own plan (`groupId`): one shared walk everybody reads, rather
+  // than a personal plan shared outward. `prayer_plans.group_id` has carried
+  // the policies for it since the first migration.
 
   // The plan's row-level visibility. 'circles' is an app-level concept; at the
   // row level a plan shared with circles is simply not private, and
@@ -620,7 +599,7 @@ Deno.serve(async (req) => {
   // reservation uses it, and the first chunk derives its own key from it — so a
   // retry of the same create is idempotent end to end, without the reservation
   // and its first chunk colliding on the globally-unique `request_id`.
-  const reservationId = requestIdFrom(body?.request_id);
+  const reservationId = idempotencyKeyFrom(request.requestId);
 
   // The reservation is the quota gate: atomic per user, append-only, and not
   // refunded by deleting or failing the plan. It also creates the plan row and

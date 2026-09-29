@@ -15,7 +15,15 @@ const GARBAGE_MARKERS = ["},{", '"},', '",{', '"}]', "}]", "},"];
 const TRAILING_STRUCTURE = /[\s{}[\]",]+$/;
 const LEADING_STRUCTURE = /^[\s{}[\]",]+/;
 
-export const sanitizeGeneratedText = (value: string | null | undefined) => {
+// Un texto entra y un texto sale (nunca `null`): los tipos lo dicen para que
+// `DayPayload.title` no tenga que fingir que puede faltar.
+export function sanitizeGeneratedText(value: string): string;
+export function sanitizeGeneratedText(
+  value: string | null | undefined,
+): string | null;
+export function sanitizeGeneratedText(
+  value: string | null | undefined,
+): string | null {
   if (!value) {
     return value ?? null;
   }
@@ -36,4 +44,4 @@ export const sanitizeGeneratedText = (value: string | null | undefined) => {
   // A closing quote or period is fine to lose; an empty field is not, so fall
   // back to the original rather than storing nothing.
   return text.trim().length > 0 ? text.trim() : value.trim();
-};
+}
