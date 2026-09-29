@@ -88,7 +88,7 @@
     "timezoneMoved": "Tu dispositivo está en {{zone}}. ¿Te has mudado?",
     "timezoneUpdate": "Usar {{zone}}",
     "about": "Acerca de Ammen",
-    "aboutBody": "Ammen es una app para orar cada día y para no hacerlo sola. El plan lo escribe una inteligencia artificial a partir de lo que le cuentas; los versículos salen de la Reina-Valera 1909, que es de dominio público.",
+    "aboutBody": "Ammen es una app para orar cada día y para no hacerlo sola. El plan lo escribe una inteligencia artificial a partir de lo que le cuentas; los versículos salen de la Reina-Valera 1909, en español, y de la World English Bible, en inglés, las dos de dominio público.",
     "aboutAi": "Lo que genera la IA son sugerencias para orar, no consejo médico, legal ni doctrinal.",
     "version": "Versión {{version}}",
     "support": "Escríbenos",
