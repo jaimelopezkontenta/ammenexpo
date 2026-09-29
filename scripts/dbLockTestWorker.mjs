@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import {
   acquireDbLock,
+  dbLockHeldBy,
   releaseDbLock,
   startDbLockHeartbeat,
 } from "./dbLock.mjs";
@@ -12,6 +13,13 @@ const sleep = (milliseconds) =>
 
 if (command === "sleep") {
   await sleep(durationMs);
+} else if (command === "inside") {
+  // Lo que ve un hijo de with-db-lock.mjs: el token que le pasan y si el lock
+  // vigente es de verdad ese.
+  process.stdout.write(
+    `INSIDE ${dbLockHeldBy(process.env.DB_LOCK_TOKEN) ? "yes" : "no"}
+`,
+  );
 } else {
   let handle;
   try {

@@ -11,7 +11,8 @@ import {
 const command = process.argv.slice(2).join(" ");
 
 const terminateChildTree = (child, signal = "SIGTERM") => {
-  if (!child.pid || child.exitCode !== null || child.signalCode !== null) return;
+  if (!child.pid || child.exitCode !== null || child.signalCode !== null)
+    return;
 
   if (process.platform === "win32") {
     const killed = spawnSync(
@@ -54,7 +55,13 @@ if (!command) {
     const child = spawn(command, {
       shell: true,
       stdio: "inherit",
-      env: process.env,
+      // El hijo sabe que ya corre dentro del lock (y de cuál): así
+      // `dbTest.mjs --only x` no intenta cogerlo otra vez.
+      env: {
+        ...process.env,
+        DB_LOCK_TOKEN: handle.token,
+        DB_LOCK_PATH: handle.lockPath,
+      },
       detached: process.platform !== "win32",
     });
     let heartbeatFailure = false;

@@ -26,5 +26,11 @@ export function startDbLockHeartbeat(
   handle: DbLockHandle,
   options?: { intervalMs?: number; onError?: (error: unknown) => void },
 ): () => void;
-export function releaseDbLock(handle: Pick<DbLockHandle, "token" | "lockPath">): boolean;
+export function releaseDbLock(
+  handle: Pick<DbLockHandle, "token" | "lockPath">,
+): boolean;
 export function isDbLockHeld(options?: DbLockOptions): boolean;
+export function dbLockHeldBy(
+  token: string | undefined,
+  options?: DbLockOptions,
+): boolean;

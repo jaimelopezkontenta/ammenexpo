@@ -86,13 +86,13 @@ nunca seeds. Los despliegues los hace una persona, no CI.
 
 ## Cómo se prueba
 
-| Capa      | Comando              | Qué cubre                                                                  |
-| --------- | -------------------- | -------------------------------------------------------------------------- |
-| Unitarios | `npm run test`       | Lógica de `core/`, `scripts/` y funciones puras de `supabase/functions`    |
-| SQL       | `npm run db:test`    | Quince suites de aserciones, cada una sobre una base recién reseteada      |
-| Flujos    | `npm run e2e`        | Playwright (Chromium) contra Metro; `e2e:static` contra el export, como CI |
-| Visual    | `npm run e2e:visual` | Capturas en claro y oscuro contra el export estático (ADR 0003)            |
-| Todo      | `npm run verify`     | typecheck + lint + vitest + migrations:check + db:test + db:types:check    |
+| Capa      | Comando              | Qué cubre                                                                                    |
+| --------- | -------------------- | -------------------------------------------------------------------------------------------- |
+| Unitarios | `npm run test`       | Lógica de `core/`, `scripts/` y funciones puras de `supabase/functions`                      |
+| SQL       | `npm run db:test`    | Quince suites de aserciones (`scripts/dbTest.mjs`), cada una sobre una base recién reseteada |
+| Flujos    | `npm run e2e`        | Playwright (Chromium) contra Metro; `e2e:static` contra el export, como CI                   |
+| Visual    | `npm run e2e:visual` | Capturas en claro y oscuro contra el export estático (ADR 0003)                              |
+| Todo      | `npm run verify`     | typecheck + lint + vitest + migrations:check + db:test + db:types:check                      |
 
 CI (`.github/workflows/verify.yml`) corre lo anterior, en cada PR y en cada push
 a `main`, más dos jobs sin base de datos: `functions-types` (`deno check` de las

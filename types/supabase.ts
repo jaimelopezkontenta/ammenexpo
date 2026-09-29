@@ -675,19 +675,19 @@ export type Database = {
       }
       email_runtime: {
         Row: {
-          hmac_secret: string
+          hmac_secret: string | null
           id: boolean
           pause_growth: boolean
           updated_at: string
         }
         Insert: {
-          hmac_secret: string
+          hmac_secret?: string | null
           id?: boolean
           pause_growth?: boolean
           updated_at?: string
         }
         Update: {
-          hmac_secret?: string
+          hmac_secret?: string | null
           id?: boolean
           pause_growth?: boolean
           updated_at?: string
@@ -2301,6 +2301,7 @@ export type Database = {
       }
       email_habit_payload: { Args: { p_user: string }; Returns: Json }
       email_hmac_secret: { Args: never; Returns: string }
+      email_hmac_secret_to_vault: { Args: never; Returns: string }
       email_local_hour: { Args: { p_user: string }; Returns: number }
       email_non_t_taken_today: { Args: { p_user_id: string }; Returns: boolean }
       email_opened_app_today: { Args: { p_user: string }; Returns: boolean }
@@ -2912,6 +2913,11 @@ export type Database = {
       }
       revoke_all_my_push_devices: { Args: never; Returns: number }
       revoke_push_device: { Args: { p_token: string }; Returns: boolean }
+      rotate_circle_invite_token: {
+        Args: { p_group_id: string }
+        Returns: string
+      }
+      rotate_my_invite_code: { Args: never; Returns: string }
       run_email_jobs: { Args: never; Returns: Json }
       run_queue_drains: { Args: never; Returns: Json }
       search_bible: {

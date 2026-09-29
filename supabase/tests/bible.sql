@@ -47,6 +47,13 @@ begin
 end;
 $$;
 
+-- Las aserciones de plan (`plan_mentions`) dependen de las estadísticas.
+-- Justo después de un `db reset`, autovacuum puede no haber analizado todavía
+-- los 62.000 versículos, y sin estadísticas el planificador elige un seq scan
+-- aunque el índice GIN sirva: la suite fallaba o no según lo que tardara el
+-- reset. Se analiza aquí para que no dependa de eso.
+analyze public.bible_verses;
+
 begin;
 
 insert into auth.users (id, email, aud, role, raw_user_meta_data)
@@ -859,8 +866,9 @@ select pg_temp.assert(
 
 commit;
 
--- El del correo: sin versión, la RVR1909 de siempre; el payload de hábito no ha
--- cambiado y sigue pidiéndolo así.
+-- El del correo: sin versión, la RVR1909 de siempre. El payload de hábito elige
+-- la versión por el idioma de quien lo recibe (email.sql prueba el inglés);
+-- Ana tiene la app en español.
 begin;
 set local role service_role;
 
@@ -882,7 +890,7 @@ begin;
 select pg_temp.assert(
   (public.email_habit_payload(:ANA) ->> 'verse_ref')
     = (select reference from public.verse_of_the_day_for(:ANA)),
-  'the habit email still carries the RVR1909 verse of the day');
+  'a Spanish speaker''s habit email still carries the RVR1909 verse of the day');
 
 commit;
 

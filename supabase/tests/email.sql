@@ -530,3 +530,659 @@ select pg_temp.assert(
     where conrelid = 'public.profiles'::regclass
       and conname = 'profiles_display_name_length'),
   'the display name length constraint is validated, so every existing row fits');
+
+-- ===========================================================================
+-- Oleada 4b (2026-09-29): lo que el correo hacía sin que nada lo probara —
+-- digest social, invitaciones de principio a fin, sunset de cuentas
+-- inactivas, suppressions, tokens de preferencias, el secreto HMAC en Vault y
+-- el versículo en el idioma de cada cual. Gente nueva para no heredar el
+-- estado (cadencias, topes) de las secciones de arriba.
+-- ===========================================================================
+\set EVA  '''55555555-5555-5555-5555-555555555555'''
+\set FEDE '''66666666-6666-6666-6666-666666666666'''
+\set GABI '''77777777-7777-7777-7777-777777777777'''
+\set HUGO '''88888888-8888-8888-8888-888888888888'''
+\set IRIS '''99999999-9999-9999-9999-999999999999'''
+
+-- Una zona horaria en la que ahora mismo son las `p_hour` (Etc/GMT va con el
+-- signo al revés). Se usa dentro de la misma transacción que el job: now() no
+-- se mueve, así que el cambio de hora no puede colarse entre medias.
+create or replace function pg_temp.tz_at_hour(p_hour integer)
+returns text language sql as $$
+  select 'Etc/GMT' || case
+    when o > 0 then '-' || o
+    when o < 0 then '+' || (-o)
+    else ''
+  end
+  from (
+    select case when d > 12 then d - 24 else d end as o
+    from (
+      select (((p_hour - extract(hour from now() at time zone 'UTC')::integer) % 24) + 24) % 24 as d
+    ) x
+  ) y;
+$$;
+
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values
+  (:EVA,  'eva-mail@test.local',  'authenticated', 'authenticated', '{"display_name":"Eva Ruiz"}'),
+  (:FEDE, 'fede-mail@test.local', 'authenticated', 'authenticated', '{"display_name":"Fede"}'),
+  (:GABI, 'gabi-mail@test.local', 'authenticated', 'authenticated', '{"display_name":"Gabi"}'),
+  (:HUGO, 'hugo-mail@test.local', 'authenticated', 'authenticated', '{"display_name":"Hugo"}'),
+  (:IRIS, 'iris-mail@test.local', 'authenticated', 'authenticated', '{"display_name":"Iris"}');
+
+-- Cuentas de hace una semana, con onboarding, vistas ayer: ni goteo de alta ni
+-- tope de «primer día» ni win-back por accidente.
+update public.profiles
+   set created_at = now() - interval '7 days',
+       last_seen_at = now() - interval '1 day'
+ where id in (:EVA, :FEDE, :GABI, :HUGO, :IRIS);
+
+update public.profile_settings
+   set onboarding_answers = '{}'::jsonb,
+       timezone = 'UTC'
+ where id in (:EVA, :FEDE, :GABI, :HUGO, :IRIS);
+
+insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility)
+values ('eeee0000-0000-0000-0000-000000000001', :EVA, 'Plan de Eva', 7, current_date, 'link');
+
+insert into public.prayer_plan_days (id, plan_id, day_number, title, prayer_body, unlock_date)
+values ('eeee0000-0000-0000-0000-0000000000d1', 'eeee0000-0000-0000-0000-000000000001',
+        1, 'Día uno', 'Privado', current_date);
+
+-- Fede, Gabi y Hugo oran hoy por Eva; Eva tiene bloqueado a Hugo.
+insert into public.intercessions (plan_day_id, intercessor_id)
+values ('eeee0000-0000-0000-0000-0000000000d1', :FEDE),
+       ('eeee0000-0000-0000-0000-0000000000d1', :GABI),
+       ('eeee0000-0000-0000-0000-0000000000d1', :HUGO);
+
+insert into public.blocks (blocker_id, blocked_id) values (:EVA, :HUGO);
+
+-- Y Fede entra hoy en el círculo de Eva.
+insert into public.groups (id, owner_id, name, visibility)
+values ('eeee0000-0000-0000-0000-00000000c001', :EVA, 'Círculo de Eva', 'private');
+
+insert into public.group_members (group_id, user_id, role)
+values ('eeee0000-0000-0000-0000-00000000c001', :FEDE, 'member');
+
+commit;
+
+-- ---------------------------------------------------------------------------
+-- Digest social: a las 20:00 locales, solo si pasó algo, sin los bloqueados
+-- ---------------------------------------------------------------------------
+begin;
+
+update public.profile_settings set timezone = pg_temp.tz_at_hour(20)
+ where id in (:EVA, :GABI);
+
+select public.enqueue_digest_emails();
+
+select pg_temp.assert(
+  (select count(*) from public.email_outbox
+    where user_id = :EVA and template = 'digest_social'
+      and status = 'pending' and channel = 'S') = 1,
+  'the social digest goes out at 20:00 local when someone prayed for her today');
+
+select pg_temp.assert(
+  (select payload from public.email_outbox
+    where user_id = :EVA and template = 'digest_social')
+    = '{"first_name":"Eva","names":["Fede","Gabi"],"count":2,"joins":1}'::jsonb,
+  'and it names who prayed, counts them and counts who joined her circle today');
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.email_outbox
+     where user_id = :EVA and template = 'digest_social'
+       and (payload -> 'names') ? 'Hugo'),
+  'someone she blocked is neither named nor counted');
+
+select pg_temp.assert(
+  (select idempotency_key from public.email_outbox
+    where user_id = :EVA and template = 'digest_social')
+    = 'digest/' || :EVA::text || '/' || public.local_today(:EVA)::text,
+  'the digest key carries her local date: one a day');
+
+select public.enqueue_digest_emails();
+
+select pg_temp.assert(
+  (select count(*) from public.email_outbox
+    where user_id = :EVA and template = 'digest_social') = 1,
+  'running the job again the same evening does not send a second digest');
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.email_outbox
+     where user_id = :GABI and template = 'digest_social'),
+  'at 20:00 with nothing to tell, there is no digest');
+
+commit;
+
+begin;
+
+delete from public.email_outbox where user_id = :EVA and template = 'digest_social';
+update public.profile_settings set timezone = pg_temp.tz_at_hour(21) where id = :EVA;
+
+select public.enqueue_digest_emails();
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.email_outbox
+     where user_id = :EVA and template = 'digest_social'),
+  'at any other hour the digest waits');
+
+rollback;
+
+begin;
+
+delete from public.email_outbox where user_id = :EVA and template = 'digest_social';
+update public.profile_settings set timezone = pg_temp.tz_at_hour(20) where id = :EVA;
+update public.email_preferences set social = false where user_id = :EVA;
+
+select public.enqueue_digest_emails();
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.email_outbox
+     where user_id = :EVA and template = 'digest_social'),
+  'with social emails turned off there is no digest at all');
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- Invitaciones: el camino feliz y lo que viaja en el correo
+-- ---------------------------------------------------------------------------
+begin;
+
+update public.profile_settings set locale = 'en-US' where id = :EVA;
+
+insert into public.invites (inviter_id, code) values (:EVA, 'codigo-de-eva');
+insert into public.share_links (token, scope, plan_id, created_by)
+values ('plan-de-eva', 'plan', 'eeee0000-0000-0000-0000-000000000001', :EVA);
+
+commit;
+
+select invite_token as eva_circle_token from public.groups
+ where id = 'eeee0000-0000-0000-0000-00000000c001' \gset
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+select public.enqueue_invite_email('circle', '  Nueva.Amiga@Test.local ', :'eva_circle_token') as eva_circle_invite \gset
+select public.enqueue_invite_email('app', 'app-amiga@test.local', 'codigo-de-eva') as eva_app_invite \gset
+select public.enqueue_invite_email('plan', 'plan-amiga@test.local', 'plan-de-eva') as eva_plan_invite \gset
+
+commit;
+
+select pg_temp.assert(
+  (:'eva_circle_invite')::jsonb = '{"ok": true}'::jsonb
+    and (:'eva_app_invite')::jsonb = '{"ok": true}'::jsonb
+    and (:'eva_plan_invite')::jsonb = '{"ok": true}'::jsonb,
+  'inviting by email to a circle, to the app and to a plan all answer ok');
+
+select pg_temp.assert(
+  (select count(*) from public.email_outbox
+    where to_email = 'nueva.amiga@test.local'
+      and template = 'invite_circle' and status = 'pending'
+      and channel = 'S' and user_id is null and invited_by = :EVA) = 1,
+  'the circle invitation is queued once, to the trimmed lower-case address, on the social channel');
+
+select pg_temp.assert(
+  (select payload from public.email_outbox
+    where to_email = 'nueva.amiga@test.local' and template = 'invite_circle')
+    = jsonb_build_object(
+        'inviter_name', 'Eva Ruiz',
+        'circle_name', 'Círculo de Eva',
+        'token', :'eva_circle_token'),
+  'and it carries who invites, the circle and its token, nothing else');
+
+select pg_temp.assert(
+  (select locale from public.email_outbox
+    where to_email = 'nueva.amiga@test.local' and template = 'invite_circle') = 'en',
+  'in the language of whoever sends it');
+
+select pg_temp.assert(
+  (select idempotency_key from public.email_outbox
+    where to_email = 'nueva.amiga@test.local' and template = 'invite_circle')
+    = 'invite/circle/' || :'eva_circle_token' || '/nueva.amiga@test.local/'
+      || to_char(now(), 'IYYY-"W"IW'),
+  'and its key is per link, address and week');
+
+select pg_temp.assert(
+  (select payload from public.email_outbox
+    where to_email = 'app-amiga@test.local' and template = 'invite_app')
+    = '{"inviter_name":"Eva Ruiz","token":"codigo-de-eva"}'::jsonb
+  and (select payload from public.email_outbox
+    where to_email = 'plan-amiga@test.local' and template = 'invite_plan')
+    = '{"inviter_name":"Eva Ruiz","plan_title":"Plan de Eva","token":"plan-de-eva"}'::jsonb,
+  'an app invitation carries her code, a plan invitation the plan title and link');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"66666666-6666-6666-6666-666666666666","role":"authenticated"}';
+
+-- Fede es miembro del círculo de Eva, no administrador.
+select pg_temp.assert(
+  public.enqueue_invite_email('circle', 'otra@test.local', :'eva_circle_token')
+      = '{"ok": false, "reason": "not_owner"}'::jsonb
+    and public.enqueue_invite_email('app', 'otra@test.local', 'codigo-de-eva')
+      = '{"ok": false, "reason": "not_owner"}'::jsonb
+    and public.enqueue_invite_email('plan', 'otra@test.local', 'plan-de-eva')
+      = '{"ok": false, "reason": "not_owner"}'::jsonb,
+  'nobody can send invitations with someone else''s circle, code or plan');
+
+commit;
+
+select pg_temp.assert(
+  not exists (select 1 from public.email_outbox where to_email = 'otra@test.local'),
+  'and those refusals queue nothing');
+
+-- ---------------------------------------------------------------------------
+-- Suppressions: rebote y queja (webhook de Resend) cortan el envío, también el
+-- transaccional y el de invitación, sin que quien invita lo note
+-- ---------------------------------------------------------------------------
+begin;
+
+select pg_temp.assert(
+  public.record_email_event('svix-rebote-1', 'email.bounced', null,
+    '{"data":{"to":["Rebota@Test.local"]}}'::jsonb),
+  'a bounce webhook is recorded');
+
+select pg_temp.assert(
+  not public.record_email_event('svix-rebote-1', 'email.bounced', null,
+    '{"data":{"to":["Rebota@Test.local"]}}'::jsonb)
+  and (select count(*) from public.email_events where svix_id = 'svix-rebote-1') = 1,
+  'and the same webhook delivered twice is recorded once');
+
+select public.record_email_event('svix-queja-1', 'email.complained', null,
+  '{"data":{"to":"queja@test.local"}}'::jsonb);
+select public.record_email_event('svix-entregado-1', 'email.delivered', null,
+  '{"data":{"to":["entregado@test.local"]}}'::jsonb);
+
+select pg_temp.assert(
+  (select reason from public.email_suppressions where email = 'rebota@test.local') = 'bounce'
+    and (select reason from public.email_suppressions where email = 'queja@test.local') = 'complaint',
+  'bounces and complaints suppress the (lower-cased) address, each with its reason');
+
+select pg_temp.assert(
+  not exists (select 1 from public.email_suppressions where email = 'entregado@test.local'),
+  'a delivered email suppresses nothing');
+
+select public.enqueue_email(
+  'welcome', 'REBOTA@test.local', null, 'es', 'T', '{}'::jsonb,
+  'welcome-to-bounced', now());
+
+select pg_temp.assert(
+  (select (status, last_error)::text from public.email_outbox
+    where idempotency_key = 'welcome-to-bounced') = '(skipped,suppressed)',
+  'even a transactional email to a bounced address is skipped as suppressed');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+
+select public.enqueue_invite_email('circle', 'queja@test.local', :'eva_circle_token') as invite_to_complainer \gset
+
+commit;
+
+select pg_temp.assert(
+  (:'invite_to_complainer')::jsonb = '{"ok": true}'::jsonb
+    and (select (status, last_error)::text from public.email_outbox
+          where to_email = 'queja@test.local' and template = 'invite_circle')
+        = '(skipped,suppressed)',
+  'inviting an address that complained answers ok like any other, and sends nothing');
+
+-- ---------------------------------------------------------------------------
+-- Tokens de preferencias: sin sesión, solo con el enlace del correo. No
+-- caducan (no llevan fecha): los invalida rotar el secreto, más abajo.
+-- ---------------------------------------------------------------------------
+select public.issue_email_prefs_token(:FEDE) as fede_token \gset
+select public.issue_email_prefs_token(:GABI) as gabi_token \gset
+select public.issue_email_prefs_token(:HUGO) as hugo_token \gset
+
+-- La firma de Fede con el id de Gabi delante; y la de Fede con un carácter
+-- cambiado.
+select replace(:'gabi_token', split_part(:'gabi_token', '.', 2), split_part(:'fede_token', '.', 2))
+  as swapped_token \gset
+select left(:'fede_token', -1)
+       || case when right(:'fede_token', 1) = '0' then '1' else '0' end
+  as tampered_token \gset
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"66666666-6666-6666-6666-666666666666","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.issue_my_email_prefs_token() = :'fede_token',
+  'the owner gets the same token the email footer carries');
+
+commit;
+
+begin;
+set local role anon;
+
+select pg_temp.assert(
+  (select (cadence, social, nudge)::text from public.email_prefs_by_token(:'fede_token'))
+    = '(daily,t,t)',
+  'a valid token shows its preferences without a session');
+
+select pg_temp.assert(
+  public.update_email_prefs_by_token(:'fede_token', 'weekly', false, null),
+  'and changes them');
+
+select pg_temp.assert(
+  not public.update_email_prefs_by_token(:'tampered_token', 'off', null, null)
+    and (select count(*) from public.email_prefs_by_token(:'tampered_token')) = 0,
+  'a token with one character changed neither reads nor writes');
+
+select pg_temp.assert(
+  not public.update_email_prefs_by_token(:'swapped_token', 'off', false, false)
+    and not public.unsubscribe_email_one_click(:'swapped_token'),
+  'someone else''s signature does not unlock this account');
+
+select pg_temp.assert(
+  public.update_email_prefs_by_token(null, 'off', null, null) is not true
+    and not public.update_email_prefs_by_token('', 'off', null, null)
+    and not public.update_email_prefs_by_token('sin-punto', 'off', null, null)
+    and not public.update_email_prefs_by_token(split_part(:'fede_token', '.', 1) || '.', 'off', null, null),
+  'an empty, dotless or unsigned token does nothing');
+
+commit;
+
+select pg_temp.assert(
+  (select (cadence, social, nudge)::text from public.email_preferences where user_id = :FEDE)
+    = '(weekly,f,t)'
+  and (select (cadence, social, nudge)::text from public.email_preferences where user_id = :GABI)
+    = '(daily,t,t)',
+  'only the valid token changed anything, and only its own account');
+
+-- Con social apagado por el enlace, el correo social se omite; el
+-- transaccional sigue saliendo.
+begin;
+
+select public.enqueue_email(
+  'digest_social', 'fede-mail@test.local', :FEDE, 'es', 'S', '{}'::jsonb,
+  'digest/' || :FEDE::text || '/prefs-test', now());
+select public.enqueue_email(
+  'invite_used', 'fede-mail@test.local', :FEDE, 'es', 'T', '{}'::jsonb,
+  'invite_used/prefs-test', now());
+
+select pg_temp.assert(
+  (select (status, last_error)::text from public.email_outbox
+    where idempotency_key = 'digest/' || :FEDE::text || '/prefs-test') = '(skipped,channel_off)'
+  and (select status from public.email_outbox
+    where idempotency_key = 'invite_used/prefs-test') = 'pending',
+  'turning social off by link skips social email, not transactional email');
+
+rollback;
+
+-- Hugo borra su cuenta: su enlace ya no lleva a nadie.
+delete from auth.users where id = :HUGO;
+
+select pg_temp.assert(
+  public.verify_email_prefs_token(:'hugo_token') is null,
+  'a correctly signed token for an account that no longer exists resolves to nobody');
+
+-- ---------------------------------------------------------------------------
+-- Sunset: la cuenta que no vuelve deja de recibir correo sola
+-- ---------------------------------------------------------------------------
+begin;
+
+update public.email_preferences
+   set cadence = 'weekdays', nudge = true, sunset_at = null, previous_cadence = null
+ where user_id = :GABI;
+update public.profiles
+   set last_seen_at = now() - interval '30 days'
+ where id = :GABI;
+
+select public.enqueue_winback_emails();
+
+select pg_temp.assert(
+  (select count(*) from public.email_outbox
+    where user_id = :GABI and template = 'winback_d30' and status = 'pending') = 1,
+  'after thirty days away the last win-back (D30) is queued');
+
+select pg_temp.assert(
+  (select (cadence, previous_cadence, sunset_at is not null)::text
+     from public.email_preferences where user_id = :GABI)
+    = '(weekdays,weekdays,t)',
+  'and the sunset clock starts, remembering her cadence, without turning anything off yet');
+
+commit;
+
+select sunset_at as gabi_sunset from public.email_preferences
+ where user_id = '77777777-7777-7777-7777-777777777777' \gset
+
+begin;
+
+select public.enqueue_winback_emails();
+
+select pg_temp.assert(
+  (select sunset_at from public.email_preferences where user_id = :GABI) = :'gabi_sunset'
+    and (select count(*) from public.email_outbox
+          where user_id = :GABI and template = 'winback_d30') = 1,
+  'running win-back again neither restarts the clock nor sends a second D30');
+
+select pg_temp.assert(
+  public.email_apply_sunset() = 0
+    and (select cadence::text from public.email_preferences where user_id = :GABI) = 'weekdays',
+  'within the seven days of grace nothing is switched off');
+
+commit;
+
+-- Fede abrió su D30: a él no se le apaga nada.
+begin;
+
+update public.email_preferences
+   set sunset_at = now() - interval '8 days', nudge = true
+ where user_id in (:GABI, :FEDE);
+
+insert into public.email_outbox (
+  template, locale, to_email, user_id, channel, idempotency_key, status, resend_id, sent_at
+) values (
+  'winback_d30', 'es', 'fede-mail@test.local', :FEDE, 'G',
+  'winback_d30/' || :FEDE::text, 'sent', 're_fede_d30', now() - interval '8 days'
+);
+
+select public.record_email_event('svix-abre-fede', 'email.opened', 're_fede_d30', '{}'::jsonb);
+
+select pg_temp.assert(
+  public.email_apply_sunset() = 1,
+  'seven days after an unopened D30, the sunset applies');
+
+select pg_temp.assert(
+  (select (cadence, nudge)::text from public.email_preferences where user_id = :GABI)
+    = '(off,f)',
+  'and switches off both her cadence and her nudges');
+
+select pg_temp.assert(
+  (select (cadence, nudge)::text from public.email_preferences where user_id = :FEDE)
+    = '(weekly,t)',
+  'but not for someone who opened the D30');
+
+-- Todo lo necesario para que, sin el sunset, le tocara un win-back D14 y el
+-- correo de hábito de esta hora: si llega cualquiera de los dos (aunque sea
+-- como `skipped`), el sunset no apagó nada.
+update public.profiles
+   set last_seen_at = now() - interval '14 days', streak_last_day = null
+ where id = :GABI;
+update public.profile_settings
+   set timezone = 'UTC',
+       reminder_hours = array[extract(hour from now() at time zone 'UTC')::smallint]
+ where id = :GABI;
+
+select public.enqueue_winback_emails();
+select public.enqueue_habit_emails();
+
+select pg_temp.assert(
+  not exists (
+    select 1 from public.email_outbox
+     where user_id = :GABI and template <> 'winback_d30'),
+  'after the sunset she gets neither win-backs nor habit emails');
+
+commit;
+
+begin;
+set local role anon;
+
+select pg_temp.assert(
+  public.reactivate_email_cadence_by_token(:'gabi_token'),
+  'one tap on the link in the email reactivates her');
+
+commit;
+
+select pg_temp.assert(
+  (select (cadence, nudge, sunset_at is null)::text
+     from public.email_preferences where user_id = :GABI)
+    = '(weekdays,t,t)',
+  'with the cadence she had before, nudges back on and the sunset cleared');
+
+-- ---------------------------------------------------------------------------
+-- El versículo del correo de hábito, en su idioma (EN-3)
+-- ---------------------------------------------------------------------------
+begin;
+
+update public.profile_settings set locale = 'en' where id = :IRIS;
+update public.profile_settings set locale = 'es' where id = :GABI;
+
+select pg_temp.assert(
+  (select (public.email_habit_payload(:IRIS) ->> 'verse_ref',
+           public.email_habit_payload(:IRIS) ->> 'verse_text'))
+    = (select (reference, text) from public.verse_of_the_day_for(:IRIS, 'web')),
+  'an English speaker''s habit email carries the verse of the day from the WEB');
+
+select pg_temp.assert(
+  (select (public.email_habit_payload(:GABI) ->> 'verse_ref',
+           public.email_habit_payload(:GABI) ->> 'verse_text'))
+    = (select (reference, text) from public.verse_of_the_day_for(:GABI, 'rvr1909')),
+  'a Spanish speaker''s still carries the Reina-Valera 1909');
+
+update public.profile_settings set locale = 'en-GB' where id = :IRIS;
+
+select pg_temp.assert(
+  public.email_habit_payload(:IRIS) ->> 'verse_text'
+    = (select text from public.verse_of_the_day_for(:IRIS, 'web')),
+  'any English locale (en-GB) gets the English Bible, like the template language');
+
+commit;
+
+begin;
+
+update public.email_preferences set cadence = 'daily' where user_id = :IRIS;
+update public.profile_settings
+   set reminder_hours = array[extract(hour from now() at time zone 'UTC')::smallint]
+ where id = :IRIS;
+update public.profiles
+   set last_seen_at = now() - interval '2 days', streak_last_day = null
+ where id = :IRIS;
+
+select public.enqueue_habit_emails();
+
+select pg_temp.assert(
+  (select (locale, payload ->> 'verse_text') from public.email_outbox
+    where user_id = :IRIS and template = 'habit')
+    = (select ('en'::text, text) from public.verse_of_the_day_for(:IRIS, 'web')),
+  'the queued habit email goes in English with the English verse');
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- El secreto HMAC, en Vault
+-- ---------------------------------------------------------------------------
+select pg_temp.assert(
+  (select count(*) from vault.decrypted_secrets
+    where name = 'ammen_email_hmac_secret'
+      and length(decrypted_secret) >= 32) = 1
+  and (select hmac_secret from public.email_runtime where id) is null,
+  'the HMAC secret lives in Vault and no longer in plain text in email_runtime');
+
+select pg_temp.assert(
+  (select array_agg(p.proname::text order by p.proname)
+     from pg_proc p
+    where p.pronamespace = 'public'::regnamespace
+      and p.prosrc ~ '\mhmac_secret\M')
+    = array['email_hmac_secret', 'email_hmac_secret_to_vault'],
+  'nothing but the secret''s accessor and the migration reads the old column');
+
+select pg_temp.assert(
+  :'fede_token' = replace(:FEDE::text, '-', '') || '.' || encode(extensions.hmac(
+    replace(:FEDE::text, '-', ''),
+    (select decrypted_secret from vault.decrypted_secrets where name = 'ammen_email_hmac_secret'),
+    'sha256'), 'hex'),
+  'tokens are signed with the secret in Vault');
+
+select pg_temp.assert(
+  not has_function_privilege('service_role', 'public.email_hmac_secret_to_vault()', 'EXECUTE')
+    and not has_function_privilege('authenticated', 'public.email_hmac_secret_to_vault()', 'EXECUTE')
+    and not has_function_privilege('anon', 'public.email_hmac_secret_to_vault()', 'EXECUTE'),
+  'moving the secret is for the database owner only');
+
+-- Una base «de antes»: el secreto solo en la tabla. Un token firmado ahí
+-- tiene que seguir valiendo cuando el secreto pasa a Vault.
+begin;
+
+delete from vault.secrets where name = 'ammen_email_hmac_secret';
+update public.email_runtime set hmac_secret = 'secreto-de-antes-de-vault-0123456789' where id;
+
+select public.issue_email_prefs_token(:FEDE) as token_before \gset
+
+select pg_temp.assert(
+  :'token_before' = replace(:FEDE::text, '-', '') || '.' || encode(extensions.hmac(
+    replace(:FEDE::text, '-', ''), 'secreto-de-antes-de-vault-0123456789', 'sha256'), 'hex'),
+  'without the Vault secret, the table still signs (a half-migrated database does not break)');
+
+select pg_temp.assert(
+  public.email_hmac_secret_to_vault() = 'created',
+  'the move creates the Vault secret');
+
+select pg_temp.assert(
+  (select decrypted_secret from vault.decrypted_secrets where name = 'ammen_email_hmac_secret')
+    = 'secreto-de-antes-de-vault-0123456789'
+  and (select hmac_secret from public.email_runtime where id) is null,
+  'with the same value the table had, and then empties the table');
+
+select pg_temp.assert(
+  public.issue_email_prefs_token(:FEDE) = :'token_before'
+    and public.verify_email_prefs_token(:'token_before') = :FEDE,
+  'so a token issued before the move verifies the same after it');
+
+select pg_temp.assert(
+  public.email_hmac_secret_to_vault() = 'already_in_vault'
+    and (select count(*) from vault.secrets where name = 'ammen_email_hmac_secret') = 1,
+  'running the move again changes nothing');
+
+rollback;
+
+-- Rotar el secreto en Vault invalida los enlaces ya enviados.
+begin;
+
+select vault.update_secret(
+  (select id from vault.secrets where name = 'ammen_email_hmac_secret'),
+  'secreto-rotado-9876543210-abcdefghij'
+);
+
+select pg_temp.assert(
+  public.verify_email_prefs_token(:'fede_token') is null
+    and not public.unsubscribe_email_one_click(:'fede_token'),
+  'after rotating the secret in Vault, old links stop working');
+
+select pg_temp.assert(
+  public.verify_email_prefs_token(public.issue_email_prefs_token(:FEDE)) = :FEDE,
+  'and new ones are signed with the new secret');
+
+rollback;
+
+-- Sin secreto en ningún sitio, falla cerrado.
+begin;
+
+delete from vault.secrets where name = 'ammen_email_hmac_secret';
+
+select pg_temp.assert(
+  public.issue_email_prefs_token(:FEDE) is null
+    and public.verify_email_prefs_token(:'fede_token') is null,
+  'with no secret anywhere, nothing is signed and nothing verifies');
+
+rollback;

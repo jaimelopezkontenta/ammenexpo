@@ -2,7 +2,8 @@
 # Exercises the chunk orchestration without depending on model quality.
 #
 # Requires the local stack and `npx supabase functions serve` to be running.
-# Run with: npm run test:chunks
+# Run with: npm run db:test:chunks (optional suite of scripts/dbTest.mjs,
+# which resets the database first; not part of db:test or verify).
 set -euo pipefail
 
 API="http://127.0.0.1:54421"

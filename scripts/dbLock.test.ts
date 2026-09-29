@@ -11,7 +11,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { acquireDbLock, releaseDbLock } from "./dbLock.mjs";
+import { acquireDbLock, dbLockHeldBy, releaseDbLock } from "./dbLock.mjs";
 
 type LockMetadata = {
   token: string;
@@ -165,6 +165,37 @@ describe("atomic database lock", () => {
     expect(releaseDbLock(original)).toBe(false);
     expect(readMetadata(lockPath).token).toBe(foreign.token);
     expect(releaseDbLock({ token: foreign.token, lockPath })).toBe(true);
+  });
+
+  it("tells the current holder apart from any other token", () => {
+    const lockPath = lockPathForTest();
+    const handle = acquireDbLock("holder", { lockPath });
+
+    expect(dbLockHeldBy(handle.token, { lockPath })).toBe(true);
+    expect(dbLockHeldBy(randomUUID(), { lockPath })).toBe(false);
+    expect(dbLockHeldBy(undefined, { lockPath })).toBe(false);
+
+    expect(releaseDbLock(handle)).toBe(true);
+    expect(dbLockHeldBy(handle.token, { lockPath })).toBe(false);
+  });
+
+  it("hands its token to the protected command, so it does not queue behind itself", () => {
+    const lockPath = lockPathForTest();
+    const wrapped = spawnSync(
+      process.execPath,
+      ["scripts/with-db-lock.mjs", "node scripts/dbLockTestWorker.mjs inside"],
+      {
+        cwd: process.cwd(),
+        // Sin DB_LOCK_PATH en el hijo el worker miraría el lock global: lo
+        // tiene que heredar de with-db-lock, no de este entorno.
+        env: workerEnvironment(lockPath, { DB_LOCK_TOKEN: "stale-token" }),
+        encoding: "utf8",
+      },
+    );
+
+    expect(wrapped.status).toBe(0);
+    expect(wrapped.stdout).toContain("INSIDE yes");
+    expect(existsSync(lockPath)).toBe(false);
   });
 
   it("takes over a fresh-looking lock when its same-host PID is dead", async () => {

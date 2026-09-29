@@ -8,10 +8,12 @@
 # desde conexiones independientes y afirma que solo FREE_PLAN_LIMIT (3) ganan.
 #
 # Requisitos: el stack local levantado (`supabase start`) y `docker` accesible.
-# No forma parte de `npm run verify` ni de `db:test`.
+# No forma parte de `npm run verify` ni de `db:test`: es una suite opcional
+# de `scripts/dbTest.mjs`, que resetea la base antes.
 #
-#   bash supabase/tests/generation-concurrency.sh
-#   N=12 bash supabase/tests/generation-concurrency.sh   # más presión
+#   npm run db:test:generation-concurrency
+#   N=12 npm run db:test:generation-concurrency         # más presión
+#   bash supabase/tests/generation-concurrency.sh       # sin reset ni lock
 #
 # Cada worker borra y recrea su usuario (id fijo, cascada limpia el ledger), así
 # que el harness es re-ejecutable sin reset.
