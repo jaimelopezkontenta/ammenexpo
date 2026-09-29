@@ -74,6 +74,17 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=4096
 
+      # Regresión visual (ADR 0003): solo cuando hay baselines Linux en el repo.
+      # Las de `*-win32.png` no casan aquí; se generan con el workflow
+      # `visual-baselines` (lanzado a mano) y se commitean. Hasta entonces este
+      # paso se salta; desde entonces es bloqueante. Mismo export estático y mismo
+      # Supabase que el paso anterior — globalSetup resetea la base otra vez.
+      - name: Regresión visual (claro y oscuro)
+        if: ${{ hashFiles('e2e/**/*-linux.png') != '' }}
+        run: npm run e2e:visual
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
       - name: Publicar artefactos de Playwright al fallar
         if: failure()
         uses: actions/upload-artifact@v4
