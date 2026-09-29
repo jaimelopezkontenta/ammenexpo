@@ -8,6 +8,7 @@ import {
   classifyTicket,
   errorReasonFor,
   isDeviceNotRegistered,
+  logReasonFor,
   pairTicketsWithDestinations,
   resolveSenderConfig,
   timingSafeEqualString,
@@ -194,6 +195,44 @@ describe("errorReasonFor", () => {
 
   it("names the specific reason for a missing ticket, not a generic one", () => {
     expect(errorReasonFor(null)).toBe("missing_ticket_in_response");
+  });
+});
+
+describe("logReasonFor", () => {
+  it("logs Expo's closed error code", () => {
+    expect(
+      logReasonFor({
+        status: "error",
+        message: "irrelevant",
+        details: { error: "MessageRateExceeded" },
+      }),
+    ).toBe("MessageRateExceeded");
+  });
+
+  it("never logs the free-text message, which quotes the device token", () => {
+    const reason = logReasonFor({
+      status: "error",
+      message:
+        '"ExponentPushToken[secret-device-token]" is not a registered push notification recipient',
+    });
+
+    expect(reason).toBe("expo_error");
+    expect(reason).not.toContain("ExponentPushToken");
+  });
+
+  it("does not trust a code that is not a plain identifier", () => {
+    expect(
+      logReasonFor({
+        status: "error",
+        message: "x",
+        details: { error: "ExponentPushToken[abc] gone" },
+      }),
+    ).toBe("expo_error");
+  });
+
+  it("keeps the labels for a missing ticket and for a successful one", () => {
+    expect(logReasonFor(null)).toBe("missing_ticket_in_response");
+    expect(logReasonFor({ status: "ok", id: "receipt-1" })).toBe("");
   });
 });
 

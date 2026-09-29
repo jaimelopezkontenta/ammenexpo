@@ -1,6 +1,7 @@
 import { createAdminClient } from "../_shared/admin.ts";
 import { CORS_INVOKER, jsonWith, preflight } from "../_shared/http.ts";
 import { authorizeInvoker } from "../_shared/invoker.ts";
+import { createLogger, describeError, requestIdFrom } from "../_shared/log.ts";
 
 const json = jsonWith(CORS_INVOKER);
 
@@ -13,6 +14,8 @@ Deno.serve(async (req: Request) => {
     return preflight(CORS_INVOKER);
   }
 
+  const logger = createLogger("enqueue-emails", requestIdFrom(req.headers));
+
   if (
     authorizeInvoker(
       req.headers.get("x-ammen-invoker"),
@@ -20,6 +23,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_URL") ?? undefined,
     ) === "unauthorized"
   ) {
+    logger.warn("auth.rejected");
     return json({ ok: false, error: "unauthorized" }, 401);
   }
 
@@ -28,6 +32,7 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ?? "";
 
   if (!supabaseUrl || !serviceRoleKey) {
+    logger.error("not_configured");
     return json({ ok: false, error: "not_configured" }, 503);
   }
 
@@ -35,9 +40,18 @@ Deno.serve(async (req: Request) => {
   const { data, error } = await supabase.rpc("enqueue_all_email_jobs");
 
   if (error) {
-    console.error("enqueue_all_email_jobs failed", error);
+    logger.error("enqueue.failed", describeError(error));
     return json({ ok: false, error: "enqueue_failed" }, 500);
   }
+
+  // Solo los contadores por tipo de trabajo (habit, drip, digest…).
+  const counts: Record<string, number> = {};
+  if (data && typeof data === "object") {
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === "number") counts[key] = value;
+    }
+  }
+  logger.info("enqueue.done", counts);
 
   return json({ ok: true, jobs: data });
 });

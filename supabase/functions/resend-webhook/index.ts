@@ -1,5 +1,6 @@
 import { createAdminClient } from "../_shared/admin.ts";
 import { json, preflight } from "../_shared/http.ts";
+import { createLogger, describeError, requestIdFrom } from "../_shared/log.ts";
 import { verifyResendSignature } from "./svix.ts";
 
 type ResendEvent = {
@@ -23,12 +24,15 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "method_not_allowed" }, 405);
   }
 
+  const logger = createLogger("resend-webhook", requestIdFrom(req.headers));
+
   const secret = Deno.env.get("RESEND_WEBHOOK_SECRET")?.trim() ?? "";
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim() ?? "";
   const serviceRoleKey =
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ?? "";
 
   if (!secret || !supabaseUrl || !serviceRoleKey) {
+    logger.error("not_configured");
     return json({ ok: false, error: "webhook_not_configured" }, 503);
   }
 
@@ -46,6 +50,7 @@ Deno.serve(async (req: Request) => {
   });
 
   if (!ok) {
+    logger.warn("signature.rejected");
     return json({ ok: false, error: "invalid_signature" }, 401);
   }
 
@@ -53,6 +58,7 @@ Deno.serve(async (req: Request) => {
   try {
     parsed = JSON.parse(body) as ResendEvent;
   } catch {
+    logger.warn("body.invalid_json");
     return json({ ok: false, error: "invalid_json" }, 400);
   }
 
@@ -65,9 +71,17 @@ Deno.serve(async (req: Request) => {
   });
 
   if (error) {
-    console.error("record_email_event failed", error);
+    logger.error("record.failed", describeError(error));
     return json({ ok: false, error: "persist_failed" }, 500);
   }
+
+  // `svix_id` es un id opaco; el tipo de evento, una etiqueta de Resend. Ni el
+  // destinatario ni el payload.
+  logger.info("event.recorded", {
+    svix_id: svixId,
+    event_type: parsed.type ?? "unknown",
+    recorded: Boolean(data),
+  });
 
   return json({ ok: true, recorded: Boolean(data) });
 });

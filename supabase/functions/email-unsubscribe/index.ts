@@ -1,5 +1,6 @@
 import { createAdminClient } from "../_shared/admin.ts";
 import { CORS_UNSUBSCRIBE, jsonWith, preflight } from "../_shared/http.ts";
+import { createLogger, describeError, requestIdFrom } from "../_shared/log.ts";
 
 const json = jsonWith(CORS_UNSUBSCRIBE);
 
@@ -10,6 +11,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return preflight(CORS_UNSUBSCRIBE);
   }
+
+  const logger = createLogger("email-unsubscribe", requestIdFrom(req.headers));
 
   const url = new URL(req.url);
   const token = url.searchParams.get("t") ?? "";
@@ -39,6 +42,7 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ?? "";
 
   if (!supabaseUrl || !serviceRoleKey) {
+    logger.error("not_configured");
     return json({ ok: false, error: "not_configured" }, 503);
   }
 
@@ -48,9 +52,12 @@ Deno.serve(async (req: Request) => {
   });
 
   if (error) {
-    console.error("unsubscribe_email_one_click failed", error);
+    logger.error("unsubscribe.failed", describeError(error));
     return json({ ok: false, error: "unsubscribe_failed" }, 500);
   }
+
+  // El token de baja identifica a una persona: no se registra ni su valor.
+  logger.info("unsubscribe.done", { applied: Boolean(data) });
 
   return json({ ok: Boolean(data) });
 });

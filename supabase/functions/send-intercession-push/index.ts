@@ -1,12 +1,19 @@
 import { createAdminClient, type SupabaseClient } from "../_shared/admin.ts";
 import { CORS_INVOKER, jsonWith, preflight } from "../_shared/http.ts";
 import {
+  createLogger,
+  describeError,
+  type Logger,
+  requestIdFrom,
+} from "../_shared/log.ts";
+import {
   authorizeInvoker,
   BATCH_SIZE,
   buildPushMessage,
   chunk,
   classifyTicket,
   errorReasonFor,
+  logReasonFor,
   pairTicketsWithDestinations,
   resolveSenderConfig,
   unmatchedTicketCount,
@@ -56,6 +63,7 @@ const sendBatch = async (
 
 const resolveOutbox = async (
   supabase: SupabaseClient,
+  logger: Logger,
   outboxId: string,
   status: "sent" | "permanent_failure" | "retryable_failure",
   receiptId: string | null,
@@ -69,7 +77,11 @@ const resolveOutbox = async (
   });
 
   if (rpcError) {
-    console.error("mark_push_delivery failed", outboxId, rpcError);
+    logger.error("mark.failed", {
+      outbox_id: outboxId,
+      status,
+      ...describeError(rpcError),
+    });
   }
 };
 
@@ -105,6 +117,11 @@ Deno.serve(async (req: Request) => {
     return preflight(CORS_INVOKER);
   }
 
+  const logger = createLogger(
+    "send-intercession-push",
+    requestIdFrom(req.headers),
+  );
+
   // Si el secret está definido, el header tiene que coincidir. Sin secret,
   // solo se deja pasar en local; fuera de local es fail-closed.
   // Nunca se loguea el secret ni el valor del header.
@@ -115,6 +132,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_URL") ?? undefined,
     ) === "unauthorized"
   ) {
+    logger.warn("auth.rejected");
     return json({ ok: false, error: "unauthorized" }, 401);
   }
 
@@ -127,12 +145,14 @@ Deno.serve(async (req: Request) => {
 
   if (!config.enabled) {
     if (config.reason === "kill_switch") {
+      logger.info("skipped", { reason: "kill_switch" });
       return json({ ok: true, skipped: "kill_switch", sent: 0 });
     }
 
     // Fail-closed: sin configuración interna válida no se envía nada. `503`
     // porque es una condición de despliegue, no un fallo transitorio de un
     // envío concreto. Sin drenar el outbox: ni una fila se arrienda aquí.
+    logger.error("sender.not_configured");
     return json({ ok: false, error: "sender_not_configured" }, 503);
   }
 
@@ -148,7 +168,7 @@ Deno.serve(async (req: Request) => {
   );
 
   if (claimError) {
-    console.error("claim_push_outbox_batch failed", claimError);
+    logger.error("claim.failed", describeError(claimError));
     return json({ ok: false, error: "claim_push_outbox_batch_failed" }, 500);
   }
 
@@ -157,6 +177,8 @@ Deno.serve(async (req: Request) => {
   if (rows.length === 0) {
     return json({ ok: true, sent: 0, retried: 0, failed: 0 });
   }
+
+  logger.info("batch.claimed", { rows: rows.length });
 
   let sent = 0;
   let retried = 0;
@@ -177,9 +199,10 @@ Deno.serve(async (req: Request) => {
         // No debería pasar según la documentación de Expo, pero "no
         // debería" no es lo mismo que "no puede": se registra y se sigue,
         // en vez de dejar que un ticket sobrante desalinee el resto.
-        console.error(
-          `send-intercession-push: Expo returned ${extra} more ticket(s) than destinations sent`,
-        );
+        logger.error("tickets.unmatched", {
+          extra,
+          destinations: destinations.length,
+        });
       }
 
       await Promise.all(
@@ -191,6 +214,7 @@ Deno.serve(async (req: Request) => {
               sent += 1;
               await resolveOutbox(
                 supabase,
+                logger,
                 destination.outboxId,
                 "sent",
                 ticket && ticket.status === "ok" ? ticket.id : null,
@@ -205,8 +229,16 @@ Deno.serve(async (req: Request) => {
               retried += 1;
             }
 
+            // Al log, solo el código de Expo: su `message` cita el token.
+            logger.warn("delivery.not_sent", {
+              outbox_id: destination.outboxId,
+              outcome,
+              reason: logReasonFor(ticket),
+            });
+
             await resolveOutbox(
               supabase,
+              logger,
               destination.outboxId,
               outcome,
               null,
@@ -222,13 +254,17 @@ Deno.serve(async (req: Request) => {
       // lease sin que nadie suba el contador ni reprograme nada.
       const reason =
         caught instanceof Error ? caught.message : "transport_error";
-      console.error("send-intercession-push batch transport failure", caught);
+      logger.error("batch.transport_failure", {
+        batch_size: batch.length,
+        ...describeError(caught),
+      });
 
       await Promise.all(
         batch.map(async (row) => {
           retried += 1;
           await resolveOutbox(
             supabase,
+            logger,
             row.outbox_id,
             "retryable_failure",
             null,
@@ -238,6 +274,8 @@ Deno.serve(async (req: Request) => {
       );
     }
   }
+
+  logger.info("batch.done", { sent, retried, failed });
 
   return json({ ok: true, sent, retried, failed });
 });

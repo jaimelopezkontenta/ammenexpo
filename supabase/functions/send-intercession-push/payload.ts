@@ -108,6 +108,23 @@ export const errorReasonFor = (ticket: ExpoPushTicket | null): string => {
   return ticket.details?.error ?? ticket.message;
 };
 
+/**
+ * El motivo de un ticket, en versión registrable. `errorReasonFor()` cae en
+ * `ticket.message` cuando Expo no manda código, y ese mensaje cita el token
+ * del dispositivo (`"ExponentPushToken[…]" is not a registered…`): va a la
+ * base, pero a un log no. Aquí solo sale el código cerrado de Expo
+ * (`DeviceNotRegistered`, `MessageRateExceeded`…) o una etiqueta fija.
+ */
+export const logReasonFor = (ticket: ExpoPushTicket | null): string => {
+  if (ticket === null) return "missing_ticket_in_response";
+  if (ticket.status === "ok") return "";
+
+  const code = ticket.details?.error;
+  return typeof code === "string" && /^[A-Za-z]{1,64}$/.test(code)
+    ? code
+    : "expo_error";
+};
+
 // ---------------------------------------------------------------------------
 // Emparejar destinos con tickets — nunca por índice a ciegas
 // ---------------------------------------------------------------------------
