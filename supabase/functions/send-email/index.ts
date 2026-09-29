@@ -23,6 +23,14 @@ const RESEND_URL = "https://api.resend.com/emails";
 const FROM = "Ammen <hola@mail.ammen.app>";
 const REPLY_TO = "hola@ammen.app";
 
+/**
+ * Sin timeout, un Resend que no contesta deja colgada toda la invocación (y con
+ * ella los 50 correos arrendados) hasta que el reloj del edge la mata. Con él, el
+ * fallo es reintentable como cualquier otro: el `Idempotency-Key` hace que un
+ * reintento tras un correo que SÍ salió no lo duplique.
+ */
+const RESEND_TIMEOUT_MS = 20_000;
+
 const json = jsonWith(CORS_INVOKER);
 
 type ClaimedRow = {
@@ -114,6 +122,7 @@ const sendOne = async (input: {
       method: "POST",
       headers,
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
     });
   } catch (caught) {
     const reason = caught instanceof Error ? caught.message : "transport_error";
@@ -135,7 +144,12 @@ const sendOne = async (input: {
     };
   }
 
-  const payload = (await response.json()) as { id?: string };
+  // Un 200 cuyo cuerpo no es JSON tampoco lanza: sin id no hay nada que dar por
+  // enviado, así que se trata como cualquier respuesta sin id (y el
+  // Idempotency-Key evita el duplicado al reintentar).
+  const payload = (await response.json().catch(() => ({}))) as {
+    id?: string;
+  };
   if (!payload.id) {
     return { retryable: true, error: "resend_missing_id" };
   }

@@ -23,6 +23,13 @@ import {
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
+/**
+ * Sin timeout, un Expo que no contesta deja colgada la invocación con hasta 200
+ * filas arrendadas. Con él, el lote se trata como un fallo de transporte:
+ * reintentable, con backoff (ver el `catch` de más abajo).
+ */
+const EXPO_TIMEOUT_MS = 30_000;
+
 const json = jsonWith(CORS_INVOKER);
 
 type ClaimedRow = {
@@ -47,6 +54,7 @@ const sendBatch = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify(messages),
+    signal: AbortSignal.timeout(EXPO_TIMEOUT_MS),
   });
 
   if (!response.ok) {

@@ -10,6 +10,12 @@ import { deriveChunkRequestId } from "./chunkRequestId.ts";
 import { parseGenerateBody, readJsonBody } from "./input.ts";
 import { createAnthropicProvider } from "./providers/anthropic.ts";
 import { createFixtureProvider } from "./providers/fixture.ts";
+import {
+  AttemptTimeout,
+  BudgetExhausted,
+  DEFAULT_BUDGET,
+  remainingMs,
+} from "./providers/retry.ts";
 import { createUnslothProvider } from "./providers/unsloth.ts";
 import {
   type PlanProvider,
@@ -227,6 +233,12 @@ const writeChunk = async ({
   });
 
   const messages: ProviderMessage[] = [{ role: "user", content: userPrompt }];
+
+  // ONE time budget for the whole stretch — the generation and the scripture
+  // repair pass draw from the same deadline, and it ends before the lease does
+  // (see providers/retry.ts). Otherwise each call started with a full budget of
+  // its own and a slow stretch could outlive the lease it was holding.
+  const deadline = Date.now() + DEFAULT_BUDGET.totalMs;
   let result;
 
   try {
@@ -234,11 +246,16 @@ const writeChunk = async ({
       system: SYSTEM_PROMPT,
       messages,
       schema: PLAN_JSON_SCHEMA,
+      deadline,
     });
   } catch (error) {
     console.error("generation failed", error);
     const reason =
-      error instanceof ProviderRefusal ? "refused" : "generation_failed";
+      error instanceof ProviderRefusal
+        ? "refused"
+        : error instanceof AttemptTimeout || error instanceof BudgetExhausted
+          ? "generation_timeout"
+          : "generation_failed";
     await failChunk(reason);
     return;
   }
@@ -275,7 +292,18 @@ const writeChunk = async ({
   let days: ResolvedDay[] = await resolveDays(supabase, generated.days);
   let bad = unresolved(days);
 
-  if (bad.length > 0) {
+  // The repair is a nicety: with too little of the budget left it is skipped
+  // and the days ship without those verses, exactly as if it had failed.
+  const canRepair =
+    remainingMs(deadline, Date.now()) >= DEFAULT_BUDGET.repairMinRemainingMs;
+
+  if (bad.length > 0 && !canRepair) {
+    console.warn(
+      `repair pass skipped (${bad.length} unresolved reference(s)): not enough of the time budget is left`,
+    );
+  }
+
+  if (bad.length > 0 && canRepair) {
     console.warn(
       `unresolved references: ${bad
         .slice(0, 10)
@@ -292,6 +320,7 @@ const writeChunk = async ({
           { role: "user", content: buildRepairPrompt(bad) },
         ],
         schema: PLAN_JSON_SCHEMA,
+        deadline,
       });
 
       const repairedPlan = JSON.parse(repaired.json);

@@ -7,6 +7,13 @@ export type GenerateArgs = {
   system: string;
   messages: ProviderMessage[];
   schema: unknown;
+  /**
+   * Hasta cuándo puede tardar esta llamada, en ms desde la época (`Date.now()`).
+   * Lo fija quien orquesta el tramo UNA vez, para que la generación y la pasada
+   * de reparación gasten del mismo presupuesto (ver `retry.ts`). Sin él, cada
+   * llamada parte de un presupuesto completo.
+   */
+  deadline?: number;
 };
 
 export type GenerateResult = {
