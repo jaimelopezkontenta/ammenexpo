@@ -1537,6 +1537,118 @@ select pg_temp.assert(count(*) = 1,
 
 commit;
 
+-- ---------------------------------------------------------------------------
+-- posts: el autor escribe su texto; contadores y moderación, no
+--
+-- El autor podía quitarle a su post el `hidden_at` que le puso moderación,
+-- publicarlo con mil oraciones ya contadas o moverlo a un círculo del que no
+-- es (la policy de UPDATE no mira `group_id`).
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000003","role":"authenticated"}';
+
+-- useWritePrayerRequest
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.posts (id, author_id, body, is_anonymous, group_id)
+    values ('c1c1e000-0000-0000-0000-000000000001',
+            'c1c10000-0000-0000-0000-000000000003',
+            'Oren por mi examen de mañana', false,
+            'c1c1c000-0000-0000-0000-000000000002')
+  $q$),
+  'writing a prayer request the way the app does still works');
+
+select pg_temp.assert(
+  (select crisis_flagged_at is null and prayer_count = 0
+     from public.posts where id = 'c1c1e000-0000-0000-0000-000000000001'),
+  'and it reads back what the app asks for');
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('prayer_count',      '1000'),
+      ('comment_count',     '1000'),
+      ('hidden_at',         'now()'),
+      ('hidden_by',         $v$'c1c10000-0000-0000-0000-000000000001'$v$),
+      ('held_at',           'now()'),
+      ('crisis_flagged_at', 'now()'),
+      ('answered_at',       'now()'),
+      ('created_at',        $v$'2000-01-01'$v$),
+      ('updated_at',        $v$'2000-01-01'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.raises(format(
+      'insert into public.posts (author_id, body, %I) values (%L, %L, %s)',
+      forced.col, 'c1c10000-0000-0000-0000-000000000003', 'Con trampa', forced.val))
+    then
+      raise exception 'FAIL  a new post cannot choose its own %', forced.col;
+    end if;
+    raise notice 'PASS  a new post cannot choose its own %', forced.col;
+  end loop;
+end;
+$$;
+
+-- useMarkAnswered
+with changed as (
+  update public.posts set answered_at = now()
+   where id = 'c1c1e000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1,
+  'marking it answered still works')
+  from changed;
+
+commit;
+
+-- Moderación lo oculta.
+update public.posts
+   set hidden_at = now(), hidden_by = 'c1c10000-0000-0000-0000-000000000001'
+ where id = 'c1c1e000-0000-0000-0000-000000000001';
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000003","role":"authenticated"}';
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('hidden_at',         'null'),
+      ('hidden_by',         'null'),
+      ('held_at',           'null'),
+      ('crisis_flagged_at', 'null'),
+      ('prayer_count',      '1000'),
+      ('comment_count',     '1000'),
+      ('group_id',          'null'),
+      ('author_id',         $v$'c1c10000-0000-0000-0000-000000000003'$v$),
+      ('is_anonymous',      'true'),
+      ('created_at',        $v$'2000-01-01'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.raises(format(
+      'update public.posts set %I = %s where id = %L',
+      forced.col, forced.val, 'c1c1e000-0000-0000-0000-000000000001'))
+    then
+      raise exception 'FAIL  the author cannot rewrite the post''s %', forced.col;
+    end if;
+    raise notice 'PASS  the author cannot rewrite the post''s %', forced.col;
+  end loop;
+end;
+$$;
+
+commit;
+
+select pg_temp.assert(
+  (select hidden_at is not null and prayer_count = 0
+          and group_id = 'c1c1c000-0000-0000-0000-000000000002'
+     from public.posts where id = 'c1c1e000-0000-0000-0000-000000000001'),
+  'the post stays hidden, in its circle, with its real count');
+
 \echo ''
 \echo '================================'
 \echo ' ALL RLS ASSERTIONS PASSED'
