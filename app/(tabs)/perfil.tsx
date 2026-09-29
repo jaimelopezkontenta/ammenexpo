@@ -1,6 +1,6 @@
 import * as Localization from "expo-localization";
 import { Link, router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, Platform, ScrollView, View } from "react-native";
 
@@ -31,7 +31,9 @@ import {
 } from "@/core/onboarding/options";
 import { useOpenReportCount } from "@/core/moderation/queue";
 import { useToast } from "@/core/toast/ToastProvider";
+import { useAction } from "@/core/toast/useAction";
 import { useEmailPreferences } from "@/core/email/queries";
+import { createDebouncedSaver, sameHours } from "@/core/profile/autosave";
 import {
   useDeleteAccount,
   useProfile,
@@ -74,8 +76,45 @@ export default function Profile() {
   // Resultados de acción por el toast del sistema: caducan solos y no
   // empujan el layout justo cuando la app dice "guardado".
   const toast = useToast();
+  const { run: save } = useAction();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  // El nombre que ya va de camino al servidor: al pulsar Intro llegan
+  // `onSubmitEditing` y `onBlur` seguidos, y sin esto se guardaba dos veces.
+  const nameInFlight = useRef<string | null>(null);
+
+  // Las horas se guardan al elegirlas, con un respiro: tres toques seguidos
+  // son un guardado y un solo «Guardado.». El ahorrador se crea una vez y en
+  // cada render se le da el guardado con lo último que ve el componente.
+  const [hoursSaver] = useState(() =>
+    createDebouncedSaver<number[]>(() => undefined, 700),
+  );
+  const serverHours = profile?.reminder_hours;
+
+  useEffect(() => {
+    hoursSaver.setSave((next) => {
+      // Volver a lo de siempre antes de que salte el guardado no es un cambio:
+      // ni petición ni «Guardado.» de mentira.
+      if (serverHours && sameHours(next, serverHours)) {
+        setDraftHours(null);
+        return;
+      }
+
+      void save(
+        () => update.mutateAsync({ reminderHours: next }),
+        t("profile.saved"),
+      ).then((ok) => {
+        // Solo se suelta el borrador si nadie ha vuelto a tocar las horas
+        // mientras tanto.
+        if (ok)
+          setDraftHours((cur) => (cur && sameHours(cur, next) ? null : cur));
+      });
+    });
+  });
+
+  // Si la pantalla se va con un toque pendiente, se guarda ya en vez de
+  // perderlo.
+  useEffect(() => () => hoursSaver.flush(), [hoursSaver]);
 
   if (isLoading) {
     return <LoadingState skeleton="profile" />;
@@ -87,12 +126,6 @@ export default function Profile() {
 
   const name = draftName ?? profile.display_name;
   const hours = draftHours ?? profile.reminder_hours;
-  // Content, not reference: `draftHours !== profile.reminder_hours` is true for
-  // two arrays holding the same numbers, so every render would look dirty.
-  const sameHours =
-    hours.length === profile.reminder_hours.length &&
-    hours.every((entry) => profile.reminder_hours.includes(entry));
-  const dirty = name.trim() !== profile.display_name || !sameHours;
 
   // La zona horaria se escribía **una sola vez**, en el onboarding, y decide
   // cuándo se abre tu día y cuándo cuenta tu racha: quien se mudaba de país no
@@ -143,18 +176,32 @@ export default function Profile() {
     }
   };
 
-  const handleSave = async () => {
-    try {
-      await update.mutateAsync({
-        displayName: name.trim() !== profile.display_name ? name : undefined,
-        reminderHours: sameHours ? undefined : hours,
-      });
+  // El nombre se guarda al terminar de editarlo (salir del campo o Intro), no
+  // con un botón que aparecía lejos de él: tema, idioma y horas ya guardaban al
+  // instante, y una pantalla con dos modelos de guardado deja dudando de qué
+  // se ha guardado.
+  const commitName = async () => {
+    const next = name.trim();
 
+    // Un nombre vacío no se guarda: el campo vuelve al de siempre.
+    if (!next || next === profile.display_name) {
       setDraftName(null);
-      setDraftHours(null);
-      toast.success(t("profile.saved"));
-    } catch {
-      toast.error(t("common.errorGeneric"));
+      return;
+    }
+
+    if (nameInFlight.current === next) return;
+    nameInFlight.current = next;
+
+    const ok = await save(
+      () => update.mutateAsync({ displayName: next }),
+      t("profile.saved"),
+    );
+
+    nameInFlight.current = null;
+    // Si falla, el borrador se queda: el toast lo dice y salir del campo otra
+    // vez lo reintenta.
+    if (ok) {
+      setDraftName((cur) => (cur !== null && cur.trim() === next ? null : cur));
     }
   };
 
@@ -248,21 +295,12 @@ export default function Profile() {
                 label={t("profile.name")}
                 value={name}
                 onChangeText={setDraftName}
+                onBlur={() => void commitName()}
+                onSubmitEditing={() => void commitName()}
+                returnKeyType="done"
                 maxLength={80}
               />
             </Card>
-
-            {/* Un único guardado para nombre y recordatorios. Aquí queda junto al
-            campo de nombre, en vez de aparecer al final de Preferencias. */}
-            {dirty ? (
-              <View className="w-full md:max-w-sm">
-                <Button
-                  title={t("common.save")}
-                  loading={update.isPending}
-                  onPress={() => void handleSave()}
-                />
-              </View>
-            ) : null}
 
             <View className="gap-6 md:flex-row md:items-start">
               <View className="gap-6 md:min-w-0 md:flex-1">
@@ -280,15 +318,16 @@ export default function Profile() {
                         label: t(`onboarding.hours.${slot.key}`),
                       }))}
                       selected={hours.map(String)}
-                      onToggle={(value) =>
-                        setDraftHours(
-                          toggleWithLimit(
-                            hours.map(String),
-                            value,
-                            REMINDER_MAX,
-                          ).map(Number),
-                        )
-                      }
+                      onToggle={(value) => {
+                        const next = toggleWithLimit(
+                          hours.map(String),
+                          value,
+                          REMINDER_MAX,
+                        ).map(Number);
+
+                        setDraftHours(next);
+                        hoursSaver.schedule(next);
+                      }}
                       max={REMINDER_MAX}
                       multiple
                     />

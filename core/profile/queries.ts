@@ -4,6 +4,7 @@ import i18n from "i18next";
 import { supabase } from "@/utils/supabase";
 
 import { syncLocalReminders } from "@/core/notifications/localReminders";
+import { applyProfileChanges } from "./autosave";
 import {
   sanitizeOnboardingAnswers,
   type OnboardingAnswers,
@@ -125,6 +126,12 @@ export const useUpdateProfile = (userId: string | undefined) => {
       }
     },
     onSuccess: (_data, variables) => {
+      // Lo guardado entra en la caché ya: Perfil guarda al terminar de editar
+      // y suelta el borrador al acabar, así que sin esto el campo enseñaba un
+      // instante el valor viejo hasta que volvía el refetch.
+      queryClient.setQueryData<Profile | null>(["profile", userId], (cached) =>
+        cached ? applyProfileChanges(cached, variables) : cached,
+      );
       void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
       // The name is stamped into plans and shown to everyone praying for you.
       void queryClient.invalidateQueries({ queryKey: ["sharedWithMe"] });
