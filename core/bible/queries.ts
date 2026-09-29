@@ -11,6 +11,7 @@ import { useSession } from "@/core/auth/SessionProvider";
 import { msUntilLocalMidnight } from "@/core/time/midnight";
 
 import type { BibleBook } from "./navigation";
+import { type BibleVersion, DEFAULT_BIBLE_VERSION } from "./versions";
 
 export type Verse = {
   verse: number;
@@ -65,13 +66,19 @@ export const useBibleBooks = () => {
   });
 };
 
-/** One chapter, in verse order. Immutable, so it is cached forever. */
+/**
+ * One chapter, in verse order. Immutable, so it is cached forever.
+ *
+ * Lee la tabla directamente, así que filtra la versión: `bible_verses` guarda
+ * cada versículo una vez por versión y sin el filtro llegarían las dos juntas.
+ */
 export const useChapter = (
   bookId: number | undefined,
   chapter: number | undefined,
+  version: BibleVersion = DEFAULT_BIBLE_VERSION,
 ) =>
   useQuery({
-    queryKey: ["bibleChapter", bookId, chapter],
+    queryKey: ["bibleChapter", version, bookId, chapter],
     enabled: Boolean(bookId) && Boolean(chapter),
     staleTime: Infinity,
     gcTime: Infinity,
@@ -79,6 +86,7 @@ export const useChapter = (
       const { data, error } = await supabase
         .from("bible_verses")
         .select("verse, text")
+        .eq("version", version)
         .eq("book_id", bookId!)
         .eq("chapter", chapter!)
         .order("verse");

@@ -47,9 +47,9 @@ export const qk = {
   // -- Biblia ----------------------------------------------------------------
   bibleBooks: key<[]>("bibleBooks"),
   bibleChapter:
-    key<[bookId: number | undefined, chapter: number | undefined]>(
-      "bibleChapter",
-    ),
+    key<
+      [version: string, bookId: number | undefined, chapter: number | undefined]
+    >("bibleChapter"),
   bibleReference: key<[query: string]>("bibleReference"),
   bibleSearch: key<[query: string]>("bibleSearch"),
   chapterMarks:
