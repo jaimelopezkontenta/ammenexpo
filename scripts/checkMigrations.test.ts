@@ -92,6 +92,26 @@ describe("checkMigrations", () => {
     ]);
   });
 
+  it("rejects a dollar-quote tag inside a line comment (the supabase CLI splitter opens a literal on it)", () => {
+    const current = files({
+      "20260929125011_bible_web_data.sql":
+        "-- El dollar-quote $web$ no interpreta nada\nselect 1;",
+    });
+
+    expect(checkMigrations(current, null)).toEqual([
+      expect.stringContaining("etiqueta de dollar-quote"),
+    ]);
+  });
+
+  it("accepts dollar-quoted code and comments without a tag", () => {
+    const current = files({
+      "20260929125012_ok.sql":
+        "-- una función con cuerpo entre dólares\ncreate function f() returns int language sql as $$ select 1 $$;",
+    });
+
+    expect(checkMigrations(current, null)).toEqual([]);
+  });
+
   it("rejects names that are not <14 digits>_<snake>.sql", () => {
     const current = files({ "2026_Mal-Nombre.sql": "select 1;" });
 

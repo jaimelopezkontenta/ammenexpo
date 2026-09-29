@@ -72,6 +72,9 @@ export const LEGACY_EDITS = new Map([
 
 const normalize = (content) => content.replace(/\r\n/gu, "\n");
 
+/** Una etiqueta de dollar-quote (`$web$`, `$$`…) dentro de un comentario de línea `--`. */
+const COMMENT_DOLLAR_TAG = /^\s*--.*(\$[A-Za-z_]*\$)/u;
+
 /**
  * @param {Map<string, string>} current fichero → contenido en el árbol actual
  * @param {Map<string, string> | null} base fichero → contenido en la ref base
@@ -98,6 +101,23 @@ export const checkMigrations = (
     } else {
       byVersion.set(match[1], name);
     }
+  }
+
+  // El divisor de sentencias del CLI de supabase (JavaScript, el de `supabase start`
+  // y `db push`) no distingue un comentario de código: una etiqueta de dollar-quote
+  // escrita en un `--` la toma por una apertura y parte la migración mal. Con la de
+  // la WEB (4,3 MB) dejó `supabase start` colgado más de 12 minutos en CI.
+  for (const [name, content] of current) {
+    normalize(content)
+      .split("\n")
+      .forEach((line, index) => {
+        const tag = COMMENT_DOLLAR_TAG.exec(line);
+        if (tag) {
+          errors.push(
+            `${name}:${index + 1}: un comentario lleva la etiqueta de dollar-quote ${tag[1]} — el CLI de supabase la toma por una apertura (escríbela sin los signos de dólar o quita el comentario)`,
+          );
+        }
+      });
   }
 
   if (!base) return errors;
