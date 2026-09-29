@@ -57,9 +57,9 @@ export const useHomeFeed = () =>
     }),
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("home_feed_page", {
-        p_before: cursor?.created_at ?? null,
-        p_before_id: cursor?.id ?? null,
-        p_before_kind: cursor?.kind ?? null,
+        p_before: cursor?.created_at,
+        p_before_id: cursor?.id,
+        p_before_kind: cursor?.kind,
         p_limit: PAGE_SIZE,
       });
 

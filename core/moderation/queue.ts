@@ -36,8 +36,8 @@ export const useReportQueue = (status: ReportStatus) =>
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("report_queue_page", {
         p_status: status,
-        p_before: cursor?.created_at ?? null,
-        p_before_id: cursor?.id ?? null,
+        p_before: cursor?.created_at,
+        p_before_id: cursor?.id,
         p_limit: PAGE_SIZE,
       });
 
@@ -151,8 +151,8 @@ export const useHeldContentQueue = (
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("held_content_queue_page", {
         p_statuses: statuses,
-        p_after: cursor?.created_at ?? null,
-        p_after_id: cursor?.id ?? null,
+        p_after: cursor?.created_at,
+        p_after_id: cursor?.id,
         p_limit: PAGE_SIZE,
       });
 
@@ -262,8 +262,8 @@ export const useCrisisQueue = (userId: string | undefined) =>
 
       for (let page = 0; page < CRISIS_MAX_PAGES; page += 1) {
         const { data, error } = await supabase.rpc("open_crisis_queue", {
-          p_after: after?.created_at ?? null,
-          p_after_id: after?.id ?? null,
+          p_after: after?.created_at,
+          p_after_id: after?.id,
           p_limit: CRISIS_PAGE,
         });
 

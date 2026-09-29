@@ -85,9 +85,10 @@ export const useUpdateEmailPreferencesByToken = (token: string | undefined) => {
         "update_email_prefs_by_token",
         {
           p_token: token!,
-          p_cadence: changes.cadence ?? null,
-          p_social: changes.social ?? null,
-          p_nudge: changes.nudge ?? null,
+          // `undefined` = no tocar ese ajuste (el argumento tiene default null).
+          p_cadence: changes.cadence ?? undefined,
+          p_social: changes.social ?? undefined,
+          p_nudge: changes.nudge ?? undefined,
         },
       );
 

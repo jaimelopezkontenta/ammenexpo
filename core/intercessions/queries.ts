@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { track } from "@/core/observability/track";
 import { supabase } from "@/utils/supabase";
+import type { Database } from "@/types/supabase";
 
 /** A plan someone else shared with me, showing their day for today. */
 export type SharedPlan = {
@@ -120,11 +121,13 @@ export const usePrayForSomeone = (userId: string | undefined) => {
       dayId: string;
       message?: string;
     }) => {
+      // `plan_owner_id` (not null) lo rellena el trigger de la tabla a partir del
+      // día: el tipo generado lo pide porque no tiene default, el cliente no lo sabe.
       const { error } = await supabase.from("intercessions").insert({
         plan_day_id: dayId,
         intercessor_id: userId!,
         message: message?.trim().slice(0, MESSAGE_MAX) || null,
-      });
+      } as Database["public"]["Tables"]["intercessions"]["Insert"]);
 
       if (error) {
         // The unique constraint is the anti-spam rule, not a bug: pressing the

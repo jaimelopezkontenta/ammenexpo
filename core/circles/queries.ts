@@ -131,7 +131,7 @@ export const useCircleInvitePreview = (token: string | undefined) =>
     enabled: Boolean(token),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_circle_invite_preview", {
-        p_token: token,
+        p_token: token!,
       });
 
       if (error) throw error;

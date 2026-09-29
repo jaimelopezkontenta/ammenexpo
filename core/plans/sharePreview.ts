@@ -28,7 +28,7 @@ export const useSharedPlanPreview = (token: string | undefined) =>
     enabled: Boolean(token),
     queryFn: async (): Promise<SharedPlanPreview | null> => {
       const { data, error } = await supabase.rpc("get_shared_plan_preview", {
-        p_token: token,
+        p_token: token!,
       });
 
       if (error) {

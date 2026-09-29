@@ -4,6 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 import { createSecureSessionStorage } from "@/core/native/secureSessionStorage";
+import type { Database } from "@/types/supabase";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -46,7 +47,7 @@ const nativeSessionStorage = () => {
   });
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     // On web, supabase-js defaults to localStorage, which is what we want for
     // the shared-link -> signup flow. Native gets the keychain adapter above.

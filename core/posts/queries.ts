@@ -79,9 +79,9 @@ export const usePrayerFeed = (circleId?: string) =>
     keyOf: (row) => row.id,
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("prayer_feed_page", {
-        p_group_id: circleId ?? null,
-        p_before: cursor?.created_at ?? null,
-        p_before_id: cursor?.id ?? null,
+        p_group_id: circleId,
+        p_before: cursor?.created_at,
+        p_before_id: cursor?.id,
         p_limit: PAGE_SIZE,
       });
 
