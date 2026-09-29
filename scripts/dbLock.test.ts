@@ -111,24 +111,30 @@ describe("atomic database lock", () => {
     const lockPath = lockPathForTest();
     const holder = spawn(
       process.execPath,
-      ["scripts/dbLockTestWorker.mjs", "hold", "300"],
+      ["scripts/dbLockTestWorker.mjs", "hold", "stdin"],
       {
         cwd: process.cwd(),
         env: workerEnvironment(lockPath),
-        stdio: ["ignore", "pipe", "pipe"],
+        stdio: ["pipe", "pipe", "pipe"],
       },
     );
     await waitForReady(holder);
 
-    const contender = spawnSync(
-      process.execPath,
-      ["scripts/dbLockTestWorker.mjs", "once"],
-      {
-        cwd: process.cwd(),
-        env: workerEnvironment(lockPath),
-        encoding: "utf8",
-      },
-    );
+    let contender;
+    try {
+      contender = spawnSync(
+        process.execPath,
+        ["scripts/dbLockTestWorker.mjs", "once"],
+        {
+          cwd: process.cwd(),
+          env: workerEnvironment(lockPath),
+          encoding: "utf8",
+        },
+      );
+    } finally {
+      // El rival ya terminó (spawnSync): ahora, y no antes, se suelta el lock.
+      holder.stdin?.end();
+    }
 
     expect(contender.status).toBe(1);
     expect(contender.stderr).toContain("ya está en uso");

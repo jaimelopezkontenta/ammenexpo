@@ -24,7 +24,17 @@ if (command === "sleep") {
     }
 
     const stopHeartbeat = startDbLockHeartbeat(handle);
-    if (command === "hold") await sleep(durationMs);
+    // `hold stdin`: suelta el lock cuando el test cierra stdin. Un plazo fijo
+    // era una carrera: en Windows con carga, arrancar el proceso rival tarda
+    // más de 300 ms y llegaba con el lock ya liberado.
+    if (command === "hold" && durationValue === "stdin") {
+      await new Promise((resolve) => {
+        process.stdin.on("end", resolve);
+        process.stdin.resume();
+      });
+    } else if (command === "hold") {
+      await sleep(durationMs);
+    }
     stopHeartbeat();
     releaseDbLock(handle);
   } catch (error) {
