@@ -22,7 +22,8 @@
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
     "greetingEvening": "Good evening",
-    "greetingNight": "Good night"
+    "greetingNight": "Good night",
+    "goToday": "Go to Today"
   },
   "tabs": {
     "today": "Today",
@@ -574,7 +575,9 @@
     "days_plural": "{{count}} days",
     "visPublic": "Everyone",
     "visPublicHint": "It will sit on your profile and in the community. Anybody can read it. For someone to pray for you, share it with them directly or with a circle.",
-    "makePrivate": "Keep it just for me"
+    "makePrivate": "Switch to \"Only me\"",
+    "preparingCircleTitle": "Preparing the circle's plan",
+    "preparingCircleBody": "We are writing it from the topics you chose. It takes a few seconds."
   },
   "bible": {
     "title": "Bible",

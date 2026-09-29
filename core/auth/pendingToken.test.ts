@@ -4,6 +4,7 @@ import {
   redeemPendingTokens,
   redeemShareToken,
   rememberShareToken,
+  shouldStashLinkToken,
 } from "./pendingToken";
 
 const storage = vi.hoisted(() => {
@@ -115,5 +116,27 @@ describe("share token redemption", () => {
       kind: "circle",
       circleId: "circle-9",
     });
+  });
+});
+
+describe("stashing a link token", () => {
+  it("never stashes it for someone already signed in", () => {
+    // Con sesión, el token guardado se canjeaba solo en el siguiente arranque
+    // y unía al círculo sin haber pulsado «Unirme».
+    expect(
+      shouldStashLinkToken({ sessionLoading: false, hasSession: true }),
+    ).toBe(false);
+  });
+
+  it("waits until the session has been read", () => {
+    expect(
+      shouldStashLinkToken({ sessionLoading: true, hasSession: false }),
+    ).toBe(false);
+  });
+
+  it("stashes it for a visitor without an account", () => {
+    expect(
+      shouldStashLinkToken({ sessionLoading: false, hasSession: false }),
+    ).toBe(true);
   });
 });

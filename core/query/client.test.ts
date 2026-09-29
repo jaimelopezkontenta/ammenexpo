@@ -63,6 +63,69 @@ describe("createQueryClient", () => {
   });
 });
 
+describe("expected errors", () => {
+  beforeEach(() => {
+    observability.reset();
+  });
+
+  const failMutation = (
+    client: ReturnType<typeof createQueryClient>,
+    error: Error,
+  ) =>
+    client
+      .getMutationCache()
+      .build(client, {
+        mutationKey: ["intercede"],
+        mutationFn: () => Promise.reject(error),
+      })
+      .execute(undefined)
+      .catch(() => {});
+
+  it("does not report an answer the screen already explains as a failure", async () => {
+    const reporter = vi.fn();
+    observability.configureErrors(reporter);
+    const client = createQueryClient();
+
+    // Las clases de dominio, tal como se ven desde aquí: por su nombre.
+    for (const name of [
+      "AlreadyPrayed",
+      "PlanLimitReached",
+      "GenerationInFlight",
+    ]) {
+      const error = new Error(name);
+      error.name = name;
+      await failMutation(client, error);
+    }
+
+    await client
+      .fetchQuery({
+        queryKey: ["avatar"],
+        queryFn: () =>
+          Promise.reject(Object.assign(new Error("x"), { expected: true })),
+        retry: false,
+      })
+      .catch(() => {});
+
+    expect(reporter).not.toHaveBeenCalled();
+  });
+
+  it("still reports the provider being down", async () => {
+    const reporter = vi.fn();
+    observability.configureErrors(reporter);
+    const client = createQueryClient();
+    const error = new Error("generation_unavailable");
+    error.name = "GenerationUnavailable";
+
+    await failMutation(client, error);
+
+    expect(reporter).toHaveBeenCalledWith({
+      source: "mutation",
+      key: "intercede",
+      name: "GenerationUnavailable",
+    });
+  });
+});
+
 describe("wireAppFocus", () => {
   it("listens to AppState on native and can be unhooked", () => {
     platform.OS = "ios";

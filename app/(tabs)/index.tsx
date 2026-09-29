@@ -1,6 +1,6 @@
 import { Link, router } from "expo-router";
 import { Check, MoreHorizontal } from "lucide-react-native";
-import { useCallback, useRef, useState } from "react";
+import { type ReactNode, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -10,6 +10,7 @@ import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
 import { DaySection } from "@/components/DaySection";
 import { DayView } from "@/components/DayView";
+import { Glass } from "@/components/Glass";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PlanOptionsSheet } from "@/components/PlanOptionsSheet";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
@@ -48,6 +49,7 @@ import { Pill } from "@/components/ui/Pill";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StreakRing } from "@/components/StreakRing";
 import { Tap, triggerHaptic } from "@/components/ui/Tap";
+import { useToastLift } from "@/components/ui/Toast";
 import { useToast } from "@/core/toast/ToastProvider";
 import { icon, useThemeColors } from "@/theme";
 import { enterCelebrate, enterFade } from "@/theme/motion";
@@ -61,6 +63,27 @@ const JOURNEY_STEPS = [
 ] as const;
 
 type JourneyStep = (typeof JOURNEY_STEPS)[number]["key"];
+
+/**
+ * El contenedor del «Ya oré hoy» gemelo. Mientras está montado, los avisos
+ * suben su altura para no pintarse encima (components/ui/Toast.tsx); al
+ * desmontarse —el de verdad asomó, o ya oraste— bajan solos.
+ */
+const FloatingCta = ({ children }: { children: ReactNode }) => {
+  const [height, setHeight] = useState(0);
+  useToastLift(height);
+
+  return (
+    <Animated.View
+      entering={enterFade}
+      pointerEvents="box-none"
+      onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
+      className="absolute inset-x-0 bottom-0 gap-2 px-7 pb-4"
+    >
+      {children}
+    </Animated.View>
+  );
+};
 
 // Si esta pestaña revienta, las demás y la barra siguen en pie.
 export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary";
@@ -149,6 +172,9 @@ export default function Today() {
       });
     });
   }, []);
+  // Solo en móvil, solo mientras el de verdad no asoma y solo cuando ya se
+  // sabe que hoy no has orado — no parpadea mientras carga.
+  const floatingCta = prayed === false && ctaOffscreen && !isWide;
 
   // Al cerrar el cajón se desarma lo efímero: ni el archivar queda a un toque
   // de dispararse ni el rename abierto, para que la próxima apertura empiece
@@ -623,15 +649,24 @@ export default function Today() {
                       {/* La barra dice dónde estás, igual que su etiqueta. Medía los
                       días orados: con «Día 4 de 14» encima y ninguno orado
                       parecía rota. La constancia ya la cuenta el anillo. */}
+                      {/* Para el lector de pantalla la barra es decoración:
+                      anunciaba «Día X de Y» justo después de la línea que ya
+                      lo dice. */}
                       {plan.duration_days > 0 ? (
-                        <ProgressBar
-                          value={day.day_number}
-                          max={plan.duration_days}
-                          accessibilityLabel={t("plan.dayOf", {
-                            current: day.day_number,
-                            total: plan.duration_days,
-                          })}
-                        />
+                        <View
+                          accessibilityElementsHidden
+                          importantForAccessibility="no-hide-descendants"
+                          aria-hidden
+                        >
+                          <ProgressBar
+                            value={day.day_number}
+                            max={plan.duration_days}
+                            accessibilityLabel={t("plan.dayOf", {
+                              current: day.day_number,
+                              total: plan.duration_days,
+                            })}
+                          />
+                        </View>
                       ) : null}
                     </View>
                   </View>
@@ -718,8 +753,19 @@ export default function Today() {
                   <DayView day={day} books={books ?? []} focus={step} />
                 </Animated.View>
 
-                {/* La única acción primaria del journey. */}
-                <View ref={ctaRef} onLayout={checkCta} className="pb-2 pt-2">
+                {/* La única acción primaria del journey. Mientras flota su
+              gemelo, el lector de pantalla ve solo el gemelo: dos «Ya oré
+              hoy» a la vez era uno de más. */}
+                <View
+                  ref={ctaRef}
+                  onLayout={checkCta}
+                  className="pb-2 pt-2"
+                  accessibilityElementsHidden={floatingCta}
+                  importantForAccessibility={
+                    floatingCta ? "no-hide-descendants" : "auto"
+                  }
+                  aria-hidden={floatingCta}
+                >
                   {prayed ? (
                     // El orbe con la marca, como en el montaje. Es el único momento
                     // del día en que la app dice "hecho", y decirlo con una línea de
@@ -753,7 +799,9 @@ export default function Today() {
                   )}
                 </View>
 
-                {actionError ? (
+                {/* Con el gemelo flotando, el error sale junto a él: aquí
+                quedaba bajo el pliegue, pegado a un botón que no se veía. */}
+                {actionError && !floatingCta ? (
                   <Txt
                     variant="caption"
                     tone="danger"
@@ -837,21 +885,27 @@ export default function Today() {
           </ResponsiveTabContent>
         </ScrollView>
 
-        {/* El gemelo flotante de «Ya oré hoy» (ver checkCta): solo en móvil,
-        solo mientras el de verdad no asoma y solo cuando ya se sabe que hoy
-        no has orado — no parpadea mientras carga. */}
-        {prayed === false && ctaOffscreen && !isWide ? (
-          <Animated.View
-            entering={enterFade}
-            pointerEvents="box-none"
-            className="absolute inset-x-0 bottom-0 px-7 pb-4"
-          >
+        {/* El gemelo flotante de «Ya oré hoy» (ver checkCta y floatingCta). */}
+        {floatingCta ? (
+          <FloatingCta>
+            {actionError ? (
+              <Glass flat readable className="rounded-card px-4 py-2">
+                <Txt
+                  variant="caption"
+                  tone="danger"
+                  className="text-center"
+                  accessibilityRole="alert"
+                >
+                  {actionError}
+                </Txt>
+              </Glass>
+            ) : null}
             <Button
               title={t("plan.markDone")}
               loading={markPrayed.isPending}
               onPress={markToday}
             />
-          </Animated.View>
+          </FloatingCta>
         ) : null}
       </View>
 

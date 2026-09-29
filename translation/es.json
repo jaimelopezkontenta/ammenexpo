@@ -22,7 +22,8 @@
     "greetingMorning": "Buenos días",
     "greetingAfternoon": "Buenas tardes",
     "greetingEvening": "Buenas noches",
-    "greetingNight": "Buenas noches"
+    "greetingNight": "Buenas noches",
+    "goToday": "Ir a Hoy"
   },
   "tabs": {
     "today": "Hoy",
@@ -574,7 +575,9 @@
     "days_plural": "{{count}} días",
     "visPublic": "Todo el mundo",
     "visPublicHint": "Aparecerá en tu perfil y en la comunidad. Cualquiera podrá leerlo. Para que alguien ore por ti hace falta compartirlo con esa persona o con un círculo.",
-    "makePrivate": "Crearlo solo para mí"
+    "makePrivate": "Cambiar a «Solo yo»",
+    "preparingCircleTitle": "Preparando el plan del círculo",
+    "preparingCircleBody": "Lo escribimos con los temas que has elegido. Tarda unos segundos."
   },
   "bible": {
     "title": "Biblia",

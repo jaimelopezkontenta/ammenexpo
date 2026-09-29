@@ -8,7 +8,7 @@ import { Platform } from "react-native";
 import { supabase } from "@/utils/supabase";
 import { track } from "@/core/observability/track";
 
-import { canRegisterRemotePush } from "./pushConfig";
+import { canRegisterRemotePush, PUSH_PERMISSION_REFRESH } from "./pushConfig";
 import { type ResolvedNotification } from "./resolveTarget";
 import {
   createPushResponseCoordinator,
@@ -269,11 +269,13 @@ export const useNotificationResponseHandler = ({
 /**
  * Si este teléfono deja avisar. Solo en nativo (en web el aviso es el correo).
  * Con el refresco al volver del fondo (core/query/client.ts), si alguien lo
- * activa en los ajustes y vuelve, Perfil se entera solo.
+ * activa en los ajustes y vuelve, Perfil se entera solo — también si vuelve
+ * en menos de 30 s (`PUSH_PERMISSION_REFRESH`).
  */
 export const usePushPermissionStatus = () =>
   useQuery({
     queryKey: ["pushPermission"],
     enabled: Platform.OS !== "web",
+    ...PUSH_PERMISSION_REFRESH,
     queryFn: async () => (await Notifications.getPermissionsAsync()).status,
   });

@@ -22,6 +22,7 @@ import {
   clearReturnTo,
   peekReturnTo,
   rememberReturnTo,
+  resumeReturnTo,
 } from "@/core/nav/returnTo";
 
 // Esta pantalla se quedó con los grises del scaffold hasta el rediseño, y no por
@@ -87,6 +88,12 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (pathname === peekReturnTo()) clearReturnTo();
   }, [pathname]);
+  // Tras cerrar sesión a propósito no se recuerda la pantalla que se dejaba;
+  // ya en la de entrar, lo que se abra desde aquí sí (core/nav/returnTo.ts).
+  const signedOutAtAuth = !session && !isLoading && group === "(auth)";
+  useEffect(() => {
+    if (signedOutAtAuth) resumeReturnTo();
+  }, [signedOutAtAuth]);
   const correoToken =
     pathname === "/correo" &&
     typeof search.t === "string" &&

@@ -16,6 +16,16 @@ import { supabase } from "@/utils/supabase";
 
 import { gateStateFrom, type OnboardingRead } from "./onboardingState";
 import { redeemPendingTokens } from "./pendingToken";
+import {
+  cleanupOnSessionChange,
+  destinationPath,
+  redeemStep,
+} from "./sessionFlow";
+import {
+  forgetReturnToOnSignOut,
+  noteSessionUser,
+  rememberReturnTo,
+} from "@/core/nav/returnTo";
 import type { RedeemDestination } from "@/core/plans/redeemOutcome";
 import {
   revokeThisDevicePush,
@@ -62,7 +72,14 @@ export const SessionProvider = ({
 
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      lastUserId.current = data.session?.user.id ?? null;
+      const userId = data.session?.user.id ?? null;
+      lastUserId.current = userId;
+      noteSessionUser(userId);
+      // Arrancar sin sesión también limpia el día guardado: si la sesión se
+      // perdió con la app cerrada, no hubo transición que lo hiciera.
+      if (cleanupOnSessionChange(null, userId).clearCachedDays) {
+        void clearCachedDays();
+      }
       setSession(data.session);
       setIsLoading(false);
     });
@@ -79,13 +96,15 @@ export const SessionProvider = ({
         //
         // Skipped when there was no previous user: at startup there is nothing
         // cached to leak, and clearing would cancel the first fetches.
-        if (lastUserId.current !== null && lastUserId.current !== nextUserId) {
-          queryClient.clear();
-          // Lo mismo con el día guardado para leer sin red: lleva el texto de
-          // oración y en web vive en localStorage.
-          void clearCachedDays();
-        }
+        const cleanup = cleanupOnSessionChange(lastUserId.current, nextUserId);
+        if (cleanup.clearQueryCache) queryClient.clear();
+        // Lo mismo con el día guardado para leer sin red: lleva el texto de
+        // oración y en web vive en localStorage.
+        if (cleanup.clearCachedDays) void clearCachedDays();
 
+        // Antes de que la puerta vuelva a pintar: lo que otra persona dejó
+        // en `returnTo` no es destino de quien entra ahora.
+        noteSessionUser(nextUserId);
         lastUserId.current = nextUserId;
         setSession(nextSession);
         setIsLoading(false);
@@ -105,7 +124,11 @@ export const SessionProvider = ({
   // no-op once there is nothing stashed, so it costs one AsyncStorage read per
   // launch.
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      // Un destino de la sesión anterior no es de quien entre después.
+      pendingDestination.current = null;
+      return;
+    }
 
     let active = true;
 
@@ -126,33 +149,8 @@ export const SessionProvider = ({
     };
   }, [userId, queryClient]);
 
-  // Un share canjeado al entrar abre el día que toca orar, y una invitación a
-  // un círculo abre ese círculo — no Hoy, que dejaba a quien llegaba a una
-  // pestaña de distancia y sin pista de qué había pasado. El invite code de
-  // la app no lleva a ningún sitio concreto y no navega.
-  //
-  // Se navega solo con el navegador raíz ya montado: el canje puede resolver
-  // en el arranque en frío, antes, y un `router.replace` en ese momento caía
-  // en `/` arrastrando los parámetros de la ruta anterior (`/?token=…`).
   const rootNavigation = useRootNavigationState();
   const navigationReady = Boolean(rootNavigation?.key);
-  useEffect(() => {
-    const destination = pendingDestination.current;
-    if (!destination || !navigationReady) return;
-    pendingDestination.current = null;
-
-    if (destination.kind === "plan") {
-      router.replace({
-        pathname: "/orar/[planId]",
-        params: { planId: destination.planId },
-      });
-    } else {
-      router.replace({
-        pathname: "/circulo/[id]",
-        params: { id: destination.circleId },
-      });
-    }
-  }, [destinationTick, navigationReady]);
 
   // Keyed by user, so signing in as someone else can never inherit the
   // previous account's onboarding state.
@@ -209,6 +207,45 @@ export const SessionProvider = ({
     readFailed,
   });
 
+  // Un share canjeado al entrar abre el día que toca orar, y una invitación a
+  // un círculo abre ese círculo — no Hoy, que dejaba a quien llegaba a una
+  // pestaña de distancia y sin pista de qué había pasado. El invite code de
+  // la app no lleva a ningún sitio concreto y no navega.
+  //
+  // Se navega solo con el navegador raíz ya montado: el canje puede resolver
+  // en el arranque en frío, antes, y un `router.replace` en ese momento caía
+  // en `/` arrastrando los parámetros de la ruta anterior (`/?token=…`).
+  //
+  // Y solo con las puertas de `AuthGate` cruzadas: en un alta nueva el canje
+  // vuelve mientras faltan los términos y el onboarding, y navegar entonces
+  // era perder el destino. Mientras falten, se le deja a `returnTo`, que es
+  // adonde la puerta lleva al cruzar la última (core/auth/sessionFlow.ts).
+  useEffect(() => {
+    const destination = pendingDestination.current;
+    if (!destination) return;
+
+    const step = redeemStep({ hasOnboarded, termsAccepted, navigationReady });
+    if (step === "wait") return;
+    pendingDestination.current = null;
+
+    if (step === "handoff") {
+      rememberReturnTo(destinationPath(destination));
+      return;
+    }
+
+    if (destination.kind === "plan") {
+      router.replace({
+        pathname: "/orar/[planId]",
+        params: { planId: destination.planId },
+      });
+    } else {
+      router.replace({
+        pathname: "/circulo/[id]",
+        params: { id: destination.circleId },
+      });
+    }
+  }, [destinationTick, navigationReady, hasOnboarded, termsAccepted]);
+
   // RDY-10: se pide permiso ya dentro de la app, no en el primer frame — de
   // ahí depender de `hasOnboarded`/`termsAccepted` y no solo de `userId`.
   usePushRegistration(
@@ -255,6 +292,10 @@ export const SessionProvider = ({
   }, [refetch]);
 
   const signOut = useCallback(async () => {
+    // Salir a propósito no es «te echaron de aquí»: la pantalla desde la que
+    // se cierra sesión no queda como destino para quien entre después.
+    forgetReturnToOnSignOut();
+
     // Revocar necesita el token de *este* dispositivo, que ya no se puede
     // pedir una vez la sesión se fue. Pero `getExpoPushTokenAsync` a veces
     // no vuelve: await de la revocación atrapaba a quien solo quería salir.

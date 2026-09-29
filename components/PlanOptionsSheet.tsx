@@ -1,5 +1,4 @@
 import { X } from "lucide-react-native";
-import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   KeyboardAvoidingView,
@@ -16,6 +15,7 @@ import Animated from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
 import { Glass } from "@/components/Glass";
+import { useSheetClosed } from "@/components/ui/sheetClose";
 import { SheetGrabHandle, useSheetDrag } from "@/components/ui/sheetDrag";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
 import { TextField } from "@/components/TextField";
@@ -25,7 +25,7 @@ import { icon, scrim, useThemeColors } from "@/theme";
 
 import { Tap } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
-import { DURATION, enterSheet } from "@/theme/motion";
+import { enterSheet } from "@/theme/motion";
 
 type Props = {
   visible: boolean;
@@ -94,33 +94,10 @@ export const PlanOptionsSheet = ({
   const { t } = useTranslation();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
-  const closedOnce = useRef(false);
-  const onClosedRef = useRef(onClosed);
   const { panGesture, dragStyle } = useSheetDrag(onClose, visible);
-
-  useEffect(() => {
-    onClosedRef.current = onClosed;
-  }, [onClosed]);
-
-  useEffect(() => {
-    if (visible) {
-      closedOnce.current = false;
-      return;
-    }
-    if (Platform.OS !== "web") return;
-    const timer = setTimeout(() => {
-      if (closedOnce.current) return;
-      closedOnce.current = true;
-      onClosedRef.current?.();
-    }, DURATION.exit);
-    return () => clearTimeout(timer);
-  }, [visible]);
-
-  const handleClosed = () => {
-    if (closedOnce.current) return;
-    closedOnce.current = true;
-    onClosedRef.current?.();
-  };
+  // Una llamada a `onClosed` por cierre, también en Android, donde el Modal
+  // no dispara `onDismiss` (components/ui/sheetClose.ts).
+  const handleClosed = useSheetClosed(visible, onClosed);
 
   return (
     <Modal

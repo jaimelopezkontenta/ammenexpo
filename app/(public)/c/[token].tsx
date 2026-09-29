@@ -8,7 +8,11 @@ import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { rememberShareToken, rememberSource } from "@/core/auth/pendingToken";
+import {
+  rememberShareToken,
+  rememberSource,
+  shouldStashLinkToken,
+} from "@/core/auth/pendingToken";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   useCircleInvitePreview,
@@ -24,7 +28,7 @@ export default function CircleInvite() {
     /** Por dónde llegó: lo pone `buildShareUrl` al repartir el enlace. */
     de?: string;
   }>();
-  const { session } = useSession();
+  const { session, isLoading: sessionLoading } = useSession();
   const userId = session?.user.id;
 
   const {
@@ -40,14 +44,20 @@ export default function CircleInvite() {
 
   // Same as the shared-plan preview: keep the token across signup so the new
   // account lands inside the circle instead of on an empty home screen.
+  // Solo sin sesión: con cuenta abierta se une con «Unirme», y un token
+  // guardado se canjeaba solo en el siguiente arranque.
+  const stash = shouldStashLinkToken({
+    sessionLoading,
+    hasSession: Boolean(session),
+  });
   useEffect(() => {
-    if (token) {
+    if (token && stash) {
       void rememberShareToken(token);
       // La etiqueta viaja con el enlace y se guarda **una sola vez**: quien
       // abre tres antes de decidirse entró por el primero.
       if (de) void rememberSource(de);
     }
-  }, [token, de]);
+  }, [token, de, stash]);
 
   const handleJoin = async () => {
     if (!token) return;
