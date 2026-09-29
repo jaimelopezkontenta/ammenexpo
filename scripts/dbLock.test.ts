@@ -11,7 +11,12 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { acquireDbLock, dbLockHeldBy, releaseDbLock } from "./dbLock.mjs";
+import {
+  acquireDbLock,
+  dbLockHeldBy,
+  parseProjectId,
+  releaseDbLock,
+} from "./dbLock.mjs";
 
 type LockMetadata = {
   token: string;
