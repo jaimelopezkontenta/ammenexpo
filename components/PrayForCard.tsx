@@ -45,7 +45,7 @@ export const PrayForCard = ({ plan, onOpen }: Props) => {
         </View>
 
         <View className="gap-1">
-          <Txt variant="editorial" className="text-base">
+          <Txt variant="editorial">
             {t("common.day", { number: plan.day_number })}
           </Txt>
           <Txt variant="body">{plan.day_title}</Txt>

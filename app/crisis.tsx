@@ -1,14 +1,13 @@
 import * as Localization from "expo-localization";
-import { router, Stack } from "expo-router";
+import { router } from "expo-router";
 import { useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, ScrollView, View } from "react-native";
+import { Linking, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
-import { DawnBackground } from "@/components/DawnBackground";
+import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { Txt } from "@/components/ui/Text";
-import { useScreenPadding } from "@/components/useScreenPadding";
 import {
   emergencyNumberFor,
   FIND_A_HELPLINE_URL,
@@ -62,7 +61,6 @@ const noRegion = () => null;
 
 export default function CrisisResources() {
   const { t, i18n } = useTranslation();
-  const { scrollBottom } = useScreenPadding();
 
   const region = useSyncExternalStore(noSubscription, deviceRegion, noRegion);
 
@@ -71,107 +69,97 @@ export default function CrisisResources() {
   const emergency = emergencyNumberFor(region);
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          // `title` se queda para el título del documento en web; el header
-          // visible va mudo (`headerTitle`): el H1 serif de la pantalla ya
-          // dice "Antes de seguir" y salía dos veces.
-          title: t("crisis.title"),
-          headerTitle: "",
-          headerShown: true,
-          // Una ceremonia entra de frente, no como un paso lateral más.
-          animation: "fade_from_bottom",
-          // Nadie sale de aquí por accidente: ni gesto, ni el back del
-          // stack. Volver a `/peticiones/nueva` reabriría el borrador con
-          // la frase de crisis todavía escrita. La salida es "Volver a Hoy".
-          gestureEnabled: false,
-          headerBackVisible: false,
-          headerLeft: () => null,
-        }}
-      />
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-        >
-          <Txt variant="title">{t("crisis.title")}</Txt>
+    <ScreenScaffold
+      // `title` se queda para el título del documento en web; el header
+      // visible va mudo (`headerTitle`): el H1 serif de la pantalla ya
+      // dice "Antes de seguir" y salía dos veces.
+      title={t("crisis.title")}
+      screenOptions={{
+        headerTitle: "",
+        // Una ceremonia entra de frente, no como un paso lateral más.
+        animation: "fade_from_bottom",
+        // Nadie sale de aquí por accidente: ni gesto, ni el back del
+        // stack. Volver a `/peticiones/nueva` reabriría el borrador con
+        // la frase de crisis todavía escrita. La salida es "Volver a Hoy".
+        gestureEnabled: false,
+        headerBackVisible: false,
+        headerLeft: () => null,
+      }}
+      contentClassName="flex-grow gap-6"
+    >
+      <Txt variant="title">{t("crisis.title")}</Txt>
 
-          <Txt variant="body" accessibilityRole="alert">
-            {t("crisis.intro")}
-          </Txt>
+      <Txt variant="body" accessibilityRole="alert">
+        {t("crisis.intro")}
+      </Txt>
 
-          <Txt variant="caption">{t("crisis.notDiagnosis")}</Txt>
+      <Txt variant="caption">{t("crisis.notDiagnosis")}</Txt>
 
-          <Txt variant="caption" accessibilityRole="alert">
-            {t("crisis.draftPrivate")}
-          </Txt>
+      <Txt variant="caption" accessibilityRole="alert">
+        {t("crisis.draftPrivate")}
+      </Txt>
 
-          <Card className="gap-4">
-            <Txt variant="subheadingLg">{t("crisis.resourcesTitle")}</Txt>
+      <Card className="gap-4">
+        <Txt variant="subheadingLg">{t("crisis.resourcesTitle")}</Txt>
 
-            {lines.map((line, index) => (
-              <View key={line.region} className="gap-2">
-                <Txt variant="bodyMedium">
-                  {t(`crisis.lines.${line.region}.title`)}
-                </Txt>
-                <Txt variant="caption">
-                  {t(`crisis.lines.${line.region}.body`)}
-                </Txt>
-                <Button
-                  title={t("crisis.callNumber", { number: line.display })}
-                  // La primera es la más cercana: la del país, o la de
-                  // España si no hay país. Las demás, un paso por detrás.
-                  variant={index === 0 ? "primary" : "secondary"}
-                  accessibilityRole="link"
-                  onPress={() => open(telUrl(line.phone))}
-                />
-              </View>
-            ))}
-
-            <View className="gap-2">
-              <Txt variant="bodyMedium">
-                {lines.length > 0
-                  ? t("crisis.otherCountriesTitle")
-                  : t("crisis.findYourLineTitle")}
-              </Txt>
-              <Txt variant="caption">{t("crisis.otherCountriesBody")}</Txt>
-              <Button
-                title={t("crisis.findHelpline")}
-                variant={lines.length > 0 ? "secondary" : "primary"}
-                accessibilityRole="link"
-                onPress={() => open(FIND_A_HELPLINE_URL)}
-              />
-              <Txt variant="caption">{t("crisis.emergencyNumbers")}</Txt>
-            </View>
-
-            <View className="gap-2">
-              <Txt variant="label" tone="danger">
-                {t("crisis.resourceEmergency")}
-              </Txt>
-              {/* Solo el número del país del dispositivo: el de otro país
-                podría no existir allí. Sin país, queda el texto de arriba. */}
-              {emergency ? (
-                <Button
-                  title={t("crisis.callEmergency", { number: emergency })}
-                  variant="secondary"
-                  accessibilityRole="link"
-                  onPress={() => open(telUrl(emergency))}
-                />
-              ) : null}
-            </View>
-          </Card>
-
-          <Txt variant="caption">{t("crisis.staying")}</Txt>
-
-          <View className="mt-auto gap-3 pt-6">
+        {lines.map((line, index) => (
+          <View key={line.region} className="gap-2">
+            <Txt variant="bodyMedium">
+              {t(`crisis.lines.${line.region}.title`)}
+            </Txt>
+            <Txt variant="caption">{t(`crisis.lines.${line.region}.body`)}</Txt>
             <Button
-              title={t("crisis.goHome")}
-              onPress={() => router.replace("/")}
+              title={t("crisis.callNumber", { number: line.display })}
+              // La primera es la más cercana: la del país, o la de
+              // España si no hay país. Las demás, un paso por detrás.
+              variant={index === 0 ? "primary" : "secondary"}
+              accessibilityRole="link"
+              onPress={() => open(telUrl(line.phone))}
             />
           </View>
-        </ScrollView>
-      </DawnBackground>
-    </>
+        ))}
+
+        <View className="gap-2">
+          <Txt variant="bodyMedium">
+            {lines.length > 0
+              ? t("crisis.otherCountriesTitle")
+              : t("crisis.findYourLineTitle")}
+          </Txt>
+          <Txt variant="caption">{t("crisis.otherCountriesBody")}</Txt>
+          <Button
+            title={t("crisis.findHelpline")}
+            variant={lines.length > 0 ? "secondary" : "primary"}
+            accessibilityRole="link"
+            onPress={() => open(FIND_A_HELPLINE_URL)}
+          />
+          <Txt variant="caption">{t("crisis.emergencyNumbers")}</Txt>
+        </View>
+
+        <View className="gap-2">
+          <Txt variant="label" tone="danger">
+            {t("crisis.resourceEmergency")}
+          </Txt>
+          {/* Solo el número del país del dispositivo: el de otro país
+                podría no existir allí. Sin país, queda el texto de arriba. */}
+          {emergency ? (
+            <Button
+              title={t("crisis.callEmergency", { number: emergency })}
+              variant="secondary"
+              accessibilityRole="link"
+              onPress={() => open(telUrl(emergency))}
+            />
+          ) : null}
+        </View>
+      </Card>
+
+      <Txt variant="caption">{t("crisis.staying")}</Txt>
+
+      <View className="mt-auto gap-3 pt-6">
+        <Button
+          title={t("crisis.goHome")}
+          onPress={() => router.replace("/")}
+        />
+      </View>
+    </ScreenScaffold>
   );
 }

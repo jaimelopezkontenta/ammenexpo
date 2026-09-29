@@ -4,8 +4,8 @@ import { View } from "react-native";
 import { FONT_STEPS, type ReaderFontStep } from "@/core/bible/readerPrefs";
 import { BIBLE_VERSIONS, type BibleVersion } from "@/core/bible/versions";
 
+import { GlassIconButton } from "@/components/ui/GlassIconButton";
 import { Pill } from "@/components/ui/Pill";
-import { Tap } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
 
 /**
@@ -38,21 +38,17 @@ export const ReaderToolbar = ({
     next: ReaderFontStep | null,
     textClass: string,
   ) => (
-    <Tap
-      accessibilityRole="button"
+    <GlassIconButton
       accessibilityLabel={accessibilityLabel}
       disabled={next === null}
       onPress={() => next && onStep(next)}
-      className={`h-11 w-11 items-center justify-center rounded-full border border-glassedge/60 bg-glass/60 ${
-        next === null ? "opacity-40" : ""
-      }`}
     >
       {/* La A de muestra: serif del sistema con el tamaño del control
           (la clase de tamaño del caller gana a la escala de `title`). */}
       <Txt variant="title" className={textClass}>
         {label}
       </Txt>
-    </Tap>
+    </GlassIconButton>
   );
 
   return (

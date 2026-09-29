@@ -65,7 +65,7 @@ export const HeldQueue = () => {
           {t(`moderation.target.${hold.target_type}`)} ·{" "}
           {t(`moderation.holdStatus.${hold.status}`)}
         </Txt>
-        <Txt variant="caption" className="text-xs">
+        <Txt variant="captionSm">
           {new Date(hold.created_at).toLocaleString()}
         </Txt>
       </View>
@@ -92,7 +92,7 @@ export const HeldQueue = () => {
             void run(() => claim.mutateAsync(hold.id), t("moderation.claim"));
           }}
         >
-          <Txt variant="label" className="underline">
+          <Txt variant="label" underline>
             {t("moderation.claim")}
           </Txt>
         </Tap>
@@ -121,7 +121,7 @@ export const HeldQueue = () => {
                 );
               }}
             >
-              <Txt variant="caption" className="underline">
+              <Txt variant="caption" underline>
                 {t("moderation.release")}
               </Txt>
             </Tap>
@@ -138,7 +138,7 @@ export const HeldQueue = () => {
                 );
               }}
             >
-              <Txt variant="caption" tone="danger" className="underline">
+              <Txt variant="caption" tone="danger" underline>
                 {t("moderation.remove")}
               </Txt>
             </Tap>

@@ -200,7 +200,7 @@ export default function Bible() {
                     openChapter(hit.book_id, hit.chapter, hit.verse)
                   }
                 >
-                  <Txt variant="editorial" className="text-base">
+                  <Txt variant="editorial">
                     {hit.book_name} {hit.chapter}:{hit.verse}
                   </Txt>
                   <Txt variant="bodySerifReading">

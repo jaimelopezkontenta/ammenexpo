@@ -75,7 +75,7 @@ export const TestimonyCard = memo(function TestimonyCard({
               accessibilityRole="button"
               onPress={() => actions.share(entry.body)}
             >
-              <Txt variant="caption" tone="accent" className="underline">
+              <Txt variant="caption" tone="accent" underline>
                 {t("testimony.share")}
               </Txt>
             </Tap>
@@ -85,7 +85,7 @@ export const TestimonyCard = memo(function TestimonyCard({
                 accessibilityRole="button"
                 onPress={() => actions.makePrivate(entry.id)}
               >
-                <Txt variant="caption" className="underline">
+                <Txt variant="caption" underline>
                   {t("testimony.makePrivate")}
                 </Txt>
               </Tap>
@@ -119,7 +119,7 @@ export const TestimonyCard = memo(function TestimonyCard({
               accessibilityRole="button"
               onPress={() => actions.report(entry.id)}
             >
-              <Txt variant="caption" className="underline">
+              <Txt variant="caption" underline>
                 {t("moderation.report")}
               </Txt>
             </Tap>
@@ -129,7 +129,7 @@ export const TestimonyCard = memo(function TestimonyCard({
               accessibilityLabel={`${t("moderation.block")} ${entry.author_name}`}
               onPress={() => actions.block(entry.author_id, entry.author_name)}
             >
-              <Txt variant="caption" className="underline">
+              <Txt variant="caption" underline>
                 {t("moderation.block")}
               </Txt>
             </Tap>

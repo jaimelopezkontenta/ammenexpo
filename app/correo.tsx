@@ -154,7 +154,7 @@ export default function Correo() {
         <Link
           href={{ pathname: "/legal/[doc]", params: { doc: "privacidad" } }}
         >
-          <Txt variant="caption" className="underline">
+          <Txt variant="caption" underline>
             {t("email.privacyLink")}
           </Txt>
         </Link>

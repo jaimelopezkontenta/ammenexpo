@@ -89,7 +89,7 @@ const Bubble = ({
   return (
     <Animated.View entering={entering}>
       {dayLabel ? (
-        <Txt variant="editorial" className="pb-3 pt-1 text-center text-base">
+        <Txt variant="editorial" className="pb-3 pt-1 text-center">
           {dayLabel}
         </Txt>
       ) : null}
@@ -135,11 +135,9 @@ const Bubble = ({
             {/* La hora dentro de la burbuja, como en cualquier chat:
                 pequeña, al filo, sin robarle línea al mensaje. */}
             <Txt
-              variant="caption"
+              variant="captionSm"
               tone={item.is_mine ? "onDark" : undefined}
-              className={`self-end pt-0.5 text-xs ${
-                item.is_mine ? "opacity-70" : ""
-              }`}
+              className={`self-end pt-0.5 ${item.is_mine ? "opacity-70" : ""}`}
             >
               {timeLabel}
             </Txt>

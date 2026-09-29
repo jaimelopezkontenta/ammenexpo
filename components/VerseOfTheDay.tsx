@@ -45,9 +45,7 @@ export const VerseOfTheDay = () => {
           asChild
         >
           <Tap accessibilityRole="link">
-            <Txt variant="editorial" className="text-base">
-              {data.reference}
-            </Txt>
+            <Txt variant="editorial">{data.reference}</Txt>
           </Tap>
         </Link>
 
@@ -63,7 +61,7 @@ export const VerseOfTheDay = () => {
           asChild
         >
           <Tap accessibilityRole="link">
-            <Txt variant="label" className="underline">
+            <Txt variant="label" underline>
               {t("bible.shareVerse")}
             </Txt>
           </Tap>

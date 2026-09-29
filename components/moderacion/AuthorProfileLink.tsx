@@ -14,7 +14,7 @@ export const AuthorProfileLink = ({ authorId }: { authorId: string }) => {
       asChild
     >
       <Tap accessibilityRole="link">
-        <Txt variant="caption" tone="accent" className="underline">
+        <Txt variant="caption" tone="accent" underline>
           {t("moderation.openProfile")}
         </Txt>
       </Tap>

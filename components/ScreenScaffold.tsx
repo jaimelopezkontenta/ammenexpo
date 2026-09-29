@@ -27,7 +27,14 @@ type Props = {
    * decide (listas virtualizadas, layouts propios).
    */
   scroll?: boolean;
-  /** Clases extra del contenedor de contenido (se añaden a las del sistema). */
+  /**
+   * Clases extra del contenedor de contenido. Se SUMAN a las del sistema, no
+   * las sustituyen: entre dos clases de la misma familia no gana la última
+   * del string sino la que va después en la hoja de Tailwind (dentro de una
+   * familia, orden alfabético), en web y en nativo. `gap-6`/`gap-7`/`gap-8`
+   * pisan el `gap-5`; `gap-3`/`gap-4` no, y tampoco un `py-10` al `py-8`.
+   * Una pantalla que necesite eso no encaja aquí tal cual.
+   */
   contentClassName?: string;
   /** Opciones extra de la pantalla (animation, headerRight…). */
   screenOptions?: Parameters<typeof Stack.Screen>[0]["options"];

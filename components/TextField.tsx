@@ -3,6 +3,7 @@ import { TextInput, TextInputProps, View } from "react-native";
 
 import { Txt } from "@/components/ui/Text";
 import { useThemeColors } from "@/theme";
+import { MAX_FONT_SCALE } from "@/theme/typography";
 
 /**
  * Las tres pieles del campo de texto, que existían de palabra (documentadas
@@ -55,6 +56,9 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
           placeholderTextColor={colors.mist.ink}
+          // El mismo tope que Txt: lo que se escribe no puede crecer más que
+          // su rótulo.
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           {...inputProps}
           className={`w-full rounded-input border px-4 py-4 font-sans text-base text-plum ${SKIN[skin]} ${
             error ? "border-danger" : "border-glassedge/70"

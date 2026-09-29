@@ -5,6 +5,7 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { Orb } from "@/components/Orb";
 import { Wordmark } from "@/components/Wordmark";
 import { Txt } from "@/components/ui/Text";
+import { MAX_FONT_SCALE } from "@/theme/typography";
 
 /**
  * La única pantalla que se ve al equivocarse de enlace. Antes eran dos líneas
@@ -25,6 +26,8 @@ export default function NotFoundScreen() {
         </Txt>
         <Link
           href="/"
+          // El Link pinta su propio texto (no un Txt): el tope, a mano.
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           className="min-h-11 py-2 text-center font-sans-semibold text-base text-ember-ink underline"
         >
           {t("common.notFoundLink")}

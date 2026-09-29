@@ -8,6 +8,7 @@ import { Txt } from "@/components/ui/Text";
 import { NOTE_MAX } from "@/core/bible/marks";
 import type { BibleVersion } from "@/core/bible/versions";
 import { useThemeColors } from "@/theme";
+import { MAX_FONT_SCALE } from "@/theme/typography";
 
 type VerseRowProps = {
   verse: number;
@@ -184,6 +185,7 @@ const VerseEditor = ({
         onChangeText={setDraft}
         placeholder={t("bible.notePlaceholder")}
         placeholderTextColor={colors.mist.ink}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         maxLength={NOTE_MAX}
         multiline
       />
@@ -195,13 +197,13 @@ const VerseEditor = ({
         >
           {/* Guardar vacío borra la nota, y lo dice: un botón de guardar que
               borra sin avisar es una trampa. */}
-          <Txt variant="label" className="font-sans-semibold">
+          <Txt variant="labelStrong">
             {!draft.trim() && note ? t("bible.noteDelete") : t("common.save")}
           </Txt>
         </Tap>
 
         <Tap accessibilityRole="button" onPress={onClose}>
-          <Txt variant="caption" className="underline">
+          <Txt variant="caption" underline>
             {t("common.cancel")}
           </Txt>
         </Tap>
@@ -225,7 +227,7 @@ const VerseEditor = ({
         asChild
       >
         <Tap accessibilityRole="link">
-          <Txt variant="label" tone="accent" className="underline">
+          <Txt variant="label" tone="accent" underline>
             {t("bible.shareVerse")}
           </Txt>
         </Tap>

@@ -62,7 +62,7 @@ export const ReportsQueue = () => {
               <Txt variant="overline">
                 {t(`moderation.target.${report.target_type}`)}
               </Txt>
-              <Txt variant="caption" className="text-xs">
+              <Txt variant="captionSm">
                 {new Date(report.created_at).toLocaleString()}
               </Txt>
             </View>
@@ -100,7 +100,7 @@ export const ReportsQueue = () => {
                       )
                     }
                   >
-                    <Txt variant="caption" className="underline">
+                    <Txt variant="caption" underline>
                       {t("moderation.hide")}
                     </Txt>
                   </Tap>
@@ -116,7 +116,7 @@ export const ReportsQueue = () => {
                       )
                     }
                   >
-                    <Txt variant="caption" className="underline">
+                    <Txt variant="caption" underline>
                       {t("moderation.block")}
                     </Txt>
                   </Tap>
@@ -135,7 +135,7 @@ export const ReportsQueue = () => {
                     )
                   }
                 >
-                  <Txt variant="label" className="underline">
+                  <Txt variant="label" underline>
                     {t("moderation.markReviewed")}
                   </Txt>
                 </Tap>
@@ -153,7 +153,7 @@ export const ReportsQueue = () => {
                     )
                   }
                 >
-                  <Txt variant="caption" className="underline">
+                  <Txt variant="caption" underline>
                     {t("moderation.dismiss")}
                   </Txt>
                 </Tap>

@@ -222,7 +222,7 @@ export default function PrayerRequestComments() {
                       )
                     }
                   >
-                    <Txt variant="caption" className="underline">
+                    <Txt variant="caption" underline>
                       {t("moderation.report")}
                     </Txt>
                   </Tap>
@@ -234,7 +234,7 @@ export default function PrayerRequestComments() {
                       blockConfirm.ask(comment.author_id, comment.author_name)
                     }
                   >
-                    <Txt variant="caption" className="underline">
+                    <Txt variant="caption" underline>
                       {t("moderation.block")}
                     </Txt>
                   </Tap>
@@ -252,7 +252,7 @@ export default function PrayerRequestComments() {
                         )
                       }
                     >
-                      <Txt variant="caption" className="underline">
+                      <Txt variant="caption" underline>
                         {t("moderation.hide")}
                       </Txt>
                     </Tap>

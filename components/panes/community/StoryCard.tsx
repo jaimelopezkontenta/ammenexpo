@@ -75,7 +75,7 @@ export const StoryCard = ({
             asChild
           >
             <Tap accessibilityRole="link">
-              <Txt variant="caption" tone="accent" className="underline">
+              <Txt variant="caption" tone="accent" underline>
                 {t("community.openPlan")}
               </Txt>
             </Tap>
@@ -83,7 +83,7 @@ export const StoryCard = ({
         ) : (
           <Link href="/testimonios" asChild>
             <Tap accessibilityRole="link">
-              <Txt variant="caption" tone="accent" className="underline">
+              <Txt variant="caption" tone="accent" underline>
                 {t("community.openTestimonies")}
               </Txt>
             </Tap>
@@ -93,7 +93,7 @@ export const StoryCard = ({
         {entry.is_mine ? null : (
           <>
             <Tap accessibilityRole="button" onPress={onReport}>
-              <Txt variant="caption" className="underline">
+              <Txt variant="caption" underline>
                 {t("moderation.report")}
               </Txt>
             </Tap>
@@ -103,7 +103,7 @@ export const StoryCard = ({
               accessibilityLabel={`${t("moderation.block")} ${entry.author_name ?? ""}`}
               onPress={onBlock}
             >
-              <Txt variant="caption" className="underline">
+              <Txt variant="caption" underline>
                 {t("moderation.block")}
               </Txt>
             </Tap>

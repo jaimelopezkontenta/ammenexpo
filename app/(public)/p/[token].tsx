@@ -220,9 +220,7 @@ export default function SharedPlanPreviewScreen() {
             <Card label={t("plan.scripture")} className="gap-2">
               <Txt variant="reading">{data.scripture_text}</Txt>
               {data.scripture_ref ? (
-                <Txt variant="editorial" className="text-base">
-                  {data.scripture_ref}
-                </Txt>
+                <Txt variant="editorial">{data.scripture_ref}</Txt>
               ) : null}
             </Card>
           ) : null}

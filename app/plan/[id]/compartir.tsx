@@ -1,15 +1,13 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { Txt } from "@/components/ui/Text";
 import { Card } from "@/components/Card";
 import { ChoiceChips } from "@/components/ChoiceChips";
-import { DawnBackground } from "@/components/DawnBackground";
 import { EmailInviteField } from "@/components/email/EmailInviteField";
-import { useScreenPadding } from "@/components/useScreenPadding";
-import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { useUserId } from "@/core/auth/useUserId";
 import { useMyCircles } from "@/core/circles/queries";
 import {
@@ -36,7 +34,6 @@ export default function SharePlan() {
   const { t } = useTranslation();
   const toast = useToast();
   const colors = useThemeColors();
-  const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = useUserId();
 
@@ -77,29 +74,19 @@ export default function SharePlan() {
     );
 
   if (isLoading) {
-    return (
-      <>
-        <Stack.Screen
-          options={{ title: t("share.title"), headerShown: true }}
-        />
-        <LoadingState />
-      </>
-    );
+    return <ScreenScaffold title={t("share.title")} loading />;
   }
 
   // Both used to render as one headerless line of grey text, so a network
   // stumble said your own plan did not exist and gave you no way out.
   if (isLoadingError || !plan) {
     return (
-      <>
-        <Stack.Screen
-          options={{ title: t("share.title"), headerShown: true }}
-        />
-        <ErrorState
-          onRetry={isLoadingError ? () => void refetch() : undefined}
-          message={isLoadingError ? undefined : t("share.previewNotFound")}
-        />
-      </>
+      <ScreenScaffold
+        title={t("share.title")}
+        error
+        onRetry={isLoadingError ? () => void refetch() : undefined}
+        errorMessage={isLoadingError ? undefined : t("share.previewNotFound")}
+      />
     );
   }
 
@@ -138,133 +125,121 @@ export default function SharePlan() {
   };
 
   return (
-    <>
-      <Stack.Screen options={{ title: t("share.title"), headerShown: true }} />
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-        >
-          <View className="gap-1">
-            <Txt variant="subheadingLg">{plan.title}</Txt>
-            <Txt variant="body" tone="secondary">
-              {stillWriting
-                ? t("share.stillWritingMinute")
-                : t("share.subtitle")}
-            </Txt>
-          </View>
+    <ScreenScaffold title={t("share.title")} contentClassName="gap-8">
+      <View className="gap-1">
+        <Txt variant="subheadingLg">{plan.title}</Txt>
+        <Txt variant="body" tone="secondary">
+          {stillWriting ? t("share.stillWritingMinute") : t("share.subtitle")}
+        </Txt>
+      </View>
 
-          {/* Publicar, y **dejar de publicar**, que es la mitad que importa:
+      {/* Publicar, y **dejar de publicar**, que es la mitad que importa:
             elegir "Todo el mundo" al crear el plan era un camino sin vuelta, y
             la única salida habría sido borrarlo entero con los días ya orados
             dentro. */}
-          <View className="gap-3">
-            <Txt variant="subheadingLg">{t("share.publicTitle")}</Txt>
-            <Txt variant="caption">
-              {isPublic ? t("share.publicOn") : t("share.publicOff")}
-            </Txt>
-            <Button
-              title={isPublic ? t("share.unpublish") : t("share.publish")}
-              variant="secondary"
-              loading={setPublic.isPending}
-              onPress={() => void handlePublic()}
+      <View className="gap-3">
+        <Txt variant="subheadingLg">{t("share.publicTitle")}</Txt>
+        <Txt variant="caption">
+          {isPublic ? t("share.publicOn") : t("share.publicOff")}
+        </Txt>
+        <Button
+          title={isPublic ? t("share.unpublish") : t("share.publish")}
+          variant="secondary"
+          loading={setPublic.isPending}
+          onPress={() => void handlePublic()}
+        />
+      </View>
+
+      <View className="gap-3">
+        <Txt variant="subheadingLg">{t("share.circlesTitle")}</Txt>
+
+        {(circles ?? []).length > 0 ? (
+          <>
+            <ChoiceChips
+              options={(circles ?? []).map((circle) => ({
+                value: circle.id,
+                label: circle.name,
+              }))}
+              selected={shared}
+              onToggle={(circleId) => void handleToggleCircle(circleId)}
+              multiple
             />
-          </View>
+            <Txt variant="caption">{t("share.circlesHint")}</Txt>
+          </>
+        ) : (
+          // A failed read used to render "Todavía no tienes círculos", which
+          // is a different and untrue thing to say — and it says it on the
+          // screen where someone is deciding who gets to see their request.
+          <Txt variant="caption">
+            {circlesFailed ? t("common.errorBody") : t("newPlan.noCircles")}
+          </Txt>
+        )}
+      </View>
 
-          <View className="gap-3">
-            <Txt variant="subheadingLg">{t("share.circlesTitle")}</Txt>
+      <View className="gap-3">
+        <Txt variant="subheadingLg">{t("share.linkTitle")}</Txt>
 
-            {(circles ?? []).length > 0 ? (
-              <>
-                <ChoiceChips
-                  options={(circles ?? []).map((circle) => ({
-                    value: circle.id,
-                    label: circle.name,
-                  }))}
-                  selected={shared}
-                  onToggle={(circleId) => void handleToggleCircle(circleId)}
-                  multiple
-                />
-                <Txt variant="caption">{t("share.circlesHint")}</Txt>
-              </>
-            ) : (
-              // A failed read used to render "Todavía no tienes círculos", which
-              // is a different and untrue thing to say — and it says it on the
-              // screen where someone is deciding who gets to see their request.
-              <Txt variant="caption">
-                {circlesFailed ? t("common.errorBody") : t("newPlan.noCircles")}
+        {linkLoading ? (
+          <ActivityIndicator
+            color={colors.plum.DEFAULT}
+            accessibilityLabel={t("common.loading")}
+          />
+        ) : linkUrl ? (
+          <>
+            <Card className="gap-2">
+              <Txt variant="caption" selectable>
+                {linkUrl}
               </Txt>
-            )}
-          </View>
+            </Card>
 
-          <View className="gap-3">
-            <Txt variant="subheadingLg">{t("share.linkTitle")}</Txt>
+            <Txt variant="caption">{t("share.linkWarning")}</Txt>
 
-            {linkLoading ? (
-              <ActivityIndicator
-                color={colors.plum.DEFAULT}
-                accessibilityLabel={t("common.loading")}
-              />
-            ) : linkUrl ? (
-              <>
-                <Card className="gap-2">
-                  <Txt variant="caption" selectable>
-                    {linkUrl}
-                  </Txt>
-                </Card>
+            <Button
+              title={t("common.share")}
+              disabled={stillWriting}
+              onPress={() => void handleShare()}
+            />
 
-                <Txt variant="caption">{t("share.linkWarning")}</Txt>
-
-                <Button
-                  title={t("common.share")}
-                  disabled={stillWriting}
-                  onPress={() => void handleShare()}
-                />
-
-                {/* Copiar, a un toque y sin pasar por la hoja de compartir: el
+            {/* Copiar, a un toque y sin pasar por la hoja de compartir: el
                   enlace se pega en un grupo de WhatsApp, un correo, una nota. */}
-                {canCopyText() ? (
-                  <Button
-                    title={t("share.copyLink")}
-                    variant="secondary"
-                    disabled={stillWriting}
-                    onPress={() =>
-                      void copyText(linkUrl).then((copied) =>
-                        copied
-                          ? toast.success(t("share.linkCopied"))
-                          : toast.error(t("common.errorGeneric")),
-                      )
-                    }
-                  />
-                ) : null}
+            {canCopyText() ? (
+              <Button
+                title={t("share.copyLink")}
+                variant="secondary"
+                disabled={stillWriting}
+                onPress={() =>
+                  void copyText(linkUrl).then((copied) =>
+                    copied
+                      ? toast.success(t("share.linkCopied"))
+                      : toast.error(t("common.errorGeneric")),
+                  )
+                }
+              />
+            ) : null}
 
-                {link ? (
-                  <EmailInviteField kind="plan" token={link.token} />
-                ) : null}
+            {link ? <EmailInviteField kind="plan" token={link.token} /> : null}
 
-                {/* Revoking is as prominent as sharing on purpose. These are
+            {/* Revoking is as prominent as sharing on purpose. These are
                   personal prayer requests: closing the tap must not require
                   hunting through a menu. */}
-                <Button
-                  title={t("share.revoke")}
-                  variant="secondary"
-                  loading={revokeLink.isPending}
-                  onPress={() => void handleRevoke()}
-                />
-              </>
-            ) : (
-              <>
-                <Txt variant="caption">{t("share.noLinkHint")}</Txt>
-                <Button
-                  title={t("share.createLink")}
-                  loading={createLink.isPending}
-                  onPress={() => void handleCreate()}
-                />
-              </>
-            )}
-          </View>
-        </ScrollView>
-      </DawnBackground>
-    </>
+            <Button
+              title={t("share.revoke")}
+              variant="secondary"
+              loading={revokeLink.isPending}
+              onPress={() => void handleRevoke()}
+            />
+          </>
+        ) : (
+          <>
+            <Txt variant="caption">{t("share.noLinkHint")}</Txt>
+            <Button
+              title={t("share.createLink")}
+              loading={createLink.isPending}
+              onPress={() => void handleCreate()}
+            />
+          </>
+        )}
+      </View>
+    </ScreenScaffold>
   );
 }

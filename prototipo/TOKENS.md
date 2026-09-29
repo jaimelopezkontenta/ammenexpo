@@ -16,10 +16,11 @@ no al revés.
 | dawn.peach-mid | #FCEBD8 | Paso intermedio de esa imagen, y el versículo subrayado |
 | ember | #F2A578 | CTA, inicio del degradado |
 | ember.pale | #FBDFC2 | CTA, fin del degradado |
-| ember.accent | #E2703F | **Solo decoración**: labels editoriales ≥18px, indicador de tab activa, iconos, relleno del progress |
+| ember.accent | #E2703F | **Solo decoración**: labels editoriales ≥18px, indicador de tab activa, iconos, relleno del progress, fondo de los badges |
 | ember.ink | #B24A22 | **Texto naranja que hay que leer**: enlaces, "Saltar", "¿Olvidaste tu contraseña?" |
 | plum | #413653 | Texto principal |
 | plum.chip | #4D405C | Pills y tabs activas, badges, chips de acción |
+| badge-ink | #211D33 | La cifra de los badges sobre ember.accent (Oleada 5, 2026-09-29). Fija en los dos temas, como cta-ink |
 | mist | #8A8494 | **Solo decoración**: iconos, separadores, bordes |
 | mist.ink | #6F6879 | Texto secundario y placeholders |
 | surface | #FFFFFF | Cards, inputs, pills |
@@ -48,6 +49,12 @@ tarjeta. `peach` se queda por la imagen que se comparte.
 | **danger** | ✅ 5,44 | ✅ 4,89 | ✅ 5,08 | ⚠️ 4,12 | ⚠️ 3,71 |
 
 Blanco sobre plum.chip: ✅ 9,53 — las pills activas y la burbuja propia del chat.
+
+**Los badges.** Los de la app (pestaña Juntos, raíl, filas de círculo) van sobre
+ember.accent, no sobre plum.chip. Su cifra iba en blanco en el raíl y en las filas
+(❌ 3,17) y en negro en la pestaña (una heurística de react-navigation). Las tres van
+en badge-ink: ✅ 5,14, en claro y en oscuro (el acento no cambia de tema). El punto
+de «sin leer», que no lleva texto, se queda en el acento.
 
 **El CTA.** Label plum: 5,56 en el extremo oscuro del degradado y 8,75 en el claro.
 El blanco que pedía el montaje daba 2,01 y 1,28.
@@ -141,3 +148,41 @@ activa. **Nunca en el isotipo.**
 - Radios: cards 20px · inputs 16px · CTA 15px · chips 9px · pills 999px
 - shadow-soft: `0 8px 24px rgba(65,54,83,.10)`
 - shadow-card: `0 10px 30px rgba(65,54,83,.12)`
+
+## Espaciado — la escala real (censo del 2026-09-29, Oleada 5)
+
+El prototipo no la congeló; la app la fijó con el uso. Es la escala de Tailwind
+(1 = 4 px, en `rem` en web, así que crece con la letra del navegador) y **no hay
+nada fuera de ella**: ni un `gap-[18px]` ni un `px-[26px]` en `app/`, `components/`
+ni `core/`. Las cuatro medidas arbitrarias que hay son tamaños, no espacios (la
+barrita de la pestaña activa, `w-[34px] h-[3px]`, y dos `max-w-[…%]`). Los números
+sueltos en `StyleSheet` coinciden con la escala y están ahí por una razón: el relleno
+del CTA (20/16 = `px-5 py-4`) y el del bloque cálido del día (20 = `p-5`) van en el
+hijo del degradado, y `HEADER_GAP` (8) y `SCREEN_Y` (32 = `py-8`) en
+`components/useScreenPadding.ts`.
+
+| Papel | Clase | px |
+|---|---|---|
+| Margen lateral de pantalla (stack y pestaña; `md:px-10` en las pestañas de escritorio) | `px-7` | 28 |
+| Margen de un estado centrado (error, 404, páginas públicas, onboarding) | `px-8` | 32 |
+| Aire vertical de una pantalla de stack (`SCREEN_Y`; abajo, el inset si es mayor) | `py-8` | 32 |
+| Ritmo entre bloques de una pantalla (el de `ScreenScaffold`) | `gap-5` | 20 |
+| … en pantallas que respiran más (acerca, crisis, círculo, persona, día, compartir) | `gap-6` a `gap-8` | 24–32 |
+| Una lista de tarjetas o un formulario | `gap-4` | 16 |
+| Dentro de un grupo o de una tarjeta | `gap-3` | 12 |
+| Una fila: chips, icono y texto, acciones de texto | `gap-2` | 8 |
+| Título y su subtítulo | `gap-1` / `gap-0.5` | 4 / 2 |
+| Relleno de tarjeta (`Card`; la compacta, `p-4`) | `p-5` | 20 |
+| Pill · campo · CTA | `px-4 py-2.5` · `px-4 py-4` · `px-5 py-4` | |
+| Lo que se pega al pie (salir, volver a Hoy) | `mt-auto gap-3 pt-6` | 24 |
+| Del encabezado de las pantallas de cuenta al formulario | `mt-8` | 32 |
+
+Frecuencia: `gap-3` ×97, `gap-2` ×77, `gap-4` ×51, `px-7` ×35, `gap-1` ×31,
+`gap-6` ×29, `py-8` ×20, `gap-5` ×19, `p-5` ×14.
+
+**Ojo al afinar una clase de la misma familia.** No gana la última del string sino
+la que va después en la hoja de Tailwind, que dentro de una familia es alfabética
+(en web y en nativo). Sobre el `gap-5` de `ScreenScaffold`, `gap-6`/`gap-7`/`gap-8`
+ganan y `gap-3`/`gap-4` no: por eso `plan/[id]/dias` (pedía `gap-3`) y `avisos`
+(pedía `gap-4`) se ven con `gap-5` desde Amanecer 3.0. Lo mismo con el texto
+(`theme/txt-overrides.test.ts`).

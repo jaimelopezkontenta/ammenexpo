@@ -63,6 +63,11 @@ const colors = {
   // El label del CTA es el mismo en los dos temas: el degradado melocotón no
   // cambia con el modo, así que su tinta tampoco (5,6:1 y 8,8:1 medidos).
   "cta-ink": "#413653",
+  // La cifra de los badges (pestaña Juntos, raíl, filas de círculo), que van
+  // sobre `ember.accent`. Era blanco: 3,17:1, por debajo de AA para una cifra
+  // de 12-14 px. El violeta de la noche da 5,14:1. Fija en los dos temas,
+  // como `cta-ink`, porque el acento de debajo tampoco cambia.
+  "badge-ink": "#211D33",
   ember: {
     DEFAULT: "#F2A578",
     pale: "#FBDFC2",
@@ -108,6 +113,7 @@ const scrimBase = "#413653";
  *   danger         #E8887A sobre cielo →  6,4:1
  *   blanco sobre plum.chip #514463     →  8,9:1
  *   cta-ink sobre el degradado melocotón → 5,6:1 y 8,8:1 (igual que en claro)
+ *   badge-ink sobre ember.accent       → 5,1:1 (igual que en claro)
  *
  * Los decorativos conservan su papel de solo-decoración: `mist` da 3,6:1 y el
  * acento 5,1:1 sobre el cielo oscuro. El CTA no cambia de tema: el melocotón
@@ -128,6 +134,7 @@ const colorsDark = {
   // neón alrededor de cada tarjeta.
   glassedge: "#A79DBE",
   "cta-ink": "#413653",
+  "badge-ink": "#211D33",
   ember: {
     DEFAULT: "#F2A578",
     // La clase `bg-ember-pale` es el subrayado del versículo: ámbar profundo.

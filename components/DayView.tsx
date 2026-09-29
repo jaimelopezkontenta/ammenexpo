@@ -45,11 +45,7 @@ export const ScriptureSection = ({
     <DaySection label={t("plan.scripture")} tone="scripture">
       <Txt variant="reading">{scriptureText}</Txt>
 
-      {scriptureRef ? (
-        <Txt variant="editorial" className="text-base">
-          {scriptureRef}
-        </Txt>
-      ) : null}
+      {scriptureRef ? <Txt variant="editorial">{scriptureRef}</Txt> : null}
 
       {/* If the reference cannot be parsed there is no link at all — guessing
           would open the wrong chapter. */}

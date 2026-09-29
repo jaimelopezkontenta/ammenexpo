@@ -7,6 +7,7 @@ import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { useSendMessage } from "@/core/circles/chat";
 import { useThemeColors } from "@/theme";
+import { MAX_FONT_SCALE } from "@/theme/typography";
 
 /**
  * Escribir y enviar, con el borrador dentro.
@@ -82,6 +83,7 @@ export const ChatComposer = ({
           onChangeText={setDraft}
           placeholder={t("chat.placeholder")}
           placeholderTextColor={colors.mist.ink}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           multiline
           // react-native-web renders a multiline input as `rows={2}`, so an
           // empty composer stood two lines tall next to a one-line button.

@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { colors, colorsDark } from "./tokens";
@@ -56,6 +59,13 @@ describe("amanecer (paleta clara)", () => {
     // El label del CTA sobre los dos extremos del degradado melocotón.
     ["cta-ink sobre ember", colors["cta-ink"], colors.ember.DEFAULT, AA],
     ["cta-ink sobre ember.pale", colors["cta-ink"], colors.ember.pale, AA],
+    // La cifra de los badges (pestaña, raíl, filas): era blanco, 3,17:1.
+    [
+      "badge-ink sobre ember.accent",
+      colors["badge-ink"],
+      colors.ember.accent,
+      AA,
+    ],
   ])("%s ≥ %d:1", (_name, fg, bg, min) => {
     expect(ratio(fg, bg)).toBeGreaterThanOrEqual(min);
   });
@@ -95,7 +105,47 @@ describe("anochecer (paleta oscura)", () => {
       colorsDark.ember.DEFAULT,
       AA,
     ],
+    [
+      "badge-ink sobre ember.accent",
+      colorsDark["badge-ink"],
+      colorsDark.ember.accent,
+      AA,
+    ],
   ])("%s ≥ %d:1", (_name, fg, bg, min) => {
     expect(ratio(fg, bg)).toBeGreaterThanOrEqual(min);
+  });
+});
+
+describe("badges", () => {
+  // Por qué existe `badge-ink`: el blanco sobre el acento no llega.
+  it("blanco sobre ember.accent no llega a AA (era la cifra de los badges)", () => {
+    expect(ratio("#FFFFFF", colors.ember.accent)).toBeLessThan(AA);
+  });
+
+  it("ningún Txt sobre bg-ember-accent vuelve a ir en blanco", () => {
+    const root = join(__dirname, "..");
+    const tsxFiles = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) return tsxFiles(full);
+        return entry.name.endsWith(".tsx") ? [full] : [];
+      });
+    const offenders: string[] = [];
+    for (const dir of ["app", "components", "core"]) {
+      for (const file of tsxFiles(join(root, dir))) {
+        const source = readFileSync(file, "utf8");
+        for (const match of source.matchAll(/bg-ember-accent/g)) {
+          // Lo que va dentro de esa caja, hasta que se cierra.
+          const inside = source.slice(
+            match.index,
+            source.indexOf("</View>", match.index),
+          );
+          if (/<Txt[^>]*tone="onDark"/.test(inside)) {
+            offenders.push(relative(root, file).replaceAll("\\", "/"));
+          }
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });

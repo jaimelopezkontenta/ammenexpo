@@ -77,16 +77,17 @@ export const NavRail = ({
               <Txt
                 variant="label"
                 numberOfLines={1}
-                // La tinta acompaña al icono (ember al enfocar) y el tamaño
-                // es el del raíl, más chico que la escala: ambos se afinan.
+                // La tinta acompaña al icono (ember al enfocar). El raíl
+                // pedía además 11,5 px con `text-[11.5px]`, pero esa clase
+                // nunca ganó al `text-sm` de label (va antes en la hoja): el
+                // raíl siempre se vio a 14 px, y así sigue.
                 style={{ color }}
-                className="text-[11.5px]"
               >
                 {label}
               </Txt>
               {badge ? (
                 <View className="absolute right-4 top-1 min-w-5 items-center justify-center rounded-full bg-ember-accent px-1.5 py-0.5">
-                  <Txt variant="subheading" tone="onDark" className="text-xs">
+                  <Txt variant="subheading" tone="onBadge" className="text-xs">
                     {badge}
                   </Txt>
                 </View>
