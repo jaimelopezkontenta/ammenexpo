@@ -86,16 +86,31 @@ ningún dispositivo** y exige un **binario nuevo** (no llega por OTA). Todo est�
 
 ## 4. CI y baselines visuales
 
-- Las baselines de la regresión visual son `*-win32.png`; en CI (Linux) no casan. Para
-  activar la regresión visual en CI: lanzar el workflow manual `visual-baselines`
-  (`gh workflow run visual-baselines.yml --ref main`), descargar el artefacto
-  (`gh run download <id> -n visual-baselines-linux -D .`), revisar las capturas y
-  commitear los `*-linux.png`. Desde ese momento el paso visual de `verify` es
-  bloqueante (`docs/runbooks/ci.md`, `docs/adr/0003-…`).
-- El primer run de CI con `supabase start -x studio,vector,logflare` es un experimento en
-  un commit aparte: si falla al arrancar, `git revert` de ese commit.
+- La regresión visual ya es bloqueante en CI: hay 58 baselines `*-linux.png`
+  commiteadas (generadas por el workflow `visual-baselines`). Tras un cambio visual
+  deliberado, regenerar los dos juegos (`docs/runbooks/ci.md`, `docs/adr/0003-…`).
 - El primer run de los workflows nuevos (`functions-types`, `expo-health`,
   `visual-baselines`, Dependabot) es la prueba real; ninguno se había ejecutado.
+
+## 4b. Producto: lo que quedó sin pantalla
+
+- **Rotar el enlace de invitación** (RPC `rotate_circle_invite_token` y
+  `rotate_my_invite_code`, con tests): sin botón en la app. Además el cliente debe
+  invalidar `qk.inviteCode`, que hoy no caduca nunca.
+- **Selector de versión de la Biblia** solo en el lector; la pestaña Biblia muestra la
+  versión pero no deja cambiarla.
+- **El plan de un círculo** sale en el idioma de quien lo crea, no en el de cada miembro.
+- **Los planes ya existentes** conservan su texto y versículos (RVR, español); un plan
+  nuevo pedido con la app en inglés sale en inglés.
+- **A−/A+ del lector**: la letra pequeña ahora sí se ve más pequeña (antes no hacía
+  nada); comprobarlo con los ojos.
+- **Tamaños de letra que nunca se aplicaron** (siete rótulos en cursiva querían 16 px y se
+  ven a 18; el texto de `lista/orar` quería 24 px y se ve a 18; las etiquetas del raíl de
+  escritorio querían 11,5 px y se ven a 14): decidir si se quieren de verdad.
+- **Errata en el prompt español del generador** («Diríjete» por «Dirígete»): no se
+  corrigió a propósito (el prompt español está fijado byte a byte por un test); si se
+  arregla, actualizar la huella en el mismo commit.
+- **`circulo/[id]` mientras carga no tiene cabecera** (ni título ni volver).
 
 ## 5. Cosas que el código ya no puede resolver solo
 

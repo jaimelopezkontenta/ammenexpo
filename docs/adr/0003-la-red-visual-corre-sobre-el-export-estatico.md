@@ -28,8 +28,17 @@ existe en producción, y las capturas fallaban sin que la app cambiara.
 
 ## Consecuencias
 
-- Las baselines son `-win32.png`. Para correr la suite en CI hacen falta
-  baselines `-linux.png` (un job manual las genera como artefacto).
+- Hay dos juegos de baselines: `-win32.png` (quien corre `npm run e2e:visual` en
+  Windows) y `-linux.png` (CI). Estas últimas las genera el workflow manual
+  `visual-baselines` (2026-09-29: 58 capturas, con una segunda pasada estable) y
+  desde entonces el paso visual de `verify` es bloqueante. Tras un cambio visual
+  deliberado hay que regenerar AMBOS juegos: `npm run e2e:visual:update` en local y
+  `gh workflow run visual-baselines.yml` para Linux (`docs/runbooks/ci.md`).
+- Lo que depende del día real NO puede verse en una captura: la hora se fija a las
+  10:00 pero el día no (congelarlo descuadraría los datos del seed), así que las
+  fechas (cabecera de Hoy, fecha de cada aviso, «este día se abre el …») llevan
+  `testID` y `visual.css` las oculta. Una fecha nueva en una pantalla capturada
+  necesita lo mismo.
 - Un cambio visual deliberado exige `npm run e2e:visual:update` y revisar cada
   captura tocada.
 - El color de un `Txt` va siempre por `tone`: en web una clase de color por

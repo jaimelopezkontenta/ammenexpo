@@ -25,11 +25,32 @@ ejecutarlo.
 | 1c | ErrorBoundary, canal de errores, red vs error, frescura, caché offline con fecha | `a14cc72` | ✅ |
 | pre-2 | ESLint del contrato, red visual que detecta texto, primitivas compartidas; CTA ilegible en oscuro y fecha mal capitalizada | `259a40b` | ✅ |
 | 2a | Bucle central: CTA siempre visible, cuota antes del formulario, invitación que lleva al círculo, `returnTo`, siguiente persona, copiar enlace | `c4499d1` | ✅ |
-| 2b–2c | Onboarding y generación, contenido en inglés, pantallas secundarias | — | Pendiente |
-| 3a–3d | Arquitectura del frontend | — | Pendiente |
-| 4a–4d | Backend, edge functions y velocidad de tests | — | Pendiente |
-| 5 | Sistema visual | — | Pendiente |
-| 6 | Plataforma (lote nativo, universal links, producción) | — | Pendiente |
+| 2b (1/2) | Onboarding y generación: pantalla de espera, error con salida, red visual estable | `745bb55` | ✅ |
+| 2c | Pantallas secundarias: Orar con todos los planes, bloqueo confirmado, Perfil autoguardado, /p con marca, auth en `<form>`, flag `community_feed` | `8f20420` | ✅ |
+| EN-1 | Biblia por versión: catálogo, RPC con `p_version`, World English Bible (156 INSERT) | `f96c536` | ✅ |
+| EN-2 | El lector lee en la versión activa (elegida o la del idioma), selector, versículo del día por versión | `860a3f9` | ✅ |
+| EN-3 | Los planes se escriben, verifican y guardan en el idioma de la persona | `f7adad4` | ✅ |
+| EN-4 | e2e en inglés (interfaz + lector WEB↔RVR + búsqueda) | `e2e/english.spec.ts` | ✅ |
+| 3a | Cliente Supabase tipado, fábrica `qk` de claves de caché (184 claves) con ESLint, `isLoadingError` | ver ADR 0006 | ✅ (quedan los `userId!` de `core/**/queries.ts`) |
+| 3b | `SessionProvider` + `AppEffects`, Hoy y moderación partidos, `useAction`, `useUserId`, claves de almacenamiento | `1d5ce27` | ✅ |
+| 3c | Feeds en `FlatList`, Comunidad partida, chat paginado, lector con `VerseRow` | `e91bc79` | ✅ |
+| 3d | Paridad legal, claves versionadas y limpieza al cerrar sesión, tests de lógica pura (sin RNTL: no hay renderizador RN para Vitest) | `ffd2acd`, `1d5ce27` | ✅ parcial |
+| 4a | Edge functions: helpers compartidos, validación, presupuesto de reintentos, logs con correlación, 6/6 pasan `deno check` | `65dfe22` | ✅ |
+| 4b | Runner `db:test`, cobertura de correo, arreglo de un test intermitente | `01a659b` | ✅ (sin «reset suave»: descartado) |
+| 4c | CI: `deno check`, expo-health, Dependabot, baselines Linux, presupuesto de bundle | `b72f610`, `37e5333` | ✅ |
+| 4d | HMAC en Vault, rotación de tokens de invitación, CSP + HSTS + COOP, presupuesto de bundle | `01a659b`, `37e5333` | ✅ (sin UI de rotación) |
+| Revisión | 3 revisiones adversariales (SQL, edge/CI, frontend) → 30 hallazgos corregidos | `4ac610f`, `436bcdd` | ✅ |
+| 5 | Sistema visual: `ScreenScaffold` en 9 pantallas más, `GlassIconButton`, variantes de `Txt`, tope de fuente, contraste del badge, escala de espaciado | `29ebdb7` | ✅ (H1: decisión de Jaime) |
+| 6 | Lote nativo (SecureStore, NetInfo, copiar enlace, exportar fichero, crisis por país, EAS y universal links preparados) | `d9a7c0a` | ✅ código, **sin verificar en dispositivo** |
+| Web | Iconos por ruta: bundle de entrada 5,37 → 3,45 MB | `16dfe5f` | ✅ |
+
+Lo que quedó **fuera de esta auditoría** o solo a medias está en
+`docs/runbooks/pendientes-del-dueno.md` (staging, decisiones, cuentas y
+dispositivos). Hallazgos del propio proceso de ejecución: el CLI de Supabase
+(JavaScript) parte mal una migración con una etiqueta de dollar-quote en un
+comentario (colgó `supabase start` en CI); el `deno.lock` de CI rompía el
+edge-runtime local; las fechas del día real caducaban las baselines visuales cada
+medianoche. Los tres están corregidos y con guard o test.
 
 ### Lo que depende de Jaime
 

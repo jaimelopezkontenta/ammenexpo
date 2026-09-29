@@ -268,5 +268,7 @@ abrirá su PR.
   logs. `verify.yml` vuelve al arranque completo. Reabrir solo desactivando antes analytics
   en `supabase/config.toml` (y comprobando que `supabase status -o env` sigue dando
   `API_URL` y `ANON_KEY`).
-- **Baselines Linux:** todavía no hay ninguna commiteada; el paso visual de
-  `verify` está inactivo hasta entonces.
+- **Baselines Linux:** commiteadas (58, 2026-09-29): el paso visual de `verify` es
+  bloqueante. Tras un cambio visual, regenerarlas con `gh workflow run
+  visual-baselines.yml --ref <rama>`, descargar el artefacto y commitearlas junto a
+  las de win32.
