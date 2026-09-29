@@ -37,7 +37,7 @@ export default function PrayThrough() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data, isLoading, isError, refetch } = usePrayerList(userId);
+  const { data, isLoading, isLoadingError, refetch } = usePrayerList(userId);
 
   const [minutes, setMinutes] = useState<number | null>(null);
   const [index, setIndex] = useState(0);
@@ -85,7 +85,7 @@ export default function PrayThrough() {
     );
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return (
       <>
         <Stack.Screen options={{ title: t("list.pray"), headerShown: true }} />

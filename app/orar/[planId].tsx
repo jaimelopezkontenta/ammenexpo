@@ -48,7 +48,12 @@ function PrayForSomeone({ planId }: { planId: string }) {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: plan, isLoading, isError, refetch } = useSharedPlanDay(planId);
+  const {
+    data: plan,
+    isLoading,
+    isLoadingError,
+    refetch,
+  } = useSharedPlanDay(planId);
   const pray = usePrayForSomeone(userId);
 
   const [message, setMessage] = useState("");
@@ -102,15 +107,15 @@ function PrayForSomeone({ planId }: { planId: string }) {
     );
   }
 
-  if (isError || !plan) {
+  if (isLoadingError || !plan) {
     return (
       <>
         <Stack.Screen
           options={{ title: t("pray.title"), headerShown: true, headerLeft }}
         />
         <ErrorState
-          onRetry={isError ? () => void refetch() : undefined}
-          message={isError ? undefined : t("pray.planGone")}
+          onRetry={isLoadingError ? () => void refetch() : undefined}
+          message={isLoadingError ? undefined : t("pray.planGone")}
         />
       </>
     );

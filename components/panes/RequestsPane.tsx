@@ -43,7 +43,7 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
   const {
     data: requests,
     isLoading,
-    isError,
+    isLoadingError,
     error,
     refetch,
     hasNextPage,
@@ -91,7 +91,7 @@ export const RequestsPane = ({ circulo }: { circulo?: string }) => {
     return <LoadingState />;
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 

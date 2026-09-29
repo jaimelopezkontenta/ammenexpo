@@ -37,7 +37,7 @@ export default function Pray() {
   const {
     data: plans,
     isLoading,
-    isError,
+    isLoadingError,
     error,
     refetch,
   } = usePlansSharedWithMe(userId);
@@ -51,7 +51,7 @@ export default function Pray() {
   // Before this, a failed read fell straight through to the empty state and told
   // people nobody had shared anything with them — a false statement, with no way
   // to find out otherwise.
-  if (isError) {
+  if (isLoadingError) {
     return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 

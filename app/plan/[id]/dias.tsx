@@ -26,7 +26,7 @@ export default function PlanDays() {
   const {
     data: days,
     isLoading,
-    isError,
+    isLoadingError,
     error,
     refetch,
   } = usePlanDays(id, plan?.status === "generating");
@@ -35,7 +35,7 @@ export default function PlanDays() {
     return <ScreenScaffold title={t("plan.days")} loading />;
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return (
       <ScreenScaffold
         title={t("plan.days")}

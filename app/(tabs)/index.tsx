@@ -97,7 +97,7 @@ export default function Today() {
   const {
     data: plans,
     isLoading,
-    isError,
+    isLoadingError,
     error: plansError,
     refetch: refetchPlan,
   } = useMyPlans(userId);
@@ -126,7 +126,7 @@ export default function Today() {
   const { data: progress } = usePlanProgress(plan?.id);
   const { data: streak } = useStreak(userId);
   const { data: profile } = useProfile(userId);
-  const { data: prayedForMe, isError: prayedForMeFailed } =
+  const { data: prayedForMe, isLoadingError: prayedForMeFailed } =
     useWhoPrayedForMe(userId);
   const { data: sharedWithMe } = usePlansSharedWithMe(userId);
   const { data: books } = useBibleBooks();
@@ -321,7 +321,7 @@ export default function Today() {
     return <LoadingState skeleton="day" />;
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return <ErrorState error={plansError} onRetry={() => void refetchPlan()} />;
   }
 

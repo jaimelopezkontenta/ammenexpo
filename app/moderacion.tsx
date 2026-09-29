@@ -148,7 +148,7 @@ function ReportsQueue() {
 
       {queue.isLoading ? (
         <LoadingState />
-      ) : queue.isError ? (
+      ) : queue.isLoadingError ? (
         <ErrorState onRetry={() => void queue.refetch()} />
       ) : (queue.data ?? []).length === 0 ? (
         <Txt variant="body" tone="secondary">
@@ -446,7 +446,7 @@ function HeldQueue() {
 
       {queue.isLoading ? (
         <LoadingState />
-      ) : queue.isError ? (
+      ) : queue.isLoadingError ? (
         <ErrorState onRetry={() => void queue.refetch()} />
       ) : (queue.data ?? []).length === 0 ? (
         <Txt variant="body" tone="secondary">
@@ -518,7 +518,7 @@ function CrisisQueue() {
 
       {queue.isLoading ? (
         <LoadingState />
-      ) : queue.isError ? (
+      ) : queue.isLoadingError ? (
         <ErrorState onRetry={() => void queue.refetch()} />
       ) : open.length === 0 ? (
         <Txt variant="body" tone="secondary">

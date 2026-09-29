@@ -30,7 +30,12 @@ export default function PublicPlanDayScreen() {
   const { t } = useTranslation();
   const { scrollBottom } = useScreenPadding();
   const { planId } = useLocalSearchParams<{ planId: string }>();
-  const { data: plan, isLoading, isError, refetch } = usePublicPlanDay(planId);
+  const {
+    data: plan,
+    isLoading,
+    isLoadingError,
+    refetch,
+  } = usePublicPlanDay(planId);
   const { data: books } = useBibleBooks();
 
   useEffect(() => {
@@ -50,15 +55,17 @@ export default function PublicPlanDayScreen() {
     );
   }
 
-  if (isError || !plan) {
+  if (isLoadingError || !plan) {
     return (
       <>
         <Stack.Screen
           options={{ title: t("community.title"), headerShown: true }}
         />
         <ErrorState
-          onRetry={isError ? () => void refetch() : undefined}
-          message={isError ? undefined : t("community.publicPlan.notFound")}
+          onRetry={isLoadingError ? () => void refetch() : undefined}
+          message={
+            isLoadingError ? undefined : t("community.publicPlan.notFound")
+          }
         />
       </>
     );

@@ -42,7 +42,7 @@ export default function FindCircles() {
   const {
     data: circles,
     isLoading,
-    isError,
+    isLoadingError,
     refetch,
   } = useSearchPublicCircles(query);
   const join = useJoinPublicCircle(userId);
@@ -90,12 +90,14 @@ export default function FindCircles() {
 
           {isLoading ? <LoadingState /> : null}
 
-          {isError ? <ErrorState onRetry={() => void refetch()} /> : null}
+          {isLoadingError ? (
+            <ErrorState onRetry={() => void refetch()} />
+          ) : null}
 
           {/* An empty query browses instead of filtering, so "no results" here
             always means something real: either nobody has opened a public
             circle yet, or this search found none. */}
-          {!isLoading && !isError && (circles ?? []).length === 0 ? (
+          {!isLoading && !isLoadingError && (circles ?? []).length === 0 ? (
             <EmptyState
               title={
                 query.trim() ? t("circles.findEmpty") : t("circles.findNone")

@@ -39,8 +39,8 @@ export default function CircleDetail() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: circle, isLoading, isError, refetch } = useCircle(id);
-  const { data: members, isError: membersFailed } = useCircleMembers(id);
+  const { data: circle, isLoading, isLoadingError, refetch } = useCircle(id);
+  const { data: members, isLoadingError: membersFailed } = useCircleMembers(id);
   const { data: inviteToken } = useCircleInviteToken(id);
   const { data: circlePlan } = useCirclePlan(id);
   const { data: canCreatePlan } = useCanCreateCirclePlan(id);
@@ -79,15 +79,15 @@ export default function CircleDetail() {
   // These two used to be one branch with no header and no controls, so a flaky
   // connection told you your own circle did not exist and left you stuck on a
   // line of grey text with no way back.
-  if (isError || !circle) {
+  if (isLoadingError || !circle) {
     return (
       <>
         <Stack.Screen
           options={{ title: t("circles.title"), headerShown: true }}
         />
         <ErrorState
-          onRetry={isError ? () => void refetch() : undefined}
-          message={isError ? undefined : t("circles.inviteNotFound")}
+          onRetry={isLoadingError ? () => void refetch() : undefined}
+          message={isLoadingError ? undefined : t("circles.inviteNotFound")}
         />
       </>
     );

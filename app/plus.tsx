@@ -52,7 +52,7 @@ export default function Plus() {
   const {
     data: entry,
     isLoading: entryLoading,
-    isError: entryError,
+    isLoadingError: entryError,
     refetch: refetchEntry,
   } = useMyWaitlistEntry(userId);
   const join = useJoinWaitlist(userId);

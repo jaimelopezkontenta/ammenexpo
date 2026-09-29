@@ -181,7 +181,7 @@ export const CommunityPane = () => {
       {searching ? (
         people.isLoading ? (
           <LoadingState />
-        ) : people.isError ? (
+        ) : people.isLoadingError ? (
           <ErrorState
             error={people.error}
             onRetry={() => void people.refetch()}
@@ -238,7 +238,7 @@ export const CommunityPane = () => {
         )
       ) : feed.isLoading ? (
         <LoadingState />
-      ) : feed.isError ? (
+      ) : feed.isLoadingError ? (
         <ErrorState error={feed.error} onRetry={() => void feed.refetch()} />
       ) : (
         <>

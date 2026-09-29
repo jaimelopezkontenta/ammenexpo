@@ -44,7 +44,7 @@ export const CirclesPane = ({
   const {
     data: circles,
     isLoading,
-    isError,
+    isLoadingError,
     error: circlesError,
     refetch,
   } = useMyCircles(userId);
@@ -97,7 +97,7 @@ export const CirclesPane = ({
 
   // A failed read used to fall through to "you have no circles yet", which is
   // a different and untrue thing to say.
-  if (isError) {
+  if (isLoadingError) {
     return <ErrorState error={circlesError} onRetry={() => void refetch()} />;
   }
 

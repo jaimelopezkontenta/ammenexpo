@@ -41,8 +41,8 @@ export default function SharePlan() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: plan, isLoading, isError, refetch } = usePlanSummary(id);
-  const { data: circles, isError: circlesFailed } = useMyCircles(userId);
+  const { data: plan, isLoading, isLoadingError, refetch } = usePlanSummary(id);
+  const { data: circles, isLoadingError: circlesFailed } = useMyCircles(userId);
   const { data: sharedCircles } = usePlanCircles(id);
   const { data: link, isLoading: linkLoading } = usePlanShareLink(id);
 
@@ -101,15 +101,15 @@ export default function SharePlan() {
 
   // Both used to render as one headerless line of grey text, so a network
   // stumble said your own plan did not exist and gave you no way out.
-  if (isError || !plan) {
+  if (isLoadingError || !plan) {
     return (
       <>
         <Stack.Screen
           options={{ title: t("share.title"), headerShown: true }}
         />
         <ErrorState
-          onRetry={isError ? () => void refetch() : undefined}
-          message={isError ? undefined : t("share.previewNotFound")}
+          onRetry={isLoadingError ? () => void refetch() : undefined}
+          message={isLoadingError ? undefined : t("share.previewNotFound")}
         />
       </>
     );

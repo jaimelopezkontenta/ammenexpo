@@ -34,7 +34,7 @@ export default function CircleInvite() {
   const {
     data: circle,
     isLoading,
-    isError,
+    isLoadingError,
     refetch,
   } = useCircleInvitePreview(token);
   const join = useJoinCircle(userId);
@@ -78,7 +78,7 @@ export default function CircleInvite() {
     return <LoadingState />;
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return <ErrorState onRetry={() => void refetch()} />;
   }
 

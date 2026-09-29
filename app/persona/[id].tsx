@@ -55,7 +55,12 @@ export default function PersonProfile() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: person, isLoading, isError, refetch } = usePublicProfile(id);
+  const {
+    data: person,
+    isLoading,
+    isLoadingError,
+    refetch,
+  } = usePublicProfile(id);
   const { data: testimonies } = useVisibleTestimonies(userId);
   const { data: posts } = usePersonPosts(id);
   const { data: plans } = usePersonPlans(id);
@@ -136,7 +141,7 @@ export default function PersonProfile() {
     );
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return (
       <>
         <Stack.Screen options={{ title: "", headerShown: true }} />

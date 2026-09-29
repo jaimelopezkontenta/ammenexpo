@@ -56,7 +56,7 @@ export default function Profile() {
   const {
     data: profile,
     isLoading,
-    isError,
+    isLoadingError,
     error,
     refetch,
   } = useProfile(userId);
@@ -121,7 +121,7 @@ export default function Profile() {
     return <LoadingState skeleton="profile" />;
   }
 
-  if (isError || !profile) {
+  if (isLoadingError || !profile) {
     return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 

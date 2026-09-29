@@ -56,9 +56,14 @@ export default function CircleChat() {
 
   const { data: circle } = useCircle(id);
   const { data: members } = useCircleMembers(id);
-  const { data: conversationId, isError: conversationFailed } =
+  const { data: conversationId, isLoadingError: conversationFailed } =
     useCircleConversation(id);
-  const { data: messages, isLoading, isError, refetch } = useCircleMessages(id);
+  const {
+    data: messages,
+    isLoading,
+    isLoadingError,
+    refetch,
+  } = useCircleMessages(id);
 
   useCircleChatRealtime(id, conversationId);
 
@@ -175,7 +180,7 @@ export default function CircleChat() {
   // go out with `conversation_id: undefined`, fail, and report a generic
   // "no hemos podido enviar tu mensaje" — while Realtime never subscribed, so
   // nothing anyone else wrote would arrive either.
-  if (isError || conversationFailed) {
+  if (isLoadingError || conversationFailed) {
     return (
       <>
         <Stack.Screen options={{ title: t("chat.title"), headerShown: true }} />

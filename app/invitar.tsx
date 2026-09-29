@@ -31,7 +31,7 @@ export default function Invite() {
   const {
     data: code,
     isLoading,
-    isError,
+    isLoadingError,
     error,
     refetch,
   } = useMyInviteCode(userId);
@@ -59,7 +59,7 @@ export default function Invite() {
     return <ScreenScaffold title={t("invite.title")} loading />;
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return (
       <ScreenScaffold
         title={t("invite.title")}

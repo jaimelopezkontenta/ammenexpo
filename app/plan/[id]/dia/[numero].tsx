@@ -27,7 +27,7 @@ export default function PlanDayDetail() {
   const {
     data: day,
     isLoading,
-    isError,
+    isLoadingError,
     refetch,
   } = usePlanDay(id, Number.isInteger(dayNumber) ? dayNumber : undefined);
   const { data: books } = useBibleBooks();
@@ -50,13 +50,13 @@ export default function PlanDayDetail() {
     );
   }
 
-  if (isError || !day) {
+  if (isLoadingError || !day) {
     return (
       <>
         <Stack.Screen options={{ title: t("plan.days"), headerShown: true }} />
         <ErrorState
-          onRetry={isError ? () => void refetch() : undefined}
-          message={isError ? undefined : t("plan.dayNotFound")}
+          onRetry={isLoadingError ? () => void refetch() : undefined}
+          message={isLoadingError ? undefined : t("plan.dayNotFound")}
         />
       </>
     );

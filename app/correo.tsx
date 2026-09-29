@@ -103,7 +103,7 @@ export default function Correo() {
     );
   }
 
-  if (source.isError || !server) {
+  if (source.isLoadingError || !server) {
     return (
       <ScreenScaffold
         title={t("email.title")}

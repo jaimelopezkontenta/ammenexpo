@@ -56,7 +56,7 @@ export default function PrayerRequestComments() {
   const {
     data: comments,
     isLoading,
-    isError,
+    isLoadingError,
     error: loadError,
     refetch,
   } = usePostComments(id);
@@ -133,7 +133,7 @@ export default function PrayerRequestComments() {
     );
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return (
       <>
         <Stack.Screen

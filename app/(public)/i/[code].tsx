@@ -35,7 +35,12 @@ export default function InviteLanding() {
   }>();
   const { session } = useSession();
 
-  const { data: name, isLoading, isError, refetch } = useInvitePreview(code);
+  const {
+    data: name,
+    isLoading,
+    isLoadingError,
+    refetch,
+  } = useInvitePreview(code);
 
   useEffect(() => {
     if (code) {
@@ -50,7 +55,7 @@ export default function InviteLanding() {
     return <LoadingState />;
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return <ErrorState onRetry={() => void refetch()} />;
   }
 

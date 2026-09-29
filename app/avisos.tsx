@@ -31,7 +31,7 @@ export default function Notifications() {
   const {
     data,
     isLoading,
-    isError,
+    isLoadingError,
     error,
     refetch,
     hasNextPage,
@@ -52,7 +52,7 @@ export default function Notifications() {
     return <ScreenScaffold title={t("notifications.title")} loading />;
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return (
       <ScreenScaffold
         title={t("notifications.title")}

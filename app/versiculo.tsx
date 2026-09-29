@@ -48,7 +48,7 @@ export default function VerseImage() {
   const [error, setError] = useState<string | null>(null);
 
   const { data: books } = useBibleBooks();
-  const { data, isLoading, isError, refetch } = useChapter(
+  const { data, isLoading, isLoadingError, refetch } = useChapter(
     bookId,
     chapterNumber,
   );
@@ -85,7 +85,7 @@ export default function VerseImage() {
     return <ScreenScaffold {...screen} loading />;
   }
 
-  if (isError || !row) {
+  if (isLoadingError || !row) {
     return <ScreenScaffold {...screen} error onRetry={() => void refetch()} />;
   }
 

@@ -26,7 +26,12 @@ export default function BlockedPeople() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data: blocks, isLoading, isError, refetch } = useMyBlocks(userId);
+  const {
+    data: blocks,
+    isLoading,
+    isLoadingError,
+    refetch,
+  } = useMyBlocks(userId);
   const unblock = useUnblockUser(userId);
 
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +54,9 @@ export default function BlockedPeople() {
 
       {isLoading ? <LoadingState /> : null}
 
-      {isError ? <ErrorState onRetry={() => void refetch()} /> : null}
+      {isLoadingError ? <ErrorState onRetry={() => void refetch()} /> : null}
 
-      {!isLoading && !isError ? (
+      {!isLoading && !isLoadingError ? (
         <DawnBackground>
           <ScrollView
             contentContainerClassName="gap-4 px-7 py-8 md:w-full md:max-w-read md:self-center"

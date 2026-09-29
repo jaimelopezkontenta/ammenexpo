@@ -41,7 +41,7 @@ export default function PrayerList() {
   const { session } = useSession();
   const userId = session?.user.id;
 
-  const { data, isLoading, isError, refetch } = usePrayerList(userId);
+  const { data, isLoading, isLoadingError, refetch } = usePrayerList(userId);
   const add = useAddListItem(userId);
   const setAnswered = useSetItemAnswered(userId);
   const remove = useDeleteListItem(userId);
@@ -105,7 +105,7 @@ export default function PrayerList() {
     );
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return (
       <>
         <Stack.Screen options={screenOptions} />

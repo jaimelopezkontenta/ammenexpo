@@ -156,7 +156,7 @@ export const SessionProvider = ({
   // previous account's onboarding state.
   const {
     data,
-    isError: readFailed,
+    isLoadingError: readFailed,
     refetch,
   } = useQuery({
     queryKey: ["onboarding", userId],

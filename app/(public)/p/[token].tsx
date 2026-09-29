@@ -35,7 +35,7 @@ export default function SharedPlanPreviewScreen() {
     de?: string;
   }>();
   const { session } = useSession();
-  const { data, isLoading, isError, error, refetch } =
+  const { data, isLoading, isLoadingError, error, refetch } =
     useSharedPlanPreview(token);
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [redeemError, setRedeemError] = useState<string | null>(null);
@@ -120,7 +120,7 @@ export default function SharedPlanPreviewScreen() {
 
   // A failed request is not a dead link, and telling a stranger someone's link
   // is gone when the network hiccuped is both wrong and unrecoverable.
-  if (isError) {
+  if (isLoadingError) {
     return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 

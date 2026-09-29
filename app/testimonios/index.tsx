@@ -40,7 +40,7 @@ export default function Testimonies() {
   const {
     data: testimonies,
     isLoading,
-    isError,
+    isLoadingError,
     refetch,
     hasNextPage,
     isFetchingNextPage,
@@ -99,7 +99,7 @@ export default function Testimonies() {
     );
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return (
       <>
         <Stack.Screen
