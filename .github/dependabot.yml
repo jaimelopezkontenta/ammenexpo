@@ -1,0 +1,42 @@
+version: 2
+
+updates:
+  # Las acciones de los workflows (checkout, setup-node, setup-deno,
+  # upload-artifact…) van por etiquetas de versión mayor: sin esto nadie se
+  # entera de que una se depreca (Node 20 en los runners, por ejemplo).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # npm: SOLO avisos de seguridad. `open-pull-requests-limit: 0` apaga los PR de
+  # actualización de versión y deja los de seguridad, que no cuentan para ese
+  # límite. El SDK de Expo se sube entero y a propósito (`npx expo install
+  # --fix`, ver docs/runbooks/ci.md), no paquete a paquete con un bot.
+  #
+  # OJO con `ignore`: GitHub lo aplica solo a las actualizaciones de versión,
+  # NO a las de seguridad. Hoy, con las de versión apagadas, no filtra nada; está
+  # para que, si alguien las enciende, el bot no pelee con el SDK. Un aviso de
+  # seguridad de un paquete de Expo sí abrirá su PR (es lo que se quiere).
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: "eslint-config-expo"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
+      - dependency-name: "@react-native/*"
+      - dependency-name: "@react-native-async-storage/async-storage"
+      - dependency-name: "nativewind"
+      - dependency-name: "@types/react"
