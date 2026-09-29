@@ -1,14 +1,12 @@
 import Constants from "expo-constants";
 import { Link, Stack } from "expo-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, ScrollView, View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
-import { Button } from "@/components/Button";
+import { ExportData } from "@/components/ExportData";
 import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
-import { useExportMyData } from "@/core/legal/export";
 
 import { Tap } from "@/components/ui/Tap";
 
@@ -28,28 +26,8 @@ const SUPPORT_EMAIL = "hola@ammen.app";
 export default function About() {
   const { t } = useTranslation();
   const { scrollBottom } = useScreenPadding();
-  const exportData = useExportMyData();
-
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const version = Constants.expoConfig?.version ?? "—";
-
-  const handleExport = async () => {
-    setNotice(null);
-    setError(null);
-
-    try {
-      const outcome = await exportData.mutateAsync();
-      setNotice(
-        outcome === "downloaded"
-          ? t("legal.exportDone")
-          : t("legal.exportShared"),
-      );
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
 
   return (
     <>
@@ -113,28 +91,9 @@ export default function About() {
 
           {/* Llevarte tus datos. Iba junto a borrar la cuenta hasta que me di
             cuenta de que ahí solo lo ve quien ya se está yendo — y esto sirve
-            sobre todo para quien se queda y quiere saber qué hay guardado. */}
-          <View className="gap-2">
-            <Button
-              title={t("legal.export")}
-              variant="secondary"
-              loading={exportData.isPending}
-              onPress={() => void handleExport()}
-            />
-            <Txt variant="caption">{t("legal.exportHint")}</Txt>
-
-            {notice ? (
-              <Txt variant="caption" accessibilityRole="alert">
-                {notice}
-              </Txt>
-            ) : null}
-
-            {error ? (
-              <Txt variant="caption" tone="danger" accessibilityRole="alert">
-                {error}
-              </Txt>
-            ) : null}
-          </View>
+            sobre todo para quien se queda y quiere saber qué hay guardado.
+            También vive en Perfil, donde se busca primero. */}
+          <ExportData />
         </ScrollView>
       </DawnBackground>
     </>

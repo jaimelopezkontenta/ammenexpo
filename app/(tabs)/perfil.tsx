@@ -10,6 +10,7 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ChoiceChips } from "@/components/ChoiceChips";
+import { ExportData } from "@/components/ExportData";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -433,6 +434,13 @@ export default function Profile() {
                   <Link href="/acerca" asChild>
                     <NavRow label={t("profile.about")} />
                   </Link>
+                </Card>
+
+                {/* Tus datos, a la vista: el derecho de acceso no puede estar
+                escondido dentro de «Acerca de». Una tarjeta propia, ni con
+                el soporte ni en la zona de peligro: exportar no rompe nada. */}
+                <Card label={t("profile.dataZone")} className="gap-3">
+                  <ExportData />
                 </Card>
 
                 <Card label={t("profile.dangerZone")} className="gap-3">
