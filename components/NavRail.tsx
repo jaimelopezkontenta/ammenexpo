@@ -87,7 +87,7 @@ export const NavRail = ({
               </Txt>
               {badge ? (
                 <View className="absolute right-4 top-1 min-w-5 items-center justify-center rounded-full bg-ember-accent px-1.5 py-0.5">
-                  <Txt variant="subheading" tone="onDark" className="text-xs">
+                  <Txt variant="subheading" tone="onBadge" className="text-xs">
                     {badge}
                   </Txt>
                 </View>

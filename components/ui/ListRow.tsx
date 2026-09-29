@@ -76,9 +76,10 @@ export const ListRow = forwardRef<View, Props>(
           </View>
           {badge ? (
             // El mismo trato que el badge de la tab bar (ember.accent con
-            // blanco): son el mismo aviso en dos sitios y deben leerse igual.
+            // badge-ink): son el mismo aviso en dos sitios y deben leerse
+            // igual.
             <View className="min-w-6 items-center justify-center rounded-full bg-ember-accent px-2 py-0.5">
-              <Txt variant="labelStrong" tone="onDark">
+              <Txt variant="labelStrong" tone="onBadge">
                 {badge}
               </Txt>
             </View>

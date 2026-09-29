@@ -12,6 +12,7 @@ export interface Palette {
   glass: string;
   glassedge: string;
   "cta-ink": string;
+  "badge-ink": string;
   ember: { DEFAULT: string; pale: string; accent: string; ink: string };
   plum: { DEFAULT: string; chip: string };
   mist: { DEFAULT: string; ink: string };

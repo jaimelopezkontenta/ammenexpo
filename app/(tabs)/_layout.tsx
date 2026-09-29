@@ -163,7 +163,14 @@ export default function TabLayout() {
           // El punto de mensajes sin leer se pintaba **dentro** de la pantalla,
           // así que había que entrar para saber que había algo que ver.
           tabBarBadge: unreadTotal || undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.ember.accent },
+          // La cifra, explícita: react-navigation la elegía con una
+          // heurística (YIQ) que con este acento daba negro, mientras el
+          // raíl y las filas la ponían en blanco (3,17:1). Ahora las tres
+          // usan la misma tinta (5,14:1).
+          tabBarBadgeStyle: {
+            backgroundColor: colors.ember.accent,
+            color: colors["badge-ink"],
+          },
         }}
       />
       <Tabs.Screen

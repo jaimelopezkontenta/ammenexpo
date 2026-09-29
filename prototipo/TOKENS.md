@@ -16,10 +16,11 @@ no al revés.
 | dawn.peach-mid | #FCEBD8 | Paso intermedio de esa imagen, y el versículo subrayado |
 | ember | #F2A578 | CTA, inicio del degradado |
 | ember.pale | #FBDFC2 | CTA, fin del degradado |
-| ember.accent | #E2703F | **Solo decoración**: labels editoriales ≥18px, indicador de tab activa, iconos, relleno del progress |
+| ember.accent | #E2703F | **Solo decoración**: labels editoriales ≥18px, indicador de tab activa, iconos, relleno del progress, fondo de los badges |
 | ember.ink | #B24A22 | **Texto naranja que hay que leer**: enlaces, "Saltar", "¿Olvidaste tu contraseña?" |
 | plum | #413653 | Texto principal |
 | plum.chip | #4D405C | Pills y tabs activas, badges, chips de acción |
+| badge-ink | #211D33 | La cifra de los badges sobre ember.accent (Oleada 5, 2026-09-29). Fija en los dos temas, como cta-ink |
 | mist | #8A8494 | **Solo decoración**: iconos, separadores, bordes |
 | mist.ink | #6F6879 | Texto secundario y placeholders |
 | surface | #FFFFFF | Cards, inputs, pills |
@@ -48,6 +49,12 @@ tarjeta. `peach` se queda por la imagen que se comparte.
 | **danger** | ✅ 5,44 | ✅ 4,89 | ✅ 5,08 | ⚠️ 4,12 | ⚠️ 3,71 |
 
 Blanco sobre plum.chip: ✅ 9,53 — las pills activas y la burbuja propia del chat.
+
+**Los badges.** Los de la app (pestaña Juntos, raíl, filas de círculo) van sobre
+ember.accent, no sobre plum.chip. Su cifra iba en blanco en el raíl y en las filas
+(❌ 3,17) y en negro en la pestaña (una heurística de react-navigation). Las tres van
+en badge-ink: ✅ 5,14, en claro y en oscuro (el acento no cambia de tema). El punto
+de «sin leer», que no lleva texto, se queda en el acento.
 
 **El CTA.** Label plum: 5,56 en el extremo oscuro del degradado y 8,75 en el claro.
 El blanco que pedía el montaje daba 2,01 y 1,28.

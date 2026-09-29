@@ -43,7 +43,9 @@ export type TxtTone =
   | "onDark"
   // La tinta fija del CTA melocotón: el degradado no cambia con el tema, así
   // que su texto tampoco (AGENTS.md, marca fija).
-  | "onCta";
+  | "onCta"
+  // La cifra de un badge sobre `ember.accent` (5,14:1), fija como el acento.
+  | "onBadge";
 
 type TxtProps = TextProps & {
   variant?: TxtVariant;
@@ -82,6 +84,7 @@ const TONE: Record<TxtTone, string> = {
   danger: "text-danger",
   onDark: "text-white",
   onCta: "text-cta-ink",
+  onBadge: "text-badge-ink",
 };
 
 /** El tono que cada variante lleva si no se pide otro. */
