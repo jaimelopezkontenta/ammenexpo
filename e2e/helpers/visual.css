@@ -9,3 +9,17 @@
 [data-testid="unread-dot"] {
   visibility: hidden !important;
 }
+
+/*
+ * Las fechas que salen del día REAL (la de la cabecera —«Miércoles, 30 de septiembre»—, la de
+ * cada aviso y «este día se abre el …» de un plan) son la del día REAL: la
+ * hora se fija a las 10:00 pero no el día (congelarlo descuadraría los datos del
+ * seed, que nacen en el reset de la corrida). Sin ocultarla, todas las capturas
+ * con cabecera de pestaña caducaban a medianoche (2026-09-30: Hoy, en claro y en
+ * oscuro, amaneció con 470-640 px de diferencia solo en esa línea).
+ */
+[data-testid="tab-header-date"],
+[data-testid="notification-date"],
+[data-testid="day-locked-date"] {
+  visibility: hidden !important;
+}

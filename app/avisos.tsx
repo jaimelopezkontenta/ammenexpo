@@ -37,6 +37,7 @@ const NotificationRow = memo(function NotificationRow({
       name,
       planTitle: entry.payload.plan_title ?? "",
     }),
+    metaTestID: "notification-date",
     meta: new Date(entry.created_at).toLocaleDateString(i18n.language, {
       day: "numeric",
       month: "long",

@@ -13,6 +13,8 @@ type Props = Omit<TapProps, "children"> & {
   title: string;
   /** La línea secundaria: último mensaje, fecha, censo… */
   meta?: string;
+  /** Para que la red visual pueda ocultar una fecha que cambia cada día. */
+  metaTestID?: string;
   /** Contador de no leídos, a la derecha. */
   badge?: number;
   /** El punto mudo de "hay algo nuevo", cuando el número exacto no ayuda. */
@@ -40,6 +42,7 @@ export const ListRow = forwardRef<View, Props>(
       leading,
       title,
       meta,
+      metaTestID,
       badge,
       dot = false,
       titleLines,
@@ -68,7 +71,12 @@ export const ListRow = forwardRef<View, Props>(
               {title}
             </Txt>
             {meta ? (
-              <Txt variant="caption" tone="secondary" numberOfLines={1}>
+              <Txt
+                variant="caption"
+                tone="secondary"
+                numberOfLines={1}
+                testID={metaTestID}
+              >
                 {meta}
               </Txt>
             ) : null}

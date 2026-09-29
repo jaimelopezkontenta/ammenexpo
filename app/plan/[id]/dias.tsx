@@ -122,7 +122,7 @@ export default function PlanDays() {
               <Txt variant="overline">
                 {t("common.day", { number: day.day_number })}
               </Txt>
-              <Txt variant="body" tone="secondary">
+              <Txt variant="body" tone="secondary" testID="day-locked-date">
                 {t("plan.locked", {
                   date: new Date(day.unlock_date).toLocaleDateString(
                     i18n.language,

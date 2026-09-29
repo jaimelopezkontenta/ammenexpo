@@ -93,7 +93,7 @@ export const TabHeader = ({
           </Txt>
         ) : null}
         {showDate ? (
-          <Txt variant="caption" className="mt-0.5">
+          <Txt variant="caption" className="mt-0.5" testID="tab-header-date">
             {dateLabel}
           </Txt>
         ) : null}
