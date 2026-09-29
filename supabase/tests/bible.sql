@@ -47,6 +47,13 @@ begin
 end;
 $$;
 
+-- Las aserciones de plan (`plan_mentions`) dependen de las estadísticas.
+-- Justo después de un `db reset`, autovacuum puede no haber analizado todavía
+-- los 62.000 versículos, y sin estadísticas el planificador elige un seq scan
+-- aunque el índice GIN sirva: la suite fallaba o no según lo que tardara el
+-- reset. Se analiza aquí para que no dependa de eso.
+analyze public.bible_verses;
+
 begin;
 
 insert into auth.users (id, email, aud, role, raw_user_meta_data)
