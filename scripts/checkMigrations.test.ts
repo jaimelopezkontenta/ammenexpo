@@ -153,6 +153,7 @@ describe("checkHistory", () => {
       "20260730100100_groups.sql",
       "20260730100200_plans.sql",
       "20260730100300_social.sql",
+      "20260929125011_bible_web_data.sql",
     ]);
   });
 });

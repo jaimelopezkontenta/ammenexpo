@@ -21,7 +21,8 @@
  *   - la HISTORIA publicada no tiene ediciones ni borrados sueltos: contra el
  *     contenido no basta, porque con `cancel-in-progress` un push puede
  *     saltarse su comprobación y el siguiente solo mira un tramo. Las cuatro
- *     migraciones de 2026-07-30 editadas una vez en `96adcde` están fijadas en
+ *     migraciones de 2026-07-30 editadas una vez en `96adcde` (y la de la WEB,
+ *     troceada antes de aplicarse en ningún sitio) están fijadas en
  *     `LEGACY_EDITS`; una edición más, o una nueva, hace fallar el guard.
  *
  *   node scripts/checkMigrations.mjs                 → contra origin/main
@@ -45,7 +46,12 @@ export const MIGRATION_NAME = /^(\d{14})_([a-z0-9_]+)\.sql$/u;
  *
  * @type {ReadonlyMap<string, string>}
  */
-export const IMMUTABILITY_EXCEPTIONS = new Map();
+export const IMMUTABILITY_EXCEPTIONS = new Map([
+  [
+    "20260929125011_bible_web_data.sql",
+    "editada (troceada en INSERT de 200 líneas) el 2026-09-29 antes de que ningún entorno remoto la aplicara: con una sentencia única de 4,3 MB, `supabase start` se colgaba en el runner de CI",
+  ],
+]);
 
 /**
  * Migraciones publicadas que se editaron UNA vez antes de que existiera el
@@ -59,6 +65,9 @@ export const LEGACY_EDITS = new Map([
   ["20260730100100_groups.sql", 1],
   ["20260730100200_plans.sql", 1],
   ["20260730100300_social.sql", 1],
+  // Troceada el 2026-09-29, antes de aplicarse en ningún entorno remoto (ver la
+  // cabecera de la propia migración e IMMUTABILITY_EXCEPTIONS).
+  ["20260929125011_bible_web_data.sql", 1],
 ]);
 
 const normalize = (content) => content.replace(/\r\n/gu, "\n");

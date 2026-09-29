@@ -7,12 +7,29 @@
 -- texto alterado. **No se edita a mano**: si hubiera que tocar el texto, se
 -- regenera desde el fichero original o deja de poder llamarse WEB.
 --
--- Por qué UNA sentencia con el fichero pegado dentro y no 31.103 INSERT: es el
+-- Por qué el fichero pegado dentro de un dollar-quote y no 31.103 INSERT: es el
 -- mismo texto que publica eBible.org, línea por línea («GEN 1:1 In the
 -- beginning…»), así que se puede comparar con el original a simple vista, y
--- Postgres lo parte y lo parsea en un solo paso. El dollar-quote `$web$` no
+-- Postgres lo parte y lo parsea de una vez. El dollar-quote `$web-- Ammen — la World English Bible (WEB), el texto.
+--
+-- Fuente: eBible.org, fichero engwebp_vpl.txt (edición «2020 stable text», canon
+-- protestante de 66 libros, sin notas ni títulos), descargado el 2026-09-29 de
+-- https://eBible.org/Scriptures/ . La WEB es de dominio público; «World English
+-- Bible» es marca de eBible.org, y la única condición es no llamar así a un
+-- texto alterado. **No se edita a mano**: si hubiera que tocar el texto, se
+-- regenera desde el fichero original o deja de poder llamarse WEB.
+--
+ no
 -- interpreta nada: ni comillas ni barras (el fichero no contiene la etiqueta;
 -- el generador lo comprueba).
+--
+-- En TROZOS de 200 líneas (156 sentencias de ~27 KB), no en una sola de
+-- 4,3 MB: con una única sentencia gigante `supabase start` se quedó colgado más
+-- de 12 minutos en el runner de CI (Linux) aplicando esta migración — el CLI
+-- parte cada migración en sentencias y ese partido no aguanta un literal tan
+-- grande. En local (Windows) entraba en 3 s, por eso no se vio antes. Cada trozo
+-- es el mismo INSERT con líneas consecutivas del fichero: el contenido cargado
+-- es idéntico, y la comprobación de abajo sigue exigiendo los 31098 versículos.
 --
 -- Los códigos de libro son los de SIL/UBS; su posición en la lista de abajo es
 -- el `bible_books.id` canónico (GEN = 1 … REV = 66). `supabase/tests/bible.sql`
@@ -240,6 +257,29 @@ GEN 8:13 In the six hundred first year, in the first month, the first day of the
 GEN 8:14 In the second month, on the twenty-seventh day of the month, the earth was dry.
 GEN 8:15 God spoke to Noah, saying,
 GEN 8:16 “Go out of the ship, you, your wife, your sons, and your sons’ wives with you.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 GEN 8:17 Bring out with you every living thing that is with you of all flesh, including birds, livestock, and every creeping thing that creeps on the earth, that they may breed abundantly on the earth, and be fruitful, and multiply on the earth.”
 GEN 8:18 Noah went out, with his sons, his wife, and his sons’ wives with him.
 GEN 8:19 Every animal, every creeping thing, and every bird, whatever moves on the earth, after their families, went out of the ship.
@@ -440,6 +480,29 @@ GEN 16:15 Hagar bore a son for Abram. Abram called the name of his son, whom Hag
 GEN 16:16 Abram was eighty-six years old when Hagar bore Ishmael to Abram.
 GEN 17:1 When Abram was ninety-nine years old, the LORD appeared to Abram and said to him, “I am God Almighty. Walk before me and be blameless.
 GEN 17:2 I will make my covenant between me and you, and will multiply you exceedingly.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 GEN 17:3 Abram fell on his face. God talked with him, saying,
 GEN 17:4 “As for me, behold, my covenant is with you. You will be the father of a multitude of nations.
 GEN 17:5 Your name will no more be called Abram, but your name will be Abraham; for I have made you the father of a multitude of nations.
@@ -640,6 +703,29 @@ GEN 24:5 The servant said to him, “What if the woman isn’t willing to follow
 GEN 24:6 Abraham said to him, “Beware that you don’t bring my son there again.
 GEN 24:7 The LORD, the God of heaven—who took me from my father’s house, and from the land of my birth, who spoke to me, and who swore to me, saying, ‘I will give this land to your offspring—he will send his angel before you, and you shall take a wife for my son from there.
 GEN 24:8 If the woman isn’t willing to follow you, then you shall be clear from this oath to me. Only you shall not bring my son there again.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 GEN 24:9 The servant put his hand under the thigh of Abraham his master, and swore to him concerning this matter.
 GEN 24:10 The servant took ten of his master’s camels, and departed, having a variety of good things of his master’s with him. He arose, and went to Mesopotamia, to the city of Nahor.
 GEN 24:11 He made the camels kneel down outside the city by the well of water at the time of evening, the time that women go out to draw water.
@@ -840,6 +926,29 @@ GEN 29:1 Then Jacob went on his journey, and came to the land of the children of
 GEN 29:2 He looked, and saw a well in the field, and saw three flocks of sheep lying there by it. For out of that well they watered the flocks. The stone on the well’s mouth was large.
 GEN 29:3 There all the flocks were gathered. They rolled the stone from the well’s mouth, and watered the sheep, and put the stone back on the well’s mouth in its place.
 GEN 29:4 Jacob said to them, “My relatives, where are you from?” They said, “We are from Haran.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 GEN 29:5 He said to them, “Do you know Laban, the son of Nahor?” They said, “We know him.”
 GEN 29:6 He said to them, “Is it well with him?” They said, “It is well. See, Rachel, his daughter, is coming with the sheep.”
 GEN 29:7 He said, “Behold, it is still the middle of the day, not time to gather the livestock together. Water the sheep, and go and feed them.”
@@ -1040,6 +1149,29 @@ GEN 34:16 then will we give our daughters to you; and we will take your daughter
 GEN 34:17 But if you will not listen to us and be circumcised, then we will take our sister, and we will be gone.”
 GEN 34:18 Their words pleased Hamor and Shechem, Hamor’s son.
 GEN 34:19 The young man didn’t wait to do this thing, because he had delight in Jacob’s daughter, and he was honored above all the house of his father.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 GEN 34:20 Hamor and Shechem, his son, came to the gate of their city, and talked with the men of their city, saying,
 GEN 34:21 “These men are peaceful with us. Therefore let them live in the land and trade in it. For behold, the land is large enough for them. Let’s take their daughters to us for wives, and let’s give them our daughters.
 GEN 34:22 Only on this condition will the men consent to us to live with us, to become one people, if every male among us is circumcised, as they are circumcised.
@@ -1240,6 +1372,29 @@ GEN 41:1 At the end of two full years, Pharaoh dreamed, and behold, he stood by 
 GEN 41:2 Behold, seven cattle came up out of the river. They were sleek and fat, and they fed in the marsh grass.
 GEN 41:3 Behold, seven other cattle came up after them out of the river, ugly and thin, and stood by the other cattle on the brink of the river.
 GEN 41:4 The ugly and thin cattle ate up the seven sleek and fat cattle. So Pharaoh awoke.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 GEN 41:5 He slept and dreamed a second time; and behold, seven heads of grain came up on one stalk, healthy and good.
 GEN 41:6 Behold, seven heads of grain, thin and blasted with the east wind, sprung up after them.
 GEN 41:7 The thin heads of grain swallowed up the seven healthy and full ears. Pharaoh awoke, and behold, it was a dream.
@@ -1440,6 +1595,29 @@ GEN 46:10 The sons of Simeon: Jemuel, Jamin, Ohad, Jachin, Zohar, and Shaul the 
 GEN 46:11 The sons of Levi: Gershon, Kohath, and Merari.
 GEN 46:12 The sons of Judah: Er, Onan, Shelah, Perez, and Zerah; but Er and Onan died in the land of Canaan. The sons of Perez were Hezron and Hamul.
 GEN 46:13 The sons of Issachar: Tola, Puvah, Iob, and Shimron.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 GEN 46:14 The sons of Zebulun: Sered, Elon, and Jahleel.
 GEN 46:15 These are the sons of Leah, whom she bore to Jacob in Paddan Aram, with his daughter Dinah. All the souls of his sons and his daughters were thirty-three.
 GEN 46:16 The sons of Gad: Ziphion, Haggi, Shuni, Ezbon, Eri, Arodi, and Areli.
@@ -1640,6 +1818,29 @@ EXO 3:17 I have said, I will bring you up out of the affliction of Egypt to the 
 EXO 3:18 They will listen to your voice. You shall come, you and the elders of Israel, to the king of Egypt, and you shall tell him, ‘The LORD, the God of the Hebrews, has met with us. Now please let us go three days’ journey into the wilderness, that we may sacrifice to the LORD, our God.’
 EXO 3:19 I know that the king of Egypt won’t give you permission to go, no, not by a mighty hand.
 EXO 3:20 I will reach out my hand and strike Egypt with all my wonders which I will do among them, and after that he will let you go.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EXO 3:21 I will give this people favor in the sight of the Egyptians, and it will happen that when you go, you shall not go empty-handed.
 EXO 3:22 But every woman shall ask of her neighbor, and of her who visits her house, jewels of silver, jewels of gold, and clothing. You shall put them on your sons, and on your daughters. You shall plunder the Egyptians.”
 EXO 4:1 Moses answered, “But, behold, they will not believe me, nor listen to my voice; for they will say, ‘The LORD has not appeared to you.’”
@@ -1840,6 +2041,29 @@ EXO 10:19 The LORD sent an exceedingly strong west wind, which took up the locus
 EXO 10:20 But the LORD hardened Pharaoh’s heart, and he didn’t let the children of Israel go.
 EXO 10:21 The LORD said to Moses, “Stretch out your hand toward the sky, that there may be darkness over the land of Egypt, even darkness which may be felt.”
 EXO 10:22 Moses stretched out his hand toward the sky, and there was a thick darkness in all the land of Egypt for three days.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EXO 10:23 They didn’t see one another, and nobody rose from his place for three days; but all the children of Israel had light in their dwellings.
 EXO 10:24 Pharaoh called to Moses, and said, “Go, serve the LORD. Only let your flocks and your herds stay behind. Let your little ones also go with you.”
 EXO 10:25 Moses said, “You must also give into our hand sacrifices and burnt offerings, that we may sacrifice to the LORD our God.
@@ -2040,6 +2264,29 @@ EXO 17:13 Joshua defeated Amalek and his people with the edge of the sword.
 EXO 17:14 The LORD said to Moses, “Write this for a memorial in a book, and rehearse it in the ears of Joshua: that I will utterly blot out the memory of Amalek from under the sky.”
 EXO 17:15 Moses built an altar, and called its name “The LORD our Banner”.
 EXO 17:16 He said, “The LORD has sworn: ‘The LORD will have war with Amalek from generation to generation.’”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EXO 18:1 Now Jethro, the priest of Midian, Moses’ father-in-law, heard of all that God had done for Moses and for Israel his people, how the LORD had brought Israel out of Egypt.
 EXO 18:2 Jethro, Moses’ father-in-law, received Zipporah, Moses’ wife, after he had sent her away,
 EXO 18:3 and her two sons. The name of one son was Gershom, for Moses said, “I have lived as a foreigner in a foreign land”.
@@ -2240,6 +2487,29 @@ EXO 25:1 The LORD spoke to Moses, saying,
 EXO 25:2 “Speak to the children of Israel, that they take an offering for me. From everyone whose heart makes him willing you shall take my offering.
 EXO 25:3 This is the offering which you shall take from them: gold, silver, bronze,
 EXO 25:4 blue, purple, scarlet, fine linen, goats’ hair,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EXO 25:5 rams’ skins dyed red, sea cow hides, acacia wood,
 EXO 25:6 oil for the light, spices for the anointing oil and for the sweet incense,
 EXO 25:7 onyx stones, and stones to be set for the ephod and for the breastplate.
@@ -2440,6 +2710,29 @@ EXO 30:14 Everyone who passes over to those who are counted, from twenty years o
 EXO 30:15 The rich shall not give more, and the poor shall not give less, than the half shekel, when they give the offering of the LORD, to make atonement for your souls.
 EXO 30:16 You shall take the atonement money from the children of Israel, and shall appoint it for the service of the Tent of Meeting; that it may be a memorial for the children of Israel before the LORD, to make atonement for your souls.”
 EXO 30:17 The LORD spoke to Moses, saying,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EXO 30:18 “You shall also make a basin of bronze, and its base of bronze, in which to wash. You shall put it between the Tent of Meeting and the altar, and you shall put water in it.
 EXO 30:19 Aaron and his sons shall wash their hands and their feet in it.
 EXO 30:20 When they go into the Tent of Meeting, they shall wash with water, that they don’t die; or when they come near to the altar to minister, to burn an offering made by fire to the LORD.
@@ -2640,6 +2933,29 @@ EXO 36:30 There were eight boards and their sockets of silver, sixteen sockets�
 EXO 36:31 He made bars of acacia wood: five for the boards of the one side of the tabernacle,
 EXO 36:32 and five bars for the boards of the other side of the tabernacle, and five bars for the boards of the tabernacle for the hinder part westward.
 EXO 36:33 He made the middle bar to pass through in the middle of the boards from the one end to the other.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EXO 36:34 He overlaid the boards with gold, and made their rings of gold as places for the bars, and overlaid the bars with gold.
 EXO 36:35 He made the veil of blue, purple, scarlet, and fine twined linen, with cherubim. He made it the work of a skillful workman.
 EXO 36:36 He made four pillars of acacia for it, and overlaid them with gold. Their hooks were of gold. He cast four sockets of silver for them.
@@ -2840,6 +3156,29 @@ LEV 4:1 The LORD spoke to Moses, saying,
 LEV 4:2 “Speak to the children of Israel, saying, ‘If anyone sins unintentionally, in any of the things which the LORD has commanded not to be done, and does any one of them,
 LEV 4:3 if the anointed priest sins so as to bring guilt on the people, then let him offer for his sin which he has sinned a young bull without defect to the LORD for a sin offering.
 LEV 4:4 He shall bring the bull to the door of the Tent of Meeting before the LORD; and he shall lay his hand on the head of the bull, and kill the bull before the LORD.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LEV 4:5 The anointed priest shall take some of the blood of the bull, and bring it to the Tent of Meeting.
 LEV 4:6 The priest shall dip his finger in the blood, and sprinkle some of the blood seven times before the LORD, before the veil of the sanctuary.
 LEV 4:7 The priest shall put some of the blood on the horns of the altar of sweet incense before the LORD, which is in the Tent of Meeting; and he shall pour out the rest of the blood of the bull at the base of the altar of burnt offering, which is at the door of the Tent of Meeting.
@@ -3040,6 +3379,29 @@ LEV 10:19 Aaron spoke to Moses, “Behold, today they have offered their sin off
 LEV 10:20 When Moses heard that, it was pleasing in his sight.
 LEV 11:1 The LORD spoke to Moses and to Aaron, saying to them,
 LEV 11:2 “Speak to the children of Israel, saying, ‘These are the living things which you may eat among all the animals that are on the earth.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LEV 11:3 Whatever parts the hoof, and is cloven-footed, and chews the cud among the animals, that you may eat.
 LEV 11:4 “‘Nevertheless these you shall not eat of those that chew the cud, or of those who part the hoof: the camel, because it chews the cud but doesn’t have a parted hoof, is unclean to you.
 LEV 11:5 The hyrax, because it chews the cud but doesn’t have a parted hoof, is unclean to you.
@@ -3240,6 +3602,29 @@ LEV 15:28 “‘But if she is cleansed of her discharge, then she shall count to
 LEV 15:29 On the eighth day she shall take two turtledoves, or two young pigeons, and bring them to the priest, to the door of the Tent of Meeting.
 LEV 15:30 The priest shall offer the one for a sin offering, and the other for a burnt offering; and the priest shall make atonement for her before the LORD for the uncleanness of her discharge.
 LEV 15:31 “‘Thus you shall separate the children of Israel from their uncleanness, so they will not die in their uncleanness when they defile my tabernacle that is among them.’”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LEV 15:32 This is the law of him who has a discharge, and of him who has an emission of semen, so that he is unclean by it;
 LEV 15:33 and of her who has her period, and of a man or woman who has a discharge, and of him who lies with her who is unclean.
 LEV 16:1 The LORD spoke to Moses after the death of the two sons of Aaron, when they came near before the LORD, and died;
@@ -3440,6 +3825,29 @@ LEV 22:27 “When a bull, a sheep, or a goat is born, it shall remain seven days
 LEV 22:28 Whether it is a cow or ewe, you shall not kill it and its young both in one day.
 LEV 22:29 “When you sacrifice a sacrifice of thanksgiving to the LORD, you shall sacrifice it so that you may be accepted.
 LEV 22:30 It shall be eaten on the same day; you shall leave none of it until the morning. I am the LORD.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LEV 22:31 “Therefore you shall keep my commandments, and do them. I am the LORD.
 LEV 22:32 You shall not profane my holy name, but I will be made holy among the children of Israel. I am the LORD who makes you holy,
 LEV 22:33 who brought you out of the land of Egypt, to be your God. I am the LORD.”
@@ -3640,6 +4048,29 @@ LEV 27:26 “‘However the firstborn among animals, which belongs to the LORD a
 LEV 27:27 If it is an unclean animal, then he shall buy it back according to your valuation, and shall add to it the fifth part of it; or if it isn’t redeemed, then it shall be sold according to your valuation.
 LEV 27:28 “‘Notwithstanding, no devoted thing that a man devotes to the LORD of all that he has, whether of man or animal, or of the field of his possession, shall be sold or redeemed. Everything that is permanently devoted is most holy to the LORD.
 LEV 27:29 “‘No one devoted to destruction, who shall be devoted from among men, shall be ransomed. He shall surely be put to death.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LEV 27:30 “‘All the tithe of the land, whether of the seed of the land or of the fruit of the trees, is the LORD’s. It is holy to the LORD.
 LEV 27:31 If a man redeems anything of his tithe, he shall add a fifth part to it.
 LEV 27:32 All the tithe of the herds or the flocks, whatever passes under the rod, the tenth shall be holy to the LORD.
@@ -3840,6 +4271,29 @@ NUM 5:4 The children of Israel did so, and put them outside of the camp; as the 
 NUM 5:5 The LORD spoke to Moses, saying,
 NUM 5:6 “Speak to the children of Israel: ‘When a man or woman commits any sin that men commit, so as to trespass against the LORD, and that soul is guilty,
 NUM 5:7 then he shall confess his sin which he has done; and he shall make restitution for his guilt in full, add to it the fifth part of it, and give it to him in respect of whom he has been guilty.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 NUM 5:8 But if the man has no kinsman to whom restitution may be made for the guilt, the restitution for guilt which is made to the LORD shall be the priest’s, in addition to the ram of the atonement, by which atonement shall be made for him.
 NUM 5:9 Every heave offering of all the holy things of the children of Israel, which they present to the priest, shall be his.
 NUM 5:10 Every man’s holy things shall be his; whatever any man gives the priest, it shall be his.’”
@@ -4040,6 +4494,29 @@ NUM 10:8 “The sons of Aaron, the priests, shall blow the trumpets. This shall 
 NUM 10:9 When you go to war in your land against the adversary who oppresses you, then you shall sound an alarm with the trumpets. Then you will be remembered before the LORD your God, and you will be saved from your enemies.
 NUM 10:10 “Also in the day of your gladness, and in your set feasts, and in the beginnings of your months, you shall blow the trumpets over your burnt offerings, and over the sacrifices of your peace offerings; and they shall be to you for a memorial before your God. I am the LORD your God.”
 NUM 10:11 In the second year, in the second month, on the twentieth day of the month, the cloud was taken up from over the tabernacle of the covenant.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 NUM 10:12 The children of Israel went forward on their journeys out of the wilderness of Sinai; and the cloud stayed in the wilderness of Paran.
 NUM 10:13 They first went forward according to the commandment of the LORD by Moses.
 NUM 10:14 First, the standard of the camp of the children of Judah went forward according to their armies. Nahshon the son of Amminadab was over his army.
@@ -4240,6 +4717,29 @@ NUM 16:2 They rose up before Moses, with some of the children of Israel, two hun
 NUM 16:3 They assembled themselves together against Moses and against Aaron, and said to them, “You take too much on yourself, since all the congregation are holy, everyone of them, and the LORD is among them! Why do you lift yourselves up above the LORD’s assembly?”
 NUM 16:4 When Moses heard it, he fell on his face.
 NUM 16:5 He said to Korah and to all his company, “In the morning, the LORD will show who are his, and who is holy, and will cause him to come near to him. Even him whom he shall choose, he will cause to come near to him.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 NUM 16:6 Do this: have Korah and all his company take censers,
 NUM 16:7 put fire in them, and put incense on them before the LORD tomorrow. It shall be that the man whom the LORD chooses, he shall be holy. You have gone too far, you sons of Levi!”
 NUM 16:8 Moses said to Korah, “Hear now, you sons of Levi!
@@ -4440,6 +4940,29 @@ NUM 22:21 Balaam rose up in the morning, and saddled his donkey, and went with t
 NUM 22:22 God’s anger burned because he went; and the LORD’s angel placed himself in the way as an adversary against him. Now he was riding on his donkey, and his two servants were with him.
 NUM 22:23 The donkey saw the LORD’s angel standing in the way, with his sword drawn in his hand; and the donkey turned out of the path, and went into the field. Balaam struck the donkey, to turn her into the path.
 NUM 22:24 Then the LORD’s angel stood in a narrow path between the vineyards, a wall being on this side, and a wall on that side.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 NUM 22:25 The donkey saw the LORD’s angel, and she thrust herself to the wall, and crushed Balaam’s foot against the wall. He struck her again.
 NUM 22:26 The LORD’s angel went further, and stood in a narrow place, where there was no way to turn either to the right hand or to the left.
 NUM 22:27 The donkey saw the LORD’s angel, and she lay down under Balaam. Balaam’s anger burned, and he struck the donkey with his staff.
@@ -4640,6 +5163,29 @@ NUM 28:19 but you shall offer an offering made by fire, a burnt offering to the 
 NUM 28:20 with their meal offering, fine flour mixed with oil. You shall offer three tenths for a bull, and two tenths for the ram.
 NUM 28:21 You shall offer one tenth for every lamb of the seven lambs;
 NUM 28:22 and one male goat for a sin offering, to make atonement for you.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 NUM 28:23 You shall offer these in addition to the burnt offering of the morning, which is for a continual burnt offering.
 NUM 28:24 In this way you shall offer daily, for seven days, the food of the offering made by fire, of a pleasant aroma to the LORD. It shall be offered in addition to the continual burnt offering and its drink offering.
 NUM 28:25 On the seventh day you shall have a holy convocation. You shall do no regular work.
@@ -4840,6 +5386,29 @@ NUM 33:36 They traveled from Ezion Geber, and encamped at Kadesh in the wilderne
 NUM 33:37 They traveled from Kadesh, and encamped in Mount Hor, in the edge of the land of Edom.
 NUM 33:38 Aaron the priest went up into Mount Hor at the commandment of the LORD and died there, in the fortieth year after the children of Israel had come out of the land of Egypt, in the fifth month, on the first day of the month.
 NUM 33:39 Aaron was one hundred twenty-three years old when he died in Mount Hor.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 NUM 33:40 The Canaanite king of Arad, who lived in the South in the land of Canaan, heard of the coming of the children of Israel.
 NUM 33:41 They traveled from Mount Hor, and encamped in Zalmonah.
 NUM 33:42 They traveled from Zalmonah, and encamped in Punon.
@@ -5040,6 +5609,29 @@ DEU 3:21 I commanded Joshua at that time, saying, “Your eyes have seen all tha
 DEU 3:22 You shall not fear them; for the LORD your God himself fights for you.”
 DEU 3:23 I begged GOD at that time, saying,
 DEU 3:24 “Lord GOD, you have begun to show your servant your greatness, and your strong hand. For what god is there in heaven or in earth that can do works like yours, and mighty acts like yours?
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 DEU 3:25 Please let me go over and see the good land that is beyond the Jordan, that fine mountain, and Lebanon.”
 DEU 3:26 But the LORD was angry with me because of you, and didn’t listen to me. The LORD said to me, “That is enough! Speak no more to me of this matter.
 DEU 3:27 Go up to the top of Pisgah, and lift up your eyes westward, and northward, and southward, and eastward, and see with your eyes; for you shall not go over this Jordan.
@@ -5240,6 +5832,29 @@ DEU 10:10 I stayed on the mountain, as at the first time, forty days and forty n
 DEU 10:11 The LORD said to me, “Arise, take your journey before the people; and they shall go in and possess the land which I swore to their fathers to give to them.”
 DEU 10:12 Now, Israel, what does the LORD your God require of you, but to fear the LORD your God, to walk in all his ways, to love him, and to serve the LORD your God with all your heart and with all your soul,
 DEU 10:13 to keep the LORD’s commandments and statutes, which I command you today for your good?
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 DEU 10:14 Behold, to the LORD your God belongs heaven, the heaven of heavens, and the earth, with all that is therein.
 DEU 10:15 Only the LORD had a delight in your fathers to love them, and he chose their offspring after them, even you above all peoples, as it is today.
 DEU 10:16 Circumcise therefore the foreskin of your heart, and be no more stiff-necked.
@@ -5440,6 +6055,29 @@ DEU 18:12 For whoever does these things is an abomination to the LORD. Because o
 DEU 18:13 You shall be blameless with the LORD your God.
 DEU 18:14 For these nations that you shall dispossess listen to those who practice sorcery and to diviners; but as for you, the LORD your God has not allowed you so to do.
 DEU 18:15 The LORD your God will raise up to you a prophet from among you, of your brothers, like me. You shall listen to him.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 DEU 18:16 This is according to all that you desired of the LORD your God in Horeb in the day of the assembly, saying, “Let me not hear again the LORD my God’s voice, neither let me see this great fire any more, that I not die.”
 DEU 18:17 The LORD said to me, “They have well said that which they have spoken.
 DEU 18:18 I will raise them up a prophet from among their brothers, like you. I will put my words in his mouth, and he shall speak to them all that I shall command him.
@@ -5640,6 +6278,29 @@ DEU 27:11 Moses commanded the people the same day, saying,
 DEU 27:12 “These shall stand on Mount Gerizim to bless the people, when you have crossed over the Jordan: Simeon, Levi, Judah, Issachar, Joseph, and Benjamin.
 DEU 27:13 These shall stand on Mount Ebal for the curse: Reuben, Gad, Asher, Zebulun, Dan, and Naphtali.
 DEU 27:14 With a loud voice, the Levites shall say to all the men of Israel,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 DEU 27:15 ‘Cursed is the man who makes an engraved or molten image, an abomination to the LORD, the work of the hands of the craftsman, and sets it up in secret.’ All the people shall answer and say, ‘Amen.’
 DEU 27:16 ‘Cursed is he who dishonors his father or his mother.’ All the people shall say, ‘Amen.’
 DEU 27:17 ‘Cursed is he who removes his neighbor’s landmark.’ All the people shall say, ‘Amen.’
@@ -5840,6 +6501,29 @@ DEU 32:38 which ate the fat of their sacrifices, and drank the wine of their dri
 DEU 32:39 “See now that I myself am he. There is no god with me. I kill and I make alive. I wound and I heal. There is no one who can deliver out of my hand.
 DEU 32:40 For I lift up my hand to heaven and declare, as I live forever,
 DEU 32:41 if I sharpen my glittering sword, my hand grasps it in judgment; I will take vengeance on my adversaries, and will repay those who hate me.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 DEU 32:42 I will make my arrows drunk with blood. My sword shall devour flesh with the blood of the slain and the captives, from the head of the leaders of the enemy.”
 DEU 32:43 Rejoice, you nations, with his people, for he will avenge the blood of his servants. He will take vengeance on his adversaries, and will make atonement for his land and for his people.
 DEU 32:44 Moses came and spoke all the words of this song in the ears of the people, he and Joshua the son of Nun.
@@ -6040,6 +6724,29 @@ JOS 7:20 Achan answered Joshua, and said, “I have truly sinned against the LOR
 JOS 7:21 When I saw among the plunder a beautiful Babylonian robe, two hundred shekels of silver, and a wedge of gold weighing fifty shekels, then I coveted them and took them. Behold, they are hidden in the ground in the middle of my tent, with the silver under it.”
 JOS 7:22 So Joshua sent messengers, and they ran to the tent. Behold, it was hidden in his tent, with the silver under it.
 JOS 7:23 They took them from the middle of the tent, and brought them to Joshua and to all the children of Israel. They laid them down before the LORD.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOS 7:24 Joshua, and all Israel with him, took Achan the son of Zerah, the silver, the robe, the wedge of gold, his sons, his daughters, his cattle, his donkeys, his sheep, his tent, and all that he had; and they brought them up to the valley of Achor.
 JOS 7:25 Joshua said, “Why have you troubled us? The LORD will trouble you today.” All Israel stoned him with stones, and they burned them with fire and stoned them with stones.
 JOS 7:26 They raised over him a great heap of stones that remains to this day. The LORD turned from the fierceness of his anger. Therefore the name of that place was called “The valley of Achor” to this day.
@@ -6240,6 +6947,29 @@ JOS 14:9 Moses swore on that day, saying, ‘Surely the land where you walked sh
 JOS 14:10 “Now, behold, the LORD has kept me alive, as he spoke, these forty-five years, from the time that the LORD spoke this word to Moses, while Israel walked in the wilderness. Now, behold, I am eighty-five years old, today.
 JOS 14:11 As yet I am as strong today as I was in the day that Moses sent me. As my strength was then, even so is my strength now for war, to go out and to come in.
 JOS 14:12 Now therefore give me this hill country, of which the LORD spoke in that day; for you heard in that day how the Anakim were there, and great and fortified cities. It may be that the LORD will be with me, and I shall drive them out, as the LORD said.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOS 14:13 Joshua blessed him; and he gave Hebron to Caleb the son of Jephunneh for an inheritance.
 JOS 14:14 Therefore Hebron became the inheritance of Caleb the son of Jephunneh the Kenizzite to this day, because he followed the LORD, the God of Israel wholeheartedly.
 JOS 14:15 Now the name of Hebron before was Kiriath Arba, after the greatest man among the Anakim. Then the land had rest from war.
@@ -6440,6 +7170,29 @@ JOS 21:15 Holon with its pasture lands, Debir with its pasture lands,
 JOS 21:16 Ain with its pasture lands, Juttah with its pasture lands, and Beth Shemesh with its pasture lands: nine cities out of those two tribes.
 JOS 21:17 Out of the tribe of Benjamin, Gibeon with its pasture lands, Geba with its pasture lands,
 JOS 21:18 Anathoth with its pasture lands, and Almon with its pasture lands: four cities.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOS 21:19 All the cities of the children of Aaron, the priests, were thirteen cities with their pasture lands.
 JOS 21:20 The families of the children of Kohath, the Levites, even the rest of the children of Kohath, had the cities of their lot out of the tribe of Ephraim.
 JOS 21:21 They gave them Shechem with its pasture lands in the hill country of Ephraim, the city of refuge for the man slayer, and Gezer with its pasture lands,
@@ -6640,6 +7393,29 @@ JDG 3:28 He said to them, “Follow me; for the LORD has delivered your enemies 
 JDG 3:29 They struck at that time about ten thousand men of Moab, every strong man and every man of valor. No man escaped.
 JDG 3:30 So Moab was subdued that day under the hand of Israel. Then the land had rest eighty years.
 JDG 3:31 After him was Shamgar the son of Anath, who struck six hundred men of the Philistines with an ox goad. He also saved Israel.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JDG 4:1 The children of Israel again did that which was evil in the LORD’s sight, when Ehud was dead.
 JDG 4:2 The LORD sold them into the hand of Jabin king of Canaan, who reigned in Hazor; the captain of whose army was Sisera, who lived in Harosheth of the Gentiles.
 JDG 4:3 The children of Israel cried to the LORD, for he had nine hundred chariots of iron; and he mightily oppressed the children of Israel for twenty years.
@@ -6840,6 +7616,29 @@ JDG 9:42 On the next day, the people went out into the field; and they told Abim
 JDG 9:43 He took the people and divided them into three companies, and laid wait in the field; and he looked, and behold, the people came out of the city. So, he rose up against them and struck them.
 JDG 9:44 Abimelech and the companies that were with him rushed forward and stood in the entrance of the gate of the city; and the two companies rushed on all who were in the field and struck them.
 JDG 9:45 Abimelech fought against the city all that day; and he took the city and killed the people in it. He beat down the city and sowed it with salt.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JDG 9:46 When all the men of the tower of Shechem heard of it, they entered into the stronghold of the house of Elberith.
 JDG 9:47 Abimelech was told that all the men of the tower of Shechem were gathered together.
 JDG 9:48 Abimelech went up to Mount Zalmon, he and all the people who were with him; and Abimelech took an ax in his hand, and cut down a bough from the trees, and took it up, and laid it on his shoulder. Then he said to the people who were with him, “What you have seen me do, make haste, and do as I have done!”
@@ -7040,6 +7839,29 @@ JDG 18:3 When they were by the house of Micah, they knew the voice of the young 
 JDG 18:4 He said to them, “Thus and thus has Micah dealt with me, and he has hired me, and I have become his priest.”
 JDG 18:5 They said to him, “Please ask counsel of God, that we may know whether our way which we go shall be prosperous.”
 JDG 18:6 The priest said to them, “Go in peace. Your way in which you go is before the LORD.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JDG 18:7 Then the five men departed and came to Laish and saw the people who were there, how they lived in safety, in the way of the Sidonians, quiet and secure; for there was no one in the land possessing authority, that might put them to shame in anything, and they were far from the Sidonians, and had no dealings with anyone else.
 JDG 18:8 They came to their brothers at Zorah and Eshtaol; and their brothers asked them, “What do you say?”
 JDG 18:9 They said, “Arise, and let’s go up against them; for we have seen the land, and behold, it is very good. Do you stand still? Don’t be slothful to go and to enter in to possess the land.
@@ -7240,6 +8062,29 @@ RUT 4:6 The near kinsman said, “I can’t redeem it for myself, lest I endange
 RUT 4:7 Now this was the custom in former time in Israel concerning redeeming and concerning exchanging, to confirm all things: a man took off his sandal, and gave it to his neighbor; and this was the way of formalizing transactions in Israel.
 RUT 4:8 So the near kinsman said to Boaz, “Buy it for yourself,” then he took off his sandal.
 RUT 4:9 Boaz said to the elders and to all the people, “You are witnesses today, that I have bought all that was Elimelech’s, and all that was Chilion’s and Mahlon’s, from the hand of Naomi.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 RUT 4:10 Moreover, Ruth the Moabitess, the wife of Mahlon, I have purchased to be my wife, to raise up the name of the dead on his inheritance, that the name of the dead may not be cut off from among his brothers and from the gate of his place. You are witnesses today.”
 RUT 4:11 All the people who were in the gate, and the elders, said, “We are witnesses. May the LORD make the woman who has come into your house like Rachel and like Leah, which both built the house of Israel; and treat you worthily in Ephrathah, and be famous in Bethlehem.
 RUT 4:12 Let your house be like the house of Perez, whom Tamar bore to Judah, of the offspring which the LORD will give you by this young woman.”
@@ -7440,6 +8285,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1SA 9:6 The servant said to him, “Behold now, there is a man of God in this city, and he is a man who is held in honor. All that he says surely happens. Now let’s go there. Perhaps he can tell us which way to go.”
 1SA 9:7 Then Saul said to his servant, “But behold, if we go, what should we bring the man? For the bread is spent in our sacks, and there is not a present to bring to the man of God. What do we have?”
 1SA 9:8 The servant answered Saul again and said, “Behold, I have in my hand the fourth part of a shekel of silver. I will give that to the man of God, to tell us our way.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1SA 9:9 (In earlier times in Israel, when a man went to inquire of God, he said, “Come! Let’s go to the seer;” for he who is now called a prophet was before called a seer.)
 1SA 9:10 Then Saul said to his servant, “Well said. Come! Let’s go.” So they went to the city where the man of God was.
 1SA 9:11 As they went up the ascent to the city, they found young maidens going out to draw water, and said to them, “Is the seer here?”
@@ -7640,6 +8508,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1SA 16:2 Samuel said, “How can I go? If Saul hears it, he will kill me.” The LORD said, “Take a heifer with you, and say, ‘I have come to sacrifice to the LORD.’
 1SA 16:3 Call Jesse to the sacrifice, and I will show you what you shall do. You shall anoint to me him whom I name to you.”
 1SA 16:4 Samuel did that which the LORD spoke, and came to Bethlehem. The elders of the city came to meet him trembling, and said, “Do you come peaceably?”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1SA 16:5 He said, “Peaceably; I have come to sacrifice to the LORD. Sanctify yourselves, and come with me to the sacrifice.” He sanctified Jesse and his sons, and called them to the sacrifice.
 1SA 16:6 When they had come, he looked at Eliab, and said, “Surely the LORD’s anointed is before him.”
 1SA 16:7 But the LORD said to Samuel, “Don’t look on his face, or on the height of his stature, because I have rejected him; for I don’t see as man sees. For man looks at the outward appearance, but the LORD looks at the heart.”
@@ -7840,6 +8731,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1SA 22:10 He inquired of the LORD for him, gave him food, and gave him the sword of Goliath the Philistine.”
 1SA 22:11 Then the king sent to call Ahimelech the priest, the son of Ahitub, and all his father’s house, the priests who were in Nob; and they all came to the king.
 1SA 22:12 Saul said, “Hear now, you son of Ahitub.” He answered, “Here I am, my lord.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1SA 22:13 Saul said to him, “Why have you conspired against me, you and the son of Jesse, in that you have given him bread, and a sword, and have inquired of God for him, that he should rise against me, to lie in wait, as it is today?”
 1SA 22:14 Then Ahimelech answered the king, and said, “Who among all your servants is so faithful as David, who is the king’s son-in-law, captain of your body guard, and honored in your house?
 1SA 22:15 Have I today begun to inquire of God for him? Be it far from me! Don’t let the king impute anything to his servant, nor to all the house of my father; for your servant knew nothing of all this, less or more.”
@@ -8040,6 +8954,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1SA 30:19 There was nothing lacking to them, neither small nor great, neither sons nor daughters, neither plunder, nor anything that they had taken. David brought them all back.
 1SA 30:20 David took all the flocks and the herds, which they drove before those other livestock, and said, “This is David’s plunder.”
 1SA 30:21 David came to the two hundred men, who were so faint that they could not follow David, whom also they had made to stay at the brook Besor; and they went out to meet David, and to meet the people who were with him. When David came near to the people, he greeted them.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1SA 30:22 Then all the wicked men and worthless fellows of those who went with David answered and said, “Because they didn’t go with us, we will not give them anything of the plunder that we have recovered, except to every man his wife and his children, that he may lead them away and depart.”
 1SA 30:23 Then David said, “Do not do so, my brothers, with that which the LORD has given to us, who has preserved us, and delivered the troop that came against us into our hand.
 1SA 30:24 Who will listen to you in this matter? For as his share is who goes down to the battle, so shall his share be who stays with the baggage. They shall share alike.”
@@ -8240,6 +9177,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2SA 7:17 Nathan spoke to David all these words, and according to all this vision.
 2SA 7:18 Then David the king went in and sat before the LORD; and he said, “Who am I, Lord GOD, and what is my house, that you have brought me this far?
 2SA 7:19 This was yet a small thing in your eyes, Lord GOD, but you have spoken also of your servant’s house for a great while to come; and this among men, Lord GOD!
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2SA 7:20 What more can David say to you? For you know your servant, Lord GOD.
 2SA 7:21 For your word’s sake, and according to your own heart, you have worked all this greatness, to make your servant know it.
 2SA 7:22 Therefore you are great, LORD God. For there is no one like you, neither is there any God besides you, according to all that we have heard with our ears.
@@ -8440,6 +9400,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2SA 15:8 For your servant vowed a vow while I stayed at Geshur in Syria, saying, ‘If the LORD shall indeed bring me again to Jerusalem, then I will serve the LORD.’”
 2SA 15:9 The king said to him, “Go in peace.” So he arose and went to Hebron.
 2SA 15:10 But Absalom sent spies throughout all the tribes of Israel, saying, “As soon as you hear the sound of the trumpet, then you shall say, ‘Absalom is king in Hebron!’”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2SA 15:11 Two hundred men went with Absalom out of Jerusalem, who were invited, and went in their simplicity; and they didn’t know anything.
 2SA 15:12 Absalom sent for Ahithophel the Gilonite, David’s counselor, from his city, even from Giloh, while he was offering the sacrifices. The conspiracy was strong, for the people increased continually with Absalom.
 2SA 15:13 A messenger came to David, saying, “The hearts of the men of Israel are after Absalom.”
@@ -8640,6 +9623,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2SA 21:17 But Abishai the son of Zeruiah helped him, and struck the Philistine and killed him. Then the men of David swore to him, saying, “Don’t go out with us to battle any more, so that you don’t quench the lamp of Israel.”
 2SA 21:18 After this, there was again war with the Philistines at Gob. Then Sibbecai the Hushathite killed Saph, who was of the sons of the giant.
 2SA 21:19 There was again war with the Philistines at Gob, and Elhanan the son of Jaare-Oregim the Bethlehemite killed Goliath the Gittite’s brother, the staff of whose spear was like a weaver’s beam.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2SA 21:20 There was again war at Gath, where there was a man of great stature, who had six fingers on every hand and six toes on every foot, twenty-four in number, and he also was born to the giant.
 2SA 21:21 When he defied Israel, Jonathan the son of Shimei, David’s brother, killed him.
 2SA 21:22 These four were born to the giant in Gath; and they fell by the hand of David and by the hand of his servants.
@@ -8840,6 +9846,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1KI 2:27 So Solomon thrust Abiathar out from being priest to the LORD, that he might fulfill the LORD’s word which he spoke concerning the house of Eli in Shiloh.
 1KI 2:28 This news came to Joab; for Joab had followed Adonijah, although he didn’t follow Absalom. Joab fled to the LORD’s Tent, and held onto the horns of the altar.
 1KI 2:29 King Solomon was told, “Joab has fled to the LORD’s Tent; and behold, he is by the altar.” Then Solomon sent Benaiah the son of Jehoiada, saying, “Go, fall on him.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1KI 2:30 Benaiah came to the LORD’s Tent, and said to him, “The king says, ‘Come out!’” He said, “No; but I will die here.” Benaiah brought the king word again, saying, “This is what Joab said, and this is how he answered me.”
 1KI 2:31 The king said to him, “Do as he has said, and fall on him, and bury him, that you may take away the blood, which Joab shed without cause, from me and from my father’s house.
 1KI 2:32 The LORD will return his blood on his own head, because he fell on two men more righteous and better than he, and killed them with the sword, and my father David didn’t know it: Abner the son of Ner, captain of the army of Israel, and Amasa the son of Jether, captain of the army of Judah.
@@ -9040,6 +10069,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1KI 8:12 Then Solomon said, “The LORD has said that he would dwell in the thick darkness.
 1KI 8:13 I have surely built you a house of habitation, a place for you to dwell in forever.”
 1KI 8:14 The king turned his face around and blessed all the assembly of Israel; and all the assembly of Israel stood.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1KI 8:15 He said, “Blessed is the LORD, the God of Israel, who spoke with his mouth to David your father, and has with his hand fulfilled it, saying,
 1KI 8:16 ‘Since the day that I brought my people Israel out of Egypt, I chose no city out of all the tribes of Israel to build a house, that my name might be there; but I chose David to be over my people Israel.’
 1KI 8:17 “Now it was in the heart of David my father to build a house for the name of the LORD, the God of Israel.
@@ -9240,6 +10292,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1KI 13:13 He said to his sons, “Saddle the donkey for me.” So they saddled the donkey for him; and he rode on it.
 1KI 13:14 He went after the man of God, and found him sitting under an oak. He said to him, “Are you the man of God who came from Judah?” He said, “I am.”
 1KI 13:15 Then he said to him, “Come home with me and eat bread.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1KI 13:16 He said, “I may not return with you, nor go in with you. I will not eat bread or drink water with you in this place.
 1KI 13:17 For it was said to me by the LORD’s word, ‘You shall eat no bread or drink water there, and don’t turn again to go by the way that you came.’”
 1KI 13:18 He said to him, “I also am a prophet as you are; and an angel spoke to me by the LORD’s word, saying, ‘Bring him back with you into your house, that he may eat bread and drink water.’” He lied to him.
@@ -9440,6 +10515,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1KI 19:10 He said, “I have been very jealous for the LORD, the God of Armies; for the children of Israel have forsaken your covenant, thrown down your altars, and killed your prophets with the sword. I, even I only, am left; and they seek my life, to take it away.”
 1KI 19:11 He said, “Go out and stand on the mountain before the LORD.” Behold, the LORD passed by, and a great and strong wind tore the mountains and broke in pieces the rocks before the LORD; but the LORD was not in the wind. After the wind there was an earthquake; but the LORD was not in the earthquake.
 1KI 19:12 After the earthquake a fire passed; but the LORD was not in the fire. After the fire, there was a still small voice.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1KI 19:13 When Elijah heard it, he wrapped his face in his mantle, went out, and stood in the entrance of the cave. Behold, a voice came to him, and said, “What are you doing here, Elijah?”
 1KI 19:14 He said, “I have been very jealous for the LORD, the God of Armies; for the children of Israel have forsaken your covenant, thrown down your altars, and killed your prophets with the sword. I, even I only, am left; and they seek my life, to take it away.”
 1KI 19:15 The LORD said to him, “Go, return on your way to the wilderness of Damascus. When you arrive, anoint Hazael to be king over Syria.
@@ -9640,6 +10738,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2KI 3:21 Now when all the Moabites heard that the kings had come up to fight against them, they gathered themselves together, all who were able to put on armor, young and old, and stood on the border.
 2KI 3:22 They rose up early in the morning, and the sun shone on the water, and the Moabites saw the water opposite them as red as blood.
 2KI 3:23 They said, “This is blood. The kings are surely destroyed, and they have struck each other. Now therefore, Moab, to the plunder!”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2KI 3:24 When they came to the camp of Israel, the Israelites rose up and struck the Moabites, so that they fled before them; and they went forward into the land attacking the Moabites.
 2KI 3:25 They beat down the cities; and on every good piece of land each man cast his stone, and filled it. They also stopped all the springs of water and cut down all the good trees, until in Kir Hareseth all they left was its stones; however the men armed with slings went around it and attacked it.
 2KI 3:26 When the king of Moab saw that the battle was too severe for him, he took with him seven hundred men who drew a sword, to break through to the king of Edom; but they could not.
@@ -9840,6 +10961,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2KI 10:4 But they were exceedingly afraid, and said, “Behold, the two kings didn’t stand before him! How then shall we stand?”
 2KI 10:5 He who was over the household, and he who was over the city, the elders also, and those who raised the children, sent to Jehu, saying, “We are your servants, and will do all that you ask us. We will not make any man king. You do that which is good in your eyes.”
 2KI 10:6 Then he wrote a letter the second time to them, saying, “If you are on my side, and if you will listen to my voice, take the heads of the men who are your master’s sons, and come to me to Jezreel by tomorrow this time.” Now the king’s sons, being seventy persons, were with the great men of the city, who brought them up.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2KI 10:7 When the letter came to them, they took the king’s sons and killed them, even seventy people, and put their heads in baskets, and sent them to him to Jezreel.
 2KI 10:8 A messenger came and told him, “They have brought the heads of the king’s sons.” He said, “Lay them in two heaps at the entrance of the gate until the morning.”
 2KI 10:9 In the morning, he went out and stood, and said to all the people, “You are righteous. Behold, I conspired against my master and killed him, but who killed all these?
@@ -10040,6 +11184,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2KI 17:14 Notwithstanding, they would not listen, but hardened their neck like the neck of their fathers who didn’t believe in the LORD their God.
 2KI 17:15 They rejected his statutes and his covenant that he made with their fathers, and his testimonies which he testified to them; and they followed vanity, and became vain, and followed the nations that were around them, concerning whom the LORD had commanded them that they should not do like them.
 2KI 17:16 They abandoned all the commandments of the LORD their God, and made molten images for themselves, even two calves, and made an Asherah, and worshiped all the army of the sky, and served Baal.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2KI 17:17 They caused their sons and their daughters to pass through the fire, used divination and enchantments, and sold themselves to do that which was evil in the LORD’s sight, to provoke him to anger.
 2KI 17:18 Therefore the LORD was very angry with Israel, and removed them out of his sight. There was none left but the tribe of Judah only.
 2KI 17:19 Also Judah didn’t keep the commandments of the LORD their God, but walked in the statutes of Israel which they made.
@@ -10240,6 +11407,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2KI 23:32 He did that which was evil in the LORD’s sight, according to all that his fathers had done.
 2KI 23:33 Pharaoh Necoh put him in bonds at Riblah in the land of Hamath, that he might not reign in Jerusalem; and put the land to a tribute of one hundred talents of silver and a talent of gold.
 2KI 23:34 Pharaoh Necoh made Eliakim the son of Josiah king in the place of Josiah his father, and changed his name to Jehoiakim; but he took Jehoahaz away, and he came to Egypt and died there.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2KI 23:35 Jehoiakim gave the silver and the gold to Pharaoh; but he taxed the land to give the money according to the commandment of Pharaoh. He exacted the silver and the gold of the people of the land, from everyone according to his assessment, to give it to Pharaoh Necoh.
 2KI 23:36 Jehoiakim was twenty-five years old when he began to reign, and he reigned eleven years in Jerusalem. His mother’s name was Zebidah the daughter of Pedaiah of Rumah.
 2KI 23:37 He did that which was evil in the LORD’s sight, according to all that his fathers had done.
@@ -10440,6 +11630,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1CH 4:12 Eshton became the father of Beth Rapha, Paseah, and Tehinnah the father of Ir Nahash. These are the men of Recah.
 1CH 4:13 The sons of Kenaz: Othniel and Seraiah. The sons of Othniel: Hathath.
 1CH 4:14 Meonothai became the father of Ophrah: and Seraiah became the father of Joab the father of Ge Harashim, for they were craftsmen.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1CH 4:15 The sons of Caleb the son of Jephunneh: Iru, Elah, and Naam. The son of Elah: Kenaz.
 1CH 4:16 The sons of Jehallelel: Ziph, Ziphah, Tiria, and Asarel.
 1CH 4:17 The sons of Ezrah: Jether, Mered, Epher, and Jalon; and Mered’s wife bore Miriam, Shammai, and Ishbah the father of Eshtemoa.
@@ -10640,6 +11853,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1CH 8:22 Ishpan, Eber, Eliel,
 1CH 8:23 Abdon, Zichri, Hanan,
 1CH 8:24 Hananiah, Elam, Anthothijah,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1CH 8:25 Iphdeiah, Penuel, the sons of Shashak,
 1CH 8:26 Shamsherai, Shehariah, Athaliah,
 1CH 8:27 Jaareshiah, Elijah, Zichri, and the sons of Jeroham.
@@ -10840,6 +12076,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1CH 15:6 of the sons of Merari, Asaiah the chief, and his brothers two hundred twenty;
 1CH 15:7 of the sons of Gershom, Joel the chief, and his brothers one hundred thirty;
 1CH 15:8 of the sons of Elizaphan, Shemaiah the chief, and his brothers two hundred;
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1CH 15:9 of the sons of Hebron, Eliel the chief, and his brothers eighty;
 1CH 15:10 of the sons of Uzziel, Amminadab the chief, and his brothers one hundred twelve.
 1CH 15:11 David called for Zadok and Abiathar the priests, and for the Levites: for Uriel, Asaiah, Joel, Shemaiah, Eliel, and Amminadab,
@@ -11040,6 +12299,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 1CH 23:14 But as for Moses the man of God, his sons were named among the tribe of Levi.
 1CH 23:15 The sons of Moses: Gershom and Eliezer.
 1CH 23:16 The sons of Gershom: Shebuel the chief.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1CH 23:17 The son of Eliezer was Rehabiah the chief; and Eliezer had no other sons, but the sons of Rehabiah were very many.
 1CH 23:18 The son of Izhar: Shelomith the chief.
 1CH 23:19 The sons of Hebron: Jeriah the chief, Amariah the second, Jahaziel the third, and Jekameam the fourth.
@@ -11240,6 +12522,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2CH 1:3 Then Solomon, and all the assembly with him, went to the high place that was at Gibeon; for God’s Tent of Meeting was there, which the LORD’s servant Moses had made in the wilderness.
 2CH 1:4 But David had brought God’s ark up from Kiriath Jearim to the place that David had prepared for it; for he had pitched a tent for it at Jerusalem.
 2CH 1:5 Moreover the bronze altar that Bezalel the son of Uri, the son of Hur, had made was there before the LORD’s tabernacle; and Solomon and the assembly were seeking counsel there.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2CH 1:6 Solomon went up there to the bronze altar before the LORD, which was at the Tent of Meeting, and offered one thousand burnt offerings on it.
 2CH 1:7 That night, God appeared to Solomon and said to him, “Ask for what you want me to give you.”
 2CH 1:8 Solomon said to God, “You have shown great loving kindness to David my father, and have made me king in his place.
@@ -11440,6 +12745,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2CH 10:2 When Jeroboam the son of Nebat heard of it (for he was in Egypt, where he had fled from the presence of King Solomon), Jeroboam returned out of Egypt.
 2CH 10:3 They sent and called him; and Jeroboam and all Israel came, and they spoke to Rehoboam, saying,
 2CH 10:4 “Your father made our yoke grievous. Now therefore make the grievous service of your father and his heavy yoke which he put on us, lighter, and we will serve you.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2CH 10:5 He said to them, “Come again to me after three days.” So the people departed.
 2CH 10:6 King Rehoboam took counsel with the old men, who had stood before Solomon his father while he yet lived, saying, “What counsel do you give me about how to answer these people?”
 2CH 10:7 They spoke to him, saying, “If you are kind to these people, please them, and speak good words to them, then they will be your servants forever.”
@@ -11640,6 +12968,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2CH 20:10 Now, behold, the children of Ammon and Moab and Mount Seir, whom you would not let Israel invade when they came out of the land of Egypt, but they turned away from them, and didn’t destroy them;
 2CH 20:11 behold, how they reward us, to come to cast us out of your possession, which you have given us to inherit.
 2CH 20:12 Our God, will you not judge them? For we have no might against this great company that comes against us. We don’t know what to do, but our eyes are on you.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2CH 20:13 All Judah stood before the LORD, with their little ones, their wives, and their children.
 2CH 20:14 Then the LORD’s Spirit came on Jahaziel the son of Zechariah, the son of Benaiah, the son of Jeiel, the son of Mattaniah, the Levite, of the sons of Asaph, in the middle of the assembly;
 2CH 20:15 and he said, “Listen, all Judah, and you inhabitants of Jerusalem, and you, King Jehoshaphat. The LORD says to you, ‘Don’t be afraid, and don’t be dismayed because of this great multitude; for the battle is not yours, but God’s.
@@ -11840,6 +13191,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2CH 29:6 For our fathers were unfaithful, and have done that which was evil in the LORD our God’s sight, and have forsaken him, and have turned away their faces from the habitation of the LORD, and turned their backs.
 2CH 29:7 Also they have shut up the doors of the porch, and put out the lamps, and have not burned incense nor offered burnt offerings in the holy place to the God of Israel.
 2CH 29:8 Therefore the LORD’s wrath was on Judah and Jerusalem, and he has delivered them to be tossed back and forth, to be an astonishment and a hissing, as you see with your eyes.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2CH 29:9 For behold, our fathers have fallen by the sword, and our sons and our daughters and our wives are in captivity for this.
 2CH 29:10 Now it is in my heart to make a covenant with the LORD, the God of Israel, that his fierce anger may turn away from us.
 2CH 29:11 My sons, don’t be negligent now; for the LORD has chosen you to stand before him, to minister to him, and that you should be his ministers and burn incense.”
@@ -12040,6 +13414,29 @@ RUT 4:22 and Obed became the father of Jesse, and Jesse became the father of Dav
 2CH 36:4 The king of Egypt made Eliakim his brother king over Judah and Jerusalem, and changed his name to Jehoiakim. Neco took Joahaz his brother, and carried him to Egypt.
 2CH 36:5 Jehoiakim was twenty-five years old when he began to reign, and he reigned eleven years in Jerusalem. He did that which was evil in the LORD his God’s sight.
 2CH 36:6 Nebuchadnezzar king of Babylon came up against him, and bound him in fetters to carry him to Babylon.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2CH 36:7 Nebuchadnezzar also carried some of the vessels of the LORD’s house to Babylon, and put them in his temple at Babylon.
 2CH 36:8 Now the rest of the acts of Jehoiakim, and his abominations which he did, and that which was found in him, behold, they are written in the book of the kings of Israel and Judah; and Jehoiachin his son reigned in his place.
 2CH 36:9 Jehoiachin was eight years old when he began to reign, and he reigned three months and ten days in Jerusalem. He did that which was evil in the LORD’s sight.
@@ -12240,6 +13637,29 @@ EZR 7:23 Whatever is commanded by the God of heaven, let it be done exactly for 
 EZR 7:24 Also we inform you that it shall not be lawful to impose tribute, custom, or toll on any of the priests, Levites, singers, gatekeepers, temple servants, or laborers of this house of God.
 EZR 7:25 You, Ezra, according to the wisdom of your God that is in your hand, appoint magistrates and judges who may judge all the people who are beyond the River, who all know the laws of your God; and teach him who doesn’t know them.
 EZR 7:26 Whoever will not do the law of your God and the law of the king, let judgment be executed on him with all diligence, whether it is to death, or to banishment, or to confiscation of goods, or to imprisonment.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EZR 7:27 Blessed be the LORD, the God of our fathers, who has put such a thing as this in the king’s heart, to beautify the LORD’s house which is in Jerusalem;
 EZR 7:28 and has extended loving kindness to me before the king and his counselors, and before all the king’s mighty princes. I was strengthened according to the LORD my God’s hand on me, and I gathered together chief men out of Israel to go up with me.
 EZR 8:1 Now these are the heads of their fathers’ households, and this is the genealogy of those who went up with me from Babylon, in the reign of Artaxerxes the king:
@@ -12440,6 +13860,29 @@ NEH 5:14 Moreover from the time that I was appointed to be their governor in the
 NEH 5:15 But the former governors who were before me were supported by the people, and took bread and wine from them, plus forty shekels of silver; yes, even their servants ruled over the people, but I didn’t do so, because of the fear of God.
 NEH 5:16 Yes, I also continued in the work of this wall. We didn’t buy any land. All my servants were gathered there to the work.
 NEH 5:17 Moreover there were at my table, of the Jews and the rulers, one hundred fifty men, in addition to those who came to us from among the nations that were around us.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 NEH 5:18 Now that which was prepared for one day was one ox and six choice sheep. Also fowls were prepared for me, and once in ten days a store of all sorts of wine. Yet for all this, I didn’t demand the governor’s pay, because the bondage was heavy on this people.
 NEH 5:19 Remember me, my God, for all the good that I have done for this people.
 NEH 6:1 Now when it was reported to Sanballat, Tobiah, Geshem the Arabian, and to the rest of our enemies that I had built the wall, and that there was no breach left in it (though even to that time I had not set up the doors in the gates),
@@ -12640,6 +14083,29 @@ NEH 11:8 After him Gabbai and Sallai, nine hundred twenty-eight.
 NEH 11:9 Joel the son of Zichri was their overseer; and Judah the son of Hassenuah was second over the city.
 NEH 11:10 Of the priests: Jedaiah the son of Joiarib, Jachin,
 NEH 11:11 Seraiah the son of Hilkiah, the son of Meshullam, the son of Zadok, the son of Meraioth, the son of Ahitub, the ruler of God’s house,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 NEH 11:12 and their brothers who did the work of the house, eight hundred twenty-two; and Adaiah the son of Jeroham, the son of Pelaliah, the son of Amzi, the son of Zechariah, the son of Pashhur, the son of Malchijah,
 NEH 11:13 and his brothers, chiefs of fathers’ households, two hundred forty-two; and Amashsai the son of Azarel, the son of Ahzai, the son of Meshillemoth, the son of Immer,
 NEH 11:14 and their brothers, mighty men of valor, one hundred twenty-eight; and their overseer was Zabdiel, the son of Haggedolim.
@@ -12840,6 +14306,29 @@ EST 6:3 The king said, “What honor and dignity has been given to Mordecai for 
 EST 6:4 The king said, “Who is in the court?” Now Haman had come into the outer court of the king’s house, to speak to the king about hanging Mordecai on the gallows that he had prepared for him.
 EST 6:5 The king’s servants said to him, “Behold, Haman stands in the court.” The king said, “Let him come in.”
 EST 6:6 So Haman came in. The king said to him, “What shall be done to the man whom the king delights to honor?” Now Haman said in his heart, “Who would the king delight to honor more than myself?”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EST 6:7 Haman said to the king, “For the man whom the king delights to honor,
 EST 6:8 let royal clothing be brought which the king uses to wear, and the horse that the king rides on, and on the head of which a royal crown is set.
 EST 6:9 Let the clothing and the horse be delivered to the hand of one of the king’s most noble princes, that they may array the man whom the king delights to honor with them, and have him ride on horseback through the city square, and proclaim before him, ‘Thus it shall be done to the man whom the king delights to honor!’”
@@ -13040,6 +14529,29 @@ JOB 6:18 The caravans that travel beside them turn away. They go up into the was
 JOB 6:19 The caravans of Tema looked. The companies of Sheba waited for them.
 JOB 6:20 They were distressed because they were confident. They came there, and were confounded.
 JOB 6:21 For now you are nothing. You see a terror, and are afraid.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOB 6:22 Did I ever say, ‘Give to me’? or, ‘Offer a present for me from your substance’?
 JOB 6:23 or, ‘Deliver me from the adversary’s hand’? or, ‘Redeem me from the hand of the oppressors’?
 JOB 6:24 “Teach me, and I will hold my peace. Cause me to understand my error.
@@ -13240,6 +14752,29 @@ JOB 14:15 You would call, and I would answer you. You would have a desire for th
 JOB 14:16 But now you count my steps. Don’t you watch over my sin?
 JOB 14:17 My disobedience is sealed up in a bag. You fasten up my iniquity.
 JOB 14:18 “But the mountain falling comes to nothing. The rock is removed out of its place.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOB 14:19 The waters wear the stones. The torrents of it wash away the dust of the earth. So you destroy the hope of man.
 JOB 14:20 You forever prevail against him, and he departs. You change his face, and send him away.
 JOB 14:21 His sons come to honor, and he doesn’t know it. They are brought low, but he doesn’t perceive it of them.
@@ -13440,6 +14975,29 @@ JOB 22:7 You haven’t given water to the weary to drink, and you have withheld 
 JOB 22:8 But as for the mighty man, he had the earth. The honorable man, he lived in it.
 JOB 22:9 You have sent widows away empty, and the arms of the fatherless have been broken.
 JOB 22:10 Therefore snares are around you. Sudden fear troubles you,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOB 22:11 or darkness, so that you can not see, and floods of waters cover you.
 JOB 22:12 “Isn’t God in the heights of heaven? See the height of the stars, how high they are!
 JOB 22:13 You say, ‘What does God know? Can he judge through the thick darkness?
@@ -13640,6 +15198,29 @@ JOB 31:8 then let me sow, and let another eat. Yes, let the produce of my field 
 JOB 31:9 “If my heart has been enticed to a woman, and I have laid wait at my neighbor’s door,
 JOB 31:10 then let my wife grind for another, and let others sleep with her.
 JOB 31:11 For that would be a heinous crime. Yes, it would be an iniquity to be punished by the judges,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOB 31:12 for it is a fire that consumes to destruction, and would root out all my increase.
 JOB 31:13 “If I have despised the cause of my male servant or of my female servant, when they contended with me,
 JOB 31:14 what then will I do when God rises up? When he visits, what will I answer him?
@@ -13840,6 +15421,29 @@ JOB 38:3 Brace yourself like a man, for I will question you, then you answer me!
 JOB 38:4 “Where were you when I laid the foundations of the earth? Declare, if you have understanding.
 JOB 38:5 Who determined its measures, if you know? Or who stretched the line on it?
 JOB 38:6 What were its foundations fastened on? Or who laid its cornerstone,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOB 38:7 when the morning stars sang together, and all the sons of God shouted for joy?
 JOB 38:8 “Or who shut up the sea with doors, when it broke out of the womb,
 JOB 38:9 when I made clouds its garment, and wrapped it in thick darkness,
@@ -14040,6 +15644,29 @@ PSA 7:1 A meditation by David, which he sang to the LORD, concerning the words o
 PSA 7:2 lest they tear apart my soul like a lion, ripping it in pieces, while there is no one to deliver.
 PSA 7:3 LORD, my God, if I have done this, if there is iniquity in my hands,
 PSA 7:4 if I have rewarded evil to him who was at peace with me (yes, I have plundered him who without cause was my adversary),
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 7:5 let the enemy pursue my soul, and overtake it; yes, let him tread my life down to the earth, and lay my glory in the dust. Selah.
 PSA 7:6 Arise, LORD, in your anger. Lift up yourself against the rage of my adversaries. Awake for me. You have commanded judgment.
 PSA 7:7 Let the congregation of the peoples surround you. Rule over them on high.
@@ -14240,6 +15867,29 @@ PSA 21:5 His glory is great in your salvation. You lay honor and majesty on him.
 PSA 21:6 For you make him most blessed forever. You make him glad with joy in your presence.
 PSA 21:7 For the king trusts in the LORD. Through the loving kindness of the Most High, he shall not be moved.
 PSA 21:8 Your hand will find out all of your enemies. Your right hand will find out those who hate you.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 21:9 You will make them as a fiery furnace in the time of your anger. The LORD will swallow them up in his wrath. The fire shall devour them.
 PSA 21:10 You will destroy their descendants from the earth, their posterity from among the children of men.
 PSA 21:11 For they intended evil against you. They plotted evil against you which cannot succeed.
@@ -14440,6 +16090,29 @@ PSA 34:8 Oh taste and see that the LORD is good. Blessed is the man who takes re
 PSA 34:9 Oh fear the LORD, you his saints, for there is no lack with those who fear him.
 PSA 34:10 The young lions do lack, and suffer hunger, but those who seek the LORD shall not lack any good thing.
 PSA 34:11 Come, you children, listen to me. I will teach you the fear of the LORD.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 34:12 Who is someone who desires life, and loves many days, that he may see good?
 PSA 34:13 Keep your tongue from evil, and your lips from speaking lies.
 PSA 34:14 Depart from evil, and do good. Seek peace, and pursue it.
@@ -14640,6 +16313,29 @@ PSA 44:25 For our soul is bowed down to the dust. Our body clings to the earth.
 PSA 44:26 Rise up to help us. Redeem us for your loving kindness’ sake.
 PSA 45:1 For the Chief Musician. Set to “The Lilies.” A contemplation by the sons of Korah. A wedding song. My heart overflows with a noble theme. I recite my verses for the king. My tongue is like the pen of a skillful writer.
 PSA 45:2 You are the most excellent of the sons of men. Grace has anointed your lips, therefore God has blessed you forever.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 45:3 Strap your sword on your thigh, O mighty one, in your splendor and your majesty.
 PSA 45:4 In your majesty ride on victoriously on behalf of truth, humility, and righteousness. Let your right hand display awesome deeds.
 PSA 45:5 Your arrows are sharp. The nations fall under you, with arrows in the heart of the king’s enemies.
@@ -14840,6 +16536,29 @@ PSA 59:6 They return at evening, howling like dogs, and prowl around the city.
 PSA 59:7 Behold, they spew with their mouth. Swords are in their lips, “For”, they say, “who hears us?”
 PSA 59:8 But you, LORD, laugh at them. You scoff at all the nations.
 PSA 59:9 Oh, my Strength, I watch for you, for God is my high tower.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 59:10 My God will go before me with his loving kindness. God will let me look at my enemies in triumph.
 PSA 59:11 Don’t kill them, or my people may forget. Scatter them by your power, and bring them down, Lord our shield.
 PSA 59:12 For the sin of their mouth, and the words of their lips, let them be caught in their pride, for the curses and lies which they utter.
@@ -15040,6 +16759,29 @@ PSA 71:20 You, who have shown us many and bitter troubles, you will let me live.
 PSA 71:21 Increase my honor and comfort me again.
 PSA 71:22 I will also praise you with the harp for your faithfulness, my God. I sing praises to you with the lyre, Holy One of Israel.
 PSA 71:23 My lips shall shout for joy! My soul, which you have redeemed, sings praises to you!
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 71:24 My tongue will also talk about your righteousness all day long, for they are disappointed, and they are confounded, who want to harm me.
 PSA 72:1 By Solomon. God, give the king your justice; your righteousness to the royal son.
 PSA 72:2 He will judge your people with righteousness, and your poor with justice.
@@ -15240,6 +16982,29 @@ PSA 79:11 Let the sighing of the prisoner come before you. According to the grea
 PSA 79:12 Pay back to our neighbors seven times into their bosom their reproach with which they have reproached you, Lord.
 PSA 79:13 So we, your people and sheep of your pasture, will give you thanks forever. We will praise you forever, to all generations.
 PSA 80:1 For the Chief Musician. To the tune of “The Lilies of the Covenant.” A Psalm by Asaph. Hear us, Shepherd of Israel, you who lead Joseph like a flock, you who sit above the cherubim, shine out.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 80:2 Before Ephraim, Benjamin, and Manasseh, stir up your might! Come to save us!
 PSA 80:3 Turn us again, God. Cause your face to shine, and we will be saved.
 PSA 80:4 LORD God of Armies, how long will you be angry against the prayer of your people?
@@ -15440,6 +17205,29 @@ PSA 91:1 He who dwells in the secret place of the Most High will rest in the sha
 PSA 91:2 I will say of the LORD, “He is my refuge and my fortress; my God, in whom I trust.”
 PSA 91:3 For he will deliver you from the snare of the fowler, and from the deadly pestilence.
 PSA 91:4 He will cover you with his feathers. Under his wings you will take refuge. His faithfulness is your shield and rampart.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 91:5 You shall not be afraid of the terror by night, nor of the arrow that flies by day,
 PSA 91:6 nor of the pestilence that walks in darkness, nor of the destruction that wastes at noonday.
 PSA 91:7 A thousand may fall at your side, and ten thousand at your right hand; but it will not come near you.
@@ -15640,6 +17428,29 @@ PSA 104:25 There is the sea, great and wide, in which are innumerable living thi
 PSA 104:26 There the ships go, and leviathan, whom you formed to play there.
 PSA 104:27 These all wait for you, that you may give them their food in due season.
 PSA 104:28 You give to them; they gather. You open your hand; they are satisfied with good.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 104:29 You hide your face; they are troubled. You take away their breath; they die and return to the dust.
 PSA 104:30 You send out your Spirit and they are created. You renew the face of the ground.
 PSA 104:31 Let the LORD’s glory endure forever. Let the LORD rejoice in his works.
@@ -15840,6 +17651,29 @@ PSA 111:3 His work is honor and majesty. His righteousness endures forever.
 PSA 111:4 He has caused his wonderful works to be remembered. The LORD is gracious and merciful.
 PSA 111:5 He has given food to those who fear him. He always remembers his covenant.
 PSA 111:6 He has shown his people the power of his works, in giving them the heritage of the nations.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 111:7 The works of his hands are truth and justice. All his precepts are sure.
 PSA 111:8 They are established forever and ever. They are done in truth and uprightness.
 PSA 111:9 He has sent redemption to his people. He has ordained his covenant forever. His name is holy and awesome!
@@ -16040,6 +17874,29 @@ PSA 119:98 Your commandments make me wiser than my enemies, for your commandment
 PSA 119:99 I have more understanding than all my teachers, for your testimonies are my meditation.
 PSA 119:100 I understand more than the aged, because I have kept your precepts.
 PSA 119:101 I have kept my feet from every evil way, that I might observe your word.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 119:102 I have not turned away from your ordinances, for you have taught me.
 PSA 119:103 How sweet are your promises to my taste, more than honey to my mouth!
 PSA 119:104 Through your precepts, I get understanding; therefore I hate every false way. NUN
@@ -16240,6 +18097,29 @@ PSA 135:21 Blessed be the LORD from Zion, who dwells in Jerusalem. Praise the LO
 PSA 136:1 Give thanks to the LORD, for he is good, for his loving kindness endures forever.
 PSA 136:2 Give thanks to the God of gods, for his loving kindness endures forever.
 PSA 136:3 Give thanks to the Lord of lords, for his loving kindness endures forever;
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 136:4 to him who alone does great wonders, for his loving kindness endures forever;
 PSA 136:5 to him who by understanding made the heavens, for his loving kindness endures forever;
 PSA 136:6 to him who spread out the earth above the waters, for his loving kindness endures forever;
@@ -16440,6 +18320,29 @@ PSA 150:2 Praise him for his mighty acts! Praise him according to his excellent 
 PSA 150:3 Praise him with the sounding of the trumpet! Praise him with harp and lyre!
 PSA 150:4 Praise him with tambourine and dancing! Praise him with stringed instruments and flute!
 PSA 150:5 Praise him with loud cymbals! Praise him with resounding cymbals!
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PSA 150:6 Let everything that has breath praise the LORD! Praise the LORD!
 PRO 1:1 The proverbs of Solomon, the son of David, king of Israel:
 PRO 1:2 to know wisdom and instruction; to discern the words of understanding;
@@ -16640,6 +18543,29 @@ PRO 7:21 With persuasive words, she led him astray. With the flattering of her l
 PRO 7:22 He followed her immediately, as an ox goes to the slaughter, as a fool stepping into a noose.
 PRO 7:23 Until an arrow strikes through his liver, as a bird hurries to the snare, and doesn’t know that it will cost his life.
 PRO 7:24 Now therefore, sons, listen to me. Pay attention to the words of my mouth.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PRO 7:25 Don’t let your heart turn to her ways. Don’t go astray in her paths,
 PRO 7:26 for she has thrown down many wounded. Yes, all her slain are a mighty army.
 PRO 7:27 Her house is the way to Sheol, going down to the rooms of death.
@@ -16840,6 +18766,29 @@ PRO 14:24 The crown of the wise is their riches, but the folly of fools crowns t
 PRO 14:25 A truthful witness saves souls, but a false witness is deceitful.
 PRO 14:26 In the fear of the LORD is a secure fortress, and he will be a refuge for his children.
 PRO 14:27 The fear of the LORD is a fountain of life, turning people from the snares of death.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PRO 14:28 In the multitude of people is the king’s glory, but in the lack of people is the destruction of the prince.
 PRO 14:29 He who is slow to anger has great understanding, but he who has a quick temper displays folly.
 PRO 14:30 The life of the body is a heart at peace, but envy rots the bones.
@@ -17040,6 +18989,29 @@ PRO 21:12 The Righteous One considers the house of the wicked, and brings the wi
 PRO 21:13 Whoever stops his ears at the cry of the poor, he will also cry out, but shall not be heard.
 PRO 21:14 A gift in secret pacifies anger, and a bribe in the cloak, strong wrath.
 PRO 21:15 It is joy to the righteous to do justice; but it is a destruction to the workers of iniquity.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PRO 21:16 The man who wanders out of the way of understanding shall rest in the assembly of the departed spirits.
 PRO 21:17 He who loves pleasure will be a poor man. He who loves wine and oil won’t be rich.
 PRO 21:18 The wicked is a ransom for the righteous, the treacherous for the upright.
@@ -17240,6 +19212,29 @@ PRO 27:27 There will be plenty of goats’ milk for your food, for your family�
 PRO 28:1 The wicked flee when no one pursues; but the righteous are as bold as a lion.
 PRO 28:2 In rebellion, a land has many rulers, but order is maintained by a man of understanding and knowledge.
 PRO 28:3 A needy man who oppresses the poor is like a driving rain which leaves no crops.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PRO 28:4 Those who forsake the law praise the wicked; but those who keep the law contend with them.
 PRO 28:5 Evil men don’t understand justice; but those who seek the LORD understand it fully.
 PRO 28:6 Better is the poor who walks in his integrity than he who is perverse in his ways, and he is rich.
@@ -17440,6 +19435,29 @@ ECC 4:15 I saw all the living who walk under the sun, that they were with the yo
 ECC 4:16 There was no end of all the people, even of all them over whom he was—yet those who come after shall not rejoice in him. Surely this also is vanity and a chasing after wind.
 ECC 5:1 Guard your steps when you go to God’s house; for to draw near to listen is better than to give the sacrifice of fools, for they don’t know that they do evil.
 ECC 5:2 Don’t be rash with your mouth, and don’t let your heart be hasty to utter anything before God; for God is in heaven, and you on earth. Therefore let your words be few.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ECC 5:3 For as a dream comes with a multitude of cares, so a fool’s speech with a multitude of words.
 ECC 5:4 When you vow a vow to God, don’t defer to pay it; for he has no pleasure in fools. Pay that which you vow.
 ECC 5:5 It is better that you should not vow, than that you should vow and not pay.
@@ -17640,6 +19658,29 @@ SOL 4:14 spikenard and saffron, calamus and cinnamon, with every kind of incense
 SOL 4:15 a fountain of gardens, a well of living waters, flowing streams from Lebanon.
 SOL 4:16 Awake, north wind, and come, you south! Blow on my garden, that its spices may flow out. Let my beloved come into his garden, and taste his precious fruits.
 SOL 5:1 I have come into my garden, my sister, my bride. I have gathered my myrrh with my spice; I have eaten my honeycomb with my honey; I have drunk my wine with my milk. Friends Eat, friends! Drink, yes, drink abundantly, beloved.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 SOL 5:2 I was asleep, but my heart was awake. It is the voice of my beloved who knocks: “Open to me, my sister, my love, my dove, my undefiled; for my head is filled with dew, and my hair with the dampness of the night.”
 SOL 5:3 I have taken off my robe. Indeed, must I put it on? I have washed my feet. Indeed, must I soil them?
 SOL 5:4 My beloved thrust his hand in through the latch opening. My heart pounded for him.
@@ -17840,6 +19881,29 @@ ISA 7:14 Therefore the Lord himself will give you a sign. Behold, the virgin wil
 ISA 7:15 He shall eat butter and honey when he knows to refuse the evil and choose the good.
 ISA 7:16 For before the child knows to refuse the evil and choose the good, the land whose two kings you abhor shall be forsaken.
 ISA 7:17 The LORD will bring on you, on your people, and on your father’s house days that have not come, from the day that Ephraim departed from Judah, even the king of Assyria.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ISA 7:18 It will happen in that day that the LORD will whistle for the fly that is in the uttermost part of the rivers of Egypt, and for the bee that is in the land of Assyria.
 ISA 7:19 They shall come, and shall all rest in the desolate valleys, in the clefts of the rocks, on all thorn hedges, and on all pastures.
 ISA 7:20 In that day the Lord will shave with a razor that is hired in the parts beyond the River, even with the king of Assyria, the head and the hair of the feet; and it shall also consume the beard.
@@ -18040,6 +20104,29 @@ ISA 17:13 The nations will rush like the rushing of many waters, but he will reb
 ISA 17:14 At evening, behold, terror! Before the morning, they are no more. This is the portion of those who plunder us, and the lot of those who rob us.
 ISA 18:1 Ah, the land of the rustling of wings, which is beyond the rivers of Ethiopia;
 ISA 18:2 that sends ambassadors by the sea, even in vessels of papyrus on the waters, saying, “Go, you swift messengers, to a nation tall and smooth, to a people awesome from their beginning onward, a nation that measures out and treads down, whose land the rivers divide!”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ISA 18:3 All you inhabitants of the world, and you dwellers on the earth, when a banner is lifted up on the mountains, look! When the trumpet is blown, listen!
 ISA 18:4 For the LORD said to me, “I will be still, and I will see in my dwelling place, like clear heat in sunshine, like a cloud of dew in the heat of harvest.”
 ISA 18:5 For before the harvest, when the blossom is over, and the flower becomes a ripening grape, he will cut off the sprigs with pruning hooks, and he will cut down and take away the spreading branches.
@@ -18240,6 +20327,29 @@ ISA 29:3 I will encamp against you all around you, and will lay siege against yo
 ISA 29:4 You will be brought down, and will speak out of the ground. Your speech will mumble out of the dust. Your voice will be as of one who has a familiar spirit, out of the ground, and your speech will whisper out of the dust.
 ISA 29:5 But the multitude of your foes will be like fine dust, and the multitude of the ruthless ones like chaff that blows away. Yes, it will be in an instant, suddenly.
 ISA 29:6 She will be visited by the LORD of Armies with thunder, with earthquake, with great noise, with whirlwind and storm, and with the flame of a devouring fire.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ISA 29:7 The multitude of all the nations that fight against Ariel, even all who fight against her and her stronghold, and who distress her, will be like a dream, a vision of the night.
 ISA 29:8 It will be like when a hungry man dreams, and behold, he eats; but he awakes, and his hunger isn’t satisfied; or like when a thirsty man dreams, and behold, he drinks; but he awakes, and behold, he is faint, and he is still thirsty. The multitude of all the nations that fight against Mount Zion will be like that.
 ISA 29:9 Pause and wonder! Blind yourselves and be blind! They are drunken, but not with wine; they stagger, but not with strong drink.
@@ -18440,6 +20550,29 @@ ISA 38:6 I will deliver you and this city out of the hand of the king of Assyria
 ISA 38:7 This shall be the sign to you from the LORD, that the LORD will do this thing that he has spoken.
 ISA 38:8 Behold, I will cause the shadow on the sundial, which has gone down on the sundial of Ahaz with the sun, to return backward ten steps.”’” So the sun returned ten steps on the sundial on which it had gone down.
 ISA 38:9 The writing of Hezekiah king of Judah, when he had been sick, and had recovered of his sickness:
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ISA 38:10 I said, “In the middle of my life I go into the gates of Sheol. I am deprived of the residue of my years.”
 ISA 38:11 I said, “I won’t see the LORD, the LORD in the land of the living. I will see man no more with the inhabitants of the world.
 ISA 38:12 My dwelling is removed, and is carried away from me like a shepherd’s tent. I have rolled up my life like a weaver. He will cut me off from the loom. From day even to night you will make an end of me.
@@ -18640,6 +20773,29 @@ ISA 46:10 I declare the end from the beginning, and from ancient times things th
 ISA 46:11 I call a ravenous bird from the east, the man of my counsel from a far country. Yes, I have spoken. I will also bring it to pass. I have planned. I will also do it.
 ISA 46:12 Listen to me, you stubborn-hearted, who are far from righteousness!
 ISA 46:13 I bring my righteousness near. It is not far off, and my salvation will not wait. I will grant salvation to Zion, my glory to Israel.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ISA 47:1 “Come down and sit in the dust, virgin daughter of Babylon. Sit on the ground without a throne, daughter of the Chaldeans. For you will no longer be called tender and delicate.
 ISA 47:2 Take the millstones and grind flour. Remove your veil, lift up your skirt, uncover your legs, and wade through the rivers.
 ISA 47:3 Your nakedness will be uncovered. Yes, your shame will be seen. I will take vengeance, and will spare no one.”
@@ -18840,6 +20996,29 @@ ISA 58:10 and if you pour out your soul to the hungry, and satisfy the afflicted
 ISA 58:11 and the LORD will guide you continually, satisfy your soul in dry places, and make your bones strong. You will be like a watered garden, and like a spring of water whose waters don’t fail.
 ISA 58:12 Those who will be of you will build the old waste places. You will raise up the foundations of many generations. You will be called Repairer of the Breach, Restorer of Paths with Dwellings.
 ISA 58:13 “If you turn away your foot from the Sabbath, from doing your pleasure on my holy day, and call the Sabbath a delight, and the holy of the LORD honorable, and honor it, not doing your own ways, nor finding your own pleasure, nor speaking your own words,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ISA 58:14 then you will delight yourself in the LORD, and I will make you to ride on the high places of the earth, and I will feed you with the heritage of Jacob your father;” for the LORD’s mouth has spoken it.
 ISA 59:1 Behold, the LORD’s hand is not shortened, that it can’t save; nor his ear dull, that it can’t hear.
 ISA 59:2 But your iniquities have separated you and your God, and your sins have hidden his face from you, so that he will not hear.
@@ -19040,6 +21219,29 @@ JER 2:31 Generation, consider the LORD’s word. Have I been a wilderness to Isr
 JER 2:32 “Can a virgin forget her ornaments, or a bride her attire? Yet my people have forgotten me for days without number.
 JER 2:33 How well you prepare your way to seek love! Therefore you have even taught the wicked women your ways.
 JER 2:34 Also the blood of the souls of the innocent poor is found in your skirts. You didn’t find them breaking in, but it is because of all these things.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JER 2:35 “Yet you said, ‘I am innocent. Surely his anger has turned away from me.’ “Behold, I will judge you, because you say, ‘I have not sinned.’
 JER 2:36 Why do you go about so much to change your ways? You will be ashamed of Egypt also, as you were ashamed of Assyria.
 JER 2:37 You will also leave that place with your hands on your head; for the LORD has rejected those in whom you trust, and you won’t prosper with them.
@@ -19240,6 +21442,29 @@ JER 9:21 For death has come up into our windows. It has entered into our palaces
 JER 9:22 Speak, “The LORD says, “‘The dead bodies of men will fall as dung on the open field, and as the handful after the harvester. No one will gather them.’”
 JER 9:23 The LORD says, “Don’t let the wise man glory in his wisdom. Don’t let the mighty man glory in his might. Don’t let the rich man glory in his riches.
 JER 9:24 But let him who glories glory in this, that he has understanding, and knows me, that I am the LORD who exercises loving kindness, justice, and righteousness on the earth, for I delight in these things,” says the LORD.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JER 9:25 “Behold, the days come,” says the LORD, “that I will punish all those who are circumcised only in their flesh:
 JER 9:26 Egypt, Judah, Edom, the children of Ammon, Moab, and all who have the corners of their hair cut off, who dwell in the wilderness, for all the nations are uncircumcised, and all the house of Israel are uncircumcised in heart.”
 JER 10:1 Hear the word which the LORD speaks to you, house of Israel!
@@ -19440,6 +21665,29 @@ JER 18:12 But they say, ‘It is in vain; for we will walk after our own plans, 
 JER 18:13 Therefore the LORD says: “Ask now among the nations, ‘Who has heard such things?’ The virgin of Israel has done a very horrible thing.
 JER 18:14 Will the snow of Lebanon fail from the rock of the field? Will the cold waters that flow down from afar be dried up?
 JER 18:15 For my people have forgotten me. They have burned incense to false gods. They have been made to stumble in their ways in the ancient paths, to walk in byways, in a way not built up,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JER 18:16 to make their land an astonishment, and a perpetual hissing. Everyone who passes by it will be astonished, and shake his head.
 JER 18:17 I will scatter them as with an east wind before the enemy. I will show them the back, and not the face, in the day of their calamity.
 JER 18:18 Then they said, “Come! Let’s devise plans against Jeremiah; for the law won’t perish from the priest, nor counsel from the wise, nor the word from the prophet. Come, and let’s strike him with the tongue, and let’s not give heed to any of his words.”
@@ -19640,6 +21888,29 @@ JER 26:24 But the hand of Ahikam the son of Shaphan was with Jeremiah, so that t
 JER 27:1 In the beginning of the reign of Jehoiakim the son of Josiah, king of Judah, this word came to Jeremiah from the LORD, saying,
 JER 27:2 the LORD says to me: “Make bonds and bars, and put them on your neck.
 JER 27:3 Then send them to the king of Edom, to the king of Moab, to the king of the children of Ammon, to the king of Tyre, and to the king of Sidon, by the hand of the messengers who come to Jerusalem to Zedekiah king of Judah.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JER 27:4 Give them a command to their masters, saying, ‘The LORD of Armies, the God of Israel says, “You shall tell your masters:
 JER 27:5 ‘I have made the earth, the men, and the animals that are on the surface of the earth by my great power and by my outstretched arm. I give it to whom it seems right to me.
 JER 27:6 Now I have given all these lands into the hand of Nebuchadnezzar the king of Babylon, my servant. I have also given the animals of the field to him to serve him.
@@ -19840,6 +22111,29 @@ JER 33:21 then my covenant could also be broken with David my servant, that he w
 JER 33:22 As the army of the sky can’t be counted, and the sand of the sea can’t be measured, so I will multiply the offspring of David my servant and the Levites who minister to me.’”
 JER 33:23 The LORD’s word came to Jeremiah, saying,
 JER 33:24 “Don’t consider what this people has spoken, saying, ‘Has the LORD cast off the two families which he chose?’ Thus they despise my people, that they should be no more a nation before them.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JER 33:25 The LORD says: “If my covenant of day and night fails, if I have not appointed the ordinances of heaven and earth,
 JER 33:26 then I will also cast away the offspring of Jacob, and of David my servant, so that I will not take of his offspring to be rulers over the offspring of Abraham, Isaac, and Jacob; for I will cause their captivity to be reversed and will have mercy on them.”
 JER 34:1 The word which came to Jeremiah from the LORD, when Nebuchadnezzar king of Babylon, with all his army, all the kingdoms of the earth that were under his dominion, and all the peoples, were fighting against Jerusalem and against all its cities, saying:
@@ -20040,6 +22334,29 @@ JER 42:21 I have declared it to you today; but you have not obeyed the LORD your
 JER 42:22 Now therefore know certainly that you will die by the sword, by the famine, and by the pestilence in the place where you desire to go to live.”
 JER 43:1 When Jeremiah had finished speaking to all the people all the words of the LORD their God, with which the LORD their God had sent him to them, even all these words,
 JER 43:2 then Azariah the son of Hoshaiah, Johanan the son of Kareah, and all the proud men spoke, saying to Jeremiah, “You speak falsely. The LORD our God has not sent you to say, ‘You shall not go into Egypt to live there;’
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JER 43:3 but Baruch the son of Neriah has turned you against us, to deliver us into the hand of the Chaldeans, that they may put us to death or carry us away captive to Babylon.”
 JER 43:4 So Johanan the son of Kareah, and all the captains of the forces, and all the people, didn’t obey the LORD’s voice, to dwell in the land of Judah.
 JER 43:5 But Johanan the son of Kareah and all the captains of the forces took all the remnant of Judah, who had returned from all the nations where they had been driven, to live in the land of Judah—
@@ -20240,6 +22557,29 @@ JER 50:30 Therefore her young men will fall in her streets. All her men of war w
 JER 50:31 “Behold, I am against you, you proud one,” says the Lord, GOD of Armies; “for your day has come, the time that I will visit you.
 JER 50:32 The proud one will stumble and fall, and no one will raise him up. I will kindle a fire in his cities, and it will devour all who are around him.”
 JER 50:33 The LORD of Armies says: “The children of Israel and the children of Judah are oppressed together. All who took them captive hold them fast. They refuse to let them go.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JER 50:34 Their Redeemer is strong. The LORD of Armies is his name. He will thoroughly plead their cause, that he may give rest to the earth, and disquiet the inhabitants of Babylon.
 JER 50:35 “A sword is on the Chaldeans,” says the LORD, “and on the inhabitants of Babylon, on her princes, and on her wise men.
 JER 50:36 A sword is on the boasters, and they will become fools. A sword is on her mighty men, and they will be dismayed.
@@ -20440,6 +22780,29 @@ LAM 3:42 “We have transgressed and have rebelled. You have not pardoned.
 LAM 3:43 “You have covered us with anger and pursued us. You have killed. You have not pitied.
 LAM 3:44 You have covered yourself with a cloud, so that no prayer can pass through.
 LAM 3:45 You have made us an off-scouring and refuse in the middle of the peoples.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LAM 3:46 “All our enemies have opened their mouth wide against us.
 LAM 3:47 Terror and the pit have come on us, devastation and destruction.”
 LAM 3:48 My eye runs down with streams of water, for the destruction of the daughter of my people.
@@ -20640,6 +23003,29 @@ EZE 7:19 They will cast their silver in the streets, and their gold will be as a
 EZE 7:20 As for the beauty of his ornament, he set it in majesty; but they made the images of their abominations and their detestable things therein. Therefore I have made it to them as an unclean thing.
 EZE 7:21 I will give it into the hands of the strangers for a prey, and to the wicked of the earth for a plunder; and they will profane it.
 EZE 7:22 I will also turn my face from them, and they will profane my secret place. Robbers will enter into it, and profane it.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EZE 7:23 “‘Make chains, for the land is full of bloody crimes, and the city is full of violence.
 EZE 7:24 Therefore I will bring the worst of the nations, and they will possess their houses. I will also make the pride of the strong to cease. Their holy places will be profaned.
 EZE 7:25 Destruction comes! They will seek peace, and there will be none.
@@ -20840,6 +23226,29 @@ EZE 16:34 You are different from other women in your prostitution, in that no on
 EZE 16:35 “Therefore, prostitute, hear the LORD’s word:
 EZE 16:36 ‘The Lord GOD says, “Because your filthiness was poured out, and your nakedness uncovered through your prostitution with your lovers; and because of all the idols of your abominations, and for the blood of your children, that you gave to them;
 EZE 16:37 therefore see, I will gather all your lovers, with whom you have taken pleasure, and all those whom you have loved, with all those whom you have hated. I will even gather them against you on every side, and will uncover your nakedness to them, that they may see all your nakedness.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EZE 16:38 I will judge you as women who break wedlock and shed blood are judged; and I will bring on you the blood of wrath and jealousy.
 EZE 16:39 I will also give you into their hand, and they will throw down your vaulted place, and break down your lofty places. They will strip you of your clothes and take your beautiful jewels. They will leave you naked and bare.
 EZE 16:40 They will also bring up a company against you, and they will stone you with stones, and thrust you through with their swords.
@@ -21040,6 +23449,29 @@ EZE 22:20 As they gather silver, bronze, iron, lead, and tin into the middle of 
 EZE 22:21 Yes, I will gather you, and blow on you with the fire of my wrath, and you will be melted in the middle of it.
 EZE 22:22 As silver is melted in the middle of the furnace, so you will be melted in the middle of it; and you will know that I, the LORD, have poured out my wrath on you.’”
 EZE 22:23 The LORD’s word came to me, saying,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EZE 22:24 “Son of man, tell her, ‘You are a land that is not cleansed nor rained on in the day of indignation.’
 EZE 22:25 There is a conspiracy of her prophets within it, like a roaring lion ravening the prey. They have devoured souls. They take treasure and precious things. They have made many widows within it.
 EZE 22:26 Her priests have done violence to my law and have profaned my holy things. They have made no distinction between the holy and the common, neither have they caused men to discern between the unclean and the clean, and have hidden their eyes from my Sabbaths. So I am profaned among them.
@@ -21240,6 +23672,29 @@ EZE 29:13 “‘For the Lord GOD says: “At the end of forty years I will gathe
 EZE 29:14 I will reverse the captivity of Egypt, and will cause them to return into the land of Pathros, into the land of their birth. There they will be a lowly kingdom.
 EZE 29:15 It will be the lowest of the kingdoms. It won’t lift itself up above the nations any more. I will diminish them so that they will no longer rule over the nations.
 EZE 29:16 It will no longer be the confidence of the house of Israel, bringing iniquity to memory, when they turn to look after them. Then they will know that I am the Lord GOD.”’”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EZE 29:17 It came to pass in the twenty-seventh year, in the first month, in the first day of the month, the LORD’s word came to me, saying,
 EZE 29:18 “Son of man, Nebuchadnezzar king of Babylon caused his army to serve a great service against Tyre. Every head was made bald, and every shoulder was worn; yet he had no wages, nor did his army, from Tyre, for the service that he had served against it.
 EZE 29:19 Therefore the Lord GOD says: ‘Behold, I will give the land of Egypt to Nebuchadnezzar king of Babylon. He will carry off her multitude, take her plunder, and take her prey. That will be the wages for his army.
@@ -21440,6 +23895,29 @@ EZE 36:37 “‘The Lord GOD says: “For this, moreover, I will be inquired of 
 EZE 36:38 As the flock for sacrifice, as the flock of Jerusalem in her appointed feasts, so the waste cities will be filled with flocks of men. Then they will know that I am the LORD.’”
 EZE 37:1 The LORD’s hand was on me, and he brought me out in the LORD’s Spirit, and set me down in the middle of the valley; and it was full of bones.
 EZE 37:2 He caused me to pass by them all around; and behold, there were very many in the open valley, and behold, they were very dry.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EZE 37:3 He said to me, “Son of man, can these bones live?” I answered, “Lord GOD, you know.”
 EZE 37:4 Again he said to me, “Prophesy over these bones, and tell them, ‘You dry bones, hear the LORD’s word.
 EZE 37:5 The Lord GOD says to these bones: “Behold, I will cause breath to enter into you, and you will live.
@@ -21640,6 +24118,29 @@ EZE 43:24 You shall bring them near to the LORD, and the priests shall cast salt
 EZE 43:25 “Seven days you shall prepare every day a goat for a sin offering. They shall also prepare a young bull and a ram out of the flock, without defect.
 EZE 43:26 Seven days shall they make atonement for the altar and purify it. So shall they consecrate it.
 EZE 43:27 When they have accomplished the days, it shall be that on the eighth day and onward, the priests shall make your burnt offerings on the altar and your peace offerings. Then I will accept you,’ says the Lord GOD.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 EZE 44:1 Then he brought me back by the way of the outer gate of the sanctuary, which looks toward the east; and it was shut.
 EZE 44:2 The LORD said to me, “This gate shall be shut. It shall not be opened, no man shall enter in by it; for the LORD, the God of Israel, has entered in by it. Therefore it shall be shut.
 EZE 44:3 As for the prince, he shall sit in it as prince to eat bread before the LORD. He shall enter by the way of the porch of the gate, and shall go out the same way.”
@@ -21840,6 +24341,29 @@ DAN 2:38 Wherever the children of men dwell, he has given the animals of the fie
 DAN 2:39 “After you, another kingdom will arise that is inferior to you; and another third kingdom of bronze, which will rule over all the earth.
 DAN 2:40 The fourth kingdom will be strong as iron, because iron breaks in pieces and subdues all things; and as iron that crushes all these, it will break in pieces and crush.
 DAN 2:41 Whereas you saw the feet and toes, part of potters’ clay and part of iron, it will be a divided kingdom; but there will be in it of the strength of the iron, because you saw the iron mixed with miry clay.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 DAN 2:42 As the toes of the feet were part of iron, and part of clay, so the kingdom will be partly strong and partly brittle.
 DAN 2:43 Whereas you saw the iron mixed with miry clay, they will mingle themselves with the seed of men; but they won’t cling to one another, even as iron does not mix with clay.
 DAN 2:44 “In the days of those kings the God of heaven will set up a kingdom which will never be destroyed, nor will its sovereignty be left to another people; but it will break in pieces and consume all these kingdoms, and it will stand forever.
@@ -22040,6 +24564,29 @@ DAN 9:8 Lord, to us belongs confusion of face, to our kings, to our princes, and
 DAN 9:9 To the Lord our God belong mercies and forgiveness, for we have rebelled against him.
 DAN 9:10 We haven’t obeyed the LORD our God’s voice, to walk in his laws, which he set before us by his servants the prophets.
 DAN 9:11 Yes, all Israel have transgressed your law, turning aside, and not obeying your voice. “Therefore the curse and the oath written in the law of Moses the servant of God has been poured out on us, for we have sinned against him.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 DAN 9:12 He has confirmed his words, which he spoke against us and against our judges who judged us, by bringing on us a great evil; for under the whole sky, such has not been done as has been done to Jerusalem.
 DAN 9:13 As it is written in the law of Moses, all this evil has come on us. Yet we have not entreated the favor of the LORD our God, that we should turn from our iniquities and have discernment in your truth.
 DAN 9:14 Therefore the LORD has watched over the evil, and brought it on us; for the LORD our God is righteous in all his works which he does, and we have not obeyed his voice.
@@ -22240,6 +24787,29 @@ HOS 8:2 They cry to me, ‘My God, we, Israel, acknowledge you!’
 HOS 8:3 Israel has cast off that which is good. The enemy will pursue him.
 HOS 8:4 They have set up kings, but not by me. They have made princes, and I didn’t approve. Of their silver and their gold they have made themselves idols, that they may be cut off.
 HOS 8:5 Let Samaria throw out his calf idol! My anger burns against them! How long will it be until they are capable of purity?
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 HOS 8:6 For this is even from Israel! The workman made it, and it is no God; indeed, the calf of Samaria shall be broken in pieces.
 HOS 8:7 For they sow the wind, and they will reap the whirlwind. He has no standing grain. The stalk will yield no head. If it does yield, strangers will swallow it up.
 HOS 8:8 Israel is swallowed up. Now they are among the nations like a worthless thing.
@@ -22440,6 +25010,29 @@ AMO 3:1 Hear this word that the LORD has spoken against you, children of Israel,
 AMO 3:2 “I have chosen only you of all the families of the earth. Therefore I will punish you for all of your sins.”
 AMO 3:3 Do two walk together, unless they have agreed?
 AMO 3:4 Will a lion roar in the thicket, when he has no prey? Does a young lion cry out of his den, if he has caught nothing?
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 AMO 3:5 Can a bird fall in a trap on the earth, where no snare is set for him? Does a snare spring up from the ground, when there is nothing to catch?
 AMO 3:6 Does the trumpet alarm sound in a city, without the people being afraid? Does evil happen to a city, and the LORD hasn’t done it?
 AMO 3:7 Surely the Lord GOD will do nothing, unless he reveals his secret to his servants the prophets.
@@ -22640,6 +25233,29 @@ MIC 2:1 Woe to those who devise iniquity and work evil on their beds! When the m
 MIC 2:2 They covet fields and seize them, and houses, then take them away. They oppress a man and his house, even a man and his heritage.
 MIC 2:3 Therefore the LORD says: “Behold, I am planning against these people a disaster, from which you will not remove your necks, neither will you walk haughtily, for it is an evil time.
 MIC 2:4 In that day they will take up a parable against you, and lament with a doleful lamentation, saying, ‘We are utterly ruined! My people’s possession is divided up. Indeed he takes it from me and assigns our fields to traitors!’”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MIC 2:5 Therefore you will have no one who divides the land by lot in the LORD’s assembly.
 MIC 2:6 “Don’t prophesy!”—they prophesy— “Don’t prophesy about these things. Disgrace won’t overtake us.”
 MIC 2:7 Shall it be said, O house of Jacob, “Is the LORD’s Spirit angry? Are these his doings? Don’t my words do good to him who walks blamelessly?”
@@ -22840,6 +25456,29 @@ ZEP 1:9 In that day, I will punish all those who leap over the threshold, who fi
 ZEP 1:10 In that day, says the LORD, there will be the noise of a cry from the fish gate, a wailing from the second quarter, and a great crashing from the hills.
 ZEP 1:11 Wail, you inhabitants of Maktesh, for all the people of Canaan are undone! All those who were loaded with silver are cut off.
 ZEP 1:12 It will happen at that time, that I will search Jerusalem with lamps, and I will punish the men who are settled on their dregs, who say in their heart, “The LORD will not do good, neither will he do evil.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ZEP 1:13 Their wealth will become a plunder, and their houses a desolation. Yes, they will build houses, but won’t inhabit them. They will plant vineyards, but won’t drink their wine.
 ZEP 1:14 The great day of the LORD is near. It is near and hurries greatly, the voice of the day of the LORD. The mighty man cries there bitterly.
 ZEP 1:15 That day is a day of wrath, a day of distress and anguish, a day of trouble and ruin, a day of darkness and gloom, a day of clouds and blackness,
@@ -23040,6 +25679,29 @@ ZEC 8:20 The LORD of Armies says: “Many peoples and the inhabitants of many ci
 ZEC 8:21 The inhabitants of one will go to another, saying, ‘Let’s go speedily to entreat the favor of the LORD, and to seek the LORD of Armies. I will go also.’
 ZEC 8:22 Yes, many peoples and strong nations will come to seek the LORD of Armies in Jerusalem and to entreat the favor of the LORD.”
 ZEC 8:23 The LORD of Armies says: “In those days, ten men out of all the languages of the nations will take hold of the skirt of him who is a Jew, saying, ‘We will go with you, for we have heard that God is with you.’”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ZEC 9:1 A revelation. The LORD’s word is against the land of Hadrach, and will rest upon Damascus— for the eye of man and of all the tribes of Israel is toward the LORD—
 ZEC 9:2 and Hamath, also, which borders on it, Tyre and Sidon, because they are very wise.
 ZEC 9:3 Tyre built herself a stronghold, and heaped up silver like the dust, and fine gold like the mire of the streets.
@@ -23240,6 +25902,29 @@ MAT 3:4 Now John himself wore clothing made of camel’s hair with a leather bel
 MAT 3:5 Then people from Jerusalem, all of Judea, and all the region around the Jordan went out to him.
 MAT 3:6 They were baptized by him in the Jordan, confessing their sins.
 MAT 3:7 But when he saw many of the Pharisees and Sadducees coming for his baptism, he said to them, “You offspring of vipers, who warned you to flee from the wrath to come?
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAT 3:8 Therefore produce fruit worthy of repentance!
 MAT 3:9 Don’t think to yourselves, ‘We have Abraham for our father,’ for I tell you that God is able to raise up children to Abraham from these stones.
 MAT 3:10 Even now the ax lies at the root of the trees. Therefore every tree that doesn’t produce good fruit is cut down, and cast into the fire.
@@ -23440,6 +26125,29 @@ MAT 9:17 Neither do people put new wine into old wineskins, or else the skins wo
 MAT 9:18 While he told these things to them, behold, a ruler came and worshiped him, saying, “My daughter has just died, but come and lay your hand on her, and she will live.”
 MAT 9:19 Jesus got up and followed him, as did his disciples.
 MAT 9:20 Behold, a woman who had a discharge of blood for twelve years came behind him, and touched the fringe of his garment;
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAT 9:21 for she said within herself, “If I just touch his garment, I will be made well.”
 MAT 9:22 But Jesus, turning around and seeing her, said, “Daughter, cheer up! Your faith has made you well.” And the woman was made well from that hour.
 MAT 9:23 When Jesus came into the ruler’s house and saw the flute players and the crowd in noisy disorder,
@@ -23640,6 +26348,29 @@ MAT 13:57 They were offended by him. But Jesus said to them, “A prophet is not
 MAT 13:58 He didn’t do many mighty works there because of their unbelief.
 MAT 14:1 At that time, Herod the tetrarch heard the report concerning Jesus,
 MAT 14:2 and said to his servants, “This is John the Baptizer. He is risen from the dead. That is why these powers work in him.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAT 14:3 For Herod had arrested John, bound him, and put him in prison for the sake of Herodias, his brother Philip’s wife.
 MAT 14:4 For John said to him, “It is not lawful for you to have her.”
 MAT 14:5 When he would have put him to death, he feared the multitude, because they counted him as a prophet.
@@ -23840,6 +26571,29 @@ MAT 20:4 He said to them, ‘You also go into the vineyard, and whatever is righ
 MAT 20:5 Again he went out about the sixth and the ninth hour, and did likewise.
 MAT 20:6 About the eleventh hour he went out and found others standing idle. He said to them, ‘Why do you stand here all day idle?’
 MAT 20:7 “They said to him, ‘Because no one has hired us.’ “He said to them, ‘You also go into the vineyard, and you will receive whatever is right.’
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAT 20:8 “When evening had come, the lord of the vineyard said to his manager, ‘Call the laborers and pay them their wages, beginning from the last to the first.’
 MAT 20:9 “When those who were hired at about the eleventh hour came, they each received a denarius.
 MAT 20:10 When the first came, they supposed that they would receive more; and they likewise each received a denarius.
@@ -24040,6 +26794,29 @@ MAT 24:39 and they didn’t know until the flood came and took them all away, so
 MAT 24:40 Then two men will be in the field: one will be taken and one will be left.
 MAT 24:41 Two women will be grinding at the mill: one will be taken and one will be left.
 MAT 24:42 Watch therefore, for you don’t know in what hour your Lord comes.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAT 24:43 But know this, that if the master of the house had known in what watch of the night the thief was coming, he would have watched, and would not have allowed his house to be broken into.
 MAT 24:44 Therefore also be ready, for in an hour that you don’t expect, the Son of Man will come.
 MAT 24:45 “Who then is the faithful and wise servant, whom his lord has set over his household, to give them their food in due season?
@@ -24240,6 +27017,29 @@ MAT 28:1 Now after the Sabbath, as it began to dawn on the first day of the week
 MAT 28:2 Behold, there was a great earthquake, for an angel of the Lord descended from the sky and came and rolled away the stone from the door and sat on it.
 MAT 28:3 His appearance was like lightning, and his clothing white as snow.
 MAT 28:4 For fear of him, the guards shook, and became like dead men.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAT 28:5 The angel answered the women, “Don’t be afraid, for I know that you seek Jesus, who has been crucified.
 MAT 28:6 He is not here, for he has risen, just like he said. Come, see the place where the Lord was lying.
 MAT 28:7 Go quickly and tell his disciples, ‘He has risen from the dead, and behold, he goes before you into Galilee; there you will see him.’ Behold, I have told you.”
@@ -24440,6 +27240,29 @@ MAR 5:32 He looked around to see her who had done this thing.
 MAR 5:33 But the woman, fearing and trembling, knowing what had been done to her, came and fell down before him, and told him all the truth.
 MAR 5:34 He said to her, “Daughter, your faith has made you well. Go in peace, and be cured of your disease.”
 MAR 5:35 While he was still speaking, people came from the synagogue ruler’s house, saying, “Your daughter is dead. Why bother the Teacher any more?”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAR 5:36 But Jesus, when he heard the message spoken, immediately said to the ruler of the synagogue, “Don’t be afraid, only believe.”
 MAR 5:37 He allowed no one to follow him except Peter, James, and John the brother of James.
 MAR 5:38 He came to the synagogue ruler’s house, and he saw an uproar, weeping, and great wailing.
@@ -24640,6 +27463,29 @@ MAR 10:8 and the two will become one flesh, so that they are no longer two, but 
 MAR 10:9 What therefore God has joined together, let no man separate.”
 MAR 10:10 In the house, his disciples asked him again about the same matter.
 MAR 10:11 He said to them, “Whoever divorces his wife and marries another commits adultery against her.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAR 10:12 If a woman herself divorces her husband and marries another, she commits adultery.”
 MAR 10:13 They were bringing to him little children, that he should touch them, but the disciples rebuked those who were bringing them.
 MAR 10:14 But when Jesus saw it, he was moved with indignation and said to them, “Allow the little children to come to me! Don’t forbid them, for God’s Kingdom belongs to such as these.
@@ -24840,6 +27686,29 @@ MAR 14:42 Arise! Let’s get going. Behold, he who betrays me is at hand.”
 MAR 14:43 Immediately, while he was still speaking, Judas, one of the twelve, came—and with him a multitude with swords and clubs, from the chief priests, the scribes, and the elders.
 MAR 14:44 Now he who betrayed him had given them a sign, saying, “Whomever I will kiss, that is he. Seize him, and lead him away safely.”
 MAR 14:45 When he had come, immediately he came to him and said, “Rabbi! Rabbi!” and kissed him.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 MAR 14:46 They laid their hands on him and seized him.
 MAR 14:47 But a certain one of those who stood by drew his sword and struck the servant of the high priest, and cut off his ear.
 MAR 14:48 Jesus answered them, “Have you come out, as against a robber, with swords and clubs to seize me?
@@ -25040,6 +27909,29 @@ LUK 2:23 (as it is written in the law of the Lord, “Every male who opens the w
 LUK 2:24 and to offer a sacrifice according to that which is said in the law of the Lord, “A pair of turtledoves, or two young pigeons.”
 LUK 2:25 Behold, there was a man in Jerusalem whose name was Simeon. This man was righteous and devout, looking for the consolation of Israel, and the Holy Spirit was on him.
 LUK 2:26 It had been revealed to him by the Holy Spirit that he should not see death before he had seen the Lord’s Christ.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LUK 2:27 He came in the Spirit into the temple. When the parents brought in the child, Jesus, that they might do concerning him according to the custom of the law,
 LUK 2:28 then he received him into his arms and blessed God, and said,
 LUK 2:29 “Now you are releasing your servant, Master, according to your word, in peace;
@@ -25240,6 +28132,29 @@ LUK 7:1 After he had finished speaking in the hearing of the people, he entered 
 LUK 7:2 A certain centurion’s servant, who was dear to him, was sick and at the point of death.
 LUK 7:3 When he heard about Jesus, he sent to him elders of the Jews, asking him to come and save his servant.
 LUK 7:4 When they came to Jesus, they begged him earnestly, saying, “He is worthy for you to do this for him,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LUK 7:5 for he loves our nation, and he built our synagogue for us.”
 LUK 7:6 Jesus went with them. When he was now not far from the house, the centurion sent friends to him, saying to him, “Lord, don’t trouble yourself, for I am not worthy for you to come under my roof.
 LUK 7:7 Therefore I didn’t even think myself worthy to come to you; but say the word, and my servant will be healed.
@@ -25440,6 +28355,29 @@ LUK 10:33 But a certain Samaritan, as he traveled, came where he was. When he sa
 LUK 10:34 came to him, and bound up his wounds, pouring on oil and wine. He set him on his own animal, brought him to an inn, and took care of him.
 LUK 10:35 On the next day, when he departed, he took out two denarii, gave them to the host, and said to him, ‘Take care of him. Whatever you spend beyond that, I will repay you when I return.’
 LUK 10:36 Now which of these three do you think seemed to be a neighbor to him who fell among the robbers?”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LUK 10:37 He said, “He who showed mercy on him.” Then Jesus said to him, “Go and do likewise.”
 LUK 10:38 As they went on their way, he entered into a certain village, and a certain woman named Martha received him into her house.
 LUK 10:39 She had a sister called Mary, who also sat at Jesus’ feet and heard his word.
@@ -25640,6 +28578,29 @@ LUK 15:8 “Or what woman, if she had ten drachma coins, if she lost one drachma
 LUK 15:9 When she has found it, she calls together her friends and neighbors, saying, ‘Rejoice with me, for I have found the drachma which I had lost!’
 LUK 15:10 Even so, I tell you, there is joy in the presence of the angels of God over one sinner repenting.”
 LUK 15:11 He said, “A certain man had two sons.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LUK 15:12 The younger of them said to his father, ‘Father, give me my share of your property.’ So he divided his livelihood between them.
 LUK 15:13 Not many days after, the younger son gathered all of this together and traveled into a far country. There he wasted his property with riotous living.
 LUK 15:14 When he had spent all of it, there arose a severe famine in that country, and he began to be in need.
@@ -25840,6 +28801,29 @@ LUK 20:17 But he looked at them and said, “Then what is this that is written, 
 LUK 20:18 Everyone who falls on that stone will be broken to pieces, but it will crush whomever it falls on to dust.”
 LUK 20:19 The chief priests and the scribes sought to lay hands on him that very hour, but they feared the people—for they knew he had spoken this parable against them.
 LUK 20:20 They watched him and sent out spies, who pretended to be righteous, that they might trap him in something he said, so as to deliver him up to the power and authority of the governor.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LUK 20:21 They asked him, “Teacher, we know that you say and teach what is right, and aren’t partial to anyone, but truly teach the way of God.
 LUK 20:22 Is it lawful for us to pay taxes to Caesar, or not?”
 LUK 20:23 But he perceived their craftiness, and said to them, “Why do you test me?
@@ -26040,6 +29024,29 @@ LUK 24:5 Becoming terrified, they bowed their faces down to the earth. The men s
 LUK 24:6 He isn’t here, but is risen. Remember what he told you when he was still in Galilee,
 LUK 24:7 saying that the Son of Man must be delivered up into the hands of sinful men and be crucified, and the third day rise again?”
 LUK 24:8 They remembered his words,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 LUK 24:9 returned from the tomb, and told all these things to the eleven and to all the rest.
 LUK 24:10 Now they were Mary Magdalene, Joanna, and Mary the mother of James. The other women with them told these things to the apostles.
 LUK 24:11 These words seemed to them to be nonsense, and they didn’t believe them.
@@ -26240,6 +29247,29 @@ JOH 4:40 So when the Samaritans came to him, they begged him to stay with them. 
 JOH 4:41 Many more believed because of his word.
 JOH 4:42 They said to the woman, “Now we believe, not because of your speaking; for we have heard for ourselves, and know that this is indeed the Christ, the Savior of the world.”
 JOH 4:43 After the two days he went out from there and went into Galilee.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOH 4:44 For Jesus himself testified that a prophet has no honor in his own country.
 JOH 4:45 So when he came into Galilee, the Galileans received him, having seen all the things that he did in Jerusalem at the feast, for they also went to the feast.
 JOH 4:46 Jesus came therefore again to Cana of Galilee, where he made the water into wine. There was a certain nobleman whose son was sick at Capernaum.
@@ -26440,6 +29470,29 @@ JOH 8:15 You judge according to the flesh. I judge no one.
 JOH 8:16 Even if I do judge, my judgment is true, for I am not alone, but I am with the Father who sent me.
 JOH 8:17 It’s also written in your law that the testimony of two people is valid.
 JOH 8:18 I am one who testifies about myself, and the Father who sent me testifies about me.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOH 8:19 They said therefore to him, “Where is your Father?” Jesus answered, “You know neither me nor my Father. If you knew me, you would know my Father also.”
 JOH 8:20 Jesus spoke these words in the treasury, as he taught in the temple. Yet no one arrested him, because his hour had not yet come.
 JOH 8:21 Jesus said therefore again to them, “I am going away, and you will seek me, and you will die in your sins. Where I go, you can’t come.”
@@ -26640,6 +29693,29 @@ JOH 12:16 His disciples didn’t understand these things at first, but when Jesu
 JOH 12:17 The multitude therefore that was with him when he called Lazarus out of the tomb and raised him from the dead was testifying about it.
 JOH 12:18 For this cause also the multitude went and met him, because they heard that he had done this sign.
 JOH 12:19 The Pharisees therefore said among themselves, “See how you accomplish nothing. Behold, the world has gone after him.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOH 12:20 Now there were certain Greeks among those who went up to worship at the feast.
 JOH 12:21 Therefore, these came to Philip, who was from Bethsaida of Galilee, and asked him, saying, “Sir, we want to see Jesus.”
 JOH 12:22 Philip came and told Andrew, and in turn, Andrew came with Philip, and they told Jesus.
@@ -26840,6 +29916,29 @@ JOH 18:11 Jesus therefore said to Peter, “Put the sword into its sheath. The c
 JOH 18:12 So the detachment, the commanding officer, and the officers of the Jews seized Jesus and bound him,
 JOH 18:13 and led him to Annas first, for he was father-in-law to Caiaphas, who was high priest that year.
 JOH 18:14 Now it was Caiaphas who advised the Jews that it was expedient that one man should perish for the people.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 JOH 18:15 Simon Peter followed Jesus, as did another disciple. Now that disciple was known to the high priest, and entered in with Jesus into the court of the high priest;
 JOH 18:16 but Peter was standing at the door outside. So the other disciple, who was known to the high priest, went out and spoke to her who kept the door, and brought in Peter.
 JOH 18:17 Then the maid who kept the door said to Peter, “Are you also one of this man’s disciples?” He said, “I am not.”
@@ -27040,6 +30139,29 @@ ACT 2:47 praising God and having favor with all the people. The Lord added to th
 ACT 3:1 Peter and John were going up into the temple at the hour of prayer, the ninth hour.
 ACT 3:2 A certain man who was lame from his mother’s womb was being carried, whom they laid daily at the door of the temple which is called Beautiful, to ask gifts for the needy of those who entered into the temple.
 ACT 3:3 Seeing Peter and John about to go into the temple, he asked to receive gifts for the needy.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ACT 3:4 Peter, fastening his eyes on him, with John, said, “Look at us.”
 ACT 3:5 He listened to them, expecting to receive something from them.
 ACT 3:6 But Peter said, “I have no silver or gold, but what I have, that I give you. In the name of Jesus Christ of Nazareth, get up and walk!”
@@ -27240,6 +30362,29 @@ ACT 8:20 But Peter said to him, “May your silver perish with you, because you 
 ACT 8:21 You have neither part nor lot in this matter, for your heart isn’t right before God.
 ACT 8:22 Repent therefore of this, your wickedness, and ask God if perhaps the thought of your heart may be forgiven you.
 ACT 8:23 For I see that you are in the poison of bitterness and in the bondage of iniquity.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ACT 8:24 Simon answered, “Pray for me to the Lord, that none of the things which you have spoken happen to me.”
 ACT 8:25 They therefore, when they had testified and spoken the word of the Lord, returned to Jerusalem, and preached the Good News to many villages of the Samaritans.
 ACT 8:26 Then an angel of the Lord spoke to Philip, saying, “Arise, and go toward the south to the way that goes down from Jerusalem to Gaza. This is a desert.”
@@ -27440,6 +30585,29 @@ ACT 13:34 “Concerning that he raised him up from the dead, now no more to retu
 ACT 13:35 Therefore he says also in another psalm, ‘You will not allow your Holy One to see decay.’
 ACT 13:36 For David, after he had in his own generation served the counsel of God, fell asleep, was laid with his fathers, and saw decay.
 ACT 13:37 But he whom God raised up saw no decay.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ACT 13:38 Be it known to you therefore, brothers, that through this man is proclaimed to you remission of sins;
 ACT 13:39 and by him everyone who believes is justified from all things, from which you could not be justified by the law of Moses.
 ACT 13:40 Beware therefore, lest that come on you which is spoken in the prophets:
@@ -27640,6 +30808,29 @@ ACT 19:11 God worked special miracles by the hands of Paul,
 ACT 19:12 so that even handkerchiefs or aprons were carried away from his body to the sick, and the diseases departed from them, and the evil spirits went out.
 ACT 19:13 But some of the itinerant Jews, exorcists, took on themselves to invoke over those who had the evil spirits the name of the Lord Jesus, saying, “We adjure you by Jesus whom Paul preaches.”
 ACT 19:14 There were seven sons of one Sceva, a Jewish chief priest, who did this.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ACT 19:15 The evil spirit answered, “Jesus I know, and Paul I know, but who are you?”
 ACT 19:16 The man in whom the evil spirit was leaped on them, overpowered them, and prevailed against them, so that they fled out of that house naked and wounded.
 ACT 19:17 This became known to all, both Jews and Greeks, who lived at Ephesus. Fear fell on them all, and the name of the Lord Jesus was magnified.
@@ -27840,6 +31031,29 @@ ACT 24:27 But when two years were fulfilled, Felix was succeeded by Porcius Fest
 ACT 25:1 Festus therefore, having come into the province, after three days went up to Jerusalem from Caesarea.
 ACT 25:2 Then the high priest and the principal men of the Jews informed him against Paul, and they begged him,
 ACT 25:3 asking a favor against him, that he would summon him to Jerusalem, plotting to kill him on the way.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ACT 25:4 However Festus answered that Paul should be kept in custody at Caesarea, and that he himself was about to depart shortly.
 ACT 25:5 “Let them therefore”, he said, “that are in power among you go down with me, and if there is anything wrong in the man, let them accuse him.”
 ACT 25:6 When he had stayed among them more than ten days, he went down to Caesarea, and on the next day he sat on the judgment seat, and commanded Paul to be brought.
@@ -28040,6 +31254,29 @@ ROM 3:5 But if our unrighteousness commends the righteousness of God, what will 
 ROM 3:6 May it never be! For then how will God judge the world?
 ROM 3:7 For if the truth of God through my lie abounded to his glory, why am I also still judged as a sinner?
 ROM 3:8 Why not (as we are slanderously reported, and as some affirm that we say), “Let’s do evil, that good may come?” Those who say so are justly condemned.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ROM 3:9 What then? Are we better than they? No, in no way. For we previously warned both Jews and Greeks that they are all under sin.
 ROM 3:10 As it is written, “There is no one righteous; no, not one.
 ROM 3:11 There is no one who understands. There is no one who seeks after God.
@@ -28240,6 +31477,29 @@ ROM 10:8 But what does it say? “The word is near you, in your mouth and in you
 ROM 10:9 that if you will confess with your mouth that Jesus is Lord and believe in your heart that God raised him from the dead, you will be saved.
 ROM 10:10 For with the heart one believes resulting in righteousness; and with the mouth confession is made resulting in salvation.
 ROM 10:11 For the Scripture says, “Whoever believes in him will not be disappointed.”
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 ROM 10:12 For there is no distinction between Jew and Greek; for the same Lord is Lord of all, and is rich to all who call on him.
 ROM 10:13 For, “Whoever will call on the name of the Lord will be saved.”
 ROM 10:14 How then will they call on him in whom they have not believed? How will they believe in him whom they have not heard? How will they hear without a preacher?
@@ -28440,6 +31700,29 @@ ROM 16:25
 1CO 2:2 For I determined not to know anything among you except Jesus Christ and him crucified.
 1CO 2:3 I was with you in weakness, in fear, and in much trembling.
 1CO 2:4 My speech and my preaching were not in persuasive words of human wisdom, but in demonstration of the Spirit and of power,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1CO 2:5 that your faith wouldn’t stand in the wisdom of men, but in the power of God.
 1CO 2:6 We speak wisdom, however, among those who are full grown, yet a wisdom not of this world nor of the rulers of this world who are coming to nothing.
 1CO 2:7 But we speak God’s wisdom in a mystery, the wisdom that has been hidden, which God foreordained before the worlds for our glory,
@@ -28640,6 +31923,29 @@ ROM 16:25
 1CO 10:29 Conscience, I say, not your own, but the other’s conscience. For why is my liberty judged by another conscience?
 1CO 10:30 If I partake with thankfulness, why am I denounced for something I give thanks for?
 1CO 10:31 Whether therefore you eat or drink, or whatever you do, do all to the glory of God.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1CO 10:32 Give no occasion for stumbling, whether to Jews, to Greeks, or to the assembly of God;
 1CO 10:33 even as I also please all men in all things, not seeking my own profit, but the profit of the many, that they may be saved.
 1CO 11:1 Be imitators of me, even as I also am of Christ.
@@ -28840,6 +32146,29 @@ ROM 16:25
 1CO 16:20 All the brothers greet you. Greet one another with a holy kiss.
 1CO 16:21 This greeting is by me, Paul, with my own hand.
 1CO 16:22 If any man doesn’t love the Lord Jesus Christ, let him be cursed. Come, Lord!
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1CO 16:23 The grace of the Lord Jesus Christ be with you.
 1CO 16:24 My love to all of you in Christ Jesus. Amen.
 2CO 1:1 Paul, an apostle of Christ Jesus through the will of God, and Timothy our brother, to the assembly of God which is at Corinth, with all the saints who are in the whole of Achaia:
@@ -29040,6 +32369,29 @@ ROM 16:25
 2CO 11:7 Or did I commit a sin in humbling myself that you might be exalted, because I preached to you God’s Good News free of charge?
 2CO 11:8 I robbed other assemblies, taking wages from them that I might serve you.
 2CO 11:9 When I was present with you and was in need, I wasn’t a burden on anyone, for the brothers, when they came from Macedonia, supplied the measure of my need. In everything I kept myself from being burdensome to you, and I will continue to do so.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 2CO 11:10 As the truth of Christ is in me, no one will stop me from this boasting in the regions of Achaia.
 2CO 11:11 Why? Because I don’t love you? God knows.
 2CO 11:12 But what I do, that I will continue to do, that I may cut off opportunity from those who desire an opportunity, that in which they boast, they may be recognized just like us.
@@ -29240,6 +32592,29 @@ GAL 6:7 Don’t be deceived. God is not mocked, for whatever a man sows, that he
 GAL 6:8 For he who sows to his own flesh will from the flesh reap corruption. But he who sows to the Spirit will from the Spirit reap eternal life.
 GAL 6:9 Let’s not be weary in doing good, for we will reap in due season if we don’t give up.
 GAL 6:10 So then, as we have opportunity, let’s do what is good toward all men, and especially toward those who are of the household of the faith.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 GAL 6:11 See with what large letters I write to you with my own hand.
 GAL 6:12 As many as desire to make a good impression in the flesh compel you to be circumcised, just so they may not be persecuted for the cross of Christ.
 GAL 6:13 For even they who receive circumcision don’t keep the law themselves, but they desire to have you circumcised, so that they may boast in your flesh.
@@ -29440,6 +32815,29 @@ PHI 2:4 each of you not just looking to his own things, but each of you also to 
 PHI 2:5 Have this in your mind, which was also in Christ Jesus,
 PHI 2:6 who, existing in the form of God, didn’t consider equality with God a thing to be grasped,
 PHI 2:7 but emptied himself, taking the form of a servant, being made in the likeness of men.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 PHI 2:8 And being found in human form, he humbled himself, becoming obedient to the point of death, yes, the death of the cross.
 PHI 2:9 Therefore God also highly exalted him, and gave to him the name which is above every name,
 PHI 2:10 that at the name of Jesus every knee should bow, of those in heaven, those on earth, and those under the earth,
@@ -29640,6 +33038,29 @@ COL 4:18 I, Paul, write this greeting with my own hand. Remember my chains. Grac
 1TH 3:6 But Timothy has just now come to us from you, and brought us glad news of your faith and love, and that you have good memories of us always, longing to see us, even as we also long to see you.
 1TH 3:7 For this cause, brothers, we were comforted over you in all our distress and affliction through your faith.
 1TH 3:8 For now we live, if you stand fast in the Lord.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1TH 3:9 For what thanksgiving can we give again to God for you, for all the joy with which we rejoice for your sakes before our God,
 1TH 3:10 night and day praying exceedingly that we may see your face and may perfect that which is lacking in your faith?
 1TH 3:11 Now may our God and Father himself, and our Lord Jesus Christ, direct our way to you.
@@ -29840,6 +33261,29 @@ COL 4:18 I, Paul, write this greeting with my own hand. Remember my chains. Grac
 1TI 6:8 But having food and clothing, we will be content with that.
 1TI 6:9 But those who are determined to be rich fall into a temptation, a snare, and many foolish and harmful lusts, such as drown men in ruin and destruction.
 1TI 6:10 For the love of money is a root of all kinds of evil. Some have been led astray from the faith in their greed, and have pierced themselves through with many sorrows.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1TI 6:11 But you, man of God, flee these things, and follow after righteousness, godliness, faith, love, perseverance, and gentleness.
 1TI 6:12 Fight the good fight of faith. Take hold of the eternal life to which you were called, and you confessed the good confession in the sight of many witnesses.
 1TI 6:13 I command you before God who gives life to all things, and before Christ Jesus who before Pontius Pilate testified the good confession,
@@ -30040,6 +33484,29 @@ HEB 2:18 For in that he himself has suffered being tempted, he is able to help t
 HEB 3:1 Therefore, holy brothers, partakers of a heavenly calling, consider the Apostle and High Priest of our confession: Jesus,
 HEB 3:2 who was faithful to him who appointed him, as also Moses was in all his house.
 HEB 3:3 For he has been counted worthy of more glory than Moses, because he who built the house has more honor than the house.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 HEB 3:4 For every house is built by someone; but he who built all things is God.
 HEB 3:5 Moses indeed was faithful in all his house as a servant, for a testimony of those things which were afterward to be spoken,
 HEB 3:6 but Christ is faithful as a Son over his house. We are his house, if we hold fast our confidence and the glorying of our hope firm to the end.
@@ -30240,6 +33707,29 @@ HEB 11:23 By faith Moses, when he was born, was hidden for three months by his p
 HEB 11:24 By faith Moses, when he had grown up, refused to be called the son of Pharaoh’s daughter,
 HEB 11:25 choosing rather to share ill treatment with God’s people than to enjoy the pleasures of sin for a time,
 HEB 11:26 considering the reproach of Christ greater riches than the treasures of Egypt; for he looked to the reward.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 HEB 11:27 By faith he left Egypt, not fearing the wrath of the king; for he endured, as seeing him who is invisible.
 HEB 11:28 By faith he kept the Passover and the sprinkling of the blood, that the destroyer of the firstborn should not touch them.
 HEB 11:29 By faith they passed through the Red Sea as on dry land. When the Egyptians tried to do so, they were swallowed up.
@@ -30440,6 +33930,29 @@ JAM 5:20 let him know that he who turns a sinner from the error of his way will 
 1PE 1:22 Seeing you have purified your souls in your obedience to the truth through the Spirit in sincere brotherly affection, love one another from the heart fervently,
 1PE 1:23 having been born again, not of corruptible seed, but of incorruptible, through the word of God, which lives and remains forever.
 1PE 1:24 For, “All flesh is like grass, and all of man’s glory like the flower in the grass. The grass withers, and its flower falls;
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1PE 1:25 but the Lord’s word endures forever.” This is the word of Good News which was preached to you.
 1PE 2:1 Putting away therefore all wickedness, all deceit, hypocrisies, envies, and all evil speaking,
 1PE 2:2 as newborn babies, long for the pure spiritual milk, that with it you may grow,
@@ -30640,6 +34153,29 @@ JAM 5:20 let him know that he who turns a sinner from the error of his way will 
 1JO 3:17 But whoever has the world’s goods and sees his brother in need, then closes his heart of compassion against him, how does God’s love remain in him?
 1JO 3:18 My little children, let’s not love in word only, or with the tongue only, but in deed and truth.
 1JO 3:19 And by this we know that we are of the truth and persuade our hearts before him,
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 1JO 3:20 because if our heart condemns us, God is greater than our heart, and knows all things.
 1JO 3:21 Beloved, if our hearts don’t condemn us, we have boldness toward God;
 1JO 3:22 so whatever we ask, we receive from him, because we keep his commandments and do the things that are pleasing in his sight.
@@ -30840,6 +34376,29 @@ REV 6:2 Then a white horse appeared, and he who sat on it had a bow. A crown was
 REV 6:3 When he opened the second seal, I heard the second living creature saying, “Come!”
 REV 6:4 Another came out, a red horse. To him who sat on it was given power to take peace from the earth, and that they should kill one another. There was given to him a great sword.
 REV 6:5 When he opened the third seal, I heard the third living creature saying, “Come and see!” And behold, a black horse, and he who sat on it had a balance in his hand.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 REV 6:6 I heard a voice in the middle of the four living creatures saying, “A choenix of wheat for a denarius, and three choenix of barley for a denarius! Don’t damage the oil and the wine!”
 REV 6:7 When he opened the fourth seal, I heard the fourth living creature saying, “Come and see!”
 REV 6:8 And behold, a pale horse, and the name of he who sat on it was Death. Hades followed with him. Authority over one fourth of the earth, to kill with the sword, with famine, with death, and by the wild animals of the earth was given to him.
@@ -31040,6 +34599,29 @@ REV 18:2 He cried with a mighty voice, saying, “Fallen, fallen is Babylon the 
 REV 18:3 For all the nations have drunk of the wine of the wrath of her sexual immorality, the kings of the earth committed sexual immorality with her, and the merchants of the earth grew rich from the abundance of her luxury.”
 REV 18:4 I heard another voice from heaven, saying, “Come out of her, my people, that you have no participation in her sins, and that you don’t receive of her plagues,
 REV 18:5 for her sins have reached to the sky, and God has remembered her iniquities.
+$web$, '\r?\n') as line
+cross join lateral regexp_match(line, '^([1-3A-Z]{3}) (\d+):(\d+) ?(.*)$') as m
+-- Una línea que no encaje con el patrón NO se descarta: llega con m nulo, el
+-- libro sale nulo y el NOT NULL de la tabla hace fallar la migración entera.
+where line <> ''
+  and (m is null or m[4] <> '')
+on conflict (version, book_id, chapter, verse) do nothing;
+
+insert into public.bible_verses (version, book_id, chapter, verse, text)
+select
+  'web',
+  array_position(array[
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI',
+    '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SOL',
+    'ISA', 'JER', 'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC',
+    'NAH', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT',
+    'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI',
+    'TIT', 'PHM', 'HEB', 'JAM', '1PE', '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+  ]::text[], m[1])::smallint,
+  m[2]::smallint,
+  m[3]::smallint,
+  m[4]
+from regexp_split_to_table($web$
 REV 18:6 Return to her just as she returned, and repay her double as she did, and according to her works. In the cup which she mixed, mix to her double.
 REV 18:7 However much she glorified herself and grew wanton, so much give her of torment and mourning. For she says in her heart, ‘I sit a queen, and am no widow, and will in no way see mourning.’
 REV 18:8 Therefore in one day her plagues will come: death, mourning, and famine; and she will be utterly burned with fire, for the Lord God who has judged her is strong.
