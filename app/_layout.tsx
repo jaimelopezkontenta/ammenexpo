@@ -3,13 +3,15 @@ import "../translation";
 
 import { CormorantGaramond_400Regular_Italic } from "@expo-google-fonts/cormorant-garamond";
 import { Lora_400Regular, Lora_600SemiBold } from "@expo-google-fonts/lora";
-import { QueryClientProvider } from "@tanstack/react-query";
+import NetInfo from "@react-native-community/netinfo";
+import { onlineManager, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -23,6 +25,7 @@ import {
   track,
 } from "@/core/observability/track";
 import { createQueryClient, wireAppFocus } from "@/core/query/client";
+import { wireOnlineManager } from "@/core/query/online";
 
 import { useTranslation } from "react-i18next";
 
@@ -76,6 +79,8 @@ function RootLayoutInner() {
 
   // Volver del fondo refresca lo que esté viejo (core/query/client.ts).
   useEffect(() => wireAppFocus(), []);
+  // Y recuperar la red, también (core/query/online.ts).
+  useEffect(() => wireOnlineManager(NetInfo, onlineManager, Platform.OS), []);
 
   // Tres familias, tres trabajos. General Sans lleva la interfaz; Cormorant
   // itálica, lo editorial —el wordmark y los labels—; y Lora se queda con lo
