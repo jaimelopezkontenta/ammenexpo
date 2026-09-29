@@ -3,11 +3,13 @@ import type { ReactNode } from "react";
 import { Tap, type TapProps } from "@/components/ui/Tap";
 
 /**
- * El botón redondo de vidrio con un icono dentro: el `···` de Hoy, las A−/A+
- * del lector, los anterior/siguiente del día y del capítulo, «cargar más».
+ * El botón redondo de vidrio con un icono dentro: el `···` de Hoy y las A−/A+
+ * del lector.
  *
- * Estaba copiado siete veces con las mismas clases, y cada copia podía
- * derivar sola (una ya había perdido el borde). 44×44: la zona táctil mínima.
+ * Estaba copiado a mano con las mismas clases, y cada copia podía derivar
+ * sola. 44×44: la zona táctil mínima. Los anterior/siguiente del día y del
+ * capítulo y «cargar más» parecen primos pero no lo son: llevan texto y son
+ * rectángulos `rounded-cta`, no círculos.
  */
 export const GlassIconButton = ({
   accessibilityLabel,

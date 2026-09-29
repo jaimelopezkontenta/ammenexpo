@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 import { StreakRing } from "@/components/StreakRing";
+import { GlassIconButton } from "@/components/ui/GlassIconButton";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { Tap } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
 import { journeyCaptionKey } from "@/core/plans/todayView";
 import { icon, useThemeColors } from "@/theme";
@@ -77,21 +77,19 @@ export const JourneyMetaRow = ({
         </View>
       </View>
 
-      <Tap
-        accessibilityRole="button"
+      {/* 44×44, el mínimo táctil, alrededor de un icono de 22. El vidrio es
+          el mismo de los chips sin elegir: sin él el icono flotaba como una
+          mancha gris sobre el amanecer. */}
+      <GlassIconButton
         accessibilityLabel={t("plan.planOptions")}
         onPress={onOpenOptions}
-        // 44×44, el mínimo táctil, alrededor de un icono de 22. El
-        // vidrio es el mismo de los chips sin elegir: sin él el icono
-        // flotaba como una mancha gris sobre el amanecer.
-        className="h-11 w-11 items-center justify-center rounded-full border border-glassedge/60 bg-glass/60"
       >
         <MoreHorizontal
           size={icon.md}
           color={colors.plum.DEFAULT}
           strokeWidth={icon.strokeWidth}
         />
-      </Tap>
+      </GlassIconButton>
     </View>
   );
 };
