@@ -633,6 +633,7 @@
     "inputLabel": "Write a message",
     "placeholder": "Write a message…",
     "send": "Send",
+    "loadOlder": "Show earlier messages",
     "sendFailed": "We couldn't send your message.",
     "messageActions": "Message from {{name}}. Tap to report or block.",
     "unread": "{{count}} unread message",

@@ -633,6 +633,7 @@
     "inputLabel": "Escribe un mensaje",
     "placeholder": "Escribe un mensaje…",
     "send": "Enviar",
+    "loadOlder": "Ver mensajes anteriores",
     "sendFailed": "No hemos podido enviar tu mensaje.",
     "messageActions": "Mensaje de {{name}}. Toca para reportar o bloquear.",
     "unread": "{{count}} mensaje sin leer",
