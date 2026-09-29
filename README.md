@@ -142,10 +142,12 @@ npm run verify
 ```
 
 Encadena, en este orden: `typecheck`, `lint` (eslint y prettier), los tests de
-JavaScript (Vitest) y **quince suites de assertions SQL** que se ejecutan cada
+JavaScript (Vitest), `migrations:check` (el guard de migraciones), **quince suites
+de assertions SQL** que se ejecutan cada
 una contra una base recién reseteada — `rls`, `flows`, `streak`, `timezone`,
 `bible`, `circles`, `plans`, `storage`, `social`, `flags`, `push`, `generation`,
-`email`, `rescued` y `scheduler`. Las suites SQL van en serie detrás de un lock global por proyecto (`ammen-db-<project_id>.lock` en el directorio temporal de la máquina, compartido por todos los worktrees) para
+`email`, `rescued` y `scheduler`— y, al final, `db:types:check` (que `types/supabase.ts`
+coincida con la base). Las suites SQL van en serie detrás de un lock global por proyecto (`ammen-db-<project_id>.lock` en el directorio temporal de la máquina, compartido por todos los worktrees) para
 que dos corridas no reseteen la misma base, y tardan unos ocho minutos.
 
 Nada se commitea sin esto en verde. CI (`.github/workflows/verify.yml`) corre

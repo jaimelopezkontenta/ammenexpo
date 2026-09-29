@@ -52,7 +52,8 @@ Nada de `npm run deploy:web:staging` ni `firebase deploy`: los deploys los hace 
 ## Migraciones
 
 - Una migración nueva sale **siempre** de `npx supabase migration new <nombre>`: timestamp real, nunca un número puesto a mano.
-- Lo ya publicado en `origin/main` no se edita ni se borra: se añade otra migración. `npm run migrations:check` lo comprueba (y CI también, contra la base del PR o el commit anterior).
+- Lo ya publicado en `origin/main` no se edita ni se borra: se añade otra migración. `npm run migrations:check` lo comprueba contra el **merge-base** con `origin/main` (y CI también, contra la base del PR o el commit anterior) y además audita la historia entera: las cuatro migraciones de julio editadas una vez están fijadas en `LEGACY_EDITS` (`scripts/checkMigrations.mjs`), una edición más falla.
+- `types/supabase.ts` se genera (`npm run db:types`) y `npm run db:types:check` falla si no coincide con la base local; `verify` y CI lo corren.
 - Nada de SQL aplicado a mano en la base local sin su fichero: `npm run doctor` falla si hay migraciones aplicadas sin fichero, porque el próximo reset las borra (`supabase/rescue/2026-09-29/README.md` cuenta por qué).
 - Cada migración trae su test SQL en `supabase/tests/` (y su script `db:test:*` dentro de `db:test`).
 

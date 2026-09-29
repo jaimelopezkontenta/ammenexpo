@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { checkMigrations } from "./checkMigrations.mjs";
+import {
+  checkHistory,
+  checkMigrations,
+  parseNameStatus,
+} from "./checkMigrations.mjs";
 
 const files = (entries: Record<string, string>) =>
   new Map(Object.entries(entries));
@@ -93,6 +97,77 @@ describe("checkMigrations", () => {
 
     expect(checkMigrations(current, null)).toEqual([
       expect.stringContaining("el nombre no es"),
+    ]);
+  });
+});
+
+describe("checkHistory", () => {
+  const added = (file: string) => ({ file, status: "A" });
+  const edited = (file: string) => ({ file, status: "M" });
+
+  it("accepts a history of only additions", () => {
+    expect(
+      checkHistory([
+        added("20260907100000_plus_waitlist.sql"),
+        added("20260908100000_email_lifecycle.sql"),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("rejects an edit after the add, even when no single push shows it", () => {
+    expect(
+      checkHistory([
+        added("20260907100000_plus_waitlist.sql"),
+        edited("20260907100000_plus_waitlist.sql"),
+      ]),
+    ).toEqual([expect.stringContaining("la edita 1 vez")]);
+  });
+
+  it("rejects a deleted or renamed migration", () => {
+    expect(
+      checkHistory([
+        added("20260907100000_plus_waitlist.sql"),
+        { file: "20260907100000_plus_waitlist.sql", status: "D" },
+      ]),
+    ).toEqual([expect.stringContaining("la borra o la renombra")]);
+  });
+
+  it("tolerates exactly the pinned legacy edits and not one more", () => {
+    const legacy = new Map([["20260730100000_core.sql", 1]]);
+    const once = [
+      added("20260730100000_core.sql"),
+      edited("20260730100000_core.sql"),
+    ];
+
+    expect(checkHistory(once, legacy)).toEqual([]);
+    expect(
+      checkHistory([...once, edited("20260730100000_core.sql")], legacy),
+    ).toEqual([expect.stringContaining("solo 1 están fijadas")]);
+  });
+
+  it("the real legacy pins match what the repository history contains", async () => {
+    const { LEGACY_EDITS } = await import("./checkMigrations.mjs");
+
+    expect([...LEGACY_EDITS.keys()].sort()).toEqual([
+      "20260730100000_core.sql",
+      "20260730100100_groups.sql",
+      "20260730100200_plans.sql",
+      "20260730100300_social.sql",
+    ]);
+  });
+});
+
+describe("parseNameStatus", () => {
+  it("reads A/M/D lines from git log --name-status and ignores blanks", () => {
+    const output =
+      "\nA\tsupabase/migrations/20260907100000_a.sql\n\r\n" +
+      "M\tsupabase/migrations/20260907100000_a.sql\r\n" +
+      "D\tsupabase/migrations/20260908100000_b.sql\n";
+
+    expect(parseNameStatus(output)).toEqual([
+      { status: "A", file: "20260907100000_a.sql" },
+      { status: "M", file: "20260907100000_a.sql" },
+      { status: "D", file: "20260908100000_b.sql" },
     ]);
   });
 });
