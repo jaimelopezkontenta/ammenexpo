@@ -1754,6 +1754,24 @@ export type Database = {
         }
         Relationships: []
       }
+      project_settings: {
+        Row: {
+          api_urls: string[]
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          api_urls?: string[]
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          api_urls?: string[]
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_devices: {
         Row: {
           created_at: string
@@ -2128,6 +2146,10 @@ export type Database = {
         Returns: boolean
       }
       archive_my_plan: { Args: { p_plan_id: string }; Returns: undefined }
+      avatar_url_is_valid: {
+        Args: { p_url: string; p_user: string }
+        Returns: boolean
+      }
       bible_book_label: {
         Args: { p_book_id: number; p_version?: string }
         Returns: string
@@ -2222,6 +2244,7 @@ export type Database = {
           owner_name: string
         }[]
       }
+      clear_foreign_avatar_urls: { Args: never; Returns: number }
       complete_generation_chunk: {
         Args: {
           p_days: Json
@@ -2281,6 +2304,10 @@ export type Database = {
       email_local_hour: { Args: { p_user: string }; Returns: number }
       email_non_t_taken_today: { Args: { p_user_id: string }; Returns: boolean }
       email_opened_app_today: { Args: { p_user: string }; Returns: boolean }
+      email_outbox_claimable: {
+        Args: { p_row: Database["public"]["Tables"]["email_outbox"]["Row"] }
+        Returns: boolean
+      }
       email_prayed_today: { Args: { p_user: string }; Returns: boolean }
       email_prefs_by_token: {
         Args: { p_token: string }
@@ -2766,6 +2793,10 @@ export type Database = {
         }[]
       }
       purge_expired_rows: { Args: never; Returns: Json }
+      push_outbox_claimable: {
+        Args: { p_row: Database["public"]["Tables"]["push_outbox"]["Row"] }
+        Returns: boolean
+      }
       reactivate_email_cadence_by_token: {
         Args: { p_token: string }
         Returns: boolean
@@ -2926,6 +2957,7 @@ export type Database = {
         Returns: boolean
       }
       shares_a_circle_with: { Args: { p_user: string }; Returns: boolean }
+      skip_stale_queue_rows: { Args: { p_older_than: string }; Returns: Json }
       unsubscribe_email_one_click: {
         Args: { p_token: string }
         Returns: boolean

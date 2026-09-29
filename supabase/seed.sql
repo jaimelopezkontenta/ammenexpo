@@ -213,3 +213,16 @@ update public.scheduler_settings
        enabled = false,
        updated_at = now()
  where id;
+
+-- La URL pública de la API (20260929132147_avatar_url_configurable): solo se
+-- aceptan avatares servidos desde aquí. En local son varias: la web y el
+-- simulador de iOS usan 127.0.0.1 o localhost; el emulador de Android,
+-- 10.0.2.2. Un móvil físico por la red local necesita añadir la IP del PC.
+update public.project_settings
+   set api_urls = array[
+         'http://127.0.0.1:54421',
+         'http://localhost:54421',
+         'http://10.0.2.2:54421'
+       ],
+       updated_at = now()
+ where id;

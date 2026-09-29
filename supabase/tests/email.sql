@@ -399,17 +399,20 @@ on conflict (id) do nothing;
 -- onboarding. Dani: sin onboarding.
 update public.profiles set created_at = now() - interval '2 days' where id = :ANA;
 update public.profile_settings set onboarding_answers = '{}'::jsonb
- where id in (:ANA, :CARLA);
+ where id in (:ANA, :BETO, :CARLA);
+update public.profiles set created_at = now() - interval '2 days' where id = :BETO;
 update public.profile_settings set onboarding_answers = null where id = :DANI;
 
 insert into public.groups (owner_id, name, visibility)
 values (:ANA, 'Círculo de Ana', 'private'),
+       (:BETO, 'Círculo de Beto', 'private'),
        (:CARLA, 'Círculo de Carla', 'private'),
        (:DANI, 'Círculo de Dani', 'private');
 
 commit;
 
 select invite_token as ana_token from public.groups where owner_id = '11111111-1111-1111-1111-111111111111' \gset
+select invite_token as beto_token from public.groups where owner_id = '22222222-2222-2222-2222-222222222222' \gset
 select invite_token as carla_token from public.groups where owner_id = '33333333-3333-3333-3333-333333333333' \gset
 select invite_token as dani_token from public.groups where owner_id = '44444444-4444-4444-4444-444444444444' \gset
 
@@ -427,17 +430,58 @@ select pg_temp.assert(
     = 'sender_rate_limited',
   'the eleventh invitation email in a day is refused');
 
-select pg_temp.assert(
-  public.enqueue_invite_email('circle', 'amiga1@test.local', :'ana_token') ->> 'reason'
-    = 'rate_limited',
-  'the same recipient is still limited to one invitation a week');
-
 commit;
 
 select pg_temp.assert(
   (select count(*) from public.email_outbox
     where invited_by = :ANA and template = 'invite_circle') = 10,
   'each queued invitation records who sent it');
+
+-- R1 S6: invitar no puede servir para preguntar si otra persona ya invitó a
+-- una dirección. Beto prueba con una que Ana acaba de invitar y con una nueva:
+-- la respuesta tiene que ser idéntica, y las dos gastan su cupo.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select public.enqueue_invite_email('circle', 'amiga1@test.local', :'beto_token') as beto_known \gset
+select public.enqueue_invite_email('circle', 'solo-de-beto@test.local', :'beto_token') as beto_fresh \gset
+
+commit;
+
+select pg_temp.assert(
+  (:'beto_known')::jsonb = '{"ok": true}'::jsonb
+    and (:'beto_known')::jsonb = (:'beto_fresh')::jsonb,
+  'an address someone else already invited answers exactly like a fresh one');
+
+select pg_temp.assert(
+  (select count(*) from public.email_outbox
+    where to_email = 'amiga1@test.local' and status in ('pending', 'sent')) = 1,
+  'and the recipient still gets one invitation a week, not two');
+
+select pg_temp.assert(
+  (select count(*) from public.email_outbox where invited_by = :BETO) = 2
+    and (select last_error from public.email_outbox
+          where invited_by = :BETO and to_email = 'amiga1@test.local') = 'recipient_recent',
+  'the silent one still spends the sender''s quota, so counting «ok»s does not tell either');
+
+-- Con el cupo gastado, la respuesta tampoco distingue: el tope de remitente
+-- va antes que nada que dependa de otros.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select count(*) from generate_series(1, 8) n
+ where (public.enqueue_invite_email('circle', 'relleno' || n || '@test.local', :'beto_token') ->> 'ok')::boolean;
+
+select pg_temp.assert(
+  public.enqueue_invite_email('circle', 'amiga2@test.local', :'beto_token')
+    = public.enqueue_invite_email('circle', 'nadie-la-invito@test.local', :'beto_token')
+    and public.enqueue_invite_email('circle', 'amiga2@test.local', :'beto_token') ->> 'reason'
+      = 'sender_rate_limited',
+  'once the sender is out of quota, known and unknown addresses get the same refusal');
+
+commit;
 
 begin;
 set local role authenticated;
@@ -477,3 +521,12 @@ select pg_temp.assert(
     'update public.profiles set display_name = %L where id = %L',
     repeat('x', 80), :DANI)),
   'a display name of 80 characters is accepted');
+
+-- R1 S8: `not valid` dejaba que un nombre viejo de más de 80 rompiera
+-- cualquier UPDATE de su fila (el latido, la racha…). La migración los
+-- recorta y valida la restricción: ya no queda ninguna fila fuera.
+select pg_temp.assert(
+  (select convalidated from pg_constraint
+    where conrelid = 'public.profiles'::regclass
+      and conname = 'profiles_display_name_length'),
+  'the display name length constraint is validated, so every existing row fits');

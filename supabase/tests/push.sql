@@ -544,6 +544,13 @@ select pg_temp.assert(
   (select count(*) from public.push_outbox where intercession_id = :'carla_preblock_id') = 1,
   'the row still exists — blocking is not a silent delete of history');
 
+-- R1 S2: y deja de estar `pending`. Si siguiera así, el drenaje la vería
+-- como trabajo cada minuto sin que el claim la cogiera nunca.
+select pg_temp.assert(
+  (select bool_and(status = 'skipped' and last_error = 'blocked')
+     from public.push_outbox where intercession_id = :'carla_preblock_id'),
+  'but it is marked skipped (blocked), so it stops looking like pending work');
+
 select pg_temp.assert(
   (select count(*) from public.pending_push_outbox()
     where intercession_id = :'carla_preblock_id') = 0,
@@ -648,6 +655,127 @@ select pg_temp.assert(
   'anon cannot call this at all — not even to get a polite "false"');
 
 commit;
+
+-- ===========================================================================
+-- Revisión R1 (S2): lo que ya no va a salir deja de estar pendiente
+--
+-- Revocar un dispositivo —al cerrar sesión, o porque Expo dice que el token
+-- está muerto— dejaba sus filas `pending` para siempre: el claim las ignora
+-- y el drenaje las veía como trabajo cada minuto.
+-- ===========================================================================
+begin;
+
+insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility, status)
+values ('9051d000-0000-0000-0000-0000000000b1', :ANA, 'Calma', 3, current_date, 'private', 'active');
+
+insert into public.prayer_plan_days (id, plan_id, day_number, title, prayer_body, unlock_date)
+values
+  ('9051d000-0000-0000-0000-0000000000b2', '9051d000-0000-0000-0000-0000000000b1', 1, 'Uno', 'Privado', current_date),
+  ('9051d000-0000-0000-0000-0000000000b3', '9051d000-0000-0000-0000-0000000000b1', 2, 'Dos', 'Privado', current_date);
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select public.register_push_device('ExponentPushToken[ana-r1-logout]', 'ios');
+select public.register_push_device('ExponentPushToken[ana-r1-dead]', 'android');
+
+commit;
+
+-- Beto ora dos días: dos filas por cada dispositivo vivo de Ana.
+begin;
+
+insert into public.intercessions (plan_day_id, intercessor_id)
+values ('9051d000-0000-0000-0000-0000000000b2', :BETO),
+       ('9051d000-0000-0000-0000-0000000000b3', :BETO);
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select public.revoke_push_device('ExponentPushToken[ana-r1-logout]');
+
+commit;
+
+select pg_temp.assert(
+  (select count(*) from public.push_outbox o
+     join public.push_devices d on d.id = o.device_id
+    where d.expo_push_token = 'ExponentPushToken[ana-r1-logout]') = 2
+    and (select bool_and(o.status = 'skipped' and o.last_error = 'device_revoked')
+           from public.push_outbox o
+           join public.push_devices d on d.id = o.device_id
+          where d.expo_push_token = 'ExponentPushToken[ana-r1-logout]'),
+  'logging out a device marks what it had queued as skipped (device_revoked)');
+
+select pg_temp.assert(
+  (select bool_and(o.status = 'pending')
+     from public.push_outbox o
+     join public.push_devices d on d.id = o.device_id
+    where d.expo_push_token = 'ExponentPushToken[ana-r1-dead]'),
+  'and leaves the other device''s rows pending');
+
+-- Un DeviceNotRegistered sobre una fila revoca el dispositivo: la otra fila
+-- del mismo dispositivo tampoco saldrá nunca.
+begin;
+set local role service_role;
+
+select o.id as r1_dead_first
+  from public.push_outbox o
+  join public.push_devices d on d.id = o.device_id
+ where d.expo_push_token = 'ExponentPushToken[ana-r1-dead]'
+ order by o.created_at, o.id
+ limit 1 \gset
+
+select public.mark_push_delivery(:'r1_dead_first', 'permanent_failure', null, 'DeviceNotRegistered');
+
+commit;
+
+select pg_temp.assert(
+  (select status from public.push_outbox where id = :'r1_dead_first') = 'failed'
+    and (select bool_and(o.status = 'skipped' and o.last_error = 'device_revoked')
+           from public.push_outbox o
+           join public.push_devices d on d.id = o.device_id
+          where d.expo_push_token = 'ExponentPushToken[ana-r1-dead]'
+            and o.id <> :'r1_dead_first'),
+  'a dead token fails its own row and skips the rest of what that device had queued');
+
+-- Volver a registrar el token no resucita avisos viejos.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select public.register_push_device('ExponentPushToken[ana-r1-logout]', 'ios');
+
+commit;
+
+select pg_temp.assert(
+  (select count(*) from public.push_outbox o
+     join public.push_devices d on d.id = o.device_id
+    where d.expo_push_token = 'ExponentPushToken[ana-r1-logout]'
+      and o.status = 'pending') = 0,
+  'registering the same token again does not bring stale notifications back');
+
+-- Y el drenaje, el claim y la lectura de diagnóstico usan el mismo predicado.
+select pg_temp.assert(
+  (select count(*) from public.push_outbox o
+     join public.push_devices d on d.id = o.device_id
+     join public.intercessions i on i.id = o.intercession_id
+    where o.status = 'pending'
+      and (d.revoked_at is not null
+           or exists (select 1 from public.blocks b
+                       where b.blocker_id = i.plan_owner_id
+                         and b.blocked_id = i.intercessor_id))) = 0,
+  'after all of that, nothing is left pending for a revoked device or a blocked pair');
+
+select pg_temp.assert(
+  (select count(*) from public.pending_push_outbox(200))
+    = (select count(*) from public.push_outbox o
+        where o.status = 'pending' and public.push_outbox_claimable(o)),
+  'pending_push_outbox shows exactly what push_outbox_claimable accepts');
 
 \echo '===================================='
 \echo ' PUSH ASSERTIONS PASSED'

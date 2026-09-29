@@ -151,6 +151,53 @@ select pg_temp.assert(
 
 
 -- ===========================================================================
+-- R1 S11: la cuota que enseña la app (my_plan_quota) es la que cuenta
+-- reserve_generation, también cuando hay filas que no cuentan: las de otra
+-- persona y las de otro alcance (`continuation`). Todo en una transacción que
+-- se deshace, para no tocar la cuota de Ana de las secciones siguientes.
+-- ===========================================================================
+begin;
+
+insert into public.generation_ledger (request_id, user_id, scope, status)
+values
+  (gen_random_uuid(), :BETO, 'personal', 'reserved'),
+  (gen_random_uuid(), :BETO, 'personal', 'reserved'),
+  (gen_random_uuid(), :ANA, 'continuation', 'completed');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select used = 0 and quota_limit = 3 from public.my_plan_quota()),
+  'my_plan_quota: 0 of 3 for Ana, with Beto''s reservations and her own continuation rows in the ledger');
+
+select quota_used as s11_first_used
+  from public.reserve_generation(
+    '11110000-0000-0000-0000-00000000c001'::uuid, 'personal', 7::smallint) \gset
+
+select pg_temp.assert(
+  (select used from public.my_plan_quota()) = 1 and :s11_first_used = 1,
+  'my_plan_quota: 1 of 3 after one personal plan, the same number reserve_generation reports');
+
+select quota_used as s11_circle_used
+  from public.reserve_generation(
+    '11110000-0000-0000-0000-00000000c002'::uuid, 'circle', 7::smallint,
+    'cccc0000-0000-0000-0000-0000000000a1'::uuid) \gset
+
+select pg_temp.assert(
+  (select used from public.my_plan_quota()) = 2 and :s11_circle_used = 2,
+  'my_plan_quota: a circle plan counts too, 2 of 3, again what reserve_generation says');
+
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select used from public.my_plan_quota()) = 2,
+  'and Beto sees his own two, not Ana''s');
+
+rollback;
+
+
+-- ===========================================================================
 -- La reserva crea el plan, y la cuota es de tres y permanente
 -- ===========================================================================
 begin;

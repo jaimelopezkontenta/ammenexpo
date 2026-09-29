@@ -21,6 +21,12 @@ ni un cron de CI. Solo `npm run push:drain` y `email:drain`, a mano. El
   `ammen_push_invoke_secret`), por entorno y nunca en una migración.
 - Retención: correo 90 días, eventos de Resend 180, push 30, historial de cron 7. `generation_ledger` no se purga: la cuota de planes cuenta sus filas de por
   vida.
+  - Enmienda (revisión R1, 2026-09-29): a los 90 días solo se **borra** el
+    correo cuya clave lleva fecha (hábito, digest, invitación semanal). El de
+    clave de por vida (bienvenida, goteos, win-back…) queda en lápida, sin
+    dirección ni payload, para que su clave siga impidiendo el reenvío; se
+    borra con la cuenta. Y encender con cola vieja pasa antes por
+    `skip_stale_queue_rows` (runbook).
 
 ## Consecuencias
 

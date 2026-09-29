@@ -165,10 +165,17 @@ leer su historial. El próximo push, en este orden:
      rescatadas): marcarlas como revertidas, porque las sustituyen las
      `20260929…` idempotentes:
      `npx supabase migration repair --linked --status reverted 20260909100000 20260910100000 20260911100000 20260912100000 20260913100000 20260914100000 20260915100000`
-   - **Con `20260908100000` pero sin la tabla `email_preferences`** (era la
-     `export_personal_collections` original, no `email_lifecycle`): revertirla
-     también, o `db push` daría por aplicada `email_lifecycle` sin ejecutarla:
-     `npx supabase migration repair --linked --status reverted 20260908100000`
+   - **Con `20260908100000`**: esa versión la comparten `email_lifecycle` (el
+     repo) y la `export_personal_collections` rescatada. Cuál se aplicó lo
+     dice la tabla, en el SQL Editor:
+     `select to_regclass('public.email_preferences') is not null as es_email_lifecycle;`
+     - `true` (**con** `email_preferences`): es `email_lifecycle`, la buena.
+       No se toca; `db push` la salta y aplica la `20260929062117` rescatada,
+       que es idempotente.
+     - `false` (**sin** `email_preferences`): era la
+       `export_personal_collections` original. Revertirla también, o
+       `db push` daría por aplicada `email_lifecycle` sin ejecutarla:
+       `npx supabase migration repair --linked --status reverted 20260908100000`
 4. `npx supabase db push --linked --dry-run`, revisar la lista y después sin
    `--dry-run`.
 5. Anotar aquí la última versión aplicada en staging:
@@ -182,7 +189,8 @@ abierta en staging. Siempre la base primero y la web después.
 `20260929074610_queue_scheduler.sql` crea pg_cron, tres trabajos
 (`ammen-queue-drains` cada minuto, `ammen-email-jobs` cada 15, `ammen-retention`
 a diario) y el interruptor `public.scheduler_settings`, **apagado**. Nada se
-envía hasta encenderlo. Tras el `db push`:
+envía hasta encenderlo. Tras el `db push` (y los pasos de «Tras el `db push`
+de la revisión R1», más abajo):
 
 1. Si la migración falla por permisos al crear `pg_cron`, activarlo antes en
    Dashboard → Database → Extensions y repetir el push.
@@ -193,14 +201,49 @@ envía hasta encenderlo. Tras el `db push`:
    npx supabase functions deploy enqueue-emails --project-ref syprzdjznuppckenuaua --use-api
    npx supabase functions deploy send-intercession-push --project-ref syprzdjznuppckenuaua --use-api
    ```
-3. Los secretos de invocación en Vault, con los **mismos valores** que
-   `AMMEN_EMAIL_INVOKE_SECRET` / `AMMEN_PUSH_INVOKE_SECRET` de Secret Manager.
-   En el SQL Editor del dashboard, sin guardarlos en ningún fichero:
+3. **Antes de seguir**, que las funciones tengan sus secretos de invocación:
+   ```powershell
+   npx supabase secrets list --project-ref syprzdjznuppckenuaua
+   ```
+   Tienen que salir `AMMEN_EMAIL_INVOKE_SECRET` y `AMMEN_PUSH_INVOKE_SECRET`.
+   Si falta alguno, `npm run secrets:pull` (docs/runbooks/secrets-sync.md):
+   sin ellos las funciones rechazan toda llamada con 401.
+4. Los mismos valores, en Vault. En el SQL Editor del dashboard, sin
+   guardarlos en ningún fichero:
    ```sql
    select vault.create_secret('<valor>', 'ammen_email_invoke_secret');
    select vault.create_secret('<valor>', 'ammen_push_invoke_secret');
+   -- Comprobar: dos filas, ninguna vacía.
+   select name, length(decrypted_secret) > 0 as tiene_valor
+     from vault.decrypted_secrets
+    where name in ('ammen_email_invoke_secret', 'ammen_push_invoke_secret');
    ```
-4. Encender:
+   Para **rotar** uno (primero en Secret Manager + `npm run secrets:pull`,
+   luego aquí; entre medias las llamadas dan 401 y la cola espera):
+   ```sql
+   select vault.update_secret(
+     (select id from vault.secrets where name = 'ammen_email_invoke_secret'),
+     '<valor nuevo>'
+   );
+   ```
+5. **Lo acumulado no se envía de golpe.** Push se encola desde agosto y el
+   correo desde septiembre sin que nada lo drenara: el primer minuto encendido
+   saldría todo. Mirar qué hay y marcar como `skipped` (motivo `stale`) lo
+   pendiente de más de un día, justo antes de encender:
+   ```sql
+   select 'email' as cola, template, count(*), min(created_at)
+     from public.email_outbox where status = 'pending' group by template
+   union all
+   select 'push', null, count(*), min(created_at)
+     from public.push_outbox where status = 'pending';
+
+   select public.skip_stale_queue_rows(interval '1 day');
+   ```
+6. Encender. **Ojo: `enabled = true` enciende las tres cosas a la vez**: el
+   drenaje de colas, los trabajos de correo cada 15 minutos (hábito, digest,
+   goteo, win-back: `run_email_jobs`) y la retención nocturna
+   (`purge_expired_rows`, que borra correo con fecha de más de 90 días,
+   eventos de más de 180, push de más de 30 e historial de cron de más de 7).
    ```sql
    update public.scheduler_settings
       set functions_url = 'https://syprzdjznuppckenuaua.supabase.co/functions/v1',
@@ -208,17 +251,83 @@ envía hasta encenderlo. Tras el `db push`:
           updated_at = now()
     where id;
    ```
-5. Comprobar al minuto siguiente:
+7. Comprobar al minuto siguiente:
    ```sql
-   select jobname, status, start_time from cron.job_run_details
+   select jobname, status, return_message, start_time from cron.job_run_details
      join cron.job using (jobid) order by start_time desc limit 5;
    select status_code, left(content, 200) from net._http_response
     order by created desc limit 5;
+   select public.run_queue_drains();  -- a mano: dice qué llamaría y si falta algo
    ```
-   Un 401 es un secreto de Vault que no coincide con el de la función.
+   Un 401 es un secreto de Vault que no coincide con el de la función. Si
+   falta el secreto en Vault, `run_queue_drains()` y `run_email_jobs()` no
+   llaman ni encolan: devuelven `missing_secret` (o `no_functions_url`) y
+   dejan un WARNING cada minuto en Dashboard → Logs → Postgres.
 
 Apagarlo todo (colas, trabajos de correo y retención) sin redeploy:
 `update public.scheduler_settings set enabled = false where id;`
+
+**Techo de invitaciones por correo.** Con la confirmación de email apagada
+(ver «Auth remoto»), el tope por remitente (10 al día, 3 el primer día) se
+esquiva creando cuentas; lo que manda entonces es el tope global de
+`enqueue_invite_email`: 200 por hora, **4.800 correos de invitación al día**
+como mucho, y nunca más de uno por destinatario a la semana. Si Resend avisa
+de rebotes o quejas, bajar ese número en una migración o encender la
+confirmación de email.
+
+## Tras el `db push` de la revisión R1 (2026-09-29)
+
+Dos pasos a mano, en el SQL Editor, **justo después del push**:
+
+1. **La URL del proyecto para los avatares** (`20260929132147_avatar_url_configurable`).
+   Solo se aceptan fotos servidas desde aquí; hasta rellenarlo, **ningún
+   avatar nuevo se guarda** (falla cerrado). Después, limpiar los que ya
+   apuntaban a otro sitio:
+   ```sql
+   update public.project_settings
+      set api_urls = array['https://syprzdjznuppckenuaua.supabase.co'],
+          updated_at = now()
+    where id;
+   select public.clear_foreign_avatar_urls();  -- cuántas caras se quitaron
+   ```
+   Tiene que ser exactamente la `EXPO_PUBLIC_SUPABASE_URL` del build (sin
+   barra final). Un dominio propio para la API se añade como otro elemento.
+2. **Permisos de las funciones** (`20260929132703_function_privileges_anon`).
+   Un proyecto creado con los privilegios por defecto antiguos daba EXECUTE
+   directo a `anon` sobre cada función nueva; la migración lo normaliza. Las
+   tres consultas tienen que devolver lo que dice su comentario:
+   ```sql
+   -- 0 filas: sin sesión solo se llama a las vistas previas y al correo por token.
+   select p.oid::regprocedure
+     from pg_proc p
+    where p.pronamespace = 'public'::regnamespace
+      and has_function_privilege('anon', p.oid, 'EXECUTE')
+      and p.proname not in (
+        'email_prefs_by_token', 'get_circle_invite_preview', 'get_invite_preview',
+        'get_shared_plan_preview', 'plan_today', 'reactivate_email_cadence_by_token',
+        'unsubscribe_email_one_click', 'update_email_prefs_by_token');
+
+   -- 0 filas: colas, correo y administración, nunca con sesión de usuario.
+   select p.oid::regprocedure
+     from pg_proc p
+    where p.pronamespace = 'public'::regnamespace
+      and has_function_privilege('authenticated', p.oid, 'EXECUTE')
+      and p.proname in (
+        'admin_set_flag', 'admin_set_staff', 'claim_email_outbox_batch',
+        'claim_push_outbox_batch', 'email_address_for', 'enqueue_email',
+        'ensure_follow', 'issue_email_prefs_token', 'mark_email_delivery',
+        'mark_push_delivery', 'pending_push_outbox', 'purge_expired_rows',
+        'record_email_event', 'run_email_jobs', 'run_queue_drains',
+        'skip_stale_queue_rows', 'verify_email_prefs_token');
+
+   -- {postgres=X/postgres}: las funciones nuevas ya no nacen abiertas.
+   select defaclacl from pg_default_acl
+    where defaclrole = 'postgres'::regrole
+      and defaclnamespace = 'public'::regnamespace
+      and defaclobjtype = 'f';
+   ```
+   La lista completa de funciones cerradas está en `supabase/tests/rls.sql`
+   (sección «El catálogo, entero»).
 
 ## Rollback
 
