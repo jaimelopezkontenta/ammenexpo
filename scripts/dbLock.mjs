@@ -12,11 +12,33 @@ import {
   writeSync,
   writeFileSync,
 } from "node:fs";
-import { hostname } from "node:os";
+import { hostname, tmpdir } from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
-const DEFAULT_LOCK_PATH = path.resolve(process.cwd(), ".tmp", "db.lock");
+/**
+ * El lock es de LA BASE, no del árbol de trabajo. Con `git worktree` (o varios
+ * agentes a la vez) cada carpeta tenía su propio `.tmp/db.lock` y, sin embargo,
+ * todas hablan con los mismos contenedores de Docker (`project_id` igual, mismo
+ * puerto): un `db:test` o un e2e en una carpeta reseteaba la base bajo la suite
+ * de otra, y el lock no se enteraba. Por eso vive en el directorio temporal de
+ * la máquina y se nombra por `project_id`: quien comparta pila, comparte lock.
+ */
+const projectId = () => {
+  try {
+    const config = readFileSync(
+      path.resolve(process.cwd(), "supabase", "config.toml"),
+      "utf8",
+    );
+    const match = /^s*project_ids*=s*"([^"]+)"/mu.exec(config);
+    if (match) return match[1].replace(/[^A-Za-z0-9_.-]/gu, "_");
+  } catch {
+    // Sin config.toml (un test, otra carpeta): el nombre de siempre.
+  }
+  return "ammen";
+};
+
+const DEFAULT_LOCK_PATH = path.join(tmpdir(), `ammen-db-${projectId()}.lock`);
 const DEFAULT_STALE_AFTER_MS = 10 * 60 * 1000;
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 15 * 1000;
 
@@ -85,7 +107,9 @@ const processIsAlive = (pid) => {
     return true;
   } catch (error) {
     // EPERM means that a process exists but this user cannot signal it.
-    return Boolean(error && typeof error === "object" && error.code === "EPERM");
+    return Boolean(
+      error && typeof error === "object" && error.code === "EPERM",
+    );
   }
 };
 

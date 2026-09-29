@@ -268,7 +268,11 @@ const AUTH_POLL_MS = 2_000;
 const authIsUp = async (deadline: number) => {
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(AUTH_HEALTH);
+      // Con timeout: si Kong acepta la conexión y se cuelga, sin él cada
+      // intento esperaba minutos y el reinicio «a mitad de plazo» no llegaba.
+      const response = await fetch(AUTH_HEALTH, {
+        signal: AbortSignal.timeout(5_000),
+      });
       if (response.ok) return true;
     } catch {
       // Todavía levantando.

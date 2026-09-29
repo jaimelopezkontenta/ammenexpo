@@ -142,6 +142,12 @@ describe("atomic database lock", () => {
     expect(existsSync(lockPath)).toBe(false);
   });
 
+  it("the default lock is global to the machine and named after the project, so every worktree shares it", async () => {
+    const { LOCK_PATH } = await import("./dbLock.mjs");
+
+    expect(LOCK_PATH).toBe(path.join(tmpdir(), "ammen-db-ammen.lock"));
+  });
+
   it("never releases a lock whose token belongs to somebody else", () => {
     const lockPath = lockPathForTest();
     const original = acquireDbLock("original", { lockPath });

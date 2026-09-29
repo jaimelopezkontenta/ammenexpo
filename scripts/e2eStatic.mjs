@@ -66,12 +66,22 @@ const args = [
   ...extraArgs,
 ];
 
-const result = spawnSync(NPX, args, {
-  stdio: "inherit",
-  env: { ...process.env, E2E_STATIC: "1" },
-  // En Windows `npx.cmd` es un batch: Node moderno exige shell para
-  // ejecutarlo (EINVAL sin ella). Los argumentos son simples y fijos.
-  shell: process.platform === "win32",
-});
+// Con `shell: true` (Windows) Node une los argumentos con espacios y sin
+// comillas: un filtro como `-g "hoy movil"` llegaba a Playwright partido en dos.
+// Se citan los que lo necesitan.
+const quoteForWindowsShell = (arg) =>
+  /[\s"&|<>^()]/u.test(arg) ? `"${arg.replace(/"/gu, '\\"')}"` : arg;
+
+const result = spawnSync(
+  NPX,
+  process.platform === "win32" ? args.map(quoteForWindowsShell) : args,
+  {
+    stdio: "inherit",
+    env: { ...process.env, E2E_STATIC: "1" },
+    // En Windows `npx.cmd` es un batch: Node moderno exige shell para
+    // ejecutarlo (EINVAL sin ella).
+    shell: process.platform === "win32",
+  },
+);
 
 process.exit(result.status ?? 1);
