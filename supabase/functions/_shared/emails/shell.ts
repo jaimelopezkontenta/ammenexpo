@@ -6,6 +6,8 @@
  * Orb y VerseCard. Un cliente en dark mode no debe voltear el versículo.
  */
 
+import { escapeHtml } from "../html.ts";
+
 export const AMANECER = {
   sky: "#C7D6F2",
   skyDarker: "#B8C8E6",
@@ -38,21 +40,14 @@ export type EmailShellInput = {
   layout: EmailLayout;
 };
 
-const esc = (value: string): string =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-
 const verseFontSize = (text: string): string =>
   text.length > 180 ? "22px" : "26px";
 
 const ctaBlock = (label: string, url: string): string => `
   <tr>
     <td style="padding:28px 0 8px;">
-      <a href="${esc(url)}" style="display:block;background:${AMANECER.ember};color:${AMANECER.plum};text-decoration:none;font-family:'General Sans',ui-sans-serif,system-ui,sans-serif;font-size:17px;font-weight:600;line-height:1.2;padding:14px 20px;border-radius:15px;text-align:center;">
-        ${esc(label)}
+      <a href="${escapeHtml(url)}" style="display:block;background:${AMANECER.ember};color:${AMANECER.plum};text-decoration:none;font-family:'General Sans',ui-sans-serif,system-ui,sans-serif;font-size:17px;font-weight:600;line-height:1.2;padding:14px 20px;border-radius:15px;text-align:center;">
+        ${escapeHtml(label)}
       </a>
     </td>
   </tr>`;
@@ -64,10 +59,10 @@ const verseBlock = (ref: string, text: string): string => `
         <tr>
           <td style="padding:22px 24px;">
             <p style="margin:0 0 12px;font-family:Georgia,'Cormorant Garamond',serif;font-style:italic;font-size:15px;line-height:1.4;color:${AMANECER.emberInk};">
-              ${esc(ref)}
+              ${escapeHtml(ref)}
             </p>
             <p style="margin:0;font-family:Georgia,Lora,serif;font-size:${verseFontSize(text)};line-height:1.45;color:${AMANECER.plum};">
-              ${esc(text)}
+              ${escapeHtml(text)}
             </p>
           </td>
         </tr>
@@ -89,10 +84,10 @@ const footerCopy = (
 
   const prefs =
     !transactional && prefsUrl
-      ? `<br /><a href="${esc(prefsUrl)}" style="color:${AMANECER.emberInk};text-decoration:underline;">${esc(change)}</a>`
+      ? `<br /><a href="${escapeHtml(prefsUrl)}" style="color:${AMANECER.emberInk};text-decoration:underline;">${escapeHtml(change)}</a>`
       : "";
 
-  return `${brand} · ${esc(contact)}${prefs}`;
+  return `${brand} · ${escapeHtml(contact)}${prefs}`;
 };
 
 /**
@@ -101,7 +96,7 @@ const footerCopy = (
  */
 export const renderShell = (input: EmailShellInput): string => {
   const overline = input.overline
-    ? `<span style="font-family:'General Sans',ui-sans-serif,system-ui,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${AMANECER.mistInk};">${esc(input.overline)}</span>`
+    ? `<span style="font-family:'General Sans',ui-sans-serif,system-ui,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${AMANECER.mistInk};">${escapeHtml(input.overline)}</span>`
     : "";
 
   return `<!DOCTYPE html>
@@ -138,7 +133,7 @@ export const renderShell = (input: EmailShellInput): string => {
 </head>
 <body class="ammen-sky" style="margin:0;padding:0;background:${AMANECER.sky};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-    ${esc(input.preheader)}
+    ${escapeHtml(input.preheader)}
   </div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="ammen-sky" style="background:${AMANECER.sky};">
     <tr>
@@ -162,7 +157,7 @@ export const renderShell = (input: EmailShellInput): string => {
                 <tr>
                   <td>
                     <h1 style="margin:0 0 16px;font-family:'General Sans',ui-sans-serif,system-ui,sans-serif;font-size:${input.layout === "account" ? "26px" : "22px"};font-weight:600;line-height:1.25;color:${AMANECER.plum};">
-                      ${esc(input.heading)}
+                      ${escapeHtml(input.heading)}
                     </h1>
                     <div style="font-family:'General Sans',ui-sans-serif,system-ui,sans-serif;font-size:18px;line-height:1.5;color:${AMANECER.plum};">
                       ${input.bodyHtml}

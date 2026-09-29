@@ -1,8 +1,5 @@
-import {
-  createClient,
-  type SupabaseClient,
-} from "npm:@supabase/supabase-js@^2.58.0";
-
+import { createAdminClient, type SupabaseClient } from "../_shared/admin.ts";
+import { CORS_INVOKER, jsonWith, preflight } from "../_shared/http.ts";
 import {
   authorizeInvoker,
   BATCH_SIZE,
@@ -19,18 +16,7 @@ import {
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-ammen-invoker",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+const json = jsonWith(CORS_INVOKER);
 
 type ClaimedRow = {
   outbox_id: string;
@@ -116,7 +102,7 @@ const resolveOutbox = async (
  */
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS });
+    return preflight(CORS_INVOKER);
   }
 
   // Si el secret está definido, el header tiene que coincidir. Sin secret,
@@ -150,7 +136,7 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "sender_not_configured" }, 503);
   }
 
-  const supabase = createClient(config.supabaseUrl, config.serviceRoleKey);
+  const supabase = createAdminClient(config.supabaseUrl, config.serviceRoleKey);
 
   // `claim_push_outbox_batch` arrienda lo que devuelve (`leased_until`), así
   // que una segunda invocación que se solape en el tiempo no puede recibir

@@ -1,12 +1,6 @@
-import { createClient } from "npm:@supabase/supabase-js@^2.58.0";
-
+import { createAdminClient } from "../_shared/admin.ts";
+import { json, preflight } from "../_shared/http.ts";
 import { verifyResendSignature } from "./svix.ts";
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
 
 type ResendEvent = {
   type?: string;
@@ -22,7 +16,7 @@ type ResendEvent = {
  */
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok");
+    return preflight();
   }
 
   if (req.method !== "POST") {
@@ -62,7 +56,7 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "invalid_json" }, 400);
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createAdminClient(supabaseUrl, serviceRoleKey);
   const { data, error } = await supabase.rpc("record_email_event", {
     p_svix_id: svixId,
     p_event_type: parsed.type ?? "unknown",

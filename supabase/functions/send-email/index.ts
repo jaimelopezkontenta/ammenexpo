@@ -1,8 +1,5 @@
-import {
-  createClient,
-  type SupabaseClient,
-} from "npm:@supabase/supabase-js@^2.58.0";
-
+import { createAdminClient, type SupabaseClient } from "../_shared/admin.ts";
+import { CORS_INVOKER, jsonWith, preflight } from "../_shared/http.ts";
 import { renderEmail } from "../_shared/emails/render.ts";
 import type {
   EmailLocale,
@@ -19,18 +16,7 @@ const RESEND_URL = "https://api.resend.com/emails";
 const FROM = "Ammen <hola@mail.ammen.app>";
 const REPLY_TO = "hola@ammen.app";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-ammen-invoker",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+const json = jsonWith(CORS_INVOKER);
 
 type ClaimedRow = {
   outbox_id: string;
@@ -150,7 +136,7 @@ const sendOne = async (input: {
  */
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS });
+    return preflight(CORS_INVOKER);
   }
 
   if (
@@ -181,7 +167,7 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "sender_not_configured" }, 503);
   }
 
-  const supabase = createClient(config.supabaseUrl, config.serviceRoleKey);
+  const supabase = createAdminClient(config.supabaseUrl, config.serviceRoleKey);
 
   const { data: claimed, error: claimError } = await supabase.rpc(
     "claim_email_outbox_batch",

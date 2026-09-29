@@ -5,6 +5,7 @@ import {
   type EmailPayload,
   type EmailTemplateId,
 } from "./copy.ts";
+import { escapeHtml } from "../html.ts";
 import { renderPlainText, renderShell } from "./shell.ts";
 
 export type RenderedEmail = {
@@ -83,10 +84,3 @@ export const renderEmail = (input: {
     locale: input.locale,
   };
 };
-
-const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");

@@ -3,6 +3,7 @@ import {
   type SupabaseClient,
 } from "npm:@supabase/supabase-js@^2.58.0";
 
+import { CORS_USER, jsonWith, preflight } from "../_shared/http.ts";
 import { buildRepairPrompt, buildUserPrompt, SYSTEM_PROMPT } from "./prompt.ts";
 import { checkDuration, MAX_DAYS, MIN_DAYS } from "./bounds.ts";
 import { deriveChunkRequestId } from "./chunkRequestId.ts";
@@ -18,18 +19,7 @@ import { sanitizeGeneratedText } from "./sanitize.ts";
 import { isGeneratedPlan, PLAN_JSON_SCHEMA } from "./schema.ts";
 import { resolveDays, unresolved, type ResolvedDay } from "./scripture.ts";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+const json = jsonWith(CORS_USER);
 
 /**
  * Long enough for a full stretch, short enough that a dead invocation does not
@@ -396,7 +386,7 @@ const writeChunk = async ({
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS });
+    return preflight(CORS_USER);
   }
 
   const authHeader = req.headers.get("Authorization");

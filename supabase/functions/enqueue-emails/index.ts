@@ -1,19 +1,8 @@
-import { createClient } from "npm:@supabase/supabase-js@^2.58.0";
+import { createAdminClient } from "../_shared/admin.ts";
+import { CORS_INVOKER, jsonWith, preflight } from "../_shared/http.ts";
+import { authorizeInvoker } from "../_shared/invoker.ts";
 
-import { authorizeInvoker } from "../send-email/config.ts";
-
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-ammen-invoker",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+const json = jsonWith(CORS_INVOKER);
 
 /**
  * Encola hábito / digest / drip / win-back. Idempotente. Lo llama el cron
@@ -21,7 +10,7 @@ const json = (body: unknown, status = 200) =>
  */
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS });
+    return preflight(CORS_INVOKER);
   }
 
   if (
@@ -42,7 +31,7 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "not_configured" }, 503);
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createAdminClient(supabaseUrl, serviceRoleKey);
   const { data, error } = await supabase.rpc("enqueue_all_email_jobs");
 
   if (error) {
