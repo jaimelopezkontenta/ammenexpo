@@ -2913,6 +2913,11 @@ export type Database = {
       }
       revoke_all_my_push_devices: { Args: never; Returns: number }
       revoke_push_device: { Args: { p_token: string }; Returns: boolean }
+      rotate_circle_invite_token: {
+        Args: { p_group_id: string }
+        Returns: string
+      }
+      rotate_my_invite_code: { Args: never; Returns: string }
       run_email_jobs: { Args: never; Returns: Json }
       run_queue_drains: { Args: never; Returns: Json }
       search_bible: {

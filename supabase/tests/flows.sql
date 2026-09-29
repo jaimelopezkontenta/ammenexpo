@@ -482,6 +482,154 @@ commit;
 
 
 -- ===========================================================================
+-- Rotar el código propio (Oleada 4d)
+--
+-- Un código que circula donde no debía se cambia: el viejo deja de canjearse
+-- en el acto, el de los demás no se toca, y lo que ya pasó (quién aceptó) se
+-- queda.
+-- ===========================================================================
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+-- Un doble toque en «crear» deja a Ana con dos códigos.
+insert into public.invites (inviter_id) values ('11111111-1111-1111-1111-111111111111');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+insert into public.invites (inviter_id) values ('33333333-3333-3333-3333-333333333333');
+
+commit;
+
+select code as ana_second_code from public.invites
+ where inviter_id = '11111111-1111-1111-1111-111111111111'
+   and code <> :'invite_code' \gset
+select code as carla_code from public.invites
+ where inviter_id = '33333333-3333-3333-3333-333333333333' \gset
+
+-- Una invitación por correo con el código viejo, todavía en cola.
+insert into public.email_outbox (template, to_email, channel, payload, idempotency_key)
+values ('invite_app', 'en-cola@test.local', 'S',
+        jsonb_build_object('inviter_name', 'Ana', 'token', :'invite_code'),
+        'flows-rotate-pending');
+
+select pg_temp.assert(
+  not has_function_privilege('anon', 'public.rotate_my_invite_code()', 'EXECUTE')
+    and has_function_privilege('authenticated', 'public.rotate_my_invite_code()', 'EXECUTE'),
+  'rotating your invite code needs a session');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$ select public.rotate_my_invite_code() $q$),
+  'and a caller with no user behind it is refused');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select public.rotate_my_invite_code() as ana_new_code \gset
+
+commit;
+
+select pg_temp.assert(
+  :'ana_new_code' not in (:'invite_code', :'ana_second_code')
+    and length(:'ana_new_code') > 8,
+  'rotating hands back a new code');
+
+select pg_temp.assert(
+  (select code from public.invites
+    where inviter_id = '11111111-1111-1111-1111-111111111111'
+    order by created_at, id limit 1) = :'ana_new_code',
+  'the one the app shows (her oldest row)');
+
+select pg_temp.assert(
+  (select count(*) from public.invites
+    where inviter_id = '11111111-1111-1111-1111-111111111111') = 2
+  and not exists (
+    select 1 from public.invites where code in (:'invite_code', :'ana_second_code')),
+  'every code of hers changes, the double-tap one too, without adding rows');
+
+select pg_temp.assert(
+  exists (
+    select 1 from public.invites
+     where inviter_id = '11111111-1111-1111-1111-111111111111'
+       and accepted_by = '44444444-4444-4444-4444-444444444444'),
+  'and who already accepted her invitation stays recorded');
+
+begin;
+set local role anon;
+
+select pg_temp.assert(
+  (select count(*) from public.get_invite_preview(:'invite_code')) = 0
+    and (select inviter_name from public.get_invite_preview(:'ana_new_code')) = 'Ana',
+  'the old code previews nothing; the new one says who invites');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select pg_temp.assert(
+  public.redeem_invite_code(:'invite_code') ->> 'reason' = 'invalid'
+    and public.redeem_invite_code(:'ana_second_code') ->> 'reason' = 'invalid',
+  'the old codes stop redeeming at once');
+
+select pg_temp.assert(
+  (public.redeem_invite_code(:'ana_new_code') ->> 'ok')::boolean,
+  'and the new one works');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select pg_temp.assert(
+  (public.redeem_invite_code(:'carla_code') ->> 'ok')::boolean,
+  'somebody else''s code still works');
+
+commit;
+
+select pg_temp.assert(
+  (select code from public.invites
+    where inviter_id = '33333333-3333-3333-3333-333333333333') = :'carla_code',
+  'because rotating did not touch it');
+
+select pg_temp.assert(
+  exists (select 1 from public.share_links where token = 'shared-with-carla'),
+  'and a shared plan link is not an invite code: rotating leaves it alone');
+
+select pg_temp.assert(
+  (select (status, last_error)::text from public.email_outbox
+    where idempotency_key = 'flows-rotate-pending') = '(skipped,token_rotated)',
+  'an invitation email still queued with the old code is dropped, not sent with a dead link');
+
+-- Quien aún no tenía código: rotar le da uno.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select public.rotate_my_invite_code() as dani_code \gset
+
+commit;
+
+select pg_temp.assert(
+  (select code from public.invites
+    where inviter_id = '44444444-4444-4444-4444-444444444444') = :'dani_code',
+  'somebody with no code yet gets one');
+
+
+-- ===========================================================================
 -- Los términos, aceptados dentro de la app
 --
 -- La Guideline 1.2 de Apple pide un acuerdo **aceptado**, no publicado en una

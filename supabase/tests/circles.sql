@@ -1778,6 +1778,153 @@ select pg_temp.assert(
 commit;
 
 -- ===========================================================================
+-- Rotar el enlace de invitación de un círculo (Oleada 4d)
+--
+-- Un enlace que se escapa se cambia sin borrar el círculo. Solo quien lo
+-- administra; el viejo deja de valer en el acto; nada más cambia.
+-- ===========================================================================
+\set CIRCLE_ROT   '''cccc0000-0000-0000-0000-0000000000a1'''
+\set CIRCLE_OTHER '''cccc0000-0000-0000-0000-0000000000a2'''
+
+begin;
+
+insert into public.groups (id, owner_id, name, visibility)
+values (:CIRCLE_ROT, :ANA, 'Círculo que rota', 'private'),
+       (:CIRCLE_OTHER, :CARLA, 'Otro círculo', 'private');
+
+insert into public.group_members (group_id, user_id, role)
+values (:CIRCLE_ROT, :CARLA, 'admin'),
+       (:CIRCLE_ROT, :BETO, 'member');
+
+insert into public.share_links (token, scope, group_id, created_by)
+values ('enlace-de-grupo-rot', 'group', :CIRCLE_ROT, :ANA);
+
+insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility)
+values ('cccc0000-0000-0000-0000-0000000000b1', :ANA, 'Plan compartido', 3, current_date, 'link');
+
+insert into public.share_links (token, scope, plan_id, created_by)
+values ('enlace-de-plan-rot', 'plan', 'cccc0000-0000-0000-0000-0000000000b1', :ANA);
+
+commit;
+
+select invite_token as rot_token_0 from public.groups
+ where id = 'cccc0000-0000-0000-0000-0000000000a1' \gset
+select invite_token as other_token_0 from public.groups
+ where id = 'cccc0000-0000-0000-0000-0000000000a2' \gset
+
+-- Dos invitaciones por correo en cola: una con el enlace que va a rotar, otra
+-- con el de otro círculo.
+insert into public.email_outbox (template, to_email, channel, payload, idempotency_key)
+values
+  ('invite_circle', 'rota@test.local', 'S',
+   jsonb_build_object('token', :'rot_token_0'), 'circles-rotate-pending'),
+  ('invite_circle', 'otro@test.local', 'S',
+   jsonb_build_object('token', :'other_token_0'), 'circles-other-pending');
+
+select pg_temp.assert(
+  not has_function_privilege('anon', 'public.rotate_circle_invite_token(uuid)', 'EXECUTE')
+    and has_function_privilege('authenticated', 'public.rotate_circle_invite_token(uuid)', 'EXECUTE'),
+  'rotating a circle link needs a session');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$ select public.rotate_circle_invite_token('cccc0000-0000-0000-0000-0000000000a1') $q$),
+  'a plain member cannot rotate the circle''s link');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$ select public.rotate_circle_invite_token('cccc0000-0000-0000-0000-0000000000a1') $q$)
+    and pg_temp.raises($q$ select public.rotate_circle_invite_token('cccc0000-0000-0000-0000-0000000000ff') $q$),
+  'nor can an outsider, and a circle that does not exist fails the same way');
+
+commit;
+
+select pg_temp.assert(
+  (select invite_token from public.groups where id = :CIRCLE_ROT) = :'rot_token_0',
+  'and those refusals leave the link as it was');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
+
+select public.rotate_circle_invite_token(:CIRCLE_ROT) as rot_token_1 \gset
+
+commit;
+
+select pg_temp.assert(
+  :'rot_token_1' <> :'rot_token_0'
+    and (select invite_token from public.groups where id = :CIRCLE_ROT) = :'rot_token_1',
+  'an admin rotates it and gets the new link back');
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select public.rotate_circle_invite_token(:CIRCLE_ROT) as rot_token_2 \gset
+
+select pg_temp.assert(
+  :'rot_token_2' not in (:'rot_token_0', :'rot_token_1')
+    and public.circle_invite_token(:CIRCLE_ROT) = :'rot_token_2',
+  'so does the owner, and the circle''s link is now the new one');
+
+commit;
+
+begin;
+set local role anon;
+
+select pg_temp.assert(
+  (select count(*) from public.get_circle_invite_preview(:'rot_token_0')) = 0
+    and (select name from public.get_circle_invite_preview(:'rot_token_2')) = 'Círculo que rota',
+  'the old link previews nothing; the new one shows the circle');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises(format('select public.join_group_with_token(%L)', :'rot_token_0'))
+    and public.redeem_share_token(:'rot_token_1') ->> 'reason' = 'invalid_or_expired',
+  'the old links stop letting anyone in at once');
+
+select public.redeem_share_token(:'rot_token_2') ->> 'scope' as dani_scope \gset
+
+select pg_temp.assert(
+  :'dani_scope' = 'circle' and public.is_group_member(:CIRCLE_ROT),
+  'and the new one works');
+
+commit;
+
+select pg_temp.assert(
+  (select invite_token from public.groups where id = :CIRCLE_OTHER) = :'other_token_0'
+    and (select count(*) from public.share_links
+          where token in ('enlace-de-grupo-rot', 'enlace-de-plan-rot')
+            and revoked_at is null) = 2,
+  'another circle''s link and the share links of this circle and of a plan are untouched');
+
+select pg_temp.assert(
+  (select count(*) from public.group_members
+    where group_id = :CIRCLE_ROT and user_id in (:BETO, :CARLA)) = 2,
+  'and rotating kicks nobody out');
+
+select pg_temp.assert(
+  (select (status, last_error)::text from public.email_outbox
+    where idempotency_key = 'circles-rotate-pending') = '(skipped,token_rotated)'
+  and (select status from public.email_outbox
+    where idempotency_key = 'circles-other-pending') = 'pending',
+  'a queued invitation email with the old link is dropped; one for another circle is not');
+
+
+-- ===========================================================================
 -- RLS sigue puesta en todas las tablas
 --
 -- `blocks` es nueva, y una tabla sin RLS en este esquema significa que
