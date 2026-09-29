@@ -79,7 +79,7 @@ export const flattenUnique = <T>(
 };
 
 export const usePagedQuery = <T extends PagedRow>(input: {
-  queryKey: unknown[];
+  queryKey: readonly unknown[];
   enabled?: boolean;
   fetchPage: (cursor: PageCursor | null) => Promise<T[]>;
   /** Cómo se identifica una fila para deduplicar (ver flattenUnique). */
