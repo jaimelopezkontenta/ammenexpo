@@ -329,6 +329,49 @@ Dos pasos a mano, en el SQL Editor, **justo después del push**:
    La lista completa de funciones cerradas está en `supabase/tests/rls.sql`
    (sección «El catálogo, entero»).
 
+## Secreto de los enlaces de baja, en Vault (Oleada 4b, 2026-09-29)
+
+Los enlaces de preferencias y baja de cada correo van firmados con HMAC. El
+secreto vivía en claro en `public.email_runtime.hmac_secret`; desde
+`email_hmac_vault` vive en Vault como `ammen_email_hmac_secret`. La migración
+lo copia con el **mismo valor** (los enlaces ya enviados siguen valiendo) y
+vacía la columna.
+
+**Tras el `db push`**, en el SQL Editor:
+
+```sql
+-- Una fila con valor, y la columna vieja vacía.
+select name, length(decrypted_secret) >= 32 as tiene_valor
+  from vault.decrypted_secrets where name = 'ammen_email_hmac_secret';
+select hmac_secret is null as columna_vacia from public.email_runtime;
+```
+
+Si la primera no devuelve fila (el push dejó un WARNING «Vault no disponible»),
+el secreto sigue en la tabla y los enlaces funcionan igual; en cuanto Vault
+responda, repetir el traslado — es idempotente:
+
+```sql
+select public.email_hmac_secret_to_vault();  -- 'created' o 'already_in_vault'
+```
+
+**Rotar** (si el secreto se filtró): **invalida todos los enlaces de baja ya
+enviados** — un enlace viejo deja de abrir las preferencias y de dar de baja;
+quien lo pulse tendrá que cambiarlo desde la app o esperar al siguiente correo,
+que ya lleva uno nuevo. Nada más se rompe: los correos pendientes se firman al
+enviarse, no al encolarse.
+
+```sql
+select vault.update_secret(
+  (select id from vault.secrets where name = 'ammen_email_hmac_secret'),
+  encode(extensions.gen_random_bytes(32), 'hex')
+);
+```
+
+El valor no se copia a ningún sitio (ni Secret Manager ni `.env`): solo lo usa
+la base. Nunca borrar el secreto sin rotarlo: sin él y con la columna vacía,
+`issue_email_prefs_token` devuelve null y `send-email` envía el correo **sin**
+enlace de baja (lo deja en el log como `prefs_token.missing`).
+
 ## Rollback
 
 - **Hosting:** Firebase Console → proyecto `ammen-staging` → Hosting → Release

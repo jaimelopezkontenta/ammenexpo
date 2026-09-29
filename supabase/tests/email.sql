@@ -1040,3 +1040,100 @@ select pg_temp.assert(
     = '(weekdays,t,t)',
   'with the cadence she had before, nudges back on and the sunset cleared');
 
+-- ---------------------------------------------------------------------------
+-- El secreto HMAC, en Vault
+-- ---------------------------------------------------------------------------
+select pg_temp.assert(
+  (select count(*) from vault.decrypted_secrets
+    where name = 'ammen_email_hmac_secret'
+      and length(decrypted_secret) >= 32) = 1
+  and (select hmac_secret from public.email_runtime where id) is null,
+  'the HMAC secret lives in Vault and no longer in plain text in email_runtime');
+
+select pg_temp.assert(
+  (select array_agg(p.proname::text order by p.proname)
+     from pg_proc p
+    where p.pronamespace = 'public'::regnamespace
+      and p.prosrc ~ '\mhmac_secret\M')
+    = array['email_hmac_secret', 'email_hmac_secret_to_vault'],
+  'nothing but the secret''s accessor and the migration reads the old column');
+
+select pg_temp.assert(
+  :'fede_token' = replace(:FEDE::text, '-', '') || '.' || encode(extensions.hmac(
+    replace(:FEDE::text, '-', ''),
+    (select decrypted_secret from vault.decrypted_secrets where name = 'ammen_email_hmac_secret'),
+    'sha256'), 'hex'),
+  'tokens are signed with the secret in Vault');
+
+select pg_temp.assert(
+  not has_function_privilege('service_role', 'public.email_hmac_secret_to_vault()', 'EXECUTE')
+    and not has_function_privilege('authenticated', 'public.email_hmac_secret_to_vault()', 'EXECUTE')
+    and not has_function_privilege('anon', 'public.email_hmac_secret_to_vault()', 'EXECUTE'),
+  'moving the secret is for the database owner only');
+
+-- Una base «de antes»: el secreto solo en la tabla. Un token firmado ahí
+-- tiene que seguir valiendo cuando el secreto pasa a Vault.
+begin;
+
+delete from vault.secrets where name = 'ammen_email_hmac_secret';
+update public.email_runtime set hmac_secret = 'secreto-de-antes-de-vault-0123456789' where id;
+
+select public.issue_email_prefs_token(:FEDE) as token_before \gset
+
+select pg_temp.assert(
+  :'token_before' = replace(:FEDE::text, '-', '') || '.' || encode(extensions.hmac(
+    replace(:FEDE::text, '-', ''), 'secreto-de-antes-de-vault-0123456789', 'sha256'), 'hex'),
+  'without the Vault secret, the table still signs (a half-migrated database does not break)');
+
+select pg_temp.assert(
+  public.email_hmac_secret_to_vault() = 'created',
+  'the move creates the Vault secret');
+
+select pg_temp.assert(
+  (select decrypted_secret from vault.decrypted_secrets where name = 'ammen_email_hmac_secret')
+    = 'secreto-de-antes-de-vault-0123456789'
+  and (select hmac_secret from public.email_runtime where id) is null,
+  'with the same value the table had, and then empties the table');
+
+select pg_temp.assert(
+  public.issue_email_prefs_token(:FEDE) = :'token_before'
+    and public.verify_email_prefs_token(:'token_before') = :FEDE,
+  'so a token issued before the move verifies the same after it');
+
+select pg_temp.assert(
+  public.email_hmac_secret_to_vault() = 'already_in_vault'
+    and (select count(*) from vault.secrets where name = 'ammen_email_hmac_secret') = 1,
+  'running the move again changes nothing');
+
+rollback;
+
+-- Rotar el secreto en Vault invalida los enlaces ya enviados.
+begin;
+
+select vault.update_secret(
+  (select id from vault.secrets where name = 'ammen_email_hmac_secret'),
+  'secreto-rotado-9876543210-abcdefghij'
+);
+
+select pg_temp.assert(
+  public.verify_email_prefs_token(:'fede_token') is null
+    and not public.unsubscribe_email_one_click(:'fede_token'),
+  'after rotating the secret in Vault, old links stop working');
+
+select pg_temp.assert(
+  public.verify_email_prefs_token(public.issue_email_prefs_token(:FEDE)) = :FEDE,
+  'and new ones are signed with the new secret');
+
+rollback;
+
+-- Sin secreto en ningún sitio, falla cerrado.
+begin;
+
+delete from vault.secrets where name = 'ammen_email_hmac_secret';
+
+select pg_temp.assert(
+  public.issue_email_prefs_token(:FEDE) is null
+    and public.verify_email_prefs_token(:'fede_token') is null,
+  'with no secret anywhere, nothing is signed and nothing verifies');
+
+rollback;
