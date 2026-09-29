@@ -9,9 +9,11 @@ import { Txt } from "@/components/ui/Text";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { VerseCard } from "@/components/VerseCard";
 import { VerseStory } from "@/components/VerseStory";
-import { bookName } from "@/core/bible/navigation";
 import { useBibleBooks, useChapter } from "@/core/bible/queries";
 import { useShareVerseImage } from "@/core/bible/image";
+import { formatReference } from "@/core/bible/reference";
+import { useBibleVersion } from "@/core/bible/useBibleVersion";
+import { parseBibleVersion } from "@/core/bible/versionChoice";
 
 /**
  * La imagen del versículo, antes de mandarla.
@@ -27,10 +29,16 @@ import { useShareVerseImage } from "@/core/bible/image";
  */
 export default function VerseImage() {
   const { t } = useTranslation();
-  const { book, chapter, verse } = useLocalSearchParams<{
+  const {
+    book,
+    chapter,
+    verse,
+    version: versionParam,
+  } = useLocalSearchParams<{
     book: string;
     chapter: string;
     verse: string;
+    version?: string;
   }>();
 
   const bookId = Number(book);
@@ -47,16 +55,30 @@ export default function VerseImage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // La versión la dice el enlace (el lector manda la que se estaba leyendo);
+  // sin ella, la activa. Un enlace sin versión sigue funcionando.
+  const linked = parseBibleVersion(versionParam);
+  const active = useBibleVersion();
+  const version = linked ?? active.version;
+  const versionKnown = linked !== null || active.ready;
+
   const { data: books } = useBibleBooks();
-  const { data, isLoading, isError, refetch } = useChapter(
-    bookId,
-    chapterNumber,
-  );
+  const {
+    data,
+    isLoading: chapterLoading,
+    isError,
+    refetch,
+  } = useChapter(bookId, chapterNumber, version, { enabled: versionKnown });
+  const isLoading = !versionKnown || chapterLoading;
 
   const row = (data ?? []).find((item) => item.verse === verseNumber);
   // El nombre del libro y no su número: la referencia va escrita dentro de la
-  // imagen que alguien va a mandar a su familia.
-  const reference = `${bookName(books ?? [], bookId)} ${chapterNumber}:${verseNumber}`;
+  // imagen que alguien va a mandar a su familia. En el idioma del texto.
+  const reference = formatReference(
+    books ?? [],
+    { bookId, chapter: chapterNumber, verse: verseNumber },
+    version,
+  );
 
   const handleShare = async () => {
     setNotice(null);

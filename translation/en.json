@@ -578,7 +578,15 @@
   },
   "bible": {
     "title": "Bible",
-    "subtitle": "Reina-Valera 1909",
+    "versionPicker": "Bible version",
+    "versionName": {
+      "rvr1909": "Reina-Valera 1909",
+      "web": "World English Bible"
+    },
+    "versionShort": {
+      "rvr1909": "RVR1909",
+      "web": "WEB"
+    },
     "textSmaller": "Smaller text",
     "textLarger": "Larger text",
     "searchPlaceholder": "Search a word or a reference",

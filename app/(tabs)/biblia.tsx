@@ -20,7 +20,14 @@ import {
   useReferenceJump,
 } from "@/core/bible/queries";
 import { splitHighlights } from "@/core/bible/highlight";
-import { bookName, type BibleBook } from "@/core/bible/navigation";
+import {
+  bookLabel,
+  chapterLabel,
+  type BibleBook,
+} from "@/core/bible/navigation";
+import { formatReference } from "@/core/bible/reference";
+import { useBibleVersion } from "@/core/bible/useBibleVersion";
+import type { BibleVersion } from "@/core/bible/versions";
 
 import { useThemeColors } from "@/theme";
 
@@ -37,7 +44,13 @@ const openChapter = (bookId: number, chapter: number, verse?: number) =>
     },
   });
 
-const BookRow = ({ book }: { book: BibleBook }) => {
+const BookRow = ({
+  book,
+  version,
+}: {
+  book: BibleBook;
+  version: BibleVersion;
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -51,7 +64,7 @@ const BookRow = ({ book }: { book: BibleBook }) => {
         })
       }
     >
-      <Txt variant="body">{book.modern_name}</Txt>
+      <Txt variant="body">{bookLabel(book, version)}</Txt>
       <Txt variant="caption">
         {t("bible.chapters", { count: book.chapter_count })}
       </Txt>
@@ -69,11 +82,14 @@ export default function Bible() {
 
   const [query, setQuery] = useState("");
   const colors = useThemeColors();
+  // La búsqueda y el salto van en la versión que se lee; se elige en el
+  // lector y esta pestaña, montada detrás, se entera sola.
+  const { version } = useBibleVersion();
 
   const { data: books, isLoading, isError, error, refetch } = useBibleBooks();
   const { data: position } = useReadingPosition(userId);
-  const { data: results, isFetching } = useBibleSearch(query);
-  const { data: jump } = useReferenceJump(query);
+  const { data: results, isFetching } = useBibleSearch(query, version);
+  const { data: jump } = useReferenceJump(query, version);
 
   if (isLoading) {
     return <LoadingState skeleton="list" />;
@@ -106,7 +122,7 @@ export default function Bible() {
         {/* El título ya lo dice TabHeader; repetirlo aquí eran dos "Biblia"
           apiladas empujando el buscador hacia abajo. Queda la edición. */}
         <Txt variant="body" tone="secondary">
-          {t("bible.subtitle")}
+          {t(`bible.versionName.${version}`)}
         </Txt>
 
         <TextField
@@ -130,7 +146,11 @@ export default function Bible() {
             <Glass flat readable className="rounded-card px-5 py-4 shadow-soft">
               <Txt variant="subheading" tone="accent">
                 {t("bible.goTo", {
-                  reference: `${bookName(all, jump.book_id)} ${jump.chapter}`,
+                  reference: formatReference(
+                    all,
+                    { bookId: jump.book_id, chapter: jump.chapter },
+                    version,
+                  ),
                 })}
               </Txt>
             </Glass>
@@ -205,7 +225,7 @@ export default function Bible() {
               >
                 <Card label={t("bible.continueReading")}>
                   <Txt variant="subheadingLg">
-                    {bookName(all, resume.bookId)} {resume.chapter}
+                    {chapterLabel(all, resume, version)}
                   </Txt>
                 </Card>
               </Tap>
@@ -225,7 +245,7 @@ export default function Bible() {
                   {all
                     .filter((book) => book.new_testament === testament)
                     .map((book) => (
-                      <BookRow key={book.id} book={book} />
+                      <BookRow key={book.id} book={book} version={version} />
                     ))}
                 </Card>
               </View>

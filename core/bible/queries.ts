@@ -42,6 +42,9 @@ export const MIN_SEARCH_LENGTH = 3;
  * Fetched once and never refetched: this is a fixed public-domain translation
  * loaded by migration. The chapter grid needs no query of its own because it
  * reads chapter_count from here.
+ *
+ * Trae los dos nombres de cada libro y no depende de la versión: cambiar de
+ * Biblia no vuelve a pedir la lista, solo cambia cuál se enseña (`bookLabel`).
  */
 export const useBibleBooks = () => {
   const { session } = useSession();
@@ -56,7 +59,7 @@ export const useBibleBooks = () => {
     queryFn: async (): Promise<BibleBook[]> => {
       const { data, error } = await supabase
         .from("bible_books")
-        .select("id, modern_name, new_testament, chapter_count")
+        .select("id, modern_name, name_en, new_testament, chapter_count")
         .order("id");
 
       if (error) throw error;
@@ -67,21 +70,47 @@ export const useBibleBooks = () => {
 };
 
 /**
+ * Qué enseñar mientras llega un capítulo: el mismo capítulo en la otra versión,
+ * si era lo que había en pantalla. Al cambiar de Biblia la pantalla pasaba por
+ * el spinner y volvía arriba del todo; así el texto se sustituye en su sitio.
+ * Solo entre versiones del mismo capítulo: al pasar de capítulo, enseñar el
+ * anterior bajo el título del siguiente sería mentir.
+ */
+export const chapterPlaceholder = <T>(
+  previous: T | undefined,
+  previousKey: readonly unknown[] | undefined,
+  bookId: number | undefined,
+  chapter: number | undefined,
+): T | undefined =>
+  previousKey?.[0] === "bibleChapter" &&
+  previousKey[2] === bookId &&
+  previousKey[3] === chapter
+    ? previous
+    : undefined;
+
+/**
  * One chapter, in verse order. Immutable, so it is cached forever.
  *
  * Lee la tabla directamente, así que filtra la versión: `bible_verses` guarda
  * cada versículo una vez por versión y sin el filtro llegarían las dos juntas.
+ *
+ * `enabled` es para esperar a saber qué versión se lee (`useBibleVersion`
+ * con `ready` a false): una lectura con la versión supuesta podía pintar un
+ * instante la otra Biblia.
  */
 export const useChapter = (
   bookId: number | undefined,
   chapter: number | undefined,
   version: BibleVersion = DEFAULT_BIBLE_VERSION,
+  { enabled = true }: { enabled?: boolean } = {},
 ) =>
   useQuery({
     queryKey: ["bibleChapter", version, bookId, chapter],
-    enabled: Boolean(bookId) && Boolean(chapter),
+    enabled: enabled && Boolean(bookId) && Boolean(chapter),
     staleTime: Infinity,
     gcTime: Infinity,
+    placeholderData: (previous, previousQuery) =>
+      chapterPlaceholder(previous, previousQuery?.queryKey, bookId, chapter),
     queryFn: async (): Promise<Verse[]> => {
       const { data, error } = await supabase
         .from("bible_verses")
@@ -97,9 +126,14 @@ export const useChapter = (
     },
   });
 
-export const useBibleSearch = (query: string) =>
+/**
+ * La búsqueda, en la versión que se lee: «love» no está en la RVR, y en la WEB
+ * la base lematiza en inglés. La versión va en la clave para que cambiar de
+ * Biblia no enseñe los resultados de la otra.
+ */
+export const useBibleSearch = (query: string, version: BibleVersion) =>
   useQuery({
-    queryKey: ["bibleSearch", query],
+    queryKey: ["bibleSearch", version, query],
     enabled: query.trim().length >= MIN_SEARCH_LENGTH,
     // Keeping the previous page on screen while the next loads stops the list
     // flashing empty on every keystroke.
@@ -107,6 +141,7 @@ export const useBibleSearch = (query: string) =>
     queryFn: async (): Promise<SearchHit[]> => {
       const { data, error } = await supabase.rpc("search_bible", {
         p_query: query.trim(),
+        p_version: version,
       });
 
       if (error) throw error;
@@ -118,15 +153,20 @@ export const useBibleSearch = (query: string) =>
 /**
  * Whether what was typed is a reference rather than words to search for, so
  * "Juan 3" offers to go there instead of hunting for the word "Juan".
+ *
+ * El nombre se entiende en los dos idiomas con cualquier versión, pero el
+ * versículo tiene que existir en la que se lee (Romanos 14:24 está en la WEB y
+ * no en la RVR): por eso la versión va en la llamada y en la clave.
  */
-export const useReferenceJump = (query: string) =>
+export const useReferenceJump = (query: string, version: BibleVersion) =>
   useQuery({
-    queryKey: ["bibleReference", query],
+    queryKey: ["bibleReference", version, query],
     enabled: query.trim().length > 0,
     staleTime: Infinity,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("locate_reference", {
         p_ref: query.trim(),
+        p_version: version,
       });
 
       if (error) throw error;

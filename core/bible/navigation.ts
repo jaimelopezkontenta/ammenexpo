@@ -1,6 +1,11 @@
+import { BIBLE_VERSION_LANGUAGE, type BibleVersion } from "./versions";
+
 export type BibleBook = {
   id: number;
+  /** El nombre en español, el de la RVR. */
   modern_name: string;
+  /** El nombre en inglés, el de la propia WEB («Song of Solomon»). */
+  name_en: string;
   new_testament: boolean;
   chapter_count: number;
 };
@@ -64,12 +69,43 @@ export const previousChapter = (
     : null;
 };
 
-export const bookName = (books: BibleBook[], bookId: number) =>
-  books.find((entry) => entry.id === bookId)?.modern_name ?? "";
+/**
+ * El nombre de un libro en la versión que se lee: «Juan» con la RVR, «John»
+ * con la WEB. Es el mismo reparto que `bible_book_label` en la base, para que
+ * el título del capítulo y la referencia de un resultado de búsqueda no
+ * discrepen. Sin nombre inglés (una lista cacheada de antes de que existiera)
+ * vale más el español que un hueco.
+ */
+export const bookLabel = (
+  book: Pick<BibleBook, "modern_name" | "name_en">,
+  version: BibleVersion,
+) =>
+  BIBLE_VERSION_LANGUAGE[version] === "en" && book.name_en
+    ? book.name_en
+    : book.modern_name;
+
+/**
+ * Sin versión por defecto a propósito: con una, cada pantalla que se olvidara
+ * de pasarla enseñaría los nombres en español a quien lee en inglés, y ningún
+ * typecheck lo diría.
+ */
+export const bookName = (
+  books: BibleBook[],
+  bookId: number,
+  version: BibleVersion,
+) => {
+  const book = books.find((entry) => entry.id === bookId);
+
+  return book ? bookLabel(book, version) : "";
+};
 
 /** "Juan 3" — how a chapter is labelled everywhere in the reader. */
-export const chapterLabel = (books: BibleBook[], ref: ChapterRef) => {
-  const name = bookName(books, ref.bookId);
+export const chapterLabel = (
+  books: BibleBook[],
+  ref: ChapterRef,
+  version: BibleVersion,
+) => {
+  const name = bookName(books, ref.bookId, version);
 
   return name ? `${name} ${ref.chapter}` : "";
 };
