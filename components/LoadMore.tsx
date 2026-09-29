@@ -10,24 +10,30 @@ interface Props {
   hasMore: boolean;
   loading: boolean;
   onPress: () => void;
+  /** Lo que dice el botón, si «Ver más» no basta (el chat mira hacia atrás). */
+  label?: string;
 }
 
 /**
  * El final de una lista que continúa.
  *
- * Un botón y no scroll infinito: el scroll infinito no tiene fondo, y estas son
- * listas donde el fondo importa — llegar al final de tus avisos o de tus
- * testimonios es una forma de terminar. Además evita cargar páginas por accidente
- * mientras alguien recorre buscando algo concreto.
+ * Las listas largas (`FlatList`) ya piden la página siguiente solas al
+ * acercarse al final (`useLoadMoreOnEnd`), pero el botón se queda: un lector
+ * de pantalla o un teclado recorren la lista de elemento en elemento, sin
+ * scroll que dispare nada, y sin él nunca pasarían de la primera página. Y es
+ * la señal visible de que hay más: estas son listas donde el fondo importa —
+ * llegar al final de tus avisos o de tus testimonios es una forma de terminar.
  *
  * Cuando no hay más, no se pinta nada: un botón desactivado solo invita a
  * pulsarlo para descubrir que no hace nada.
  */
-export const LoadMore = ({ hasMore, loading, onPress }: Props) => {
+export const LoadMore = ({ hasMore, loading, onPress, label }: Props) => {
   const { t } = useTranslation();
   const colors = useThemeColors();
 
   if (!hasMore) return null;
+
+  const text = label ?? t("common.loadMore");
 
   return (
     <View className="items-center py-2">
@@ -44,10 +50,10 @@ export const LoadMore = ({ hasMore, loading, onPress }: Props) => {
           // sin decir cuál — el mismo fallo que ya se corrigió en `Button`.
           <ActivityIndicator
             color={colors.mist.ink}
-            accessibilityLabel={t("common.loadMore")}
+            accessibilityLabel={text}
           />
         ) : (
-          <Txt variant="bodyMedium">{t("common.loadMore")}</Txt>
+          <Txt variant="bodyMedium">{text}</Txt>
         )}
       </Tap>
     </View>

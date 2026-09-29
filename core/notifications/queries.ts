@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
+import { PAGE_SIZE, rowId, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
 import { qk } from "@/core/query/keys";
@@ -30,7 +30,7 @@ export const useNotifications = (userId: string | undefined) =>
   usePagedQuery<AppNotification>({
     queryKey: qk.notifications(userId),
     enabled: Boolean(userId),
-    keyOf: (row) => row.id,
+    keyOf: rowId,
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("my_notifications_page", {
         p_before: cursor?.created_at,

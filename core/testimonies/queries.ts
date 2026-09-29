@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
+import { PAGE_SIZE, rowId, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
 import { qk } from "@/core/query/keys";
@@ -35,7 +35,7 @@ export const useVisibleTestimonies = (userId: string | undefined) =>
   usePagedQuery<Testimony>({
     queryKey: qk.testimonies(userId),
     enabled: Boolean(userId),
-    keyOf: (row) => row.id,
+    keyOf: rowId,
     fetchPage: async (cursor) => {
       const { data, error } = await supabase.rpc("visible_testimonies_page", {
         p_before: cursor?.created_at,
