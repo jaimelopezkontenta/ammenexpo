@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   captureError,
   devConsoleReporter,
+  isExpectedError,
   observability,
   sanitizePayload,
   toErrorReport,
@@ -184,5 +185,24 @@ describe("captureError", () => {
     captureError(new Error("x"), { source: "render" });
 
     expect(reporter).not.toHaveBeenCalled();
+  });
+});
+
+describe("isExpectedError", () => {
+  it("recognises the domain answers by name, or by an explicit flag", () => {
+    const limit = new Error("plan_limit_reached");
+    limit.name = "PlanLimitReached";
+
+    expect(isExpectedError(limit)).toBe(true);
+    expect(
+      isExpectedError(Object.assign(new Error("x"), { expected: true })),
+    ).toBe(true);
+  });
+
+  it("treats everything else as a failure", () => {
+    expect(isExpectedError(new Error("Failed to fetch"))).toBe(false);
+    expect(isExpectedError({ name: "RequestIdConflict" })).toBe(false);
+    expect(isExpectedError("AlreadyPrayed")).toBe(false);
+    expect(isExpectedError(null)).toBe(false);
   });
 });

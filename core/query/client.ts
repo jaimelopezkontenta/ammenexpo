@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { AppState, Platform } from "react-native";
 
-import { captureError } from "@/core/observability/track";
+import { captureError, isExpectedError } from "@/core/observability/track";
 
 /** La raíz de una query key (`["todayDay", planId]` → `"todayDay"`). */
 const keyRoot = (key: readonly unknown[] | undefined): string | undefined =>
@@ -18,19 +18,26 @@ const keyRoot = (key: readonly unknown[] | undefined): string | undefined =>
  * Todo error de una query o una mutación pasa por `captureError`: hasta aquí
  * ninguno se reportaba en ningún sitio, y un fallo que solo ve quien lo sufre
  * no se arregla. Solo sale la raíz de la clave, nunca sus parámetros.
+ *
+ * Menos los esperados (`isExpectedError`): «ya oraste», «límite de planes»…
+ * son respuestas que la pantalla ya explica, no fallos.
  */
 export const createQueryClient = () =>
   new QueryClient({
     queryCache: new QueryCache({
-      onError: (error, query) =>
-        captureError(error, { source: "query", key: keyRoot(query.queryKey) }),
+      onError: (error, query) => {
+        if (isExpectedError(error)) return;
+        captureError(error, { source: "query", key: keyRoot(query.queryKey) });
+      },
     }),
     mutationCache: new MutationCache({
-      onError: (error, _variables, _context, mutation) =>
+      onError: (error, _variables, _context, mutation) => {
+        if (isExpectedError(error)) return;
         captureError(error, {
           source: "mutation",
           key: keyRoot(mutation.options.mutationKey),
-        }),
+        });
+      },
     }),
     defaultOptions: {
       queries: {

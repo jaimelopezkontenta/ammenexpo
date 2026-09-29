@@ -297,6 +297,37 @@ export const track = (
 };
 
 /**
+ * Errores que son una respuesta y no un fallo: la app los espera, los
+ * explica en pantalla y no hay nada que arreglar. «Ya oraste por este día»,
+ * «llegaste al límite de planes», «ya se está escribiendo», «la foto pesa
+ * demasiado». Reportarlos llenaba el canal de errores de ruido y tapaba los
+ * de verdad.
+ *
+ * Por nombre, porque las clases viven en sus dominios (`AlreadyPrayed` en
+ * intercessions, las de planes en plans, `AvatarTooLarge` en profile) y este
+ * módulo no debe importarlas. Una clase nueva puede marcarse sola con
+ * `expected = true` en vez de entrar en la lista.
+ *
+ * `GenerationUnavailable` y `RequestIdConflict` **no** están: el proveedor
+ * caído y un id de petición repetido sí son algo que mirar.
+ */
+const EXPECTED_ERROR_NAMES: ReadonlySet<string> = new Set([
+  "AlreadyPrayed",
+  "PlanLimitReached",
+  "GenerationInFlight",
+  "AvatarTooLarge",
+]);
+
+export const isExpectedError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+  const { expected, name } = error as { expected?: unknown; name?: unknown };
+  return (
+    expected === true ||
+    (typeof name === "string" && EXPECTED_ERROR_NAMES.has(name))
+  );
+};
+
+/**
  * El otro punto de entrada: un error que la app no supo evitar (una query o
  * una mutación que falla, un render que revienta). Pasa por `toErrorReport`,
  * así que ningún reporter recibe el mensaje ni el objeto original. Respeta el
