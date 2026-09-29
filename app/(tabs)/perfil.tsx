@@ -196,10 +196,7 @@ export default function Profile() {
                 <View className="min-w-0 flex-1 gap-1">
                   <Txt variant="headingLg">{profile.display_name}</Txt>
                   {session?.user.email ? (
-                    <Txt
-                      variant="caption"
-                      accessibilityLiveRegion="polite"
-                    >
+                    <Txt variant="caption" accessibilityLiveRegion="polite">
                       {t("profile.signedIn", { email: session.user.email })}
                     </Txt>
                   ) : null}
@@ -258,72 +255,69 @@ export default function Profile() {
 
             <View className="gap-6 md:flex-row md:items-start">
               <View className="gap-6 md:min-w-0 md:flex-1">
-              <Card label={t("profile.appearance")} className="gap-3">
-                <ThemeSwitcher />
-              </Card>
-              <Card
-                label={t("profile.preferences")}
-                className="gap-6"
-              >
-                <View className="gap-3">
-                  <Txt variant="label" tone="secondary">
-                    {t("profile.reminder")}
-                  </Txt>
-                  <ChoiceChips
-                    options={REMINDER_HOURS.map((slot) => ({
-                      value: String(slot.hour),
-                      label: t(`onboarding.hours.${slot.key}`),
-                    }))}
-                    selected={hours.map(String)}
-                    onToggle={(value) =>
-                      setDraftHours(
-                        toggleWithLimit(
-                          hours.map(String),
-                          value,
-                          REMINDER_MAX,
-                        ).map(Number),
-                      )
-                    }
-                    max={REMINDER_MAX}
-                    multiple
-                  />
-                  {/* En nativo estas horas se programan como notificaciones
+                <Card label={t("profile.appearance")} className="gap-3">
+                  <ThemeSwitcher />
+                </Card>
+                <Card label={t("profile.preferences")} className="gap-6">
+                  <View className="gap-3">
+                    <Txt variant="label" tone="secondary">
+                      {t("profile.reminder")}
+                    </Txt>
+                    <ChoiceChips
+                      options={REMINDER_HOURS.map((slot) => ({
+                        value: String(slot.hour),
+                        label: t(`onboarding.hours.${slot.key}`),
+                      }))}
+                      selected={hours.map(String)}
+                      onToggle={(value) =>
+                        setDraftHours(
+                          toggleWithLimit(
+                            hours.map(String),
+                            value,
+                            REMINDER_MAX,
+                          ).map(Number),
+                        )
+                      }
+                      max={REMINDER_MAX}
+                      multiple
+                    />
+                    {/* En nativo estas horas se programan como notificaciones
                   locales diarias al guardar (ver localReminders.ts); en web no
                   se puede programar nada, y el copy lo dice sin fingir que va
                   a sonar. */}
-                  <Txt variant="caption">
-                    {Platform.OS === "web"
-                      ? t("profile.reminderHintWeb")
-                      : t("profile.reminderHintNative")}
-                  </Txt>
-                </View>
+                    <Txt variant="caption">
+                      {Platform.OS === "web"
+                        ? t("profile.reminderHintWeb")
+                        : t("profile.reminderHintNative")}
+                    </Txt>
+                  </View>
 
-                <View className="gap-2">
-                  <Txt variant="label" tone="secondary">
-                    {t("profile.timezone")}
-                  </Txt>
-                  <Txt variant="body">{profile.timezone}</Txt>
-                  <Txt variant="caption">{t("profile.timezoneHint")}</Txt>
+                  <View className="gap-2">
+                    <Txt variant="label" tone="secondary">
+                      {t("profile.timezone")}
+                    </Txt>
+                    <Txt variant="body">{profile.timezone}</Txt>
+                    <Txt variant="caption">{t("profile.timezoneHint")}</Txt>
 
-                  {zoneMoved ? (
-                    <View className="gap-2 pt-1">
-                      <Txt variant="caption">
-                        {t("profile.timezoneMoved", { zone: deviceZone })}
-                      </Txt>
-                      <Button
-                        title={t("profile.timezoneUpdate", {
-                          zone: deviceZone,
-                        })}
-                        variant="secondary"
-                        loading={updateTimezone.isPending}
-                        onPress={() => void handleTimezone()}
-                      />
-                    </View>
-                  ) : null}
-                </View>
+                    {zoneMoved ? (
+                      <View className="gap-2 pt-1">
+                        <Txt variant="caption">
+                          {t("profile.timezoneMoved", { zone: deviceZone })}
+                        </Txt>
+                        <Button
+                          title={t("profile.timezoneUpdate", {
+                            zone: deviceZone,
+                          })}
+                          variant="secondary"
+                          loading={updateTimezone.isPending}
+                          onPress={() => void handleTimezone()}
+                        />
+                      </View>
+                    ) : null}
+                  </View>
 
-                <LanguageSwitcher />
-              </Card>
+                  <LanguageSwitcher />
+                </Card>
               </View>
 
               <View className="gap-6 md:min-w-0 md:flex-1">

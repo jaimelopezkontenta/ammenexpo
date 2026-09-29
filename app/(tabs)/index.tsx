@@ -584,10 +584,13 @@ export default function Today() {
                       <ProgressBar
                         value={progress.days_prayed}
                         max={progress.days_total}
-                        accessibilityLabel={t("plan.progressDaysAccessibility", {
-                          prayed: progress.days_prayed,
-                          total: progress.days_total,
-                        })}
+                        accessibilityLabel={t(
+                          "plan.progressDaysAccessibility",
+                          {
+                            prayed: progress.days_prayed,
+                            total: progress.days_total,
+                          },
+                        )}
                       />
                     ) : null}
                   </View>

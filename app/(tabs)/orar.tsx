@@ -161,25 +161,25 @@ export default function Pray() {
             {hasSharedPlans ? (
               <>
                 {nextPending ? null : (
-                <Card className="gap-3">
-                  <View className="flex-row items-center justify-between gap-3">
-                    <Txt variant="subheading">{t("pray.progressTitle")}</Txt>
-                    <Txt variant="subheading">
-                      {t("pray.progress", {
+                  <Card className="gap-3">
+                    <View className="flex-row items-center justify-between gap-3">
+                      <Txt variant="subheading">{t("pray.progressTitle")}</Txt>
+                      <Txt variant="subheading">
+                        {t("pray.progress", {
+                          completed: prayerProgress.completedCount,
+                          total: prayerProgress.total,
+                        })}
+                      </Txt>
+                    </View>
+                    <ProgressBar
+                      value={prayerProgress.completedCount}
+                      max={prayerProgress.total}
+                      accessibilityLabel={t("pray.progressAccessibility", {
                         completed: prayerProgress.completedCount,
                         total: prayerProgress.total,
                       })}
-                    </Txt>
-                  </View>
-                  <ProgressBar
-                    value={prayerProgress.completedCount}
-                    max={prayerProgress.total}
-                    accessibilityLabel={t("pray.progressAccessibility", {
-                      completed: prayerProgress.completedCount,
-                      total: prayerProgress.total,
-                    })}
-                  />
-                </Card>
+                    />
+                  </Card>
                 )}
 
                 {/* The finish line. The server already sorts prayed-for last,
