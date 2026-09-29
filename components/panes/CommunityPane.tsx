@@ -5,6 +5,7 @@ import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { Txt } from "@/components/ui/Text";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Button } from "@/components/Button";
 import { LoadMore } from "@/components/LoadMore";
 import { PrayerRequestCard } from "@/components/PrayerRequestCard";
@@ -95,6 +96,12 @@ export const CommunityPane = () => {
       setError(t("common.errorGeneric"));
     }
   };
+
+  // Bloquear pregunta antes, venga de una petición o de un testimonio.
+  const blockConfirm = useBlockConfirm(
+    (blockedId) =>
+      void run(() => block.mutateAsync(blockedId), t("moderation.blockDone")),
+  );
 
   const handleFollow = async (targetId: string, following: boolean) => {
     if (!userId) return;
@@ -280,12 +287,7 @@ export const CommunityPane = () => {
                       t("moderation.reportDone"),
                     )
                   }
-                  onBlock={(who) =>
-                    void run(
-                      () => block.mutateAsync(who),
-                      t("moderation.blockDone"),
-                    )
-                  }
+                  onBlock={blockConfirm.ask}
                   // En el muro abierto no hay quien administre, así que esta
                   // nunca se llama: `canHide` mantiene el control fuera.
                   onHide={() => undefined}
@@ -321,10 +323,7 @@ export const CommunityPane = () => {
                   onBlock={() => {
                     if (!entry.author_id) return;
 
-                    void run(
-                      () => block.mutateAsync(entry.author_id!),
-                      t("moderation.blockDone"),
-                    );
+                    blockConfirm.ask(entry.author_id, entry.author_name ?? "");
                   }}
                 />
               ),
@@ -338,6 +337,8 @@ export const CommunityPane = () => {
           />
         </>
       )}
+
+      {blockConfirm.dialog}
     </ScrollView>
   );
 };

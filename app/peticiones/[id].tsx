@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Txt } from "@/components/ui/Text";
 import { Button } from "@/components/Button";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -91,6 +92,12 @@ export default function PrayerRequestComments() {
       setError(t("common.errorGeneric"));
     }
   };
+
+  // Bloquear pregunta antes: estaba junto a «Reportar» y bastaba un toque suelto.
+  const blockConfirm = useBlockConfirm(
+    (blockedId) =>
+      void run(() => block.mutateAsync(blockedId), t("moderation.blockDone")),
+  );
 
   if (isLoading) {
     return (
@@ -184,10 +191,7 @@ export default function PrayerRequestComments() {
                     accessibilityRole="button"
                     accessibilityLabel={`${t("moderation.block")} ${comment.author_name}`}
                     onPress={() =>
-                      void run(
-                        () => block.mutateAsync(comment.author_id),
-                        t("moderation.blockDone"),
-                      )
+                      blockConfirm.ask(comment.author_id, comment.author_name)
                     }
                   >
                     <Txt variant="caption" className="underline">
@@ -243,6 +247,7 @@ export default function PrayerRequestComments() {
           </View>
         </ScrollView>
       </DawnBackground>
+      {blockConfirm.dialog}
     </>
   );
 }

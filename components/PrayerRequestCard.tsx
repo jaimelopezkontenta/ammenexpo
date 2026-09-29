@@ -16,7 +16,8 @@ interface Props {
   onTogglePrayer: () => void;
   onOpen: () => void;
   onReport: () => void;
-  onBlock: (userId: string) => void;
+  /** Con el nombre, para que quien confirme sepa a quién bloquea. */
+  onBlock: (userId: string, name: string) => void;
   onHide: () => void;
   onMarkAnswered: () => void;
   onDelete: () => void;
@@ -163,7 +164,9 @@ export const PrayerRequestCard = ({
               <Tap
                 accessibilityRole="button"
                 accessibilityLabel={`${t("moderation.block")} ${request.author_name ?? ""}`}
-                onPress={() => onBlock(request.author_id!)}
+                onPress={() =>
+                  onBlock(request.author_id!, request.author_name ?? "")
+                }
               >
                 <Txt variant="caption" className="underline">
                   {t("moderation.block")}

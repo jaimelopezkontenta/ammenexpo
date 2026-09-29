@@ -629,6 +629,10 @@
   "moderation": {
     "block": "Bloquear",
     "blockDone": "Listo. No volverás a ver a esta persona.",
+    "blockConfirmTitle": "¿Bloquear a {{name}}?",
+    "blockThisPerson": "esta persona",
+    "blockConfirmBody": "Dejarás de ver lo que escribe y comparte, y no verá lo tuyo. No se le avisa. Puedes deshacerlo cuando quieras en «Personas bloqueadas», dentro de tu perfil.",
+    "blockConfirm": "Sí, bloquear",
     "unblock": "Desbloquear",
     "report": "Reportar",
     "reportDone": "Gracias. Lo revisaremos.",

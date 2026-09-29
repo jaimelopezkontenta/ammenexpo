@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
@@ -80,6 +81,12 @@ export default function Testimonies() {
       setError(t("common.errorGeneric"));
     }
   };
+
+  // Bloquear pregunta antes: estaba junto a «Reportar» y bastaba un toque suelto.
+  const blockConfirm = useBlockConfirm(
+    (blockedId) =>
+      void run(() => block.mutateAsync(blockedId), t("moderation.blockDone")),
+  );
 
   if (isLoading) {
     return (
@@ -264,10 +271,7 @@ export default function Testimonies() {
                       accessibilityRole="button"
                       accessibilityLabel={`${t("moderation.block")} ${entry.author_name}`}
                       onPress={() =>
-                        void run(
-                          () => block.mutateAsync(entry.author_id),
-                          t("moderation.blockDone"),
-                        )
+                        blockConfirm.ask(entry.author_id, entry.author_name)
                       }
                     >
                       <Txt variant="caption" className="underline">
@@ -292,6 +296,7 @@ export default function Testimonies() {
           />
         </ScrollView>
       </DawnBackground>
+      {blockConfirm.dialog}
     </>
   );
 }

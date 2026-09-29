@@ -21,6 +21,7 @@ import {
   useRemoveMember,
 } from "@/core/circles/queries";
 import { Avatar } from "@/components/Avatar";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Card } from "@/components/Card";
 import { CirclePlanCard } from "@/components/CirclePlanCard";
 import { EmailInviteField } from "@/components/email/EmailInviteField";
@@ -56,6 +57,20 @@ export default function CircleDetail() {
 
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
+
+  const handleBlock = async (memberId: string) => {
+    try {
+      await block.mutateAsync(memberId);
+      toast.success(t("moderation.blockDone"));
+    } catch {
+      toast.error(t("common.errorGeneric"));
+    }
+  };
+  // El censo bloqueaba con un toque suelto, pegado a «Expulsar»: ahora
+  // pregunta antes. Va sobre las ramas tempranas (es un hook).
+  const blockConfirm = useBlockConfirm(
+    (memberId) => void handleBlock(memberId),
+  );
 
   if (isLoading) {
     return <LoadingState skeleton="circle" />;
@@ -101,15 +116,6 @@ export default function CircleDetail() {
       await removeMember.mutateAsync(memberId);
     } catch {
       toast.error(t("circles.removeFailed"));
-    }
-  };
-
-  const handleBlock = async (memberId: string) => {
-    try {
-      await block.mutateAsync(memberId);
-      toast.success(t("moderation.blockDone"));
-    } catch {
-      toast.error(t("common.errorGeneric"));
     }
   };
 
@@ -277,7 +283,9 @@ export default function CircleDetail() {
                   <View className="flex-row gap-4">
                     <Tap
                       accessibilityRole="button"
-                      onPress={() => void handleBlock(member.user_id)}
+                      onPress={() =>
+                        blockConfirm.ask(member.user_id, member.display_name)
+                      }
                     >
                       <Txt variant="caption">{t("moderation.block")}</Txt>
                     </Tap>
@@ -377,6 +385,7 @@ export default function CircleDetail() {
           </View>
         </ScrollView>
       </DawnBackground>
+      {blockConfirm.dialog}
     </>
   );
 }

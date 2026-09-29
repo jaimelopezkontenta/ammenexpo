@@ -629,6 +629,10 @@
   "moderation": {
     "block": "Block",
     "blockDone": "Blocked. You won't see this person again.",
+    "blockConfirmTitle": "Block {{name}}?",
+    "blockThisPerson": "this person",
+    "blockConfirmBody": "You'll stop seeing what they write and share, and they won't see what's yours. They aren't told. You can undo it any time in “Blocked people”, inside your profile.",
+    "blockConfirm": "Yes, block",
     "unblock": "Unblock",
     "report": "Report",
     "reportDone": "Thank you. We'll look into it.",
