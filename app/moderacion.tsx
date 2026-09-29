@@ -1,14 +1,11 @@
-import { Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView } from "react-native";
 
 import { ChoiceChips } from "@/components/ChoiceChips";
-import { DawnBackground } from "@/components/DawnBackground";
 import { CrisisQueue } from "@/components/moderacion/CrisisQueue";
 import { HeldQueue } from "@/components/moderacion/HeldQueue";
 import { ReportsQueue } from "@/components/moderacion/ReportsQueue";
-import { useScreenPadding } from "@/components/useScreenPadding";
+import { ScreenScaffold } from "@/components/ScreenScaffold";
 
 type ModerationMode = "reports" | "held" | "crisis";
 
@@ -28,35 +25,23 @@ type ModerationMode = "reports" | "held" | "crisis";
  */
 export default function Moderation() {
   const { t } = useTranslation();
-  const { scrollBottom } = useScreenPadding();
   const [mode, setMode] = useState<ModerationMode>("reports");
 
   return (
-    <>
-      <Stack.Screen
-        options={{ title: t("moderation.queueTitle"), headerShown: true }}
+    <ScreenScaffold title={t("moderation.queueTitle")}>
+      <ChoiceChips
+        options={[
+          { value: "reports", label: t("moderation.mode.reports") },
+          { value: "held", label: t("moderation.mode.held") },
+          { value: "crisis", label: t("moderation.mode.crisis") },
+        ]}
+        selected={[mode]}
+        onToggle={(value) => setMode(value as ModerationMode)}
       />
 
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="gap-5 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-        >
-          <ChoiceChips
-            options={[
-              { value: "reports", label: t("moderation.mode.reports") },
-              { value: "held", label: t("moderation.mode.held") },
-              { value: "crisis", label: t("moderation.mode.crisis") },
-            ]}
-            selected={[mode]}
-            onToggle={(value) => setMode(value as ModerationMode)}
-          />
-
-          {mode === "reports" ? <ReportsQueue /> : null}
-          {mode === "held" ? <HeldQueue /> : null}
-          {mode === "crisis" ? <CrisisQueue /> : null}
-        </ScrollView>
-      </DawnBackground>
-    </>
+      {mode === "reports" ? <ReportsQueue /> : null}
+      {mode === "held" ? <HeldQueue /> : null}
+      {mode === "crisis" ? <CrisisQueue /> : null}
+    </ScreenScaffold>
   );
 }

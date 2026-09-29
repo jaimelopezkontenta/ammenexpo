@@ -2,14 +2,13 @@ import { Link, Stack, useLocalSearchParams } from "expo-router";
 import { MoreHorizontal } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
-import { useScreenPadding } from "@/components/useScreenPadding";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
-import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { ActionMenu } from "@/components/ui/ActionMenu";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
@@ -52,7 +51,6 @@ const Stat = ({ value, label }: { value: number; label: string }) => (
 export default function PersonProfile() {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
-  const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = useUserId();
 
@@ -110,21 +108,11 @@ export default function PersonProfile() {
   };
 
   if (isLoading) {
-    return (
-      <>
-        <Stack.Screen options={{ title: "", headerShown: true }} />
-        <LoadingState />
-      </>
-    );
+    return <ScreenScaffold title="" loading />;
   }
 
   if (isLoadingError) {
-    return (
-      <>
-        <Stack.Screen options={{ title: "", headerShown: true }} />
-        <ErrorState onRetry={() => void refetch()} />
-      </>
-    );
+    return <ScreenScaffold title="" error onRetry={() => void refetch()} />;
   }
 
   // Cero filas **no** es un fallo: es lo que devuelve la RPC para alguien a
@@ -148,10 +136,9 @@ export default function PersonProfile() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: person.display_name,
-          headerShown: true,
+      <ScreenScaffold
+        title={person.display_name}
+        screenOptions={{
           headerRight: person.is_me
             ? undefined
             : () => (
@@ -171,153 +158,147 @@ export default function PersonProfile() {
                 </Tap>
               ),
         }}
-      />
+        contentClassName="flex-grow gap-8"
+      >
+        <View className="items-center gap-3">
+          <Avatar
+            name={person.display_name}
+            url={person.avatar_url}
+            seed={person.id}
+            size={96}
+          />
 
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="flex-grow gap-8 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-        >
-          <View className="items-center gap-3">
-            <Avatar
-              name={person.display_name}
-              url={person.avatar_url}
-              seed={person.id}
-              size={96}
-            />
+          <Txt variant="title" className="text-center">
+            {person.display_name}
+          </Txt>
 
-            <Txt variant="title" className="text-center">
-              {person.display_name}
-            </Txt>
+          <Txt variant="caption" className="text-center">
+            {t("profile.memberSince", {
+              // El idioma de la app, no el del navegador: con `undefined`
+              // ponía "May 2026" en una pantalla entera en español.
+              date: new Date(person.member_since).toLocaleDateString(
+                i18n.language,
+                { year: "numeric", month: "long" },
+              ),
+            })}
+          </Txt>
 
-            <Txt variant="caption" className="text-center">
-              {t("profile.memberSince", {
-                // El idioma de la app, no el del navegador: con `undefined`
-                // ponía "May 2026" en una pantalla entera en español.
-                date: new Date(person.member_since).toLocaleDateString(
-                  i18n.language,
-                  { year: "numeric", month: "long" },
-                ),
-              })}
-            </Txt>
-
-            {/* Compartir círculo es lo que explica por qué esta persona puede ver
+          {/* Compartir círculo es lo que explica por qué esta persona puede ver
               tus peticiones, así que se dice en las dos direcciones. En tu
               propio perfil no: `shares_a_circle_with` contigo misma es cierto,
               y "compartís un círculo" sobre ti no significa nada. */}
-            {!person.is_me ? (
-              <Txt variant="caption" className="text-center">
-                {person.shares_circle
-                  ? t("profile.sharesCircle")
-                  : t("profile.noSharedCircle")}
-              </Txt>
-            ) : null}
+          {!person.is_me ? (
+            <Txt variant="caption" className="text-center">
+              {person.shares_circle
+                ? t("profile.sharesCircle")
+                : t("profile.noSharedCircle")}
+            </Txt>
+          ) : null}
 
-            {/* Los tres números. La racha va aquí por decisión de producto, y es
+          {/* Los tres números. La racha va aquí por decisión de producto, y es
               la única de las tres que antes era privada: en tu perfil es
               motivación, en el de otra persona es comparación. Se pinta ya
               decidida por el servidor, con el día de esa persona. */}
-            <View className="flex-row gap-6 pt-2">
-              <Stat value={person.streak} label={t("profile.statStreak")} />
-              <Stat
-                value={person.follower_count}
-                label={t("profile.statFollowers")}
-              />
-              <Stat
-                value={person.following_count}
-                label={t("profile.statFollowing")}
-              />
-            </View>
-
-            {!person.is_me ? (
-              <View className="w-full pt-2">
-                <Button
-                  title={
-                    person.i_follow ? t("social.following") : t("social.follow")
-                  }
-                  // Dejar de seguir no es la acción principal de esta pantalla, y
-                  // un botón lleno invitando a deshacerlo lo sería.
-                  variant={person.i_follow ? "secondary" : "primary"}
-                  loading={follow.isPending || unfollow.isPending}
-                  onPress={() => void handleFollow()}
-                />
-              </View>
-            ) : null}
+          <View className="flex-row gap-6 pt-2">
+            <Stat value={person.streak} label={t("profile.statStreak")} />
+            <Stat
+              value={person.follower_count}
+              label={t("profile.statFollowers")}
+            />
+            <Stat
+              value={person.following_count}
+              label={t("profile.statFollowing")}
+            />
           </View>
 
-          {(plans ?? []).length > 0 ? (
-            <View className="gap-4">
-              <Txt variant="label" tone="secondary">
-                {t("community.publicPlans")}
-              </Txt>
+          {!person.is_me ? (
+            <View className="w-full pt-2">
+              <Button
+                title={
+                  person.i_follow ? t("social.following") : t("social.follow")
+                }
+                // Dejar de seguir no es la acción principal de esta pantalla, y
+                // un botón lleno invitando a deshacerlo lo sería.
+                variant={person.i_follow ? "secondary" : "primary"}
+                loading={follow.isPending || unfollow.isPending}
+                onPress={() => void handleFollow()}
+              />
+            </View>
+          ) : null}
+        </View>
 
-              {/* `person_plans` solo devuelve planes `visibility = 'public'`,
+        {(plans ?? []).length > 0 ? (
+          <View className="gap-4">
+            <Txt variant="label" tone="secondary">
+              {t("community.publicPlans")}
+            </Txt>
+
+            {/* `person_plans` solo devuelve planes `visibility = 'public'`,
                 así que toda esta lista es la lectura pública, no la oración.
                 Desde B2, `/orar/[planId]` rechaza un plan público sin share
                 explícito — apuntar aquí a Orar dejaba el enlace roto para
                 exactamente lo que esta lista promete (ver DEF-01 del plan). */}
-              {(plans ?? []).map((plan) => (
-                <Link
-                  key={plan.id}
-                  href={{
-                    pathname: "/plan-publico/[planId]",
-                    params: { planId: plan.id },
-                  }}
-                  asChild
-                >
-                  <Tap accessibilityRole="link" className="rounded-card">
-                    <Card flat className="gap-1">
-                      <Txt variant="title" className="text-base">
-                        {plan.title}
-                      </Txt>
-                      <Txt variant="caption">
-                        {t("newPlan.days", { count: plan.duration_days })}
-                      </Txt>
-                    </Card>
-                  </Tap>
-                </Link>
-              ))}
-            </View>
-          ) : null}
+            {(plans ?? []).map((plan) => (
+              <Link
+                key={plan.id}
+                href={{
+                  pathname: "/plan-publico/[planId]",
+                  params: { planId: plan.id },
+                }}
+                asChild
+              >
+                <Tap accessibilityRole="link" className="rounded-card">
+                  <Card flat className="gap-1">
+                    <Txt variant="title" className="text-base">
+                      {plan.title}
+                    </Txt>
+                    <Txt variant="caption">
+                      {t("newPlan.days", { count: plan.duration_days })}
+                    </Txt>
+                  </Card>
+                </Tap>
+              </Link>
+            ))}
+          </View>
+        ) : null}
 
-          {(posts ?? []).length > 0 ? (
-            <View className="gap-4">
-              <Txt variant="label" tone="secondary">
-                {t("feed.title")}
-              </Txt>
+        {(posts ?? []).length > 0 ? (
+          <View className="gap-4">
+            <Txt variant="label" tone="secondary">
+              {t("feed.title")}
+            </Txt>
 
-              {/* Solo lo que pidió con su nombre. Lo anónimo no llega hasta aquí
+            {/* Solo lo que pidió con su nombre. Lo anónimo no llega hasta aquí
                 —el servidor lo excluye— porque una lista por persona es justo
                 la forma de deshacer un anonimato. */}
-              {(posts ?? []).map((post) => (
-                <Card key={post.id} flat className="gap-2">
-                  <Txt variant="bodySerifReading">{post.body}</Txt>
-                  <Txt variant="caption">
-                    {t("feed.prayCount", { count: post.prayer_count })}
-                  </Txt>
-                </Card>
-              ))}
-            </View>
-          ) : null}
+            {(posts ?? []).map((post) => (
+              <Card key={post.id} flat className="gap-2">
+                <Txt variant="bodySerifReading">{post.body}</Txt>
+                <Txt variant="caption">
+                  {t("feed.prayCount", { count: post.prayer_count })}
+                </Txt>
+              </Card>
+            ))}
+          </View>
+        ) : null}
 
-          {theirs.length > 0 ? (
-            <View className="gap-4">
-              <Txt variant="label" tone="secondary">
-                {t("testimony.title")}
-              </Txt>
+        {theirs.length > 0 ? (
+          <View className="gap-4">
+            <Txt variant="label" tone="secondary">
+              {t("testimony.title")}
+            </Txt>
 
-              {theirs.map((entry) => (
-                <Card key={entry.id} flat className="gap-2">
-                  {entry.plan_title ? (
-                    <Txt variant="caption">{entry.plan_title}</Txt>
-                  ) : null}
-                  <Txt variant="bodySerifReading">{entry.body}</Txt>
-                </Card>
-              ))}
-            </View>
-          ) : null}
-        </ScrollView>
-      </DawnBackground>
+            {theirs.map((entry) => (
+              <Card key={entry.id} flat className="gap-2">
+                {entry.plan_title ? (
+                  <Txt variant="caption">{entry.plan_title}</Txt>
+                ) : null}
+                <Txt variant="bodySerifReading">{entry.body}</Txt>
+              </Card>
+            ))}
+          </View>
+        ) : null}
+      </ScreenScaffold>
 
       {!person.is_me ? (
         <ActionMenu

@@ -1,13 +1,12 @@
-import { Link, router, Stack, useLocalSearchParams } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 
 import { Button } from "@/components/Button";
-import { DawnBackground } from "@/components/DawnBackground";
 import { Txt } from "@/components/ui/Text";
-import { useScreenPadding } from "@/components/useScreenPadding";
-import { ErrorState, LoadingState } from "@/components/ScreenState";
+import { ScreenScaffold } from "@/components/ScreenScaffold";
+import { LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
   useCanCreateCirclePlan,
@@ -34,7 +33,6 @@ import { Tap } from "@/components/ui/Tap";
 
 export default function CircleDetail() {
   const { t } = useTranslation();
-  const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
   const userId = session?.user.id;
@@ -81,15 +79,12 @@ export default function CircleDetail() {
   // line of grey text with no way back.
   if (isLoadingError || !circle) {
     return (
-      <>
-        <Stack.Screen
-          options={{ title: t("circles.title"), headerShown: true }}
-        />
-        <ErrorState
-          onRetry={isLoadingError ? () => void refetch() : undefined}
-          message={isLoadingError ? undefined : t("circles.inviteNotFound")}
-        />
-      </>
+      <ScreenScaffold
+        title={t("circles.title")}
+        error
+        onRetry={isLoadingError ? () => void refetch() : undefined}
+        errorMessage={isLoadingError ? undefined : t("circles.inviteNotFound")}
+      />
     );
   }
 
@@ -190,201 +185,195 @@ export default function CircleDetail() {
 
   return (
     <>
-      <Stack.Screen options={{ title: circle.name, headerShown: true }} />
-      <DawnBackground>
-        <ScrollView
-          contentContainerClassName="flex-grow gap-6 px-7 py-8 md:w-full md:max-w-read md:self-center"
-          contentContainerStyle={{ paddingBottom: scrollBottom }}
-        >
-          {/* The name is already in the navigation header; repeating it here as a
+      <ScreenScaffold title={circle.name} contentClassName="flex-grow gap-6">
+        {/* The name is already in the navigation header; repeating it here as a
             heading just pushed the useful content down. */}
-          <View className="gap-1">
-            {circle.description ? (
-              <Txt variant="body" tone="secondary">
-                {circle.description}
-              </Txt>
-            ) : null}
-            <Txt variant="caption">
-              {t("circles.members", { count: circle.member_count })} ·{" "}
-              {circle.visibility === "private"
-                ? t("circles.visibilityPrivate")
-                : t("circles.visibilityPublic")}
+        <View className="gap-1">
+          {circle.description ? (
+            <Txt variant="body" tone="secondary">
+              {circle.description}
             </Txt>
-          </View>
+          ) : null}
+          <Txt variant="caption">
+            {t("circles.members", { count: circle.member_count })} ·{" "}
+            {circle.visibility === "private"
+              ? t("circles.visibilityPrivate")
+              : t("circles.visibilityPublic")}
+          </Txt>
+        </View>
 
-          {inviteFirst ? inviteSection : null}
+        {inviteFirst ? inviteSection : null}
 
-          {/* Above the roster on purpose: what the circle is *doing* matters more
+        {/* Above the roster on purpose: what the circle is *doing* matters more
             than who is in it, and this screen used to answer only the second. */}
-          <CirclePlanCard
-            circle={circle}
-            plan={circlePlan}
-            canCreate={canCreatePlan === true}
-            isPending={markCircleDay.isPending}
-            error={null}
-            onMarkPrayed={(dayId) => void handleMarkCircleDay(dayId)}
-          />
+        <CirclePlanCard
+          circle={circle}
+          plan={circlePlan}
+          canCreate={canCreatePlan === true}
+          isPending={markCircleDay.isPending}
+          error={null}
+          onMarkPrayed={(dayId) => void handleMarkCircleDay(dayId)}
+        />
 
-          <View className="gap-3">
-            <Txt variant="label" tone="secondary">
-              {t("circles.membersTitle")}
-            </Txt>
-            {/* A failed roster read used to render an empty list —
+        <View className="gap-3">
+          <Txt variant="label" tone="secondary">
+            {t("circles.membersTitle")}
+          </Txt>
+          {/* A failed roster read used to render an empty list —
               indistinguishable from a circle of one — and silently set
               `isAdmin` to false, hiding "Expulsar" from a real admin at the
               moment they most likely need it. */}
-            {membersFailed ? (
-              <Txt variant="body" tone="secondary" accessibilityRole="alert">
-                {t("common.errorBody")}
-              </Txt>
-            ) : null}
-
-            {(members ?? []).map((member) => (
-              <View key={member.user_id} className="gap-1">
-                <View className="flex-row items-center justify-between gap-3">
-                  {/* El censo era una lista de nombres muertos. Ahora cada uno
-                    lleva a su perfil, que es donde se ve desde cuándo lleva
-                    aquí y lo que haya querido contar. */}
-                  <Link
-                    href={{
-                      pathname: "/persona/[id]",
-                      params: { id: member.user_id },
-                    }}
-                    asChild
-                  >
-                    <Tap
-                      accessibilityRole="link"
-                      className="flex-1 flex-row items-center gap-3"
-                    >
-                      <Avatar
-                        name={member.display_name}
-                        url={member.avatar_url}
-                        seed={member.user_id}
-                        size={32}
-                      />
-                      <Txt variant="body" className="flex-1">
-                        {member.display_name}
-                      </Txt>
-                    </Tap>
-                  </Link>
-                  {member.role !== "member" ? (
-                    <Txt variant="caption">
-                      {member.role === "owner"
-                        ? t("circles.owner")
-                        : t("circles.admin")}
-                    </Txt>
-                  ) : null}
-                </View>
-
-                {/* Now that strangers can find and join a public circle, the two
-                  ways out have to be reachable from the roster itself — not
-                  buried behind a message somebody has to receive first. */}
-                {member.user_id !== userId ? (
-                  <View className="flex-row gap-4">
-                    <Tap
-                      accessibilityRole="button"
-                      onPress={() =>
-                        blockConfirm.ask(member.user_id, member.display_name)
-                      }
-                    >
-                      <Txt variant="caption">{t("moderation.block")}</Txt>
-                    </Tap>
-
-                    {isAdmin && member.role !== "owner" ? (
-                      <Tap
-                        accessibilityRole="button"
-                        onPress={() => void handleRemove(member.user_id)}
-                      >
-                        <Txt variant="caption">
-                          {pendingRemoval === member.user_id
-                            ? t("circles.removeConfirmCta")
-                            : t("circles.remove")}
-                        </Txt>
-                      </Tap>
-                    ) : null}
-                  </View>
-                ) : null}
-              </View>
-            ))}
-          </View>
-
-          {/* What is actually being shared in here, which the screen said
-            nothing about before — including whether your own plan is among
-            them, the answer to "is this circle seeing my requests?". */}
-          <View className="gap-3">
-            <Txt variant="label" tone="secondary">
-              {t("circles.sharedTitle")}
-            </Txt>
-
-            {(sharedPlans ?? []).length === 0 ? (
-              <EmptyState title={t("circles.sharedEmpty")} />
-            ) : null}
-
-            {(sharedPlans ?? []).map((shared) => (
-              <Tap
-                key={shared.plan_id}
-                accessibilityRole="link"
-                accessibilityLabel={`${shared.plan_title}. ${shared.owner_name}`}
-                className="gap-0.5 rounded-card border border-glassedge/60 p-4"
-                onPress={() =>
-                  shared.is_mine
-                    ? router.push("/")
-                    : router.push({
-                        pathname: "/orar/[planId]",
-                        params: { planId: shared.plan_id },
-                      })
-                }
-              >
-                <Txt variant="bodyMedium">{shared.plan_title}</Txt>
-                <Txt variant="caption">
-                  {shared.is_mine ? t("circles.sharedMine") : shared.owner_name}
-                </Txt>
-              </Tap>
-            ))}
-          </View>
-
-          <Link
-            href={{ pathname: "/peticiones", params: { circulo: id! } }}
-            asChild
-          >
-            <Button title={t("feed.circleTitle")} variant="secondary" />
-          </Link>
-
-          <Link
-            href={{ pathname: "/circulo/[id]/chat", params: { id: id! } }}
-            asChild
-          >
-            <Button title={t("chat.open")} variant="secondary" />
-          </Link>
-
-          {inviteFirst ? null : inviteSection}
-
-          {confirmingLeave ? (
-            <Txt
-              variant="caption"
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite"
-            >
-              {t("circles.leaveConfirm")}
+          {membersFailed ? (
+            <Txt variant="body" tone="secondary" accessibilityRole="alert">
+              {t("common.errorBody")}
             </Txt>
           ) : null}
 
-          {/* Salir, solo al pie: compartía fila con «Invitar», y es lo único
-            de esta pantalla que no se deshace sin una invitación nueva. */}
-          <View className="mt-auto gap-3 pt-6">
-            <Button
-              title={
-                confirmingLeave
-                  ? t("circles.leaveConfirmCta")
-                  : t("circles.leave")
+          {(members ?? []).map((member) => (
+            <View key={member.user_id} className="gap-1">
+              <View className="flex-row items-center justify-between gap-3">
+                {/* El censo era una lista de nombres muertos. Ahora cada uno
+                    lleva a su perfil, que es donde se ve desde cuándo lleva
+                    aquí y lo que haya querido contar. */}
+                <Link
+                  href={{
+                    pathname: "/persona/[id]",
+                    params: { id: member.user_id },
+                  }}
+                  asChild
+                >
+                  <Tap
+                    accessibilityRole="link"
+                    className="flex-1 flex-row items-center gap-3"
+                  >
+                    <Avatar
+                      name={member.display_name}
+                      url={member.avatar_url}
+                      seed={member.user_id}
+                      size={32}
+                    />
+                    <Txt variant="body" className="flex-1">
+                      {member.display_name}
+                    </Txt>
+                  </Tap>
+                </Link>
+                {member.role !== "member" ? (
+                  <Txt variant="caption">
+                    {member.role === "owner"
+                      ? t("circles.owner")
+                      : t("circles.admin")}
+                  </Txt>
+                ) : null}
+              </View>
+
+              {/* Now that strangers can find and join a public circle, the two
+                  ways out have to be reachable from the roster itself — not
+                  buried behind a message somebody has to receive first. */}
+              {member.user_id !== userId ? (
+                <View className="flex-row gap-4">
+                  <Tap
+                    accessibilityRole="button"
+                    onPress={() =>
+                      blockConfirm.ask(member.user_id, member.display_name)
+                    }
+                  >
+                    <Txt variant="caption">{t("moderation.block")}</Txt>
+                  </Tap>
+
+                  {isAdmin && member.role !== "owner" ? (
+                    <Tap
+                      accessibilityRole="button"
+                      onPress={() => void handleRemove(member.user_id)}
+                    >
+                      <Txt variant="caption">
+                        {pendingRemoval === member.user_id
+                          ? t("circles.removeConfirmCta")
+                          : t("circles.remove")}
+                      </Txt>
+                    </Tap>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+          ))}
+        </View>
+
+        {/* What is actually being shared in here, which the screen said
+            nothing about before — including whether your own plan is among
+            them, the answer to "is this circle seeing my requests?". */}
+        <View className="gap-3">
+          <Txt variant="label" tone="secondary">
+            {t("circles.sharedTitle")}
+          </Txt>
+
+          {(sharedPlans ?? []).length === 0 ? (
+            <EmptyState title={t("circles.sharedEmpty")} />
+          ) : null}
+
+          {(sharedPlans ?? []).map((shared) => (
+            <Tap
+              key={shared.plan_id}
+              accessibilityRole="link"
+              accessibilityLabel={`${shared.plan_title}. ${shared.owner_name}`}
+              className="gap-0.5 rounded-card border border-glassedge/60 p-4"
+              onPress={() =>
+                shared.is_mine
+                  ? router.push("/")
+                  : router.push({
+                      pathname: "/orar/[planId]",
+                      params: { planId: shared.plan_id },
+                    })
               }
-              variant={confirmingLeave ? "secondary" : "ghost"}
-              loading={leave.isPending}
-              onPress={() => void handleLeave()}
-            />
-          </View>
-        </ScrollView>
-      </DawnBackground>
+            >
+              <Txt variant="bodyMedium">{shared.plan_title}</Txt>
+              <Txt variant="caption">
+                {shared.is_mine ? t("circles.sharedMine") : shared.owner_name}
+              </Txt>
+            </Tap>
+          ))}
+        </View>
+
+        <Link
+          href={{ pathname: "/peticiones", params: { circulo: id! } }}
+          asChild
+        >
+          <Button title={t("feed.circleTitle")} variant="secondary" />
+        </Link>
+
+        <Link
+          href={{ pathname: "/circulo/[id]/chat", params: { id: id! } }}
+          asChild
+        >
+          <Button title={t("chat.open")} variant="secondary" />
+        </Link>
+
+        {inviteFirst ? null : inviteSection}
+
+        {confirmingLeave ? (
+          <Txt
+            variant="caption"
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {t("circles.leaveConfirm")}
+          </Txt>
+        ) : null}
+
+        {/* Salir, solo al pie: compartía fila con «Invitar», y es lo único
+            de esta pantalla que no se deshace sin una invitación nueva. */}
+        <View className="mt-auto gap-3 pt-6">
+          <Button
+            title={
+              confirmingLeave
+                ? t("circles.leaveConfirmCta")
+                : t("circles.leave")
+            }
+            variant={confirmingLeave ? "secondary" : "ghost"}
+            loading={leave.isPending}
+            onPress={() => void handleLeave()}
+          />
+        </View>
+      </ScreenScaffold>
       {blockConfirm.dialog}
     </>
   );
