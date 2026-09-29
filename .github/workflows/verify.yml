@@ -91,6 +91,13 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=4096
 
+      # Trinquete del tamaño del JS web (bundle-budget.json): mide el `dist-e2e`
+      # que acaban de exportar los pasos de Playwright, sin exportar otra vez.
+      # Falla si la entrada o el total crecen más de un 5 % sobre lo medido.
+      # Cómo leerlo y qué pesa: docs/runbooks/ci.md.
+      - name: Presupuesto de tamaño del bundle web
+        run: npm run bundle:budget
+
       - name: Publicar artefactos de Playwright al fallar
         if: failure()
         uses: actions/upload-artifact@v4

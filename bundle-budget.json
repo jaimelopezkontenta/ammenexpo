@@ -1,0 +1,22 @@
+{
+  "$comment": [
+    "Trinquete del tamaño del JS web: lo comprueba `npm run bundle:budget` (scripts/bundleBudget.mjs) en CI, tras los e2e estáticos, sobre `dist-e2e`.",
+    "Cada límite es lo medido + 5 %, en bytes. Puede bajar y no subir: cuando el bundle adelgace, pon el límite que sugiere el script (↓) en el mismo PR.",
+    "Subir un límite es una decisión: explica en el PR qué dependencia entra y por qué. Qué pesa hoy y cómo bajarlo: docs/runbooks/ci.md, «Qué pesa»."
+  ],
+  "export": "dist-e2e",
+  "limits": {
+    "entryRaw": 5643264,
+    "entryGzip": 1094656,
+    "totalRaw": 5643264,
+    "totalGzip": 1094656
+  },
+  "measured": {
+    "date": "2026-09-29",
+    "commit": "b9fb720",
+    "entryRaw": 5374282,
+    "entryGzip": 1042101,
+    "totalRaw": 5374282,
+    "totalGzip": 1042101
+  }
+}

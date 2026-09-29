@@ -34,6 +34,38 @@
             "key": "Permissions-Policy",
             "value": "camera=(), geolocation=(), microphone=()"
           },
+          // En web la sesión de Supabase vive en localStorage: un XSS se la
+          // lleva. La CSP es lo que se lo impide (firebase-tools lee este
+          // fichero con cjson, que admite estos comentarios).
+          // - script-src: 'self' y el hash de cada <script> inline del export
+          //   (el del tema, THEME_BOOT_SCRIPT de app/+html.tsx, y la bandera
+          //   de hidratación de Expo Router). Si cambia uno, npm run
+          //   csp:hashes da el hash nuevo; scripts/cspHashes.test.ts falla
+          //   hasta que se copia aquí. Nunca 'unsafe-inline' ni 'unsafe-eval'.
+          // - style-src 'unsafe-inline', a propósito: react-native-web inyecta
+          //   <style> en ejecución, el HTML estático lleva style= en cada nodo
+          //   y expo-font pone su @font-face inline. Con hashes habría que
+          //   listar cada atributo ('unsafe-hashes') y la hidratación se
+          //   rompería. Un estilo inyectado no ejecuta código.
+          // - connect-src blob: porque la foto de perfil se lee con
+          //   fetch(blob:) (expo-image-picker en web da un object URL).
+          // - *.supabase.co: REST, Auth, Storage, Functions y Realtime (wss).
+          // El e2e sirve el export con estas mismas cabeceras, ampliando solo
+          // connect-src e img-src con su Supabase local (scripts/webHeaders.mjs).
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'sha256-KSrdjmh1bWHzua3cZAJbyO6dtU5narKpvcJDXVsMaqM=' 'sha256-67fhrP0+BkBqmgGGXTtgiVO/9EQs3QruYNU/7fnRkI8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self' data:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000; includeSubDomains"
+          },
+          // La app no abre ventanas con las que tenga que hablar (sin OAuth
+          // con popup; el enlace de recuperar contraseña llega por correo).
+          {
+            "key": "Cross-Origin-Opener-Policy",
+            "value": "same-origin"
+          },
           {
             "key": "Cache-Control",
             "value": "no-store"

@@ -4,13 +4,13 @@ Todo vive en `.github/`. Nada de CI despliega: los deploys los hace una persona.
 
 ## Qué corre
 
-| Workflow / job               | Cuándo                       | Bloquea | Qué mira                                                                                               |
-| ---------------------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `verify` · `verify`          | PR y push a `main`           | sí      | Guard de migraciones, tipos de la base, `npm run verify`, Playwright funcional y (ver abajo) el visual |
-| `verify` · `functions-types` | ídem, en paralelo            | sí      | `deno check` de las seis edge functions                                                                |
-| `verify` · `expo-health`     | ídem, en paralelo            | no      | `expo-doctor` y `expo install --check` (hoy fallan los dos; ver abajo)                                 |
-| `visual-baselines`           | a mano (`workflow_dispatch`) | —       | Genera las baselines Linux de la regresión visual y las sube como artefacto                            |
-| Dependabot                   | semanal                      | —       | Acciones de GitHub; en npm solo avisos de seguridad                                                    |
+| Workflow / job               | Cuándo                       | Bloquea | Qué mira                                                                                                                |
+| ---------------------------- | ---------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `verify` · `verify`          | PR y push a `main`           | sí      | Guard de migraciones, tipos de la base, `npm run verify`, Playwright bajo la CSP, el visual y el presupuesto del bundle |
+| `verify` · `functions-types` | ídem, en paralelo            | sí      | `deno check` de las seis edge functions                                                                                 |
+| `verify` · `expo-health`     | ídem, en paralelo            | no      | `expo-doctor` y `expo install --check` (hoy fallan los dos; ver abajo)                                                  |
+| `visual-baselines`           | a mano (`workflow_dispatch`) | —       | Genera las baselines Linux de la regresión visual y las sube como artefacto                                             |
+| Dependabot                   | semanal                      | —       | Acciones de GitHub; en npm solo avisos de seguridad                                                                     |
 
 El job `verify` corre en un runner efímero con Supabase local, así que serializa
 base y e2e por construcción. Los otros dos no levantan Supabase.
@@ -18,7 +18,111 @@ base y e2e por construcción. Los otros dos no levantan Supabase.
 Pasos de `verify`, en orden: checkout con historia completa → `npm ci` → guard de
 migraciones → Chromium → `AI_PROVIDER=fixture` → `supabase start` → tipos de la
 base contra las migraciones → `supabaseCiEnv` → `npm run verify` (typecheck, lint,
-vitest, `db:test`) → Playwright `chromium` → regresión visual (condicionada).
+vitest, `db:test`) → Playwright `chromium` → regresión visual (condicionada) →
+presupuesto del bundle web.
+
+## El e2e estático corre bajo la CSP de producción
+
+`scripts/e2eWebServer.mjs` sirve `dist-e2e` con las cabeceras de `firebase.json`
+(las lee `scripts/webHeaders.mjs`, que las aplica como Firebase: todas las reglas
+que casan con la ruta pedida, y la última gana), CSP incluida. Solo añade, para el
+e2e, el origen de `EXPO_PUBLIC_SUPABASE_URL` (`http://` y `ws://`) a `connect-src`
+e `img-src`, y un `report-uri /__csp-report`. Si falta esa variable, el servidor
+no arranca: sin ella la CSP bloquearía todo sin decir por qué.
+
+- **Una violación** sale en el log de Playwright (el `webServer` enseña su stderr):
+  `[e2e-web] CSP bloqueó connect-src: https://… en http://127.0.0.1:8081/…`.
+  `GET http://127.0.0.1:8081/__csp-report` devuelve la lista entera, para que un
+  test pueda afirmar que está vacía. Un `fetch` bloqueado rompe el flujo que lo
+  usa; una imagen o una fuente bloqueadas solo se ven ahí o en el visual.
+- **Qué no cubre:** el export del e2e es `single` y usa la plantilla de Expo, sin
+  `app/+html.tsx`, así que no lleva los dos `<script>` inline que la CSP permite
+  por hash (el del tema y la bandera de hidratación de Expo Router). Esos los
+  vigilan `scripts/cspHashes.test.ts` (vitest) y `npm run csp:check` sobre el
+  build de staging (`docs/runbooks/staging-web.md`).
+- **Metro** (`npm run e2e`, `npm run web`) no aplica cabeceras: la CSP solo se
+  ejerce contra el export.
+- **Si cambias la CSP** en `firebase.json`, el e2e la hereda sin tocar nada más.
+  Si cambias el script del tema, `npm run csp:hashes` da el hash nuevo.
+
+## Presupuesto del bundle web (`npm run bundle:budget`)
+
+Trinquete del tamaño del JS del export: `scripts/bundleBudget.mjs` mide el chunk
+de entrada (`_expo/static/js/web/entry-*.js`) y el total de JS de `dist-e2e`, en
+bruto y en gzip (zlib, nivel por defecto), y falla si alguno pasa de
+`bundle-budget.json`. En CI corre justo después de los e2e estáticos y reutiliza su
+export. En local, tras `npm run e2e:static` (o sobre otro export:
+`node scripts/bundleBudget.mjs dist`).
+
+- **Límite = lo medido + 5 %.** El 2026-09-29 (`b9fb720`): entrada 5.374.282 B
+  (1.042.101 B gzip), un solo fichero JS.
+- **Si falla:** mirar qué entró (el diff de `package.json` y los imports nuevos;
+  «Qué pesa», abajo, dice cómo medirlo). Si el crecimiento es deliberado, subir el
+  límite en el mismo PR y explicar qué entra y por qué. Nunca «hasta que pase».
+- **Si baja:** el script imprime `↓ … aprieta el trinquete` con el límite nuevo
+  cuando el ahorro pasa del 5 %. Copiarlo a `bundle-budget.json` en ese PR, y
+  actualizar `measured`.
+- Con bundle splitting (rutas asíncronas, `import()`), la entrada baja y el total
+  no: por eso se miden los dos.
+
+## Qué pesa
+
+Medido sobre `dist-e2e` de `b9fb720` sin source map: el bundle de Metro en
+producción no lleva rutas, así que se reconstruyó el grafo de módulos (`__d(…, id,
+[deps])`) y se calculó el **tamaño retenido** de cada dependencia (lo que saldría
+del bundle si ese import desapareciera; árbol de dominadores). El gzip de cada fila
+es aproximado (comprimida sola). KB = 1.000 bytes.
+
+| #   | Dependencia                                                                         | Bruto    | gzip   | % bruto |
+| --- | ----------------------------------------------------------------------------------- | -------- | ------ | ------- |
+| 1   | `lucide-react-native` (el barril: 1.759 iconos; se usan 10)                         | 1.848 KB | 185 KB | 34 %    |
+| 2   | `react-native-reanimated` (con worklets)                                            | 736 KB   | 140 KB | 14 %    |
+| 3   | `@supabase/supabase-js`                                                             | 273 KB   | 68 KB  | 5 %     |
+| 4   | `react-native-gesture-handler` (con hammerjs en web)                                | 246 KB   | 56 KB  | 5 %     |
+| 5   | `react-native-view-shot` → html2canvas (solo «compartir versículo»)                 | 208 KB   | 49 KB  | 4 %     |
+| 6   | `react-dom`                                                                         | 180 KB   | 57 KB  | 3 %     |
+| 7   | i18n: `es.json` + `en.json` (66), i18next (50), react-i18next (24)                  | 140 KB   | 43 KB  | 3 %     |
+| 8   | `@tanstack/react-query`                                                             | 84 KB    | 19 KB  | 2 %     |
+| 9   | `expo-notifications` (en web no se usa)                                             | 62 KB    | 15 KB  | 1 %     |
+| 10  | `react-native-svg`                                                                  | 50 KB    | 14 KB  | 1 %     |
+| 11  | `expo-image`                                                                        | 37 KB    | 12 KB  | 1 %     |
+| —   | Resto: react-native-web, expo-router y react-navigation, nativewind, React y la app | 1.500 KB | 376 KB | 28 %    |
+
+Fuera del JS, en el camino crítico: `app/_layout.tsx` no pinta hasta cargar siete
+TTF (General Sans ×4, Cormorant Garamond 400 Italic y Lora 400/600), unos 940 KB;
+solo la Cormorant cursiva son 407 KB porque trae cirílico y vietnamita. Y el export
+lleva otras 18 variantes que nadie pide, porque importar desde la raíz de
+`@expo-google-fonts/<familia>` arrastra todas.
+
+Recomendaciones, de más barata a menos (ninguna aplicada):
+
+1. **Iconos por ruta.** `import ChevronLeft from "lucide-react-native/icons/chevron-left"`
+   (el paquete exporta `./icons/*` con tipos) en los 14 ficheros que importan del
+   barril, y una regla `no-restricted-imports` para `lucide-react-native` (con
+   `allowTypeImports`, por `LucideIcon`). Mecánico: −1,8 MB en bruto (−34 %), unos
+   −185 KB gzip.
+2. **html2canvas bajo demanda.** `await import("react-native-view-shot")` dentro de
+   `useShareVerseImage` (`core/bible/image.ts`). En el export web de producción un
+   `import()` se carga con `<script src>` del mismo origen
+   (`expo/src/async-require/fetchThenEval.web.ts`), compatible con la CSP; el
+   `eval` de ese módulo es solo de desarrollo. −208 KB de la entrada (comprobar en
+   el export que sale un chunk aparte y bajar `entry*` en el presupuesto).
+3. **`expo-notifications` fuera de web.** Variantes `.web.ts` sin efecto de
+   `core/notifications/push.ts` y `localReminders.ts`: −62 KB.
+4. **Fuentes.** Importar cada variante por su ruta
+   (`@expo-google-fonts/cormorant-garamond/400Regular_Italic`) quita las 18 que
+   sobran del export; un subconjunto latino en woff2 de la Cormorant cursiva la
+   dejaría en decenas de KB (pide generar el fichero con fonttools, una vez).
+5. **Medio plazo: partir por rutas.** `asyncRoutes` de expo-router en web o el
+   tree shaking de Expo (`EXPO_UNSTABLE_TREE_SHAKING=1` +
+   `EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH=1`, todavía «unstable» en SDK 56, que
+   también podaría los barriles de reanimated). Probar en una rama y medir con
+   `bundle:budget`; las rutas asíncronas también se cargan con `<script src>`.
+
+Para repetir la medición: separar el bundle por `__d(` (cada módulo acaba en
+`},<id>,[<deps>]);`), construir el grafo desde los `__r(<id>)` finales y buscar
+los nodos que dominan más bytes. Con `expo export --source-maps` (y
+`source-map-explorer`) sale por paquete sin reconstruir nada.
 
 ## Regenerar las baselines Linux
 
