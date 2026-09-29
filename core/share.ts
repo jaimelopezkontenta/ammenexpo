@@ -1,3 +1,4 @@
+import * as Clipboard from "expo-clipboard";
 import { Platform, Share } from "react-native";
 
 /**
@@ -84,27 +85,49 @@ export const shareOrCopy = async (
   }
 };
 
-/** ¿Se puede copiar al portapapeles aquí? Hoy, solo en web. */
-export const canCopyText = (): boolean =>
-  Platform.OS === "web" &&
-  Boolean(
-    (globalThis as { navigator?: WebNavigator }).navigator?.clipboard
-      ?.writeText,
-  );
+export type CopyPath = "web" | "native" | null;
 
 /**
- * Copia un texto al portapapeles. Solo en web: en nativo haría falta
- * `expo-clipboard`, un módulo nativo que entra en el lote de la Oleada 6; allí
- * el botón de compartir abre la hoja del sistema, que ya trae «Copiar».
+ * Por dónde se copia, decidido sin tocar nada: en web, el portapapeles del
+ * navegador si existe (fuera de https no lo hay); en el
+ * teléfono, `expo-clipboard`, que siempre está. `null` es «aquí no se puede
+ * copiar», y quien llama esconde el botón en vez de fingir.
+ */
+export const copyPathFor = (
+  platform: string,
+  nav: WebNavigator | undefined,
+): CopyPath => {
+  if (platform !== "web") return "native";
+  return nav?.clipboard?.writeText ? "web" : null;
+};
+
+const webNavigator = () =>
+  (globalThis as { navigator?: WebNavigator }).navigator;
+
+/** ¿Se puede copiar al portapapeles aquí? */
+export const canCopyText = (): boolean =>
+  copyPathFor(Platform.OS, webNavigator()) !== null;
+
+/**
+ * Copia un texto al portapapeles: en web con el del navegador, en nativo con
+ * `expo-clipboard`. `false` si no se pudo, para que el aviso no mienta.
  */
 export const copyText = async (text: string): Promise<boolean> => {
-  if (!canCopyText()) return false;
+  const nav = webNavigator();
+  const path = copyPathFor(Platform.OS, nav);
+
   try {
-    await (
-      globalThis as { navigator?: WebNavigator }
-    ).navigator!.clipboard!.writeText(text);
-    return true;
+    if (path === "web") {
+      await nav!.clipboard!.writeText(text);
+      return true;
+    }
+
+    if (path === "native") {
+      return await Clipboard.setStringAsync(text);
+    }
   } catch {
-    return false;
+    // Permiso denegado o módulo sin responder: no se copió, y se dice.
   }
+
+  return false;
 };
