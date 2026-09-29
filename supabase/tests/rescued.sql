@@ -246,6 +246,47 @@ select pg_temp.assert(
 
 commit;
 
+-- R1 S9: lo de arriba solo distingue el calendario del dueño del de UTC
+-- cuando en Kiritimati ya es mañana (de 10:00 a 24:00 UTC): de madrugada
+-- UTC habría pasado igual con `current_date`. Con UTC+14 y UTC−12 a la vez
+-- no hay hora en la que las dos fechas locales coincidan con la de UTC, así
+-- que la prueba no depende de cuándo corra. (Los nombres Etc/GMT llevan el
+-- signo al revés: Etc/GMT-14 es UTC+14 y Etc/GMT+12 es UTC−12.)
+begin;
+
+update public.profile_settings set timezone = 'Etc/GMT-14' where id = :TEO;
+update public.profile_settings set timezone = 'Etc/GMT+12' where id = :UMA;
+
+set local role authenticated;
+
+set local request.jwt.claims = '{"sub":"e2222222-2222-2222-2222-222222222222","role":"authenticated"}';
+select plan_id as teo_plan
+  from public.reserve_generation(gen_random_uuid(), 'personal', 7::smallint) \gset
+
+set local request.jwt.claims = '{"sub":"e3333333-3333-3333-3333-333333333333","role":"authenticated"}';
+select plan_id as uma_plan
+  from public.reserve_generation(gen_random_uuid(), 'personal', 7::smallint) \gset
+
+reset role;
+
+select pg_temp.assert(
+  (select start_date from public.prayer_plans where id = :'teo_plan')
+    = (now() at time zone 'Etc/GMT-14')::date
+    and (select start_date from public.prayer_plans where id = :'uma_plan')
+      = (now() at time zone 'Etc/GMT+12')::date,
+  'at UTC+14 and UTC-12 the plan starts on each owner''s own date');
+
+select pg_temp.assert(
+  (select start_date from public.prayer_plans where id = :'teo_plan')
+    > (select start_date from public.prayer_plans where id = :'uma_plan')
+    and (
+      (select start_date from public.prayer_plans where id = :'teo_plan') <> (now() at time zone 'UTC')::date
+      or (select start_date from public.prayer_plans where id = :'uma_plan') <> (now() at time zone 'UTC')::date
+    ),
+  'and at any hour of the day at least one of them is not the UTC date');
+
+rollback;
+
 
 -- ===========================================================================
 -- circle_plan_completion
