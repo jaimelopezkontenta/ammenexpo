@@ -1,7 +1,7 @@
-import { Link, router, Stack, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, TextInput, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { DawnBackground } from "@/components/DawnBackground";
@@ -9,6 +9,7 @@ import { Txt } from "@/components/ui/Text";
 import { ReaderToolbar } from "@/components/ReaderToolbar";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Glass } from "@/components/Glass";
+import { VerseRow } from "@/components/reader/VerseRow";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
 import {
@@ -19,7 +20,6 @@ import {
 } from "@/core/bible/navigation";
 import { FONT_CLASSES, useReaderFontStep } from "@/core/bible/readerPrefs";
 import {
-  NOTE_MAX,
   useChapterMarks,
   useSaveNote,
   useToggleHighlight,
@@ -91,31 +91,62 @@ export default function ChapterReader() {
   // tiene 176 versículos y una consulta por cada uno sería una forma cara de
   // subrayar.
   const { data: marks } = useChapterMarks(userId, bookId, chapterNumber);
-  const toggleHighlight = useToggleHighlight(userId, bookId, chapterNumber);
-  const saveNote = useSaveNote(userId, bookId, chapterNumber);
+  // `mutateAsync` es estable entre renders; el objeto de la mutación no.
+  const { mutateAsync: toggleHighlight } = useToggleHighlight(
+    userId,
+    bookId,
+    chapterNumber,
+  );
+  const { mutateAsync: saveNote } = useSaveNote(userId, bookId, chapterNumber);
+
+  // Los subrayados, una vez por capítulo y no una búsqueda por fila: con la
+  // lista, cada uno de los 176 versículos de Salmos 119 la recorría entera en
+  // cada render.
+  const highlighted = useMemo(
+    () => new Set(marks?.highlighted ?? []),
+    [marks?.highlighted],
+  );
 
   // Qué versículo tiene los controles abiertos. Uno cada vez: una fila de
   // acciones bajo cada versículo convertiría el capítulo en un formulario.
+  // (El borrador de la nota vive en el editor de esa fila: ver VerseRow.)
   const [openVerse, setOpenVerse] = useState<number | null>(null);
   const [fontStep, setFontStep] = useReaderFontStep();
-  const [noteDraft, setNoteDraft] = useState("");
   const [markError, setMarkError] = useState<string | null>(null);
 
-  const openMarks = (verseNumber: number) => {
+  const toggleVerse = useCallback((verseNumber: number) => {
     setMarkError(null);
     setOpenVerse((current) => (current === verseNumber ? null : verseNumber));
-    setNoteDraft(marks?.notes[verseNumber] ?? "");
-  };
+  }, []);
 
-  const runMark = async (action: () => Promise<unknown>) => {
-    setMarkError(null);
+  const closeVerse = useCallback(() => setOpenVerse(null), []);
 
-    try {
-      await action();
-    } catch {
-      setMarkError(t("common.errorGeneric"));
-    }
-  };
+  const runMark = useCallback(
+    async (action: () => Promise<unknown>) => {
+      setMarkError(null);
+
+      try {
+        await action();
+      } catch {
+        setMarkError(t("common.errorGeneric"));
+      }
+    },
+    [t],
+  );
+
+  const onToggleHighlight = useCallback(
+    (verseNumber: number, on: boolean) =>
+      void runMark(() => toggleHighlight({ verse: verseNumber, on })),
+    [runMark, toggleHighlight],
+  );
+
+  const onSaveNote = useCallback(
+    (verseNumber: number, body: string) =>
+      void runMark(() =>
+        saveNote({ verse: verseNumber, body }).then(() => setOpenVerse(null)),
+      ),
+    [runMark, saveNote],
+  );
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -128,7 +159,9 @@ export default function ChapterReader() {
   // the content grows, and stops once layout has settled.
   const settled = useRef(false);
 
-  const scrollToTarget = () => {
+  // Solo lee refs: la misma función en cada render, así las filas
+  // memorizadas no reciben un callback nuevo.
+  const scrollToTarget = useCallback(() => {
     if (settled.current || targetY.current === null) {
       return;
     }
@@ -137,7 +170,15 @@ export default function ChapterReader() {
       y: Math.max(targetY.current - 80, 0),
       animated: false,
     });
-  };
+  }, []);
+
+  const onLinkedLayout = useCallback(
+    (y: number) => {
+      targetY.current = y;
+      scrollToTarget();
+    },
+    [scrollToTarget],
+  );
 
   useEffect(() => {
     targetY.current = null;
@@ -270,181 +311,28 @@ export default function ChapterReader() {
               >
                 <View className="gap-4">
                   {(verses ?? []).map((row) => {
-                    const linked = row.verse === targetVerse;
-                    const isHighlighted =
-                      marks?.highlighted.includes(row.verse) ?? false;
-                    const note = marks?.notes[row.verse];
                     const isOpen = openVerse === row.verse;
 
                     return (
-                      <View key={row.verse} className="gap-2">
-                        {/* El versículo entero es el control. Un icono al margen sería
-                  más pequeño que el dedo que lo busca, y aquí el gesto natural
-                  es tocar la frase que te ha parado. */}
-                        <Tap
-                          accessibilityRole="button"
-                          // El label es el versículo: con «Versículo 16:
-                          // subrayar o anotar» un lector de pantalla leía la
-                          // acción y nunca la Escritura. La acción va de pista.
-                          accessibilityLabel={t("bible.verseLabel", {
-                            verse: row.verse,
-                            text: row.text,
-                          })}
-                          accessibilityHint={t("bible.markVerseHint")}
-                          accessibilityState={{ expanded: isOpen }}
-                          onPress={() => openMarks(row.verse)}
-                          className={`flex-row gap-3 rounded-input px-2 py-1 ${
-                            linked
-                              ? "bg-ember-pale"
-                              : isHighlighted
-                                ? "bg-dawn-peach-mid"
-                                : ""
-                          }`}
-                          // Measured only for the verse we were sent to. Collecting all
-                          // 176 layouts of Salmos 119 to use one would be waste.
-                          onLayout={
-                            linked
-                              ? (event) => {
-                                  targetY.current = event.nativeEvent.layout.y;
-                                  scrollToTarget();
-                                }
-                              : undefined
-                          }
-                        >
-                          <Txt
-                            variant="subheading"
-                            tone="secondary"
-                            className="pt-1 text-xs"
-                          >
-                            {row.verse}
-                          </Txt>
-                          {/* La tipografía del versículo la manda el paso
-                              A−/A+ del lector, encima de la variante. */}
-                          <Txt
-                            variant="reading"
-                            className={`flex-1 ${FONT_CLASSES[fontStep]}`}
-                          >
-                            {row.text}
-                          </Txt>
-                        </Tap>
-
-                        {/* La nota se ve sin abrir nada: escribir algo al margen y que
-                  luego haya que ir a buscarlo es la forma de no volver a
-                  escribir ninguna. */}
-                        {note && !isOpen ? (
-                          <Txt variant="caption" className="px-2">
-                            {note}
-                          </Txt>
-                        ) : null}
-
-                        {isOpen ? (
-                          <View className="gap-3 rounded-input bg-dawn-cream p-4">
-                            <Tap
-                              accessibilityRole="button"
-                              onPress={() =>
-                                void runMark(() =>
-                                  toggleHighlight.mutateAsync({
-                                    verse: row.verse,
-                                    on: !isHighlighted,
-                                  }),
-                                )
-                              }
-                            >
-                              <Txt variant="label" tone="accent">
-                                {isHighlighted
-                                  ? t("bible.unhighlight")
-                                  : t("bible.highlight")}
-                              </Txt>
-                            </Tap>
-
-                            <TextInput
-                              className="w-full rounded-input border border-glassedge/70 bg-surface px-3 py-2.5 font-sans text-base text-plum"
-                              accessibilityLabel={t("bible.notePlaceholder")}
-                              value={noteDraft}
-                              onChangeText={setNoteDraft}
-                              placeholder={t("bible.notePlaceholder")}
-                              placeholderTextColor={colors.mist.ink}
-                              maxLength={NOTE_MAX}
-                              multiline
-                            />
-
-                            <View className="flex-row gap-4">
-                              <Tap
-                                accessibilityRole="button"
-                                onPress={() =>
-                                  void runMark(() =>
-                                    saveNote
-                                      .mutateAsync({
-                                        verse: row.verse,
-                                        body: noteDraft,
-                                      })
-                                      .then(() => setOpenVerse(null)),
-                                  )
-                                }
-                              >
-                                {/* Guardar vacío borra la nota, y lo dice: un botón de
-                          guardar que borra sin avisar es una trampa. */}
-                                <Txt
-                                  variant="label"
-                                  className="font-sans-semibold"
-                                >
-                                  {!noteDraft.trim() && note
-                                    ? t("bible.noteDelete")
-                                    : t("common.save")}
-                                </Txt>
-                              </Tap>
-
-                              <Tap
-                                accessibilityRole="button"
-                                onPress={() => setOpenVerse(null)}
-                              >
-                                <Txt variant="caption" className="underline">
-                                  {t("common.cancel")}
-                                </Txt>
-                              </Tap>
-                            </View>
-
-                            {/* Compartirlo como imagen vive aquí y no en un icono aparte:
-                      ya has tocado el versículo que te ha parado, que es
-                      exactamente el momento en que a alguien le apetece
-                      mandárselo a otra persona. */}
-                            <Link
-                              href={{
-                                pathname: "/versiculo",
-                                params: {
-                                  book: String(bookId),
-                                  chapter: String(chapterNumber),
-                                  verse: String(row.verse),
-                                  // La imagen lleva el texto que se está
-                                  // leyendo, no el de la versión por defecto.
-                                  version,
-                                },
-                              }}
-                              asChild
-                            >
-                              <Tap accessibilityRole="link">
-                                <Txt
-                                  variant="label"
-                                  tone="accent"
-                                  className="underline"
-                                >
-                                  {t("bible.shareVerse")}
-                                </Txt>
-                              </Tap>
-                            </Link>
-
-                            {markError ? (
-                              <Txt
-                                variant="caption"
-                                tone="danger"
-                                accessibilityRole="alert"
-                              >
-                                {markError}
-                              </Txt>
-                            ) : null}
-                          </View>
-                        ) : null}
-                      </View>
+                      <VerseRow
+                        key={row.verse}
+                        verse={row.verse}
+                        text={row.text}
+                        linked={row.verse === targetVerse}
+                        highlighted={highlighted.has(row.verse)}
+                        note={marks?.notes[row.verse]}
+                        open={isOpen}
+                        fontClass={FONT_CLASSES[fontStep]}
+                        markError={isOpen ? markError : null}
+                        bookId={bookId}
+                        chapter={chapterNumber}
+                        version={version}
+                        onToggle={toggleVerse}
+                        onToggleHighlight={onToggleHighlight}
+                        onSaveNote={onSaveNote}
+                        onClose={closeVerse}
+                        onLinkedLayout={onLinkedLayout}
+                      />
                     );
                   })}
                 </View>
