@@ -148,7 +148,21 @@ una contra una base recién reseteada — `rls`, `flows`, `streak`, `timezone`,
 `bible`, `circles`, `plans`, `storage`, `social`, `flags`, `push`, `generation`,
 `email`, `rescued` y `scheduler`— y, al final, `db:types:check` (que `types/supabase.ts`
 coincida con la base). Las suites SQL van en serie detrás de un lock global por proyecto (`ammen-db-<project_id>.lock` en el directorio temporal de la máquina, compartido por todos los worktrees) para
-que dos corridas no reseteen la misma base, y tardan unos ocho minutos.
+que dos corridas no reseteen la misma base, y tardan unos diecisiete minutos en Windows con Docker Desktop: casi todo es el
+reset, alrededor de un minuto por suite (las quince suites en sí suman menos de
+veinte segundos).
+
+Las corre `scripts/dbTest.mjs`, que tiene la lista de suites: por cada una,
+reset de la base y el fichero por stdin a `psql`. Una suite roja no para las
+demás; al final hay un resumen con tiempos y la salida de cada fallo queda en
+`.tmp/db-test/<suite>.log`. Para iterar sobre una:
+
+```bash
+npm run db:test:email                              # reset + esa suite (toma el lock)
+node scripts/dbTest.mjs --only email,rls           # varias, en ese orden
+node scripts/dbTest.mjs --only email --no-reset    # sin reset, sobre lo ya cargado
+node scripts/dbTest.mjs --list                     # qué suites hay
+```
 
 Nada se commitea sin esto en verde. CI (`.github/workflows/verify.yml`) corre
 lo mismo, más los e2e de Playwright, en cada PR y en cada push a `main`.
@@ -161,7 +175,8 @@ lo mismo, más los e2e de Playwright, en cada PR y en cada push a `main`.
 | `npm run e2e:static` | Los mismos e2e contra el export estático, igual que CI |
 | `npm run e2e:visual` | Regresión visual, en claro y en oscuro, contra el export estático (como CI; tarda unos minutos en exportar) |
 | `npm run e2e:visual:update` | Regenera las baselines. Solo tras un cambio visual deliberado, revisando el diff |
-| `npm run test:chunks` | La generación por tramos contra la Edge Function servida (necesita `supabase functions serve`) |
+| `npm run db:test:chunks` | La generación por tramos contra la Edge Function servida (necesita `supabase functions serve`) |
+| `npm run db:test:generation-races` · `db:test:generation-concurrency` | Carreras y concurrencia del ledger IA con conexiones independientes (lo que una sola sesión de `psql` no puede probar) |
 | `npm run email:preview` | Renderiza las plantillas de correo a `email-preview/` para mirarlas en el navegador |
 
 ---
