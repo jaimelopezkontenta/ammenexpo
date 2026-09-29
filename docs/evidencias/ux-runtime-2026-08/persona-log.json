@@ -1,0 +1,248 @@
+[
+  {
+    "t": "2026-08-31T07:38:56.825Z",
+    "step": "signup.form",
+    "screenshot": "01-crear-cuenta-390.png",
+    "body": "Crea tu cuenta Únete y deja que otros oren contigo. Correo electrónico Contraseña Crear cuenta ¿Ya tienes cuenta? Entrar ammen",
+    "tabs": 0,
+    "railHint": false
+  },
+  {
+    "t": "2026-08-31T07:38:57.796Z",
+    "step": "signup.terms",
+    "screenshot": "02-terminos-390.png",
+    "body": "Antes de empezar Ammen es un sitio donde la gente escribe lo que está viviendo. Para que sea un sitio seguro hay unas reglas, y queremos que sepas qué hacemos con lo que nos cuentas. Léelo y, si te parece bien, entramos. Términos de uso Política de privacidad Acepto Cerrar sesión",
+    "closeCount": 1,
+    "ms": 3093
+  },
+  {
+    "t": "2026-08-31T07:38:58.081Z",
+    "step": "onboarding.1",
+    "screenshot": "03-onboarding-nombre-390.png",
+    "body": "Vamos a preparar tu plan Unas preguntas rápidas para que tu plan de oración sea tuyo de verdad. ¿Cómo quieres que te llamemos? ¿Cómo prefieres que te hablemos? Para que las oraciones estén bien escritas para ti. En femenino En masculino En neutro Siguiente ammen"
+  },
+  {
+    "t": "2026-08-31T07:38:58.616Z",
+    "step": "onboarding.2",
+    "screenshot": "04-onboarding-viviendo-390.png"
+  },
+  {
+    "t": "2026-08-31T07:38:58.944Z",
+    "step": "onboarding.3",
+    "screenshot": "05-onboarding-orar-390.png"
+  },
+  {
+    "t": "2026-08-31T07:38:59.331Z",
+    "step": "onboarding.4",
+    "screenshot": "06-onboarding-hora-390.png",
+    "body": "¿A qué hora sueles orar? Puedes elegir hasta 3 momentos del día. 6:00 8:00 12:00 18:00 21:00 Crear mi plan ammen"
+  },
+  {
+    "t": "2026-08-31T07:39:01.387Z",
+    "step": "hoy.landed",
+    "screenshot": "07-hoy-390.png",
+    "tapsToHoy": 9,
+    "planGenMs": 1917,
+    "totalMs": 6667,
+    "preparing": false,
+    "emptyPlan": false,
+    "day1": false,
+    "plus": false,
+    "tabNames": [
+      "Reflexiona",
+      "Aplica",
+      "Ora",
+      "Hoy",
+      "Biblia",
+      "Orar",
+      "Juntos",
+      "Perfil"
+    ],
+    "body": "Hoy Biblia Orar Juntos Perfil"
+  },
+  {
+    "t": "2026-08-31T07:39:01.613Z",
+    "step": "juntos.empty",
+    "screenshot": "08-juntos-vacio-390.png",
+    "empty": true,
+    "emptyCta": true,
+    "findCta": true,
+    "body": "Hoy Buenas tardes, Lucía Persona ammen Día 1 de 7 La paz que no es del mundo Reflexiona Aplica Ora Palabra La paz os dejo, mi paz os doy: no como el mundo la da, yo os la doy. No se turbe vuestro corazón, ni tenga miedo. Juan 14:27 Leer el capítulo → Qué significa Jesús no promete que el ruido se apague solo. Promete una paz que se sostiene cuando el día sigue siendo el día. Hoy no hay que resolverlo todo; basta con recibir lo que Él da. Ya oré hoy Juntos ammen Círculos Comunidad Peticiones Familia, célula, amigos. Con quien compartes tus planes. Crear círculo Buscar círculos públicos Todavía no tienes círculos. Crea uno para compartir tus planes con las personas de confianza. Hoy Biblia Orar Juntos Perfil",
+    "tablist": 2
+  },
+  {
+    "t": "2026-08-31T07:39:01.746Z",
+    "step": "circulo.form",
+    "screenshot": "09-circulo-alta-390.png",
+    "body": "Hoy Buenas tardes, Lucía Persona ammen Día 1 de 7 La paz que no es del mundo Reflexiona Aplica Ora Palabra La paz os dejo, mi paz os doy: no como el mundo la da, yo os la doy. No se turbe vuestro corazón, ni tenga miedo. Juan 14:27 Leer el capítulo → Qué significa Jesús no promete que el ruido se apague solo. Promete una paz que se sostiene cuando el día sigue siendo el día. Hoy no hay que resolverlo todo; basta con recibir lo que Él da. Ya oré hoy Juntos ammen Círculos Comunidad Peticiones Nuevo círculo Nombre Descripción ¿Quién puede unirse? Solo por invitación Cualquiera puede encontrarlo No aparece en ninguna búsqueda: solo se entra con el enlace. Crear círculo Cancelar Hoy Biblia Orar Juntos Perfil",
+    "radios": ["Solo por invitación", "Cualquiera puede encontrarlo"]
+  },
+  {
+    "t": "2026-08-31T07:39:01.972Z",
+    "step": "circulo.detalle",
+    "screenshot": "10-circulo-detalle-390.png",
+    "groupId": "4a88b491-53ed-4900-b06e-37c49d79f254",
+    "inviteUrl": "http://127.0.0.1:8081/c/653bbfbca8241dd93b6f177f33ce135b?de=circulo",
+    "body": "Célula persona 1788161941746 Solo los de casa. 1 miembro · Solo por invitación Este círculo no tiene plan Un mismo recorrido para todos, día a día. Lo creas tú y lo reza el círculo entero. Crear el plan del círculo Miembros L Lucía Persona Creó el círculo Se comparte con este círculo Todavía no se comparte ningún plan aquí. Peticiones del círculo Abrir el chat Enlace de invitación http://127.0.0.1:8081/c/653bbfbca8241dd93b6f177f33ce135b?de=circulo Invitar Salir del círculo",
+    "inviteBlock": true,
+    "leave": true
+  },
+  {
+    "t": "2026-08-31T07:39:02.001Z",
+    "step": "circulo.detalle.bottom",
+    "screenshot": "11-circulo-detalle-bottom-390.png",
+    "body": "Célula persona 1788161941746 Solo los de casa. 1 miembro · Solo por invitación Este círculo no tiene plan Un mismo recorrido para todos, día a día. Lo creas tú y lo reza el círculo entero. Crear el plan del círculo Miembros L Lucía Persona Creó el círculo Se comparte con este círculo Todavía no se comparte ningún plan aquí. Peticiones del círculo Abrir el chat Enlace de invitación http://127.0.0.1:8081/c/653bbfbca8241dd93b6f177f33ce135b?de=circulo Invitar Salir del círculo"
+  },
+  {
+    "t": "2026-08-31T07:39:03.355Z",
+    "step": "invite.anon",
+    "screenshot": "12-c-token-anon-390.png",
+    "body": "Te invitan a \"Célula persona 1788161941746\" Un círculo de oración de 1 persona. Solo los de casa. Unirme Ya tengo cuenta",
+    "unirmeLink": 1,
+    "unirmeButton": 0,
+    "already": 1,
+    "tabs": 0
+  },
+  {
+    "t": "2026-08-31T07:39:03.814Z",
+    "step": "invite.afterLogin",
+    "screenshot": "13-zoe-tras-canje-390.png",
+    "url": "http://127.0.0.1:8081/",
+    "body": "Hoy Buenas tardes, Zoe Quintero ammen Aún no tienes un plan Creamos uno a tu medida a partir de lo que nos contaste. Crear mi plan de oración Versículo del día Para todas las cosas hay sazón, y todo lo que se quiere debajo del cielo, tiene su tiempo: Eclesiastés 3:1 Compartir como imagen Hoy Biblia Orar Juntos Perfil"
+  },
+  {
+    "t": "2026-08-31T07:39:06.097Z",
+    "step": "invite.joined",
+    "screenshot": "14-zoe-en-circulo-390.png",
+    "url": "http://127.0.0.1:8081/c/653bbfbca8241dd93b6f177f33ce135b?de=circulo",
+    "body": "Te invitan a \"Célula persona 1788161941746\" Un círculo de oración de 2 personas. Solo los de casa. Unirme"
+  },
+  {
+    "t": "2026-08-31T07:39:08.286Z",
+    "step": "chat",
+    "screenshot": "15-chat-390.png",
+    "url": "http://127.0.0.1:8081/circulo/4a88b491-53ed-4900-b06e-37c49d79f254/chat",
+    "body": "Célula persona 1788161941746 Todavía no hay mensajes. Escribe el primero. Enviar"
+  },
+  {
+    "t": "2026-08-31T07:39:09.281Z",
+    "step": "peticion.form",
+    "screenshot": "16-peticion-nueva-390.png",
+    "body": "Pedir oración ¿Por qué quieres que oren? Pedirlo sin mi nombre Se publicará con tu nombre. Pedir oración"
+  },
+  {
+    "t": "2026-08-31T07:39:09.390Z",
+    "step": "peticion.muro",
+    "screenshot": "17-peticiones-muro-390.png",
+    "body": "Peticiones"
+  },
+  {
+    "t": "2026-08-31T07:39:10.487Z",
+    "step": "leave.confirm",
+    "screenshot": "18-salir-confirm-390.png",
+    "body": "Célula persona 1788161941746 Solo los de casa. 2 miembros · Solo por invitación Miembros L Lucía Persona Creó el círculo Bloquear Z Zoe Quintero Se comparte con este círculo Todavía no se comparte ningún plan aquí. Peticiones del círculo Abrir el chat Enlace de invitación http://127.0.0.1:8081/c/653bbfbca8241dd93b6f177f33ce135b?de=circulo ¿Seguro que quieres salir? Invitar Sí, salir del círculo"
+  },
+  {
+    "t": "2026-08-31T07:39:12.584Z",
+    "step": "leave.done",
+    "screenshot": "19-tras-salir-390.png",
+    "url": "http://127.0.0.1:8081/circulos",
+    "body": "Juntos ammen Círculos Comunidad Peticiones Familia, célula, amigos. Con quien compartes tus planes. Crear círculo Buscar círculos públicos F Familia 2 miembros MIENTRAS TANTO Z Persona: que mi hermana encuentre trabajo esta semana. Peticiones Hoy Biblia Orar Juntos Perfil"
+  },
+  {
+    "t": "2026-08-31T07:39:13.730Z",
+    "step": "circulo.publico.form",
+    "screenshot": "20-circulo-publico-form-390.png",
+    "hint": "Juntos ammen Círculos Comunidad Peticiones Nuevo círculo Nombre Descripción ¿Quién puede unirse? Solo por invitación Cualquiera puede encontrarlo Aparecerá en las búsquedas. Quien lo cree tendrá que moderarlo. Crear círculo Cancelar Hoy Biblia Orar Juntos Perfil"
+  },
+  {
+    "t": "2026-08-31T07:39:16.198Z",
+    "step": "buscar.emptyQuery",
+    "screenshot": "21-buscar-390.png",
+    "body": "Buscar círculos Público persona 1788161953589 1 miembro Unirme"
+  },
+  {
+    "t": "2026-08-31T07:39:16.246Z",
+    "step": "buscar.hit",
+    "screenshot": "22-buscar-hit-390.png",
+    "body": "Buscar círculos Público persona 1788161953589 1 miembro Unirme"
+  },
+  {
+    "t": "2026-08-31T07:39:16.355Z",
+    "step": "buscar.joined",
+    "screenshot": "23-buscar-unida-390.png",
+    "url": "http://127.0.0.1:8081/circulo/4802371a-3803-49d8-ab61-395f687b4ed1",
+    "body": ""
+  },
+  {
+    "t": "2026-08-31T07:39:17.364Z",
+    "step": "invitar.before",
+    "screenshot": "24-invitar-390.png",
+    "body": "Invita a alguien a orar contigo Orar acompañado pesa menos. Invitar amigos"
+  },
+  {
+    "t": "2026-08-31T07:39:18.955Z",
+    "step": "invitar.after",
+    "screenshot": "25-invitar-despues-390.png",
+    "body": "Invita a alguien a orar contigo Orar acompañado pesa menos. Tu enlace http://127.0.0.1:8081/i/5278a64236f8e436aa0cc72a8bf3301b?de=invitacion Invitar amigos No se pudo compartir. Copia el enlace de arriba a mano.",
+    "link": "http://127.0.0.1:8081/i/5278a64236f8e436aa0cc72a8bf3301b?de=invitacion"
+  },
+  {
+    "t": "2026-08-31T07:39:20.466Z",
+    "step": "plus",
+    "screenshot": "26-plus-390.png",
+    "body": "Ammen Plus Planes ilimitados, hechos para lo que estás viviendo. Gratis para siempre Círculos, chat y orar por otras personas. La Biblia entera, con búsqueda. Compartir tu plan con quien quieras. Con Ammen Plus Todos los planes que quieras, no tres. Todavía no se puede pagar. Estamos en ello, y te avisaremos. Lista de espera No hay pago. Si quieres que te avisemos cuando se puedan crear más planes, déjanos cómo llamarte y un correo. Cómo te llamamos Correo Apuntarme Volver"
+  },
+  {
+    "t": "2026-08-31T07:39:22.080Z",
+    "step": "desktop.hoy",
+    "screenshot": "27-hoy-1280.png",
+    "tabNames": [
+      "Reflexiona",
+      "Aplica",
+      "Ora",
+      "Hoy",
+      "Biblia",
+      "Orar",
+      "Juntos",
+      "Perfil"
+    ],
+    "body": "Hoy Buenas tardes, Jaime ammen Día 4 de 14 Confiar cuando no veo el camino Reflexiona Aplica Ora Palabra Reconócelo en todos tus caminos, y él enderezará tus veredas. Proverbios 3:6 Leer el capítulo → Qué significa El camino se endereza andando, no mirándolo desde fuera. Hoy no necesitas todas las respuestas. Ya oré hoy Versículo del día Para todas las cosas hay sazón, y todo lo que se quiere debajo del cielo, tiene su tiempo: Eclesiastés 3:1 Compartir como imagen Hoy Biblia Orar Juntos Perfil"
+  },
+  {
+    "t": "2026-08-31T07:39:23.679Z",
+    "step": "desktop.juntos",
+    "screenshot": "28-juntos-1280.png",
+    "body": "Juntos ammen Círculos Comunidad Peticiones Familia, célula, amigos. Con quien compartes tus planes. Crear círculo Buscar círculos públicos F Familia 2 miembros MIENTRAS TANTO Z Persona: que mi hermana encuentre trabajo esta semana. Peticiones Hoy Biblia Orar Juntos Perfil"
+  },
+  {
+    "t": "2026-08-31T07:39:25.194Z",
+    "step": "desktop.detalle",
+    "screenshot": "29-circulo-detalle-1280.png",
+    "body": "Tus círculos Algo no ha ido bien Esta invitación ya no es válida."
+  },
+  {
+    "t": "2026-08-31T07:39:26.716Z",
+    "step": "desktop.buscar",
+    "screenshot": "30-buscar-1280.png",
+    "body": "Buscar círculos Público persona 1788161953589 2 miembros Unirme"
+  },
+  {
+    "t": "2026-08-31T07:39:28.256Z",
+    "step": "desktop.peticion",
+    "screenshot": "31-peticion-nueva-1280.png",
+    "body": "Pedir oración ¿Por qué quieres que oren? Pedirlo sin mi nombre Se publicará con tu nombre. Pedir oración"
+  },
+  {
+    "t": "2026-08-31T07:39:29.833Z",
+    "step": "desktop.invitar",
+    "screenshot": "32-invitar-1280.png",
+    "body": "Invita a alguien a orar contigo Orar acompañado pesa menos. Invitar amigos"
+  },
+  {
+    "t": "2026-08-31T07:39:31.572Z",
+    "step": "desktop.share-spotcheck",
+    "screenshot": "33-compartir-1280.png",
+    "body": "Compartir mi plan Confiar más que controlar Quien lo reciba podrá orar por ti cada día. En tu perfil Este plan no aparece en tu perfil ni en la comunidad. Publicarlo en mi perfil Círculos Familia Los miembros verán tu día de hoy y podrán orar por ti. Enlace público Aún no has creado un enlace para este plan. Crear enlace"
+  }
+]

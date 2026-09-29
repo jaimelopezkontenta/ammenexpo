@@ -47,6 +47,8 @@ const seedUserCount = () => {
 const result = spawnSync(NPX, ["supabase", "db", "reset"], {
   encoding: "utf8",
   maxBuffer: 20 * 1024 * 1024,
+  // Windows: npx.cmd es un batch; Node moderno exige shell (EINVAL si no).
+  shell: process.platform === "win32",
 });
 
 process.stdout.write(result.stdout ?? "");

@@ -46,6 +46,9 @@ diseno/
 # Atomic local DB lock and test scratch space.
 /.tmp/
 
+# HTML renderizado de las plantillas de correo (npm run email:preview).
+/email-preview/
+
 # Herramientas de agente y scratch de sesiones locales.
 .opencode/
 .playwright-mcp/

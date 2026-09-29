@@ -23,6 +23,7 @@ import {
 import { Avatar } from "@/components/Avatar";
 import { Card } from "@/components/Card";
 import { CirclePlanCard } from "@/components/CirclePlanCard";
+import { EmailInviteField } from "@/components/email/EmailInviteField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
@@ -332,6 +333,10 @@ export default function CircleDetail() {
                 {inviteUrl}
               </Txt>
             </Card>
+          ) : null}
+
+          {inviteToken ? (
+            <EmailInviteField kind="circle" token={inviteToken} />
           ) : null}
 
           {confirmingLeave ? (

@@ -1,7 +1,7 @@
 import * as Localization from "expo-localization";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { Platform, ScrollView, View } from "react-native";
 import Animated, { FadeInRight } from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
@@ -15,6 +15,8 @@ import { WizardHeader } from "@/components/WizardHeader";
 import { Wordmark } from "@/components/Wordmark";
 import { useSession } from "@/core/auth/SessionProvider";
 import { useGeneratePlan } from "@/core/plans/queries";
+import { EMAIL_CADENCES, type EmailCadence } from "@/core/email/cadence";
+import { defaultOnboardingCadence } from "@/core/email/queries";
 import {
   CUSTOM_TOPIC_MAX,
   GENDER_KEYS,
@@ -51,6 +53,9 @@ export default function Onboarding() {
   const [topics, setTopics] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
   const [reminderKeys, setReminderKeys] = useState<string[]>(["morning"]);
+  const [emailCadence, setEmailCadence] = useState<EmailCadence>(() =>
+    defaultOnboardingCadence(Platform.OS === "web"),
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -103,6 +108,7 @@ export default function Onboarding() {
           p_timezone: Localization.getCalendars()[0]?.timeZone ?? "UTC",
           p_reminder_hours: reminderHours,
           p_locale: i18n.resolvedLanguage ?? "es",
+          p_email_cadence: emailCadence,
         },
       );
 
@@ -311,6 +317,22 @@ export default function Onboarding() {
                   max={REMINDER_MAX}
                   multiple
                 />
+                <View className="gap-2 pt-2">
+                  <Txt variant="label">{t("email.onboardingQuestion")}</Txt>
+                  <Txt variant="caption">
+                    {Platform.OS === "web"
+                      ? t("email.onboardingHintWeb")
+                      : t("email.onboardingHintNative")}
+                  </Txt>
+                  <ChoiceChips
+                    options={EMAIL_CADENCES.map((value) => ({
+                      value,
+                      label: t(`email.cadence.${value}`),
+                    }))}
+                    selected={[emailCadence]}
+                    onToggle={(value) => setEmailCadence(value as EmailCadence)}
+                  />
+                </View>
               </View>
             ) : null}
           </Animated.View>

@@ -9,6 +9,7 @@ import { useSession } from "@/core/auth/SessionProvider";
 import { useUnreadNotifications } from "@/core/notifications/queries";
 
 import { icon, useThemeColors } from "@/theme";
+import { greetingKey } from "@/core/time/greeting";
 
 import { Tap } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
@@ -29,20 +30,17 @@ import { Txt } from "@/components/ui/Text";
  * para que le den los buenos días.
  */
 
-const greetingKey = (hour: number) => {
-  if (hour < 12) return "common.greetingMorning";
-  if (hour < 20) return "common.greetingAfternoon";
-  return "common.greetingEvening";
-};
-
 export const TabHeader = ({
   title,
   name,
+  showDate = false,
   wide = false,
 }: {
   title: string;
   /** El nombre de quien entra. Sin él no se saluda, en vez de saludar a nadie. */
   name?: string | null;
+  /** La fecha local, solo en Hoy: ancla el "hoy" de verdad. */
+  showDate?: boolean;
   /**
    * Sigue al contenido hasta `max-w-page` en lg+. Solo para pantallas cuyo
    * contenido también se ensancha (Hoy con su columna de contexto): en las
@@ -51,8 +49,14 @@ export const TabHeader = ({
    */
   wide?: boolean;
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
+  const now = new Date();
+  const dateLabel = now.toLocaleDateString(i18n.language, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
   const { session } = useSession();
   const { data: unread } = useUnreadNotifications(session?.user.id);
   const insets = useSafeAreaInsets();
@@ -81,7 +85,12 @@ export const TabHeader = ({
             numberOfLines={1}
             className="mt-0.5 text-base"
           >
-            {t(greetingKey(new Date().getHours()))}, {name}
+            {t(greetingKey(now.getHours()))}, {name}
+          </Txt>
+        ) : null}
+        {showDate ? (
+          <Txt variant="caption" className="mt-0.5 capitalize">
+            {dateLabel}
           </Txt>
         ) : null}
       </View>

@@ -175,9 +175,9 @@ const icon = {
 /* --- Fontanería del modo oscuro -----------------------------------------
  *
  * Las clases de Tailwind no llevan el hex directamente: llevan
- * `rgb(var(--rgb-…) / <alpha-value>)`, y las variables se definen en `:root`
- * (paleta clara) y bajo `@media (prefers-color-scheme: dark)` (paleta
- * oscura) desde el plugin de `tailwind.config.js`. Así `text-plum` o
+ * `rgb(var(--rgb-…) / <alpha-value>)`. Las variables se definen en `:root`
+ * (claro), bajo `@media (prefers-color-scheme: dark)` (Sistema) y en
+ * `html.dark` / `html.light` (el toggle de Perfil). Así `text-plum` o
  * `bg-glass/60` cambian de tema solos, sin tocar una sola pantalla.
  */
 

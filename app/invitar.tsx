@@ -4,6 +4,7 @@ import { Button } from "@/components/Button";
 import { Txt } from "@/components/ui/Text";
 import { Card } from "@/components/Card";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
+import { EmailInviteField } from "@/components/email/EmailInviteField";
 import { useSession } from "@/core/auth/SessionProvider";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
 import { useCreateInviteCode, useMyInviteCode } from "@/core/social/invites";
@@ -85,6 +86,8 @@ export default function Invite() {
         loading={create.isPending}
         onPress={() => void handleShare()}
       />
+
+      {code ? <EmailInviteField kind="app" token={code} /> : null}
     </ScreenScaffold>
   );
 }

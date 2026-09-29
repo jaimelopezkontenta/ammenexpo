@@ -8,6 +8,7 @@ import { Txt } from "@/components/ui/Text";
 import { Card } from "@/components/Card";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { DawnBackground } from "@/components/DawnBackground";
+import { EmailInviteField } from "@/components/email/EmailInviteField";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { useSession } from "@/core/auth/SessionProvider";
@@ -243,6 +244,10 @@ export default function SharePlan() {
                   disabled={stillWriting}
                   onPress={() => void handleShare()}
                 />
+
+                {link ? (
+                  <EmailInviteField kind="plan" token={link.token} />
+                ) : null}
 
                 {/* Revoking is as prominent as sharing on purpose. These are
                   personal prayer requests: closing the tap must not require

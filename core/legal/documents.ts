@@ -65,7 +65,7 @@ const ES_PRIVACY: Document = {
 
     "**La inteligencia artificial.** Para escribir tu plan mandamos a Anthropic (el modelo Claude) lo que respondiste en el onboarding y el tema del plan. No mandamos tu nombre, ni tu correo, ni tus peticiones de oración. Anthropic no usa esos datos para entrenar sus modelos.",
 
-    "**Dónde vive.** En Supabase, sobre infraestructura de Amazon Web Services. Los avatares están en un almacenamiento público: cualquiera con la URL exacta puede verlos, así que no subas ahí nada que no quieras que se vea.",
+    "**Dónde vive.** En Supabase, sobre infraestructura de Amazon Web Services. Los avatares están en un almacenamiento público: cualquiera con la URL exacta puede verlos, así que no subas ahí nada que no quieras que se vea. El correo de producto (versículo, invitaciones, avisos de cuenta) lo envía Resend como encargado, desde mail.ammen.app. La oración que escribes en primera persona no viaja en esos correos.",
 
     "**Cuánto tiempo.** Mientras tengas cuenta. Cuando la borras, se borra todo lo tuyo. Los enlaces públicos que hayas creado caducan solos.",
 
@@ -123,7 +123,7 @@ const EN_PRIVACY: Document = {
 
     "**Artificial intelligence.** To write your plan we send Anthropic (the Claude model) your onboarding answers and the plan's topic. We do not send your name, your email or your prayer requests. Anthropic does not use that data to train its models.",
 
-    "**Where it lives.** On Supabase, running on Amazon Web Services infrastructure. Avatars sit in public storage: anyone with the exact URL can see them, so do not upload anything there you would not want seen.",
+    "**Where it lives.** On Supabase, running on Amazon Web Services infrastructure. Avatars sit in public storage: anyone with the exact URL can see them, so do not upload anything there you would not want seen. Product email (the verse, invitations, account notices) is sent by Resend as a processor, from mail.ammen.app. The prayer you write in the first person never travels in those emails.",
 
     "**For how long.** As long as you have an account. When you delete it, everything of yours is deleted. Public links you created expire on their own.",
 

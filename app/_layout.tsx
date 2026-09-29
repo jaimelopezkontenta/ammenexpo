@@ -24,7 +24,7 @@ import {
 
 import { useTranslation } from "react-i18next";
 
-import { useThemeColors } from "@/theme";
+import { ThemeProvider, useIsDark, useThemeColors } from "@/theme";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -52,8 +52,19 @@ if (__DEV__) {
 track("open", { context: "cold_start" });
 
 export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <RootLayoutInner />
+      </ThemeProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function RootLayoutInner() {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const isDark = useIsDark();
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -103,13 +114,8 @@ export default function RootLayout() {
   }
 
   return (
-    // La raíz de los gestos (swipe para cerrar una hoja, y los que vengan):
-    // sin este View por encima, ningún `GestureDetector` de la app funciona.
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      {/* "auto" sigue al tema: tinta oscura sobre el cielo claro, clara sobre
-          el anochecer. Antes no se declaraba y valía de chiripa (el default
-          era el correcto para solo-claro). */}
-      <StatusBar style="auto" />
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
           <SessionProvider>
@@ -156,6 +162,6 @@ export default function RootLayout() {
           </SessionProvider>
         </SafeAreaProvider>
       </QueryClientProvider>
-    </GestureHandlerRootView>
+    </>
   );
 }

@@ -24,6 +24,7 @@ import {
 import { syncLocalReminders } from "@/core/notifications/localReminders";
 import { useFlushPrayedQueue } from "@/core/plans/offline";
 import { useProfile } from "@/core/profile/queries";
+import { useLastSeenHeartbeat } from "@/core/email/heartbeat";
 
 type SessionState = {
   session: Session | null;
@@ -217,6 +218,7 @@ export const SessionProvider = ({
   // cada vez que la app vuelve a primer plano: si no, la marca local y
   // el servidor se desalinean hasta el próximo arranque en frío.
   useFlushPrayedQueue(userId);
+  useLastSeenHeartbeat(userId ?? undefined);
 
   const refreshOnboarding = useCallback(async () => {
     await refetch();

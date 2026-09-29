@@ -28,6 +28,11 @@ export const ALLOWED_EVENTS = [
   "push_delivered",
   "push_failed",
   "open",
+  "email_enqueued",
+  "email_sent",
+  "email_opened",
+  "email_clicked",
+  "email_unsubscribed",
 ] as const;
 
 export type ObservabilityEvent = (typeof ALLOWED_EVENTS)[number];
@@ -101,6 +106,21 @@ const SCHEMAS: Record<ObservabilityEvent, EventSchema> = {
       kind: "enum",
       values: ["deep_link", "notification", "cold_start"],
     },
+  },
+  email_enqueued: {
+    template: { kind: "opaque_id" },
+  },
+  email_sent: {
+    template: { kind: "opaque_id" },
+  },
+  email_opened: {
+    template: { kind: "opaque_id" },
+  },
+  email_clicked: {
+    template: { kind: "opaque_id" },
+  },
+  email_unsubscribed: {
+    surface: { kind: "enum", values: ["one_click", "prefs"] },
   },
 };
 

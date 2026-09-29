@@ -1,0 +1,66 @@
+import { createClient } from "npm:@supabase/supabase-js@^2.58.0";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS, "Content-Type": "application/json" },
+  });
+
+/**
+ * Baja one-click (RFC 8058). POST pone cadence=off. GET redirige a /correo?t=.
+ */
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: CORS });
+  }
+
+  const url = new URL(req.url);
+  const token = url.searchParams.get("t") ?? "";
+  const appOrigin = (
+    Deno.env.get("EMAIL_APP_ORIGIN") ||
+    Deno.env.get("SITE_URL") ||
+    "https://ammen.app"
+  ).replace(/\/$/u, "");
+
+  if (!token) {
+    return json({ ok: false, error: "missing_token" }, 400);
+  }
+
+  if (req.method === "GET") {
+    return Response.redirect(
+      `${appOrigin}/correo?t=${encodeURIComponent(token)}`,
+      302,
+    );
+  }
+
+  if (req.method !== "POST") {
+    return json({ ok: false, error: "method_not_allowed" }, 405);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim() ?? "";
+  const serviceRoleKey =
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ?? "";
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return json({ ok: false, error: "not_configured" }, 503);
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const { data, error } = await supabase.rpc("unsubscribe_email_one_click", {
+    p_token: token,
+  });
+
+  if (error) {
+    console.error("unsubscribe_email_one_click failed", error);
+    return json({ ok: false, error: "unsubscribe_failed" }, 500);
+  }
+
+  return json({ ok: Boolean(data) });
+});

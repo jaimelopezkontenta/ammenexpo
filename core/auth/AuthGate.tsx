@@ -1,4 +1,9 @@
-import { Redirect, usePathname, useSegments } from "expo-router";
+import {
+  Redirect,
+  useGlobalSearchParams,
+  usePathname,
+  useSegments,
+} from "expo-router";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -68,7 +73,12 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   } = useSession();
   const segments = useSegments();
   const pathname = usePathname();
+  const search = useGlobalSearchParams<{ t?: string }>();
   const group = segments[0];
+  const correoToken =
+    pathname === "/correo" &&
+    typeof search.t === "string" &&
+    search.t.length > 0;
 
   if (group === "(public)") {
     return <>{children}</>;
@@ -86,11 +96,18 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
   }
 
+  // Baja / preferencias desde el pie del mail: el token firma la fila, no hay
+  // sesión. Vive en `app/correo.tsx` (stack raíz) para que, con cuenta, Atrás
+  // vuelva a Perfil — no en `(public)`, que anunciaba "(tabs), back" y caía en Hoy.
+
   if (isLoading) {
     return <Loading />;
   }
 
   if (!session) {
+    if (correoToken) {
+      return <>{children}</>;
+    }
     return group === "(auth)" ? <>{children}</> : <Redirect href="/entrar" />;
   }
 

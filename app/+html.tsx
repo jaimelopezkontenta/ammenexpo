@@ -110,6 +110,16 @@ export default function Root({ children }: { children: React.ReactNode }) {
           content={colorsDark.dawn.sky}
         />
         <title>{SOCIAL_TITLE}</title>
+        {/*
+          Lee `ammen.theme.v1` antes del JS de la app para no pintar el
+          amanecer claro un frame cuando alguien forzó Oscuro (o al revés).
+          El default es Sistema: sin clave, no se pone clase y gana el media.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("ammen.theme.v1")||"system";document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.classList.toggle("light",t==="light");}catch(e){}})();`,
+          }}
+        />
 
         <ScrollViewStyleReset />
 
@@ -140,4 +150,10 @@ body {
   body {
     background-color: ${colorsDark.dawn.sky};
   }
+}
+html.dark body {
+  background-color: ${colorsDark.dawn.sky};
+}
+html.light body {
+  background-color: ${colors.dawn.sky};
 }`;

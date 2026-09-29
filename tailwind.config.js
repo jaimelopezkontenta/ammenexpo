@@ -15,6 +15,10 @@ const plugin = require("tailwindcss/plugin");
 const tokens = require("./theme/tokens");
 
 module.exports = {
+  // "class" (no "media"): NativeWind solo deja `colorScheme.set()` con class.
+  // El sistema sigue vivo: las variables oscuras también entran por
+  // `prefers-color-scheme` cuando no hay `.dark`/`.light` forzados.
+  darkMode: "class",
   // `core/` entra en el escaneo: `core/auth/AuthGate.tsx` pinta pantalla
   // completa y se quedó con los estilos del scaffold justamente porque sus
   // clases nunca se generaban.
@@ -68,17 +72,20 @@ module.exports = {
     },
   },
   plugins: [
-    // La paleta como variables en `:root`, y el anochecer ENCENDIDO
-    // (2026-08-28, decisión de Jaime): con el sistema en oscuro, las ~65
-    // clases de token de toda la app voltean solas por CSS, sin JS. Los otros
-    // dos interruptores viven en app.config.js (`userInterfaceStyle`) y en
-    // `theme/useThemeColors.ts` (la rama JS: gradientes, iconos, blur).
+    // La paleta como variables. Tres capas, a propósito:
+    // 1. `:root` claro.
+    // 2. `@media (prefers-color-scheme: dark)` — el modo Sistema, y lo que
+    //    Playwright (`colorScheme: "dark"`) sigue usando.
+    // 3. `html.dark` / `html.light` — el toggle de Perfil, más específico
+    //    que el media, para forzar un tema contra el OS.
     plugin(({ addBase }) => {
       addBase({
         ":root": tokens.cssVars.light,
         "@media (prefers-color-scheme: dark)": {
           ":root": tokens.cssVars.dark,
         },
+        "html.dark": tokens.cssVars.dark,
+        "html.light": tokens.cssVars.light,
       });
     }),
   ],

@@ -10,6 +10,7 @@ import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NavRow } from "@/components/ui/NavRow";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PrayForCard } from "@/components/PrayForCard";
 import { ResponsiveTabContent } from "@/components/ResponsiveTabContent";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
@@ -52,6 +53,8 @@ export default function Pray() {
 
   const myFirstPlan = (myPlans ?? [])[0];
   const hasSharedPlans = (plans ?? []).length > 0;
+  const nextPending = prayerProgress.pending[0] ?? null;
+  const restPending = prayerProgress.pending.slice(1);
 
   return (
     <DawnBackground>
@@ -69,10 +72,49 @@ export default function Pray() {
             </Txt>
           </Animated.View>
 
+          {nextPending ? (
+            <Animated.View entering={enterStagger(1)}>
+              <Card className="gap-4">
+                <Txt variant="overline">{t("pray.nextUp")}</Txt>
+                <Txt variant="title">{nextPending.owner_name}</Txt>
+                <Txt variant="body" tone="secondary">
+                  {nextPending.day_title}
+                </Txt>
+                {prayerProgress.total > 0 ? (
+                  <View className="gap-2">
+                    <Txt variant="caption">
+                      {t("pray.progress", {
+                        completed: prayerProgress.completedCount,
+                        total: prayerProgress.total,
+                      })}
+                    </Txt>
+                    <ProgressBar
+                      value={prayerProgress.completedCount}
+                      max={prayerProgress.total}
+                      accessibilityLabel={t("pray.progressAccessibility", {
+                        completed: prayerProgress.completedCount,
+                        total: prayerProgress.total,
+                      })}
+                    />
+                  </View>
+                ) : null}
+                <Button
+                  title={t("pray.prayNow")}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/orar/[planId]",
+                      params: { planId: nextPending.plan_id },
+                    })
+                  }
+                />
+              </Card>
+            </Animated.View>
+          ) : null}
+
           {/* Mis planes: el CTA primario (Nuevo plan) no depende de que
           exista ya un plan ni de que nadie haya compartido contigo — es la
           puerta que antes solo aparecía dentro del empty-wall. */}
-          <Animated.View entering={enterStagger(1)}>
+          <Animated.View entering={enterStagger(2)}>
             <Card label={t("pray.sectionMyPlans")} className="gap-3">
               {myFirstPlan ? (
                 // El plan como contenido, no como pila de botones: la fila
@@ -92,6 +134,7 @@ export default function Pray() {
               ) : null}
               <Button
                 title={t("pray.newPlan")}
+                variant={nextPending ? "secondary" : "primary"}
                 onPress={() => router.push("/plan/nuevo")}
               />
             </Card>
@@ -99,7 +142,7 @@ export default function Pray() {
 
           {/* Mi lista: un tap desde Orar, siempre. No depende de que nadie
           comparta nada contigo. */}
-          <Animated.View entering={enterStagger(2)}>
+          <Animated.View entering={enterStagger(3)}>
             <Card label={t("pray.sectionMyList")} className="gap-3">
               {/* Una fila que navega, no otro botón: el único CTA de esta
                 pantalla es "Nuevo plan". */}
@@ -112,11 +155,12 @@ export default function Pray() {
           {/* Por otros: la intercesión. Sin planes ajenos el empty es local
           a este bloque — nunca una pared que esconda los dos bloques de
           arriba. */}
-          <Animated.View entering={enterStagger(3)} className="gap-4">
+          <Animated.View entering={enterStagger(4)} className="gap-4">
             <Txt variant="editorial">{t("pray.sectionForOthers")}</Txt>
 
             {hasSharedPlans ? (
               <>
+                {nextPending ? null : (
                 <Card className="gap-3">
                   <View className="flex-row items-center justify-between gap-3">
                     <Txt variant="subheading">{t("pray.progressTitle")}</Txt>
@@ -127,36 +171,16 @@ export default function Pray() {
                       })}
                     </Txt>
                   </View>
-                  <View
-                    className="h-2 overflow-hidden rounded-full bg-glass/70"
-                    accessibilityRole="progressbar"
+                  <ProgressBar
+                    value={prayerProgress.completedCount}
+                    max={prayerProgress.total}
                     accessibilityLabel={t("pray.progressAccessibility", {
                       completed: prayerProgress.completedCount,
                       total: prayerProgress.total,
                     })}
-                    accessibilityValue={{
-                      min: 0,
-                      max: prayerProgress.total,
-                      now: prayerProgress.completedCount,
-                    }}
-                  >
-                    <View
-                      className="h-full rounded-full bg-ember-accent"
-                      style={{
-                        // El guard evita el NaN% si `total` llegara a 0 (hoy
-                        // este bloque solo pinta con planes, pero un divisor
-                        // sin guard es una trampa esperando su refactor).
-                        width: `${
-                          prayerProgress.total > 0
-                            ? (prayerProgress.completedCount /
-                                prayerProgress.total) *
-                              100
-                            : 0
-                        }%`,
-                      }}
-                    />
-                  </View>
+                  />
                 </Card>
+                )}
 
                 {/* The finish line. The server already sorts prayed-for last,
                   but the UI derives this state itself instead of trusting
@@ -172,10 +196,10 @@ export default function Pray() {
                   </Card>
                 ) : null}
 
-                {prayerProgress.pending.length > 0 ? (
+                {restPending.length > 0 ? (
                   <View className="gap-3">
                     <Txt variant="editorial">{t("pray.pending")}</Txt>
-                    {prayerProgress.pending.map((plan) => (
+                    {restPending.map((plan) => (
                       <PrayForCard
                         key={plan.plan_id}
                         plan={plan}

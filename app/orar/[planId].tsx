@@ -101,7 +101,10 @@ export default function PrayForSomeone() {
           contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="gap-1">
+          <View
+            className="gap-1"
+            accessibilityLiveRegion="polite"
+          >
             <Txt variant="overline">
               {t("common.day", { number: plan.day_number })}
             </Txt>

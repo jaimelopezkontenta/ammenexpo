@@ -104,6 +104,21 @@ describe("observability allowlist + schema", () => {
     expect(() => track("open", { context: "deep_link" })).not.toThrow();
   });
 
+  it("accepts email lifecycle events without PII", () => {
+    expect(
+      sanitizePayload("email_unsubscribed", { surface: "one_click" }),
+    ).toEqual({ surface: "one_click" });
+    expect(sanitizePayload("email_sent", { template: "welcome" })).toEqual({
+      template: "welcome",
+    });
+    expect(
+      sanitizePayload("email_sent", {
+        template: "welcome",
+        email: "a@b.c",
+      } as unknown as ObservabilityPayload),
+    ).toEqual({ template: "welcome" });
+  });
+
   it("the dev console reporter only ever sees the already-sanitized payload", () => {
     const spy = vi.spyOn(console, "debug").mockImplementation(() => {});
     observability.configure(devConsoleReporter);

@@ -97,28 +97,21 @@ No crear ni reutilizar cuentas seed en remoto.
 
 ## Edge Functions y secrets
 
-Mantener el sender apagado y desplegarlo con proyecto explícito:
+La fuente de verdad de las claves de Edge (Resend, Anthropic, invoke
+secrets, kill switches) es **Google Cloud Secret Manager** en
+`ammen-staging`. No pegarlas en el dashboard de Supabase ni dejarlas en el
+historial: `docs/runbooks/secrets-sync.md`.
 
 ```powershell
-npx supabase secrets set PUSH_SENDER_ENABLED=false --project-ref syprzdjznuppckenuaua
+npm run secrets:pull
 npx supabase functions deploy send-intercession-push --project-ref syprzdjznuppckenuaua --use-api
 ```
 
-`generate-prayer-plan` necesita una clave real de Anthropic. Para cargarla sin
-dejar el valor en el historial, crear el archivo local ignorado
-`supabase/functions/.env.staging.local` con:
-
-```dotenv
-AI_PROVIDER=anthropic
-ANTHROPIC_API_KEY=<valor-real>
-```
-
-Después ejecutar y borrar el archivo local:
+`generate-prayer-plan` necesita `ANTHROPIC_API_KEY` ya creado en Secret
+Manager. Tras `npm run secrets:pull`:
 
 ```powershell
-npx supabase secrets set --env-file supabase/functions/.env.staging.local --project-ref syprzdjznuppckenuaua
 npx supabase functions deploy generate-prayer-plan --project-ref syprzdjznuppckenuaua --use-api
-Remove-Item supabase/functions/.env.staging.local
 ```
 
 No inventar, imprimir ni versionar `ANTHROPIC_API_KEY`.

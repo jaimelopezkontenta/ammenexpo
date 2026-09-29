@@ -258,15 +258,24 @@ otp_expiry = 3600
 # sender_name = "Admin"
 
 # Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# template.* se resuelve desde la raíz del repo; notification.* desde supabase/.
+[auth.email.template.recovery]
+subject = "Elegir una contraseña nueva"
+content_path = "./supabase/templates/recovery.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./templates/password_changed_notification.html"
+[auth.email.template.confirmation]
+subject = "Confirma tu correo"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.notification.password_changed]
+enabled = true
+subject = "Tu contraseña ha cambiado"
+content_path = "./templates/password_changed.html"
+
+# Producción: SMTP de Resend en el dashboard (no en este fichero).
+# host = smtp.resend.com · puerto 465 o 587 · user = resend · pass = API key
+# sender = Ammen <hola@mail.ammen.app> · replyTo hola@ammen.app
+
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
@@ -426,3 +435,17 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# Correo: el cliente Expo no llama a Resend. Estas funciones no exigen JWT de
+# usuario; el drain y el enqueue llevan `x-ammen-invoker` si hay secret.
+[functions.send-email]
+verify_jwt = false
+
+[functions.resend-webhook]
+verify_jwt = false
+
+[functions.email-unsubscribe]
+verify_jwt = false
+
+[functions.enqueue-emails]
+verify_jwt = false

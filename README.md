@@ -112,11 +112,9 @@ levantado.
 `supabase/functions/.env` **está en `.gitignore` y no se sube nunca**. Guarda la
 clave de Anthropic para el desarrollo local.
 
-En producción no hay fichero: la clave se pone con
-
-```bash
-npx supabase secrets set ANTHROPIC_API_KEY=...
-```
+En remoto no hay fichero: las claves viven en Google Cloud Secret Manager
+(`ammen-staging`) y se copian a las Edge Functions con
+`npm run secrets:pull`. Ver `docs/runbooks/secrets-sync.md`.
 
 La clave `service_role` no se usa jamás desde el cliente.
 

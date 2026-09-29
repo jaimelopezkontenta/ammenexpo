@@ -8,3 +8,6 @@
 export { colors, colorsDark, borderRadius, boxShadow, icon } from "./tokens";
 export { gradients, scrim, withAlpha } from "./gradients";
 export { useThemeColors, useIsDark } from "./useThemeColors";
+export { parseThemePref, resolveTheme, THEME_STORAGE_KEY } from "./preference";
+export type { ThemePref, ResolvedTheme } from "./preference";
+export { ThemeProvider, useThemePref } from "./ThemeProvider";

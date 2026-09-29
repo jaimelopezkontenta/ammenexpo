@@ -25,17 +25,29 @@ Reglas duras para no romper el sistema de `prototipo/TOKENS.md`. Si un cambio la
 
 ## El anochecer (modo oscuro)
 
-Encendido con Amanecer 4.0 (2026-08-28). **La fuente de verdad es el sistema** — no hay toggle de usuario; si algún día llega, va por `colorScheme.set()` de nativewind y por ningún otro sitio.
+Encendido con Amanecer 4.0 (2026-08-28). **El default es Sistema** (sigue al OS). El toggle de usuario vive en Perfil → Apariencia: Sistema / Oscuro / Claro, persistido en `ammen.theme.v1`. La única vía de forzar el tema es `colorScheme.set()` de NativeWind, llamada desde `theme/ThemeProvider.tsx`.
 
 - **Qué voltea solo:** toda clase de token (`text-plum`, `bg-glass/60`, …) vía las variables CSS de `tailwind.config.js`; la rama JS (iconos, placeholders, opciones de navegación) vía `useThemeColors()`; los degradados con gemelo (`dawnDark`, `dayActionDark`) vía `useIsDark()`.
 - **Marca fija, a propósito:** el Orb, el Avatar, `VerseCard`/`VerseStory`, `gradients.cta` y `gradients.story`, `cta-ink` y el splash no cambian de tema. El melocotón es la marca.
 - **Invariante:** el `scrim` deriva de `scrimBase` (plum tinta) en los DOS temas — en oscuro `plum` es casi blanco y un velo derivado de la paleta activa iluminaría en vez de atenuar.
 - **Reglas para código nuevo:** nada de `colors` importado estático en componentes (siempre `useThemeColors()`); un degradado nuevo trae gemelo oscuro o un comentario «marca» que explique por qué no; una pantalla nueva entra en la baseline clara (`@visual`) y también en la oscura (`@dark`, `e2e/visual-dark.spec.ts`) si estrena un primitivo ciego al volteo CSS (vidrio, scrim, gradiente JS, blur). Ojo: el tag es `@dark`, nunca `@visual-dark` — `/@visual/` lo matchearía por substring.
-- **Limitaciones aceptadas (v1):** en web, el body llega oscuro desde el primer byte (`app/+html.tsx`) pero los degradados JS hidratan después — hay un parpadeo menor en el arranque. Y si el scheme del sistema cambia con la pestaña oculta, la rama JS queda desfasada hasta volver a primer plano con otro cambio o recargar (css-interop descarta eventos con `AppState !== "active"`).
+- **Limitaciones aceptadas:** en web, el body llega con el tema correcto desde el primer byte (`app/+html.tsx` + script de `ammen.theme.v1`) pero los degradados JS hidratan después — hay un parpadeo menor en el arranque. Y si el scheme del sistema cambia con la pestaña oculta, la rama JS queda desfasada hasta volver a primer plano con otro cambio o recargar (css-interop descarta eventos con `AppState !== "active"`).
+- **No sustituir Amanecer por la paleta violeta del prototipo Vite** (`C:\ammen`). Esa SPA no es este producto. El lenguaje visual de esta app es `prototipo/TOKENS.md`.
 
 ## Fuera de este contrato
 
 - (Las tabs sociales ya se unificaron en «Juntos» con Amanecer 3.0; el modo oscuro llegó con Amanecer 4.0.)
+
+## Verificación (comandos, cwd raíz)
+
+| Check | Comando | Notas |
+|---|---|---|
+| typecheck | `npm run typecheck` | bloqueante |
+| lint | `npm run lint` | bloqueante (eslint + prettier -c) |
+| unit | `npm run test` | bloqueante |
+| db | `npm run db:test` | lento; requiere Supabase local (`npm run db:start`) |
+
+Nada de `npm run deploy:web:staging` ni `firebase deploy`: los deploys los hace el usuario.
 
 ## Tipos en `supabase/functions` (Deno)
 

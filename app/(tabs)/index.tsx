@@ -45,6 +45,8 @@ import {
 } from "@/core/plans/queries";
 
 import { Pill } from "@/components/ui/Pill";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StreakRing } from "@/components/StreakRing";
 import { Tap, triggerHaptic } from "@/components/ui/Tap";
 import { useToast } from "@/core/toast/ToastProvider";
 import { icon, useThemeColors } from "@/theme";
@@ -319,7 +321,11 @@ export default function Today() {
 
     return (
       <DawnBackground>
-        <TabHeader title={t("tabs.today")} name={profile?.display_name} />
+        <TabHeader
+          title={t("tabs.today")}
+          name={profile?.display_name}
+          showDate
+        />
         <ResponsiveTabContent className="flex-1 gap-3 pb-10 pt-2">
           {/* A failed plan can be the newest one, and without a way off this
             screen the plans that do work become unreachable. */}
@@ -407,7 +413,11 @@ export default function Today() {
   if (progress?.finished) {
     return (
       <DawnBackground>
-        <TabHeader title={t("tabs.today")} name={profile?.display_name} />
+        <TabHeader
+          title={t("tabs.today")}
+          name={profile?.display_name}
+          showDate
+        />
         <ScrollView contentContainerClassName="flex-grow py-14">
           <ResponsiveTabContent className="flex-grow">
             <View className="w-full flex-1 gap-3 self-center md:max-w-3xl">
@@ -527,7 +537,12 @@ export default function Today() {
     <DawnBackground>
       {/* `wide`: el contenido de abajo se abre a `max-w-page` en lg y la
           cabecera lo acompaña — si no, quedaba 240 px hacia dentro. */}
-      <TabHeader title={t("tabs.today")} name={profile?.display_name} wide />
+      <TabHeader
+        title={t("tabs.today")}
+        name={profile?.display_name}
+        showDate
+        wide
+      />
       <ScrollView
         contentContainerClassName="py-8"
         keyboardShouldPersistTaps="handled"
@@ -541,29 +556,41 @@ export default function Today() {
               {/* La fila meta: dónde estás y cuánto llevas. A la derecha, el
               `···` que abre el cajón del plan. */}
               <View className="flex-row items-center justify-between gap-3">
-                <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-2 gap-y-1">
-                  <Txt variant="label" tone="secondary">
-                    {t("plan.dayOf", {
-                      current: day.day_number,
-                      total: plan.duration_days,
-                    })}
-                    {plan.status === "generating" && !stuck
-                      ? ` · ${t("plan.stillPreparing")}`
-                      : ""}
-                  </Txt>
-                  {/* La racha es un chip y no un segmento más de la línea: es la
-                  única pieza de la fila que celebra, y merece forma propia. */}
+                <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-3 gap-y-1">
                   {days > 0 ? (
-                    <View className="rounded-full bg-plum-chip px-3 py-1">
-                      <Txt
-                        variant="subheading"
-                        tone="onDark"
-                        className="text-xs"
-                      >
-                        {t("plan.streak", { count: days })}
-                      </Txt>
-                    </View>
+                    <StreakRing
+                      days={days}
+                      accessibilityLabel={t("plan.streak", { count: days })}
+                    />
                   ) : null}
+                  <View className="min-w-0 flex-1 gap-1">
+                    <Txt variant="overline">
+                      {prayed
+                        ? t("plan.captionDone")
+                        : day.day_number > 1
+                          ? t("plan.captionContinue")
+                          : t("plan.captionComingUp")}
+                    </Txt>
+                    <Txt variant="label" tone="secondary">
+                      {t("plan.dayOf", {
+                        current: day.day_number,
+                        total: plan.duration_days,
+                      })}
+                      {plan.status === "generating" && !stuck
+                        ? ` · ${t("plan.stillPreparing")}`
+                        : ""}
+                    </Txt>
+                    {progress && progress.days_total > 0 ? (
+                      <ProgressBar
+                        value={progress.days_prayed}
+                        max={progress.days_total}
+                        accessibilityLabel={t("plan.progressDaysAccessibility", {
+                          prayed: progress.days_prayed,
+                          total: progress.days_total,
+                        })}
+                      />
+                    ) : null}
+                  </View>
                 </View>
 
                 <Tap
@@ -670,6 +697,9 @@ export default function Today() {
                     <Txt variant="bodyMedium" className="text-center">
                       {t("plan.markedDone")}
                     </Txt>
+                    <Txt variant="caption" className="text-center">
+                      {t("plan.seeYouTomorrow")}
+                    </Txt>
                   </Animated.View>
                 ) : (
                   <Button
@@ -751,6 +781,12 @@ export default function Today() {
                   ) : null}
                 </>
               ) : null}
+
+              {/* En móvil el versículo no tiene columna lateral: va al pie,
+                como "una palabra quieta", no encima del journey. */}
+              <View className="lg:hidden">
+                <VerseOfTheDay />
+              </View>
             </View>
 
             {/* La columna de contexto del escritorio: el versículo del día

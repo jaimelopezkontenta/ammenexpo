@@ -11,6 +11,7 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { DawnBackground } from "@/components/DawnBackground";
 import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { ResponsiveTabContent } from "@/components/ResponsiveTabContent";
@@ -29,6 +30,7 @@ import {
 } from "@/core/onboarding/options";
 import { useOpenReportCount } from "@/core/moderation/queue";
 import { useToast } from "@/core/toast/ToastProvider";
+import { useEmailPreferences } from "@/core/email/queries";
 import {
   useDeleteAccount,
   useProfile,
@@ -45,6 +47,7 @@ export default function Profile() {
   const userId = session?.user.id;
 
   const { data: profile, isLoading, isError, refetch } = useProfile(userId);
+  const { data: emailPrefs } = useEmailPreferences(userId);
   const update = useUpdateProfile(userId);
   const updateTimezone = useUpdateTimezone(userId);
   const uploadAvatar = useUploadAvatar(userId);
@@ -193,7 +196,12 @@ export default function Profile() {
                 <View className="min-w-0 flex-1 gap-1">
                   <Txt variant="headingLg">{profile.display_name}</Txt>
                   {session?.user.email ? (
-                    <Txt variant="caption">{session.user.email}</Txt>
+                    <Txt
+                      variant="caption"
+                      accessibilityLiveRegion="polite"
+                    >
+                      {t("profile.signedIn", { email: session.user.email })}
+                    </Txt>
                   ) : null}
 
                   <View className="flex-row flex-wrap gap-4 pt-1">
@@ -249,9 +257,13 @@ export default function Profile() {
             ) : null}
 
             <View className="gap-6 md:flex-row md:items-start">
+              <View className="gap-6 md:min-w-0 md:flex-1">
+              <Card label={t("profile.appearance")} className="gap-3">
+                <ThemeSwitcher />
+              </Card>
               <Card
                 label={t("profile.preferences")}
-                className="gap-6 md:min-w-0 md:flex-1"
+                className="gap-6"
               >
                 <View className="gap-3">
                   <Txt variant="label" tone="secondary">
@@ -312,6 +324,7 @@ export default function Profile() {
 
                 <LanguageSwitcher />
               </Card>
+              </View>
 
               <View className="gap-6 md:min-w-0 md:flex-1">
                 {/* Filas con chevron, no seis Button ghost idénticos: son
@@ -346,6 +359,17 @@ export default function Profile() {
 
                   <Link href="/invitar" asChild>
                     <NavRow label={t("invite.title")} />
+                  </Link>
+
+                  <Link href="/correo" asChild>
+                    <NavRow
+                      label={t("email.title")}
+                      meta={
+                        emailPrefs
+                          ? t(`email.cadence.${emailPrefs.cadence}`)
+                          : undefined
+                      }
+                    />
                   </Link>
 
                   <Link href="/acerca" asChild>

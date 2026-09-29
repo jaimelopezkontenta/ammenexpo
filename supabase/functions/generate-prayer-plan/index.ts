@@ -8,7 +8,7 @@ import { checkDuration, MAX_DAYS, MIN_DAYS } from "./bounds.ts";
 import { deriveChunkRequestId } from "./chunkRequestId.ts";
 import { createAnthropicProvider } from "./providers/anthropic.ts";
 import { createFixtureProvider } from "./providers/fixture.ts";
-import { createOllamaProvider } from "./providers/ollama.ts";
+import { createUnslothProvider } from "./providers/unsloth.ts";
 import {
   type PlanProvider,
   type ProviderMessage,
@@ -65,10 +65,11 @@ const selectProvider = (): PlanProvider => {
     return createFixtureProvider();
   }
 
-  if (provider === "ollama") {
-    return createOllamaProvider(
-      Deno.env.get("OLLAMA_URL") ?? "http://host.docker.internal:11434",
-      Deno.env.get("OLLAMA_MODEL") ?? "gemma3:4b",
+  if (provider === "unsloth") {
+    return createUnslothProvider(
+      Deno.env.get("UNSLOTH_URL") ?? "http://host.docker.internal:8888/v1",
+      Deno.env.get("UNSLOTH_MODEL") ?? "unsloth/Qwen3.8-27B-GGUF",
+      Deno.env.get("UNSLOTH_API_KEY") ?? "",
     );
   }
 
@@ -77,7 +78,7 @@ const selectProvider = (): PlanProvider => {
   if (!apiKey) {
     throw new Error(
       "ANTHROPIC_API_KEY is not set. Set it with `supabase secrets set`, " +
-        "or use AI_PROVIDER=ollama for local development.",
+        "or use AI_PROVIDER=unsloth for local development.",
     );
   }
 
