@@ -294,8 +294,9 @@ export default function CircleChat() {
                       pequeña, al filo, sin robarle línea al mensaje. */}
                         <Txt
                           variant="caption"
+                          tone={item.is_mine ? "onDark" : undefined}
                           className={`self-end pt-0.5 text-xs ${
-                            item.is_mine ? "text-white/70" : ""
+                            item.is_mine ? "opacity-70" : ""
                           }`}
                         >
                           {timeLabel(item.created_at)}
