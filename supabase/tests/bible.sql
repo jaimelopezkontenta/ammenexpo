@@ -281,7 +281,7 @@ begin;
 set local role service_role;
 
 select pg_temp.assert(
-  (select count(*) from public.bible_verses) = 31102,
+  (select count(*) from public.bible_verses where version = 'rvr1909') = 31102,
   'service_role can read scripture, which it could not before');
 
 select pg_temp.assert(
