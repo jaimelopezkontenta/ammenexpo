@@ -39,6 +39,7 @@ export default function InviteLanding() {
     data: name,
     isLoading,
     isLoadingError,
+    error,
     refetch,
   } = useInvitePreview(code);
 
@@ -56,7 +57,7 @@ export default function InviteLanding() {
   }
 
   if (isLoadingError) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   return (
