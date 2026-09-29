@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_TEAM_ID.app.ammen.ammen"],
+        "components": [
+          { "/": "/p/*", "comment": "Plan compartido" },
+          { "/": "/c/*", "comment": "Invitación a un círculo" }
+        ]
+      }
+    ]
+  }
+}
