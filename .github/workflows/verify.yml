@@ -127,9 +127,13 @@ jobs:
         with:
           deno-version: "2.1.4"
 
-      # `--frozen` contra `supabase/functions/deno.lock`: los `npm:` de las
+      # `--frozen` contra `supabase/functions/deno.ci.lock`: los `npm:` de las
       # funciones llevan rangos (`^2.58.0`) y sin el lock cada run resolvería
-      # otra versión. Sin `npm ci` a propósito: `deno.json` fuerza
+      # otra versión. NO se llama `deno.lock` a propósito: el edge-runtime local
+      # (supabase start) lo lee al arrancar cada worker y muere si no puede
+      # resolver una versión del lock («Could not find … postgrest-js@2.117.2»:
+      # el e2e dejaba a `generate-prayer-plan` sin arrancar). Con `"lock": false`
+      # en deno.json el runtime lo ignora y aquí se pasa con `--lock`. Sin `npm ci` a propósito: `deno.json` fuerza
       # `nodeModulesDir: none` para que Deno no busque en el `node_modules` de
       # la app (el `package.json` de la raíz no es de las funciones).
       - name: deno check de las funciones
@@ -137,7 +141,7 @@ jobs:
         env:
           NO_COLOR: "1"
         run: >
-          deno check --frozen
+          deno check --lock=deno.ci.lock --frozen
           send-email/index.ts
           enqueue-emails/index.ts
           email-unsubscribe/index.ts

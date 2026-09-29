@@ -90,21 +90,26 @@ un error de tipos ahí solo aparecía al desplegar. El job hace `deno check
   el `package.json` de la raíz a la vista, Deno resolvía los `npm:` contra el
   `node_modules` de la app (`@anthropic-ai/sdk` ni resolvía y `supabase-js` salía
   de la versión de la raíz, no de la del especificador).
-- **`supabase/functions/deno.lock`** fija lo que resuelven los rangos
+- **`supabase/functions/deno.ci.lock`** fija lo que resuelven los rangos
   (`^2.58.0`, `^0.70.0`). Con `--frozen`, un especificador nuevo o cambiado hace
   fallar el job con «The lockfile is out of date». Se actualiza desde
   `supabase/functions/`:
 
   ```bash
-  npx --yes deno@2.1.4 check --frozen=false send-email/index.ts enqueue-emails/index.ts \
+  npx --yes deno@2.1.4 check --lock=deno.ci.lock --frozen=false send-email/index.ts enqueue-emails/index.ts \
     email-unsubscribe/index.ts resend-webhook/index.ts send-intercession-push/index.ts \
     generate-prayer-plan/index.ts
   ```
 
-  Para subir versiones dentro del rango, borrar `deno.lock` antes; revisar el diff:
+  Para subir versiones dentro del rango, borrar `deno.ci.lock` antes; revisar el diff:
   un `supabase-js` o un SDK más nuevo puede destapar errores nuevos. Dependabot no
   toca este lock.
 
+- **Por qué no se llama `deno.lock`:** el edge-runtime de `supabase start` lee `deno.lock` al arrancar
+  cada worker y muere si no puede resolver una versión que fija («failed reading lockfile … Could
+  not find '@supabase/postgrest-js@2.117.2'»): con el lock de CI, `generate-prayer-plan` no arrancaba
+  en local y el e2e `fresh-account` fallaba. Con otro nombre, más `"lock": false` en `deno.json`,
+  el runtime lo ignora y CI lo pasa con `--lock=deno.ci.lock` (2026-09-29).
 - **Sin `--frozen` local:** `npx --yes deno@2.1.4 check <entradas>` baja el binario
   a la caché de npx (no a `node_modules`) y sirve para comprobar antes de subir.
 - Los `*.test.ts` no se chequean aquí: son de Vitest.
