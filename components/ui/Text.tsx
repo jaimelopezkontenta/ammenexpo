@@ -1,5 +1,7 @@
 import { Text as RNText, TextProps } from "react-native";
 
+import { MAX_FONT_SCALE } from "@/theme/typography";
+
 /**
  * El texto del sistema. `Txt` y no `Text` para no chocar con el de React
  * Native en los imports mientras conviven.
@@ -108,9 +110,13 @@ export const Txt = ({
   tone,
   underline = false,
   className,
+  // El tope de la letra del sistema (theme/typography.ts). Un texto que
+  // necesite más lo pide con la misma prop de React Native.
+  maxFontSizeMultiplier = MAX_FONT_SCALE,
   ...textProps
 }: TxtProps) => (
   <RNText
+    maxFontSizeMultiplier={maxFontSizeMultiplier}
     // La clase del caller es para afinar márgenes, alineación o `flex-1`,
     // y NO pisa a la variante por ir al final: el orden del string no decide
     // nada. Entre dos clases de la misma familia gana la que va después en la

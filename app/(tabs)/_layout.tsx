@@ -10,6 +10,12 @@ import { useUserId } from "@/core/auth/useUserId";
 import { useUnreadCounts } from "@/core/circles/queries";
 
 import { useThemeColors, withAlpha } from "@/theme";
+import { remFromPx } from "@/theme/typography";
+
+// La etiqueta de la barra, en px con la letra por defecto.
+const TAB_LABEL_PX = 11.5;
+// El alto de la barra en web con la letra por defecto: el suelo, no el techo.
+const TAB_BAR_WEB_MIN_HEIGHT = 62;
 
 export default function TabLayout() {
   const { t } = useTranslation();
@@ -57,15 +63,37 @@ export default function TabLayout() {
         // Las etiquetas de la barra no pasan por NativeWind, así que salían en
         // la tipografía del sistema: cinco palabras en otra letra, en la parte
         // de la app que siempre está a la vista.
-        tabBarLabelStyle: { fontFamily: "GeneralSans-Medium", fontSize: 11.5 },
+        //
+        // En web va en `rem`, como todo lo que pasa por NativeWind, para que
+        // crezca con la letra del navegador; con la de por defecto (16 px)
+        // mide los mismos 11,5 px. En nativo la escala la pone el sistema.
+        tabBarLabelStyle: {
+          fontFamily: "GeneralSans-Medium",
+          fontSize:
+            Platform.OS === "web"
+              ? // react-native-web pasa la cadena tal cual al CSS; el tipo
+                // de React Native solo conoce números.
+                (remFromPx(TAB_LABEL_PX) as unknown as number)
+              : TAB_LABEL_PX,
+        },
         tabBarStyle: {
           backgroundColor: "transparent",
           borderTopWidth: 0,
           elevation: 0,
           // Solo web: con el alto por defecto las descendentes de "Círculos"
-          // y "Perfil" salían recortadas. En nativo el alto lo decide la
-          // plataforma (incluye el safe-area) y no se toca.
-          ...(Platform.OS === "web" ? { height: 62, paddingBottom: 6 } : null),
+          // y "Perfil" salían recortadas. Los 62 son un mínimo y no un alto
+          // fijo: con la letra del navegador más grande la etiqueta crece y
+          // la barra con ella, en vez de cortarla. `height: "auto"` pisa el
+          // alto numérico que react-navigation pone por su cuenta. En nativo
+          // el alto lo decide la plataforma (incluye el safe-area) y no se
+          // toca.
+          ...(Platform.OS === "web"
+            ? {
+                height: "auto",
+                minHeight: TAB_BAR_WEB_MIN_HEIGHT,
+                paddingBottom: 6,
+              }
+            : null),
         },
         tabBarBackground: () => (
           <Glass

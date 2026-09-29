@@ -8,6 +8,7 @@ import { Txt } from "@/components/ui/Text";
 import { NOTE_MAX } from "@/core/bible/marks";
 import type { BibleVersion } from "@/core/bible/versions";
 import { useThemeColors } from "@/theme";
+import { MAX_FONT_SCALE } from "@/theme/typography";
 
 type VerseRowProps = {
   verse: number;
@@ -184,6 +185,7 @@ const VerseEditor = ({
         onChangeText={setDraft}
         placeholder={t("bible.notePlaceholder")}
         placeholderTextColor={colors.mist.ink}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         maxLength={NOTE_MAX}
         multiline
       />
