@@ -1407,6 +1407,136 @@ select pg_temp.assert(
 
 commit;
 
+-- ---------------------------------------------------------------------------
+-- share_links: solo a un plan tuyo
+--
+-- La policy solo pedía `created_by = auth.uid()`, y `redeem_share_token` se
+-- fía del enlace: quien supiera el id de un plan ajeno, o de un círculo
+-- privado del que lo echaron, se acuñaba un enlace, lo canjeaba y entraba.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000001","role":"authenticated"}';
+
+-- useCreateShareLink
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.share_links (scope, plan_id, created_by)
+    values ('plan', 'c1c1f000-0000-0000-0000-000000000001',
+            'c1c10000-0000-0000-0000-000000000001')
+  $q$),
+  'sharing your own plan by link the way the app does still works');
+
+select pg_temp.assert(
+  (select token ~ '^[0-9a-f]{32}$' and expires_at is not null and revoked_at is null
+     from public.share_links where plan_id = 'c1c1f000-0000-0000-0000-000000000001'),
+  'with a token and an expiry the server chose');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000004","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.share_links (scope, plan_id, created_by)
+    values ('plan', 'c1c1f000-0000-0000-0000-000000000001',
+            'c1c10000-0000-0000-0000-000000000004')
+  $q$),
+  'nobody mints a link to a plan that is not theirs');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.share_links (scope, group_id, created_by)
+    values ('group', 'c1c1c000-0000-0000-0000-000000000002',
+            'c1c10000-0000-0000-0000-000000000002')
+  $q$),
+  'nor a way into a private circle they are not in');
+
+commit;
+
+-- Ni siendo del círculo: la puerta de un círculo es su token, que un admin
+-- rota (`rotate_circle_invite_token`); un enlace de grupo acuñado por un
+-- miembro sobreviviría a que lo echen, y nadie más podría verlo ni revocarlo.
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000003","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    insert into public.share_links (scope, group_id, created_by)
+    values ('group', 'c1c1c000-0000-0000-0000-000000000002',
+            'c1c10000-0000-0000-0000-000000000003')
+  $q$),
+  'and circle links are not minted from the app at all');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c1c10000-0000-0000-0000-000000000001","role":"authenticated"}';
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('token',      $v$'el-de-olga'$v$),
+      ('expires_at', $v$'2999-01-01'$v$),
+      ('revoked_at', 'now()'),
+      ('created_at', $v$'2000-01-01'$v$),
+      ('id',         $v$'c1c1a000-0000-0000-0000-0000000000ff'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.raises(format(
+      'insert into public.share_links (scope, plan_id, created_by, %I) values (%L, %L, %L, %s)',
+      forced.col, 'plan', 'c1c1f000-0000-0000-0000-000000000001',
+      'c1c10000-0000-0000-0000-000000000001', forced.val))
+    then
+      raise exception 'FAIL  a new share link cannot choose its own %', forced.col;
+    end if;
+    raise notice 'PASS  a new share link cannot choose its own %', forced.col;
+  end loop;
+
+  for forced in
+    select * from (values
+      ('token',      $v$'el-de-olga'$v$),
+      ('expires_at', $v$'2999-01-01'$v$),
+      ('plan_id',    $v$'c1c1f000-0000-0000-0000-000000000001'$v$),
+      ('created_by', $v$'c1c10000-0000-0000-0000-000000000001'$v$),
+      ('scope',      $v$'plan'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.raises(format(
+      'update public.share_links set %I = %s where plan_id = %L',
+      forced.col, forced.val, 'c1c1f000-0000-0000-0000-000000000001'))
+    then
+      raise exception 'FAIL  a share link''s % cannot be rewritten', forced.col;
+    end if;
+    raise notice 'PASS  a share link''s % cannot be rewritten', forced.col;
+  end loop;
+end;
+$$;
+
+-- useRevokeShareLink
+with changed as (
+  update public.share_links set revoked_at = now()
+   where plan_id = 'c1c1f000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1,
+  'revoking the link still works')
+  from changed;
+
+commit;
+
 \echo ''
 \echo '================================'
 \echo ' ALL RLS ASSERTIONS PASSED'
