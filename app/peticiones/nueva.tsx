@@ -9,7 +9,7 @@ import { Txt } from "@/components/ui/Text";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { POST_MAX, useWritePrayerRequest } from "@/core/posts/queries";
 
 import { Tap } from "@/components/ui/Tap";
@@ -17,8 +17,7 @@ import { Tap } from "@/components/ui/Tap";
 export default function NewPrayerRequest() {
   const { t } = useTranslation();
   const { scrollBottom } = useScreenPadding();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
   const { circulo } = useLocalSearchParams<{ circulo?: string }>();
 
   const write = useWritePrayerRequest(userId);

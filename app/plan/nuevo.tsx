@@ -12,7 +12,7 @@ import { useScreenPadding } from "@/components/useScreenPadding";
 import { Button } from "@/components/Button";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { TextField } from "@/components/TextField";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useMyCircles } from "@/core/circles/queries";
 import { classifyError } from "@/core/net/classifyError";
 import {
@@ -34,8 +34,7 @@ const DURATIONS = [7, 14, 21, 30];
 export default function NewPlan() {
   const { t } = useTranslation();
   const { scrollBottom } = useScreenPadding();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
   // Set when this form was opened from a circle: the plan belongs to the
   // circle rather than to the person filling it in.
   const { circulo } = useLocalSearchParams<{ circulo?: string }>();

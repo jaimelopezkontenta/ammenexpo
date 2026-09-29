@@ -13,7 +13,7 @@ import { Orb } from "@/components/Orb";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Tap, triggerHaptic } from "@/components/ui/Tap";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { usePrayerList } from "@/core/list/queries";
 import { goBackOr } from "@/core/nav/safeBack";
 
@@ -34,8 +34,7 @@ const LENGTHS = [2, 5, 10];
  */
 export default function PrayThrough() {
   const { t } = useTranslation();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const { data, isLoading, isLoadingError, refetch } = usePrayerList(userId);
 

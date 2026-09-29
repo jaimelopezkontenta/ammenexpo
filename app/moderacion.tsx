@@ -10,7 +10,7 @@ import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { Txt } from "@/components/ui/Text";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useBlockUser } from "@/core/moderation/blocks";
 import {
   useAcknowledgeCrisis,
@@ -79,8 +79,7 @@ export default function Moderation() {
 
 function ReportsQueue() {
   const { t } = useTranslation();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const [status, setStatus] = useState<ReportStatus>("open");
   const [notice, setNotice] = useState<string | null>(null);
@@ -472,8 +471,7 @@ function HeldQueue() {
  */
 function CrisisQueue() {
   const { t } = useTranslation();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

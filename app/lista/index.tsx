@@ -10,7 +10,7 @@ import { KeyboardScreen } from "@/components/KeyboardScreen";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { useScreenPadding } from "@/components/useScreenPadding";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { goBackOr } from "@/core/nav/safeBack";
 import {
   ITEM_MAX,
@@ -38,8 +38,7 @@ import { Tap } from "@/components/ui/Tap";
  */
 export default function PrayerList() {
   const { t } = useTranslation();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const { data, isLoading, isLoadingError, refetch } = usePrayerList(userId);
   const add = useAddListItem(userId);

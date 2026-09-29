@@ -13,7 +13,7 @@ import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { ActionMenu } from "@/components/ui/ActionMenu";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { useReportProfile } from "@/core/moderation/queue";
 import { usePublicProfile } from "@/core/profile/queries";
@@ -52,8 +52,7 @@ export default function PersonProfile() {
   const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const {
     data: person,

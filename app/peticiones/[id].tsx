@@ -13,7 +13,7 @@ import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { TextField } from "@/components/TextField";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useCircleMembers } from "@/core/circles/queries";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { goBackOr } from "@/core/nav/safeBack";
@@ -50,8 +50,7 @@ export default function PrayerRequestComments() {
     id: string;
     circulo?: string;
   }>();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const {
     data: comments,

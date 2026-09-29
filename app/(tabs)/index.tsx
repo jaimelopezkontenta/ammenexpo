@@ -20,7 +20,7 @@ import { VerseOfTheDay } from "@/components/VerseOfTheDay";
 import { Txt } from "@/components/ui/Text";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
 import { WhoPrayed } from "@/components/WhoPrayed";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useBibleBooks } from "@/core/bible/queries";
 import {
   usePlansSharedWithMe,
@@ -91,8 +91,7 @@ export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary
 export default function Today() {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const {
     data: plans,

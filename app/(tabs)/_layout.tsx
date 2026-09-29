@@ -6,7 +6,7 @@ import { Glass } from "../../components/Glass";
 import { NavRail, RAIL_WIDTH } from "../../components/NavRail";
 import { TabBarIcon } from "../../components/TabBarIcon";
 import { triggerHaptic } from "@/components/ui/Tap";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useUnreadCounts } from "@/core/circles/queries";
 
 import { useThemeColors, withAlpha } from "@/theme";
@@ -14,8 +14,8 @@ import { useThemeColors, withAlpha } from "@/theme";
 export default function TabLayout() {
   const { t } = useTranslation();
   const colors = useThemeColors();
-  const { session } = useSession();
-  const { data: unreadByCircle } = useUnreadCounts(session?.user.id);
+  const userId = useUserId();
+  const { data: unreadByCircle } = useUnreadCounts(userId);
   // El mismo umbral que `md:` de NativeWind: en escritorio la navegación es
   // un raíl lateral; en el teléfono, la barra de abajo de siempre.
   const isDesktop = useWindowDimensions().width >= 768;

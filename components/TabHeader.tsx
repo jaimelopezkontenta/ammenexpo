@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Wordmark } from "@/components/Wordmark";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useUnreadNotifications } from "@/core/notifications/queries";
 
 import { icon, useThemeColors } from "@/theme";
@@ -61,8 +61,8 @@ export const TabHeader = ({
   });
   const dateLabel =
     rawDate.charAt(0).toLocaleUpperCase(i18n.language) + rawDate.slice(1);
-  const { session } = useSession();
-  const { data: unread } = useUnreadNotifications(session?.user.id);
+  const userId = useUserId();
+  const { data: unread } = useUnreadNotifications(userId);
   const insets = useSafeAreaInsets();
 
   return (

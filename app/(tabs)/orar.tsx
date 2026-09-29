@@ -14,7 +14,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PrayForCard } from "@/components/PrayForCard";
 import { ResponsiveTabContent } from "@/components/ResponsiveTabContent";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { derivePrayerProgress } from "@/core/intercessions/progress";
 import { usePlansSharedWithMe } from "@/core/intercessions/queries";
 import { useMyPlans } from "@/core/plans/queries";
@@ -31,8 +31,7 @@ export { AppErrorBoundary as ErrorBoundary } from "@/components/AppErrorBoundary
 
 export default function Pray() {
   const { t } = useTranslation();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const {
     data: plans,

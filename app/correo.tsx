@@ -9,7 +9,7 @@ import { ChoiceChips } from "@/components/ChoiceChips";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Txt } from "@/components/ui/Text";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import {
   EMAIL_CADENCES,
   type EmailCadence,
@@ -38,10 +38,9 @@ const emptyPrefs = (): EmailPreferences => ({
 export default function Correo() {
   const { t } = useTranslation();
   const toast = useToast();
-  const { session } = useSession();
+  const userId = useUserId();
   const params = useLocalSearchParams<{ t?: string; reactivate?: string }>();
   const token = typeof params.t === "string" ? params.t : undefined;
-  const userId = session?.user.id;
 
   const signedIn = useEmailPreferences(userId);
   const byToken = useEmailPreferencesByToken(userId ? undefined : token);

@@ -11,7 +11,7 @@ import { DawnBackground } from "@/components/DawnBackground";
 import { EmailInviteField } from "@/components/email/EmailInviteField";
 import { useScreenPadding } from "@/components/useScreenPadding";
 import { ErrorState, LoadingState } from "@/components/ScreenState";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useMyCircles } from "@/core/circles/queries";
 import {
   useCreateShareLink,
@@ -38,8 +38,7 @@ export default function SharePlan() {
   const colors = useThemeColors();
   const { scrollBottom } = useScreenPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const { data: plan, isLoading, isLoadingError, refetch } = usePlanSummary(id);
   const { data: circles, isLoadingError: circlesFailed } = useMyCircles(userId);

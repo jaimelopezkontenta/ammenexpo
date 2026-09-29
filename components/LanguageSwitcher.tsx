@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
 import { useUpdateLocale } from "@/core/profile/queries";
 import { supportedLanguages, type LanguageCode } from "@/translation";
 
@@ -15,8 +15,8 @@ const LABELS: Record<LanguageCode, string> = {
 
 export const LanguageSwitcher = () => {
   const { t, i18n } = useTranslation();
-  const { session } = useSession();
-  const updateLocale = useUpdateLocale(session?.user.id);
+  const userId = useUserId();
+  const updateLocale = useUpdateLocale(userId);
   const current = i18n.resolvedLanguage as LanguageCode;
 
   return (
