@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import i18n from "i18next";
 import { useRef } from "react";
 
+import {
+  BIBLE_VERSION_LANGUAGE,
+  bibleVersionForLanguage,
+} from "@/core/bible/versions";
 import {
   cacheTodayDay,
   enqueuePrayed,
@@ -303,6 +308,18 @@ export type NewPlanInput = {
   group_id?: string;
 };
 
+/**
+ * El idioma en que el servidor escribe el plan (`locale` de
+ * `generate-prayer-plan`): el de la interfaz, reducido a los que sabe escribir
+ * — `en` o, cualquier otro, `es`. Es la misma regla que elige la Biblia por
+ * idioma, y a propósito: el plan cita en la versión que el lector abre con esa
+ * interfaz (RVR 1909 o WEB).
+ */
+const planLocale = (): "es" | "en" =>
+  BIBLE_VERSION_LANGUAGE[
+    bibleVersionForLanguage(i18n.resolvedLanguage ?? i18n.language)
+  ];
+
 export const useGeneratePlan = (userId: string | undefined) => {
   const queryClient = useQueryClient();
 
@@ -316,7 +333,13 @@ export const useGeneratePlan = (userId: string | undefined) => {
     mutationFn: async (input: NewPlanInput) => {
       const { data, error } = await supabase.functions.invoke(
         "generate-prayer-plan",
-        { body: { ...input, request_id: attemptKey.current.acquire() } },
+        {
+          body: {
+            ...input,
+            request_id: attemptKey.current.acquire(),
+            locale: planLocale(),
+          },
+        },
       );
 
       if (error) {
@@ -609,7 +632,13 @@ export const useContinuePlan = (userId: string | undefined) => {
       const { error } = await supabase.functions.invoke(
         "generate-prayer-plan",
         {
-          body: { continue_plan_id: planId, request_id: attempt.acquire() },
+          // El servidor usa el idioma del plan, no este; va para que la
+          // petición diga en qué idioma se pidió.
+          body: {
+            continue_plan_id: planId,
+            request_id: attempt.acquire(),
+            locale: planLocale(),
+          },
         },
       );
 

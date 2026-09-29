@@ -16,9 +16,19 @@
 
 import { cleanText, truncateChars } from "../_shared/validate.ts";
 import { GENDER_KEYS, LIMITS, SEASON_KEYS, TOPIC_KEYS } from "./input.ts";
+import { DEFAULT_PLAN_LOCALE, type PlanLocale } from "./locale.ts";
 
-/** El mismo respaldo que ya usaba el servidor cuando no había nombre. */
-export const FALLBACK_NAME = "esta persona";
+/**
+ * Cómo se nombra en el prompt a quien no tiene nombre, en el idioma del plan
+ * (el prompt dice «para esta persona» / «for this person»). El español es el
+ * mismo respaldo que ya usaba el servidor.
+ */
+export const FALLBACK_NAMES: Record<PlanLocale, string> = {
+  es: "esta persona",
+  en: "this person",
+};
+
+export const FALLBACK_NAME = FALLBACK_NAMES[DEFAULT_PLAN_LOCALE];
 
 export const MAX_NAME_CHARS = 50;
 
@@ -35,8 +45,13 @@ const NOT_NAME_CHARS = /[^\p{L}\p{M}\p{N} '’.-]/gu;
 const collapse = (value: string): string => value.replace(/\s+/g, " ").trim();
 
 /** El nombre con el que se le habla en el prompt. */
-export const sanitizeDisplayName = (raw: unknown): string => {
-  if (typeof raw !== "string") return FALLBACK_NAME;
+export const sanitizeDisplayName = (
+  raw: unknown,
+  locale: PlanLocale = DEFAULT_PLAN_LOCALE,
+): string => {
+  const fallback = FALLBACK_NAMES[locale];
+
+  if (typeof raw !== "string") return fallback;
 
   const name = collapse(
     truncateChars(
@@ -47,7 +62,7 @@ export const sanitizeDisplayName = (raw: unknown): string => {
     // Un nombre no empieza ni acaba en puntuación suelta.
     .replace(/^[ '’.-]+|[ '’.-]+$/g, "");
 
-  return name.length > 0 ? name : FALLBACK_NAME;
+  return name.length > 0 ? name : fallback;
 };
 
 /**

@@ -24,10 +24,12 @@ const clientFor = (
     | (() => { data: unknown; error: unknown })
   >,
 ) => {
-  const rpc = vi.fn(async (_name: string, args: { p_ref: string }) => {
-    const answer = answers[args.p_ref];
-    return typeof answer === "function" ? answer() : answer;
-  });
+  const rpc = vi.fn(
+    async (_name: string, args: { p_ref: string; p_version?: string }) => {
+      const answer = answers[args.p_ref];
+      return typeof answer === "function" ? answer() : answer;
+    },
+  );
 
   return { client: { rpc } as unknown as SupabaseClient, rpc };
 };
@@ -43,7 +45,7 @@ describe("resolveDays", () => {
       "Juan 14:27": found("Juan 14:27", "La paz os dejo..."),
     });
 
-    const [resolved] = await resolveDays(client, [day("Juan 14:27")]);
+    const [resolved] = await resolveDays(client, [day("Juan 14:27")], "es");
 
     expect(resolved).toMatchObject({
       canonical_ref: "Juan 14:27",
@@ -56,7 +58,7 @@ describe("resolveDays", () => {
       "Inventado 99:99": { data: [], error: null },
     });
 
-    const days = await resolveDays(client, [day("Inventado 99:99")]);
+    const days = await resolveDays(client, [day("Inventado 99:99")], "es");
 
     expect(days[0]).toMatchObject({
       canonical_ref: null,
@@ -76,7 +78,7 @@ describe("resolveDays", () => {
       },
     });
 
-    const [resolved] = await resolveDays(client, [day("Salmos 23:1")]);
+    const [resolved] = await resolveDays(client, [day("Salmos 23:1")], "es");
 
     expect(rpc).toHaveBeenCalledTimes(2);
     expect(resolved.scripture_text).toBe("Jehová es mi pastor");
@@ -88,10 +90,11 @@ describe("resolveDays", () => {
       "Juan 14:27": found("Juan 14:27", "La paz os dejo..."),
     });
 
-    const attempt = resolveDays(client, [
-      day("Salmos 23:1"),
-      day("Juan 14:27", 2),
-    ]);
+    const attempt = resolveDays(
+      client,
+      [day("Salmos 23:1"), day("Juan 14:27", 2)],
+      "es",
+    );
 
     await expect(attempt).rejects.toBeInstanceOf(ScriptureLookupError);
     await expect(attempt).rejects.toMatchObject({ failed: 1, code: "57014" });
@@ -110,9 +113,11 @@ describe("resolveDays", () => {
       },
     });
 
-    const error = (await resolveDays(client, [
-      day("Texto de oración como referencia"),
-    ]).then(
+    const error = (await resolveDays(
+      client,
+      [day("Texto de oración como referencia")],
+      "es",
+    ).then(
       () => {
         throw new Error("debía fallar");
       },
@@ -122,5 +127,56 @@ describe("resolveDays", () => {
     expect(error.message).not.toContain("madre");
     expect(error.message).not.toContain("oración");
     expect(JSON.stringify({ ...error })).not.toContain("madre");
+  });
+});
+
+describe("resolveDays: la Biblia del idioma del plan", () => {
+  it("un plan en inglés se verifica contra la WEB, y guarda su texto", async () => {
+    const { client, rpc } = clientFor({
+      "John 14:27": found("John 14:27", "Peace I leave with you..."),
+    });
+
+    const [resolved] = await resolveDays(client, [day("John 14:27")], "en");
+
+    expect(rpc).toHaveBeenCalledWith("resolve_scripture", {
+      p_ref: "John 14:27",
+      p_version: "web",
+    });
+    expect(resolved).toMatchObject({
+      canonical_ref: "John 14:27",
+      scripture_text: "Peace I leave with you...",
+    });
+  });
+
+  it("uno en español pide la RVR 1909 explícitamente", async () => {
+    const { client, rpc } = clientFor({
+      "Juan 14:27": found("Juan 14:27", "La paz os dejo..."),
+    });
+
+    await resolveDays(client, [day("Juan 14:27")], "es");
+
+    expect(rpc).toHaveBeenCalledWith("resolve_scripture", {
+      p_ref: "Juan 14:27",
+      p_version: "rvr1909",
+    });
+  });
+
+  it("la repetición tras un fallo pasajero pide la misma versión", async () => {
+    let calls = 0;
+    const { client, rpc } = clientFor({
+      "Psalms 23:1": () => {
+        calls += 1;
+        return calls === 1
+          ? { data: null, error: { code: "57014", message: "timeout" } }
+          : found("Psalms 23:1", "Yahweh is my shepherd");
+      },
+    });
+
+    await resolveDays(client, [day("Psalms 23:1")], "en");
+
+    expect(rpc).toHaveBeenCalledTimes(2);
+    for (const call of rpc.mock.calls) {
+      expect(call[1]).toMatchObject({ p_version: "web" });
+    }
   });
 });

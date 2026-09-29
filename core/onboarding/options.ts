@@ -7,9 +7,9 @@
  * latter with a comment asking the two copies not to diverge. At eight options
  * that was a nuisance; at sixteen it is a list somebody forgets.
  *
- * The server keeps its own Spanish labels in `generate-prayer-plan/prompt.ts`,
- * because a Deno edge function cannot import from here. A vitest asserts the
- * two agree rather than trusting them to.
+ * The server keeps its own labels, in Spanish and English, in
+ * `generate-prayer-plan/prompt.ts`, because a Deno edge function cannot import
+ * from here. A vitest asserts they agree rather than trusting them to.
  */
 
 /**

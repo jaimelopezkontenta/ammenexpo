@@ -17,6 +17,7 @@ import {
   VISIBILITIES,
   type NewPlanRequest,
 } from "./input.ts";
+import { PLAN_LOCALES } from "./locale.ts";
 import { buildUserPrompt } from "./prompt.ts";
 
 const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -62,12 +63,32 @@ describe("las listas cerradas siguen siendo las del cliente", () => {
       expect(prompt, `topic ${key}`).not.toContain(
         "no ha elegido temas concretos",
       );
+
+      const english = buildUserPrompt({
+        ...base,
+        seasons: [],
+        topics: [key],
+        locale: "en",
+      });
+      expect(english, `en topic ${key}`).not.toContain(
+        "has not chosen specific topics",
+      );
     }
 
     for (const key of SEASON_KEYS) {
       const prompt = buildUserPrompt({ ...base, seasons: [key], topics: [] });
       expect(prompt, `season ${key}`).not.toContain(
         "no ha especificado qué está viviendo",
+      );
+
+      const english = buildUserPrompt({
+        ...base,
+        seasons: [key],
+        topics: [],
+        locale: "en",
+      });
+      expect(english, `en season ${key}`).not.toContain(
+        "has not said what they are going through",
       );
     }
   });
@@ -78,6 +99,7 @@ describe("parseGenerateBody: plan nuevo", () => {
     expect(accepted({})).toEqual({
       kind: "new",
       requestId: null,
+      locale: "es",
       durationDays: 7,
       visibility: "private",
       topics: [],
@@ -101,6 +123,7 @@ describe("parseGenerateBody: plan nuevo", () => {
     ).toEqual({
       kind: "new",
       requestId: A,
+      locale: "es",
       durationDays: 14,
       visibility: "circles",
       topics: ["peace", "hope"],
@@ -354,7 +377,7 @@ describe("request_id (la clave de idempotencia)", () => {
     expect(accepted({ request_id: A }).requestId).toBe(A);
     expect(parseGenerateBody({ continue_plan_id: A, request_id: B })).toEqual({
       ok: true,
-      value: { kind: "continue", planId: A, requestId: B },
+      value: { kind: "continue", planId: A, requestId: B, locale: "es" },
     });
   });
 
@@ -370,7 +393,7 @@ describe("parseGenerateBody: continuación", () => {
   it("un UUID pide el siguiente tramo", () => {
     expect(parseGenerateBody({ continue_plan_id: A })).toEqual({
       ok: true,
-      value: { kind: "continue", planId: A, requestId: null },
+      value: { kind: "continue", planId: A, requestId: null, locale: "es" },
     });
   });
 
@@ -384,7 +407,7 @@ describe("parseGenerateBody: continuación", () => {
       }),
     ).toEqual({
       ok: true,
-      value: { kind: "continue", planId: A, requestId: null },
+      value: { kind: "continue", planId: A, requestId: null, locale: "es" },
     });
   });
 
@@ -403,6 +426,48 @@ describe("parseGenerateBody: continuación", () => {
         continue_plan_id: "cccc0000-0000-0000-0000-0000000000ff",
       }),
     ).toMatchObject({ ok: true });
+  });
+});
+
+describe("locale (el idioma del plan)", () => {
+  it("ausente o null es español: los clientes de antes no lo mandaban", () => {
+    expect(accepted({}).locale).toBe("es");
+    expect(accepted({ locale: null }).locale).toBe("es");
+  });
+
+  it("acepta los dos idiomas de la lista", () => {
+    expect(accepted({ locale: "es" }).locale).toBe("es");
+    expect(accepted({ locale: "en" }).locale).toBe("en");
+  });
+
+  it("lo que no está en la lista es un 400, no un plan en un idioma inventado", () => {
+    for (const bad of ["fr", "EN", "en-US", "", "english"]) {
+      expect(rejected({ locale: bad })).toEqual({
+        error: "invalid_locale",
+        reason: "not_allowed",
+      });
+    }
+
+    for (const bad of [1, true, {}, ["en"]]) {
+      expect(rejected({ locale: bad })).toEqual({
+        error: "invalid_locale",
+        reason: "not_string",
+      });
+    }
+  });
+
+  it("una continuación también lo lleva, y también lo valida", () => {
+    expect(parseGenerateBody({ continue_plan_id: A, locale: "en" })).toEqual({
+      ok: true,
+      value: { kind: "continue", planId: A, requestId: null, locale: "en" },
+    });
+    expect(rejected({ continue_plan_id: A, locale: "fr" })).toMatchObject({
+      error: "invalid_locale",
+    });
+  });
+
+  it("la lista es la de locale.ts", () => {
+    expect([...PLAN_LOCALES]).toEqual(["es", "en"]);
   });
 });
 

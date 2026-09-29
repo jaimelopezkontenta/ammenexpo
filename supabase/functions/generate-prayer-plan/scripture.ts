@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@^2.58.0";
 
+import { BIBLE_VERSION_FOR_LOCALE, type PlanLocale } from "./locale.ts";
 import type { GeneratedDay } from "./schema.ts";
 
 export type ResolvedDay = GeneratedDay & {
@@ -26,9 +27,16 @@ export class ScriptureLookupError extends Error {
 }
 
 /**
- * Turns the model's chosen reference into real text from the RVR1909 table.
+ * Turns the model's chosen reference into real text from the Bible table.
  * A reference that does not resolve comes back with nulls — never with
  * model-written text standing in for scripture.
+ *
+ * La versión es la del idioma del plan (`BIBLE_VERSION_FOR_LOCALE`): RVR 1909
+ * para un plan en español, WEB para uno en inglés. De ella salen el texto que
+ * se guarda y la referencia canónica («Juan 14:27» / «John 14:27»). Se pide
+ * siempre explícita, también la española: sin `p_version` la base responde en
+ * RVR, y un plan en inglés con versículos en español es justo lo que esto
+ * arregla.
  *
  * Una búsqueda que falla se repite una vez (es una lectura, no cambia nada); si
  * vuelve a fallar se lanza `ScriptureLookupError` en vez de fingir que la
@@ -37,13 +45,18 @@ export class ScriptureLookupError extends Error {
 export const resolveDays = async (
   client: SupabaseClient,
   days: GeneratedDay[],
+  locale: PlanLocale,
 ): Promise<ResolvedDay[]> => {
   const failures: (string | null)[] = [];
+  const version = BIBLE_VERSION_FOR_LOCALE[locale];
 
   const resolved = await Promise.all(
     days.map(async (day) => {
       const lookup = () =>
-        client.rpc("resolve_scripture", { p_ref: day.scripture_ref });
+        client.rpc("resolve_scripture", {
+          p_ref: day.scripture_ref,
+          p_version: version,
+        });
 
       let { data, error } = await lookup();
 

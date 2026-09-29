@@ -50,6 +50,13 @@ pantalla ──► hook de core/ (React Query) ──► Supabase (PostgREST)
   existe nunca en el cliente.
 - **Las edge functions** hacen lo que no cabe en SQL: orquestar el modelo
   (`generate-prayer-plan`, con el JWT del usuario) y enviar (correo, push).
+- **Un plan se escribe en el idioma de quien lo crea.** El cliente manda el de
+  la interfaz (`locale`: `es` | `en`; ausente, `es`), la reserva lo guarda en
+  `source_prompt.locale` y cada tramo lo lee del plan, no de la petición: un
+  plan no cambia de idioma a mitad, y uno sin idioma guardado es de antes y
+  sigue en español. Del idioma salen el prompt y el esquema que lee el modelo
+  y la Biblia contra la que se verifican sus citas (`resolve_scripture` con
+  `rvr1909` o `web`), que es también la del texto que se guarda.
 - **Las colas las drena la propia base** (`run_queue_drains()`), detrás de un
   interruptor (`scheduler_settings.enabled`) apagado por defecto.
 - **Los tipos de la base** se generan (`npm run db:types` → `types/supabase.ts`)

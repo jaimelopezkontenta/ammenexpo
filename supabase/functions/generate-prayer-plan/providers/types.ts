@@ -1,3 +1,5 @@
+import type { PlanLocale } from "../locale.ts";
+
 export type ProviderMessage = {
   role: "user" | "assistant";
   content: string;
@@ -14,6 +16,12 @@ export type GenerateArgs = {
    * llamada parte de un presupuesto completo.
    */
   deadline?: number;
+  /**
+   * El idioma del plan. Los proveedores reales no lo necesitan (ya va en el
+   * prompt y en el esquema); lo lee el de pruebas, que no lee el prompt y
+   * tiene que contestar en el mismo idioma.
+   */
+  locale?: PlanLocale;
 };
 
 export type GenerateResult = {

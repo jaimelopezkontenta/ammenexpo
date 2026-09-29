@@ -10,7 +10,8 @@
  *
  * Las listas cerradas (`TOPIC_KEYS`, `SEASON_KEYS`, `GENDER_KEYS`) son copia de
  * las del cliente (`core/onboarding/options.ts`): una función de Deno no puede
- * importarlas, y `input.test.ts` comprueba que siguen iguales.
+ * importarlas, y `input.test.ts` comprueba que siguen iguales. La de idiomas
+ * (`PLAN_LOCALES`) vive en `locale.ts`.
  */
 
 import {
@@ -25,6 +26,11 @@ import {
   type Reason,
 } from "../_shared/validate.ts";
 import { checkDuration } from "./bounds.ts";
+import {
+  DEFAULT_PLAN_LOCALE,
+  PLAN_LOCALES,
+  type PlanLocale,
+} from "./locale.ts";
 
 export const SEASON_KEYS = [
   "grief",
@@ -87,6 +93,8 @@ export type NewPlanRequest = {
   kind: "new";
   /** La clave de idempotencia del cliente, si es un UUID; si no, `null`. */
   requestId: string | null;
+  /** El idioma en que se escribe el plan; se guarda con él (`locale.ts`). */
+  locale: PlanLocale;
   durationDays: number;
   visibility: Visibility;
   topics: string[];
@@ -99,6 +107,12 @@ export type ContinuePlanRequest = {
   kind: "continue";
   planId: string;
   requestId: string | null;
+  /**
+   * El idioma que declara quien pide el tramo. No decide: el plan ya tiene el
+   * suyo (`planLocaleFrom`) y es el que se usa; este solo se valida y se
+   * registra.
+   */
+  locale: PlanLocale;
 };
 
 export type GenerateRequest = NewPlanRequest | ContinuePlanRequest;
@@ -136,12 +150,26 @@ export const parseGenerateBody = (body: unknown): ParsedRequest => {
   // por una nueva (así un valor raro nunca choca con la de otra persona).
   const requestId = isUuid(body.request_id) ? body.request_id : null;
 
+  // El idioma, en los dos caminos. Ausente es español: los clientes de antes
+  // no lo mandaban y sus planes se escribían en español. Cualquier otro valor
+  // que no esté en la lista es un 400, como la visibilidad: lo que llega al
+  // prompt y a la Biblia es siempre uno de los conocidos.
+  const locale = parseOptionalEnum(body.locale, PLAN_LOCALES);
+  if (!locale.ok) return reject("invalid_locale", locale.reason);
+
+  const planLocale = locale.value ?? DEFAULT_PLAN_LOCALE;
+
   // --- Continuación: el siguiente tramo de un plan que ya existe -----------
   if (!isAbsent(body.continue_plan_id)) {
     return isUuid(body.continue_plan_id)
       ? {
           ok: true,
-          value: { kind: "continue", planId: body.continue_plan_id, requestId },
+          value: {
+            kind: "continue",
+            planId: body.continue_plan_id,
+            requestId,
+            locale: planLocale,
+          },
         }
       : reject("invalid_continue_plan_id", "not_uuid");
   }
@@ -191,6 +219,7 @@ export const parseGenerateBody = (body: unknown): ParsedRequest => {
     value: {
       kind: "new",
       requestId,
+      locale: planLocale,
       durationDays: duration.days,
       visibility: visibility.value ?? "private",
       topics: topics.value,
