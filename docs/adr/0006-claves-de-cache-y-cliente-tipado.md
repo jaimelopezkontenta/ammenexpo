@@ -30,5 +30,7 @@ sustituían a un contrato que la base ya generaba.
   trigger de `plan_owner_id` (un cast con comentario).
 - Quedan casts `as X[]` en lecturas ya tipadas; retirarlos exige lint con tipos
   (`no-unnecessary-type-assertion`), aplazado por su coste.
-- Los `userId!` de `core/**/queries.ts` siguen; el paso siguiente es que esos hooks reciban
-  un `userId` obligatorio (`useRequiredUserId`).
+- Los `userId!` ya no existen: `requireUserId(userId)` (`core/auth/requireUserId.ts`) lanza un
+  `NotSignedInError` esperado (no se reporta) dentro de `queryFn`/`mutationFn`, junto al
+  `enabled: Boolean(userId)`, y ESLint prohíbe `userId!` en `app/`, `components/` y `core/`.
+  Quedan ~40 `circleId!`/`planId!`/`token!` con la misma forma, sin regla.
