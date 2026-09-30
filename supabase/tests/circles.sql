@@ -698,17 +698,22 @@ commit;
 
 
 -- ===========================================================================
--- La regla 1, para la tabla que estrena escritor
+-- La regla 1, para la tabla que estrenó escritor
 --
 -- Una policy de SELECT que vuelve a consultar su propia tabla rompe los
--- inserts, y Postgres lo reporta igual que un fallo de WITH CHECK.
+-- inserts, y Postgres lo reporta igual que un fallo de WITH CHECK. Aquí ya no
+-- aplica: desde 20260930000720_client_insert_column_privileges el único que
+-- escribe `group_prayer_days` es `mark_circle_day` (SECURITY DEFINER). El
+-- INSERT directo pedía ser del círculo y poder leer el día, pero no que el día
+-- fuera del plan del círculo, y con días de cualquier plan legible se le subía
+-- la racha. Lo que se comprueba ahora es que esa puerta sigue cerrada.
 -- ===========================================================================
 begin;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}';
 
 select pg_temp.assert(
-  not pg_temp.raises($q$
+  pg_temp.raises($q$
     insert into public.group_prayer_days (group_id, plan_day_id, user_id)
     select 'cccc0000-0000-0000-0000-000000000003', d.id,
            '44444444-4444-4444-4444-444444444444'
@@ -717,7 +722,7 @@ select pg_temp.assert(
       and d.day_number = 6
     returning group_id
   $q$),
-  'insert ... returning works on group_prayer_days');
+  'group_prayer_days is only written through mark_circle_day');
 
 commit;
 

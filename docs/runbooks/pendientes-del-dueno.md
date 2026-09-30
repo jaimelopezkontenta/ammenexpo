@@ -98,20 +98,24 @@ La migración `circle_column_privileges` y sus tres hermanas (`invite_…`, `sha
 `post_column_privileges`) cierran las escaladas más graves (un admin que no era dueño podía
 ponerse `owner_id` y echar a la dueña; cualquiera entraba en un círculo público como admin; un
 enlace de plan ajeno se podía crear y canjear; una invitación se podía fabricar ya «aceptada»).
-Lo que el barrido encontró y **no** se arregló, por prioridad:
+La segunda ronda (`20260930000648_profile_settings_column_privileges` … `20260930000720_client_insert_column_privileges`)
+cerró el resto: ajustes del perfil (términos y onboarding solo por RPC; `accept_terms` pasa a
+SECURITY DEFINER), comentarios y mensajes sin marcas de moderación ni fecha elegida,
+testimonios colgados solo de lo tuyo y sin `image_url`, el chat por dentro solo por RPC, la lista
+de espera de Plus siempre al correo de la cuenta, denuncias y avisos por columnas, y todas las
+tablas donde el cliente solo inserta (el día de un círculo ya no se escribe a mano: subía la
+racha). Ninguna tabla de `public` concede ya INSERT ni UPDATE de tabla entera, y `rls.sql` falla
+si vuelve a aparecer uno. Lo que queda, por prioridad:
 
 1. **Decisión de producto:** un admin puede añadir a cualquier persona a su círculo sin su
    consentimiento, y un admin que no es dueño puede pasar un círculo de privado a público (quien
    entre lee el historial).
-2. `profile_settings` se puede actualizar entera en la fila propia: permite falsear o antedatar
-   `terms_version`/`terms_accepted_at` sin pasar por la RPC y apuntar `expo_push_token` al token
-   de otro dispositivo. Hay que inventariar las escrituras del cliente antes de cerrarlo.
-3. `testimonies`: `image_url` sin validar (hoy no se muestra) y `post_id`/`plan_id`/`list_item_id`
-   sin comprobar contra el dueño.
-4. `comments` y `messages`: al insertar se pueden fijar `hidden_*`, `held_at`,
-   `crisis_flagged_at` (escalados de crisis falsos). Mismo arreglo que `posts`.
-5. `conversation_members` y `conversations` (el cliente no los escribe; revocar antes de que
-   existan mensajes directos), `plus_waitlist.email` libre, `reports.status`, `notifications`.
+2. `app/plus.tsx` deja teclear un correo que el servidor ya ignora (guarda el de la cuenta): el
+   campo debería ser de solo lectura.
+3. `complete_onboarding` guarda `p_answers` sin validar la forma ni el tamaño; acaba en el prompt
+   (que lo filtra) y en los correos (`gender`).
+4. Los privilegios por defecto de `public` dan TRUNCATE, REFERENCES, TRIGGER y MAINTAIN a `anon` y
+   `authenticated` en cada tabla nueva. PostgREST no los expone, pero sobran.
 
 **Tras el `db push` a staging**, además de lo del runbook: comprobar los permisos con
 `information_schema.column_privileges` (`grantee = 'authenticated'`) y buscar rastro de abusos
@@ -121,6 +125,18 @@ sospechosas); `member_count`/`prayer_count`/`comment_count` distintos del recuen
 no cumplan `~ '^[0-9a-f]{32}$'` (`invite_token`, `invites.code`, `share_links.token`); `share_links`
 con `scope = 'plan'` cuyo `created_by` no es el dueño del plan, y los `scope = 'group'` sin revocar
 (siguen canjeándose: revisarlos y revocarlos).
+
+De la segunda ronda: la consulta de catálogo del final de `rls.sql` debe salir vacía también en
+staging, y conviene mirar `pg_default_acl` de `public` (un proyecto antiguo puede seguir dando
+`arwd` a `anon`/`authenticated` en cada tabla nueva). Rastro de abusos: `crisis_escalations` y
+`content_holds` cuyo texto no dispara `is_crisis_text`/`is_objectionable`; comentarios, mensajes,
+intercesiones, denuncias o avisos con `created_at` en el futuro; filas de `conversation_members`
+de alguien que no es del círculo o con `last_read_at` en el futuro; `conversations` sin
+`group_id`; testimonios con `image_url` o con un `plan_id`/`list_item_id` que no es del autor;
+`profile_settings` con `terms_accepted_at` anterior al 2026-08-13 o una `terms_version` que no sea
+`AAAA-MM-DD`; `groups.streak_count` mayor que los días de su plan; y `email_outbox` con
+`template = 'waitlist'` a una dirección que no es la de la cuenta (ya enviados: no se deshacen; la
+migración alinea las filas de `plus_waitlist`).
 
 ## 4b. Producto: lo que quedó sin pantalla
 

@@ -1649,6 +1649,854 @@ select pg_temp.assert(
      from public.posts where id = 'c1c1e000-0000-0000-0000-000000000001'),
   'the post stays hidden, in its circle, with its real count');
 
+-- ===========================================================================
+-- Qué columnas escribe el cliente (segunda ronda)
+--
+-- Lo mismo que el bloque anterior, para las tablas que quedaron fuera:
+-- ajustes del perfil, comentarios y mensajes, testimonios, el chat por dentro,
+-- la lista de espera de Plus, denuncias y avisos, y el resto de tablas donde el
+-- cliente solo inserta. `pg_temp.denied` distingue «me lo prohíbe un permiso o
+-- una policy» (42501) de cualquier otro fallo: una violación de unicidad o un
+-- CHECK no cuentan como que el hueco esté cerrado, y si aparecen el test se
+-- para con el error de verdad.
+-- ===========================================================================
+create or replace function pg_temp.denied(stmt text)
+returns boolean language plpgsql as $$
+begin
+  execute stmt;
+  return false;
+exception
+  when insufficient_privilege then
+    return true;
+end;
+$$;
+
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data) values
+  ('c2c20000-0000-0000-0000-000000000001', 'paula@test.local',  'authenticated', 'authenticated', '{"display_name":"Paula"}'),
+  ('c2c20000-0000-0000-0000-000000000002', 'quique@test.local', 'authenticated', 'authenticated', '{"display_name":"Quique"}'),
+  ('c2c20000-0000-0000-0000-000000000003', 'rut@test.local',    'authenticated', 'authenticated', '{"display_name":"Rut"}');
+
+-- Paula tiene un círculo privado con Quique dentro; Rut no es de él.
+insert into public.groups (id, owner_id, name, visibility) values
+  ('c2c2c000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000001', 'El círculo de Paula', 'private');
+
+insert into public.group_members (group_id, user_id) values
+  ('c2c2c000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000002');
+
+insert into public.posts (id, author_id, group_id, body) values
+  ('c2c2e000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000001',
+   'c2c2c000-0000-0000-0000-000000000001', 'Oren por mi entrevista');
+
+-- Un plan personal de Paula y uno del círculo, cada uno con un día ya abierto.
+insert into public.prayer_plans (id, owner_id, title, theme, duration_days, start_date, visibility, group_id)
+values
+  ('c2c2f000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000001',
+   'El plan de Paula', 'paz', 3, current_date - 1, 'private', null),
+  ('c2c2f000-0000-0000-0000-000000000002', 'c2c20000-0000-0000-0000-000000000001',
+   'El plan del círculo', 'paz', 3, current_date - 1, 'private',
+   'c2c2c000-0000-0000-0000-000000000001');
+
+insert into public.prayer_plan_days (id, plan_id, day_number, title, prayer_body, unlock_date)
+values
+  ('c2c2d000-0000-0000-0000-000000000001', 'c2c2f000-0000-0000-0000-000000000001', 1,
+   'Día uno', 'Oración del día uno', current_date - 1),
+  ('c2c2d000-0000-0000-0000-000000000002', 'c2c2f000-0000-0000-0000-000000000002', 1,
+   'Día uno', 'Oración del círculo', current_date - 1);
+
+insert into public.prayer_list_items (id, user_id, body) values
+  ('c2c2a000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000001', 'Por mi hermano');
+
+insert into public.notifications (id, user_id, type, payload, dedupe_key) values
+  ('c2c2b000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000002',
+   'intercession', '{"from":"Paula"}', 'c2c2-aviso');
+
+-- La conversación del círculo la crea el trigger al crear el círculo.
+insert into public.messages (conversation_id, sender_id, body)
+select c.id, 'c2c20000-0000-0000-0000-000000000001', 'Bienvenidos'
+  from public.conversations c
+ where c.group_id = 'c2c2c000-0000-0000-0000-000000000001';
+
+commit;
+
+-- ---------------------------------------------------------------------------
+-- profile_settings: horas, idioma, zona, lectura, plan activo y lo pendiente
+-- del alta, sí; términos, respuestas del onboarding y token de push, no
+--
+-- La fila entera era actualizable: se podía «aceptar» los términos con la
+-- fecha que uno quisiera sin pasar por `accept_terms`, reescribir las
+-- respuestas del onboarding (que acaban en el prompt y en los correos) o poner
+-- el token de push de otro dispositivo.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000001","role":"authenticated"}';
+
+-- bienvenida.tsx
+select pg_temp.assert(
+  (public.complete_onboarding('Paula', '{"topics":["paz"],"gender":"f"}'::jsonb,
+     'Europe/Madrid', array[8, 21]::smallint[], 'es') ->> 'ok')::boolean,
+  'completing the onboarding still works');
+
+-- useAcceptTerms
+select public.accept_terms('2026-08-02');
+
+select pg_temp.assert(
+  (select terms_version = '2026-08-02' and terms_accepted_at = now()
+     from public.profile_settings where id = 'c2c20000-0000-0000-0000-000000000001'),
+  'accepting the terms still works, with the server''s clock');
+
+select pg_temp.assert(
+  pg_temp.raises($q$ select public.accept_terms('lo que yo diga') $q$),
+  'and only a real version is accepted');
+
+-- useUpdateProfile, useUpdateTimezone, useUpdateLocale
+with changed as (
+  update public.profile_settings
+     set reminder_hours = array[7, 21]::smallint[]
+   where id = 'c2c20000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'saving the reminder hours still works') from changed;
+
+with changed as (
+  update public.profile_settings set timezone = 'America/Mexico_City'
+   where id = 'c2c20000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and the time zone') from changed;
+
+with changed as (
+  update public.profile_settings set locale = 'en'
+   where id = 'c2c20000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and the language') from changed;
+
+-- useSaveReadingPosition
+with changed as (
+  update public.profile_settings
+     set last_read_book_id = 43, last_read_chapter = 3, last_read_verse = 16,
+         last_read_at = now()
+   where id = 'c2c20000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and the reading position') from changed;
+
+-- useSetActivePlan
+with changed as (
+  update public.profile_settings set active_plan_id = 'c2c2f000-0000-0000-0000-000000000001'
+   where id = 'c2c20000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and the active plan') from changed;
+
+-- attachPendingTokensToProfile, attachSignupSource
+with changed as (
+  update public.profile_settings
+     set pending_share_token = 'un-enlace', pending_invite_code = 'un-codigo'
+   where id = 'c2c20000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and the tokens stashed before signing up') from changed;
+
+with changed as (
+  update public.profile_settings set signup_source = 'invite'
+   where id = 'c2c20000-0000-0000-0000-000000000001' and signup_source is null
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and where the account came from') from changed;
+
+-- usePushRegistration: el token de push vive en `push_devices`, por su RPC.
+select public.register_push_device('ExponentPushToken[paula-telefono]', 'ios');
+
+select pg_temp.assert(
+  (select count(*) from public.push_devices
+    where user_id = 'c2c20000-0000-0000-0000-000000000001') = 1,
+  'and registering this device for push');
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('terms_version',      $v$'2026-08-02'$v$),
+      ('terms_accepted_at',  $v$'2020-01-01'$v$),
+      ('onboarding_answers', $v$'{"gender":"m"}'$v$),
+      ('expo_push_token',    $v$'ExponentPushToken[de-otro]'$v$),
+      ('created_at',         $v$'2000-01-01'$v$),
+      ('updated_at',         $v$'2000-01-01'$v$),
+      ('id',                 $v$'c2c20000-0000-0000-0000-000000000001'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.denied(format(
+      'update public.profile_settings set %I = %s where id = %L',
+      forced.col, forced.val, 'c2c20000-0000-0000-0000-000000000001'))
+    then
+      raise exception 'FAIL  your settings'' % is not yours to write', forced.col;
+    end if;
+    raise notice 'PASS  your settings'' % is not yours to write', forced.col;
+  end loop;
+end;
+$$;
+
+commit;
+
+select pg_temp.assert(
+  (select terms_version = '2026-08-02' and terms_accepted_at > now() - interval '1 hour'
+          and onboarding_answers ->> 'gender' = 'f' and expo_push_token is null
+     from public.profile_settings where id = 'c2c20000-0000-0000-0000-000000000001'),
+  'the acceptance date and the onboarding answers are the ones the server wrote');
+
+-- ---------------------------------------------------------------------------
+-- comments y messages: nacen sin marcas de moderación ni fecha elegida
+--
+-- Un comentario podía nacer con `crisis_flagged_at` —y el trigger abría una
+-- escalada de crisis falsa—, con `held_at` —y llenaba la cola de retenidos—,
+-- u «oculto por» un admin que no lo ocultó. Un mensaje, fechado en 2999, se
+-- quedaba el primero del chat y «sin leer» para siempre.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+-- useWriteComment
+with inserted as (
+  insert into public.comments (post_id, author_id, body)
+  values ('c2c2e000-0000-0000-0000-000000000001',
+          'c2c20000-0000-0000-0000-000000000002', 'Contigo, Paula')
+  returning crisis_flagged_at)
+select pg_temp.assert(crisis_flagged_at is null,
+  'commenting the way the app does still works')
+  from inserted;
+
+with inserted as (
+  insert into public.comments (post_id, author_id, body)
+  values ('c2c2e000-0000-0000-0000-000000000001',
+          'c2c20000-0000-0000-0000-000000000002', 'quiero matarme')
+  returning crisis_flagged_at, held_at)
+select pg_temp.assert(crisis_flagged_at is not null and held_at is not null,
+  'and a real crisis is still flagged, by the server')
+  from inserted;
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('crisis_flagged_at', 'now()'),
+      ('held_at',           'now()'),
+      ('hidden_at',         'now()'),
+      ('hidden_by',         $v$'c2c20000-0000-0000-0000-000000000001'$v$),
+      ('created_at',        $v$'2000-01-01'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.denied(format(
+      'insert into public.comments (post_id, author_id, body, %I) values (%L, %L, %L, %s)',
+      forced.col, 'c2c2e000-0000-0000-0000-000000000001',
+      'c2c20000-0000-0000-0000-000000000002', 'Un comentario cualquiera', forced.val))
+    then
+      raise exception 'FAIL  a new comment cannot choose its own %', forced.col;
+    end if;
+    raise notice 'PASS  a new comment cannot choose its own %', forced.col;
+  end loop;
+end;
+$$;
+
+-- useSendMessage
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.messages (conversation_id, sender_id, body)
+    values (public.circle_conversation('c2c2c000-0000-0000-0000-000000000001'),
+            'c2c20000-0000-0000-0000-000000000002', 'Hola a todos')
+  $q$),
+  'writing in the circle chat the way the app does still works');
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('hidden_at',  'now()'),
+      ('hidden_by',  $v$'c2c20000-0000-0000-0000-000000000001'$v$),
+      ('created_at', $v$'2999-01-01'$v$),
+      ('id',         $v$'c2c29000-0000-0000-0000-000000000001'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.denied(format(
+      'insert into public.messages (conversation_id, sender_id, body, %I) values (%L, %L, %L, %s)',
+      forced.col,
+      (select public.circle_conversation('c2c2c000-0000-0000-0000-000000000001')),
+      'c2c20000-0000-0000-0000-000000000002', 'Un mensaje cualquiera', forced.val))
+    then
+      raise exception 'FAIL  a new message cannot choose its own %', forced.col;
+    end if;
+    raise notice 'PASS  a new message cannot choose its own %', forced.col;
+  end loop;
+end;
+$$;
+
+commit;
+
+select pg_temp.assert(
+  (select count(*) from public.crisis_escalations
+    where author_id = 'c2c20000-0000-0000-0000-000000000002') = 1
+  and (select count(*) from public.content_holds
+    where author_id = 'c2c20000-0000-0000-0000-000000000002') = 0,
+  'only the real crisis reaches the crisis queue, and nothing reaches the holds');
+
+-- ---------------------------------------------------------------------------
+-- testimonies: se cuenta lo tuyo
+--
+-- `image_url` no se validaba (un píxel de seguimiento el día que se pinte), y
+-- el testimonio podía colgarse de un plan, una petición o un ítem de lista de
+-- otra persona.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000001","role":"authenticated"}';
+
+-- useWriteTestimony, desde el plan terminado y desde la lista
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.testimonies (user_id, body, visibility, plan_id, list_item_id)
+    values ('c2c20000-0000-0000-0000-000000000001', 'Dios respondió', 'circles',
+            'c2c2f000-0000-0000-0000-000000000001', null)
+  $q$)
+  and not pg_temp.raises($q$
+    insert into public.testimonies (user_id, body, visibility, plan_id, list_item_id)
+    values ('c2c20000-0000-0000-0000-000000000001', 'Mi hermano volvió', 'public',
+            null, 'c2c2a000-0000-0000-0000-000000000001')
+  $q$),
+  'telling what happened with your own plan or list item still works');
+
+-- useSetTestimonyVisibility
+with changed as (
+  update public.testimonies set visibility = 'private'
+   where user_id = 'c2c20000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 2, 'and changing who sees it') from changed;
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('image_url',  $v$'https://example.com/pixel.png'$v$),
+      ('post_id',    $v$'c2c2e000-0000-0000-0000-000000000001'$v$),
+      ('created_at', $v$'2000-01-01'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.denied(format(
+      'insert into public.testimonies (user_id, body, %I) values (%L, %L, %s)',
+      forced.col, 'c2c20000-0000-0000-0000-000000000001', 'Con trampa', forced.val))
+    then
+      raise exception 'FAIL  a new testimony cannot choose its own %', forced.col;
+    end if;
+    raise notice 'PASS  a new testimony cannot choose its own %', forced.col;
+  end loop;
+
+  for forced in
+    select * from (values
+      ('image_url',    $v$'https://example.com/pixel.png'$v$),
+      ('plan_id',      $v$'c2c2f000-0000-0000-0000-000000000002'$v$),
+      ('list_item_id', 'null'),
+      ('post_id',      $v$'c2c2e000-0000-0000-0000-000000000001'$v$),
+      ('body',         $v$'Otra historia'$v$),
+      ('user_id',      $v$'c2c20000-0000-0000-0000-000000000001'$v$),
+      ('created_at',   $v$'2000-01-01'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.denied(format(
+      'update public.testimonies set %I = %s where user_id = %L',
+      forced.col, forced.val, 'c2c20000-0000-0000-0000-000000000001'))
+    then
+      raise exception 'FAIL  a testimony''s % cannot be rewritten', forced.col;
+    end if;
+    raise notice 'PASS  a testimony''s % cannot be rewritten', forced.col;
+  end loop;
+end;
+$$;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+select pg_temp.assert(
+  pg_temp.denied($q$
+    insert into public.testimonies (user_id, body, visibility, plan_id)
+    values ('c2c20000-0000-0000-0000-000000000002', 'El plan de otra', 'public',
+            'c2c2f000-0000-0000-0000-000000000002')
+  $q$),
+  'a testimony cannot hang from somebody else''s plan, not even one you can read');
+
+select pg_temp.assert(
+  pg_temp.denied($q$
+    insert into public.testimonies (user_id, body, visibility, list_item_id)
+    values ('c2c20000-0000-0000-0000-000000000002', 'La lista de otra', 'public',
+            'c2c2a000-0000-0000-0000-000000000001')
+  $q$),
+  'nor from somebody else''s prayer list');
+
+commit;
+
+-- ---------------------------------------------------------------------------
+-- conversations y conversation_members: los escribe el servidor
+--
+-- La app lee el chat y marca lo leído por RPC (`mark_conversation_read`,
+-- SECURITY DEFINER). Con INSERT directo, cualquiera del círculo metía la fila
+-- de otra persona con `last_read_at` en 2999 —y a esa persona el chat no le
+-- volvía a marcar nada sin leer— y se creaban conversaciones huérfanas.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+select pg_temp.assert(
+  (select count(*) from public.messages
+    where conversation_id = public.circle_conversation('c2c2c000-0000-0000-0000-000000000001')) = 2,
+  'a member still reads the circle chat');
+
+select pg_temp.assert(
+  (select unread from public.my_unread_counts()
+    where group_id = 'c2c2c000-0000-0000-0000-000000000001') = 1,
+  'with Paula''s message still unread');
+
+select public.mark_conversation_read('c2c2c000-0000-0000-0000-000000000001');
+
+select pg_temp.assert(
+  (select last_read_at = now() from public.conversation_members
+    where user_id = 'c2c20000-0000-0000-0000-000000000002'),
+  'and marks it read, through its RPC');
+
+select pg_temp.assert(
+  (select unread from public.my_unread_counts()
+    where group_id = 'c2c2c000-0000-0000-0000-000000000001') = 0,
+  'and the unread count follows');
+
+select pg_temp.assert(
+  pg_temp.denied($q$
+    insert into public.conversation_members (conversation_id, user_id, last_read_at)
+    values (public.circle_conversation('c2c2c000-0000-0000-0000-000000000001'),
+            'c2c20000-0000-0000-0000-000000000001', '2999-01-01')
+  $q$),
+  'nobody writes somebody else''s read marker');
+
+select pg_temp.assert(
+  pg_temp.denied($q$
+    update public.conversation_members set last_read_at = '2999-01-01'
+     where user_id = 'c2c20000-0000-0000-0000-000000000002'
+  $q$),
+  'nor their own by hand');
+
+select pg_temp.assert(
+  pg_temp.denied($q$
+    delete from public.conversation_members
+     where user_id = 'c2c20000-0000-0000-0000-000000000002'
+  $q$),
+  'nor deletes it');
+
+select pg_temp.assert(
+  pg_temp.denied($q$
+    insert into public.conversations (created_by)
+    values ('c2c20000-0000-0000-0000-000000000002')
+  $q$),
+  'and conversations are not started from the app');
+
+commit;
+
+-- ---------------------------------------------------------------------------
+-- plus_waitlist: el correo es el de tu cuenta
+--
+-- Apuntarse encola un correo a la dirección de la fila, y la dirección era
+-- libre: una cuenta por dirección ajena, con el nombre —y lo que se escriba en
+-- él— dentro del correo.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+-- useJoinWaitlist (el upsert de PostgREST, con sus columnas)
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.plus_waitlist (user_id, name, email)
+    values ('c2c20000-0000-0000-0000-000000000002', 'Quique', 'alguien@otro.example')
+    on conflict (user_id) do update
+      set user_id = excluded.user_id, name = excluded.name, email = excluded.email
+  $q$)
+  and not pg_temp.raises($q$
+    insert into public.plus_waitlist (user_id, name, email)
+    values ('c2c20000-0000-0000-0000-000000000002', 'Quique', 'otra@otro.example')
+    on conflict (user_id) do update
+      set user_id = excluded.user_id, name = excluded.name, email = excluded.email
+  $q$),
+  'joining the Plus waitlist the way the app does still works, twice');
+
+select pg_temp.assert(
+  (select email = 'quique@test.local' from public.plus_waitlist
+    where user_id = 'c2c20000-0000-0000-0000-000000000002'),
+  'and the address kept is the account''s own');
+
+select pg_temp.assert(
+  pg_temp.denied($q$
+    update public.plus_waitlist set created_at = '2000-01-01'
+     where user_id = 'c2c20000-0000-0000-0000-000000000002'
+  $q$),
+  'nor can the entry be backdated');
+
+commit;
+
+select pg_temp.assert(
+  (select count(*) from public.email_outbox
+    where template = 'waitlist' and user_id = 'c2c20000-0000-0000-0000-000000000002'
+      and to_email = 'quique@test.local') = 1
+  and (select count(*) from public.email_outbox
+    where to_email like '%@otro.example') = 0,
+  'the confirmation goes to the account''s address, never to the one typed');
+
+-- ---------------------------------------------------------------------------
+-- reports y notifications: estado, fechas y contenido los pone el servidor
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+-- useReportPost, useReportIntercession
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.reports (reporter_id, target_type, target_id)
+    values ('c2c20000-0000-0000-0000-000000000002', 'post',
+            'c2c2e000-0000-0000-0000-000000000001')
+  $q$)
+  and not pg_temp.raises($q$
+    insert into public.reports (reporter_id, target_type, target_id, reason)
+    values ('c2c20000-0000-0000-0000-000000000002', 'post',
+            'c2c2e000-0000-0000-0000-000000000001', 'spam')
+  $q$),
+  'reporting the way the app does still works');
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('status',     $v$'dismissed'$v$),
+      ('created_at', $v$'2000-01-01'$v$),
+      ('id',         $v$'c2c28000-0000-0000-0000-000000000001'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.denied(format(
+      'insert into public.reports (reporter_id, target_type, target_id, %I) values (%L, %L, %L, %s)',
+      forced.col, 'c2c20000-0000-0000-0000-000000000002', 'post',
+      'c2c2e000-0000-0000-0000-000000000001', forced.val))
+    then
+      raise exception 'FAIL  a new report cannot choose its own %', forced.col;
+    end if;
+    raise notice 'PASS  a new report cannot choose its own %', forced.col;
+  end loop;
+end;
+$$;
+
+-- useNotifications, useMarkNotificationsRead
+select pg_temp.assert(
+  (select count(*) from public.my_notifications_page()) = 1,
+  'reading your notifications still works');
+
+select pg_temp.assert(
+  public.mark_notifications_read() = 1,
+  'and marking them read');
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('type',         $v$'otra_cosa'$v$),
+      ('payload',      $v$'{"from":"alguien"}'$v$),
+      ('push_sent_at', 'null'),
+      ('dedupe_key',   $v$'otra'$v$),
+      ('created_at',   $v$'2999-01-01'$v$),
+      ('user_id',      $v$'c2c20000-0000-0000-0000-000000000002'$v$)
+    ) as v (col, val)
+  loop
+    if not pg_temp.denied(format(
+      'update public.notifications set %I = %s where id = %L',
+      forced.col, forced.val, 'c2c2b000-0000-0000-0000-000000000001'))
+    then
+      raise exception 'FAIL  a notification''s % is not yours to rewrite', forced.col;
+    end if;
+    raise notice 'PASS  a notification''s % is not yours to rewrite', forced.col;
+  end loop;
+end;
+$$;
+
+commit;
+
+select pg_temp.assert(
+  (select type = 'intercession' and read_at is not null
+     from public.notifications where id = 'c2c2b000-0000-0000-0000-000000000001'),
+  'the notification is the one the server wrote, now read');
+
+-- ---------------------------------------------------------------------------
+-- Barrido: las tablas donde el cliente solo inserta
+--
+-- Fechas de auditoría (`created_at`, `completed_at`), la ocultación que decide
+-- quien recibe una intercesión, y el día de oración de un círculo, que se
+-- escribía a mano para cualquier día legible —el de un plan propio o uno
+-- público ya pasado— y le subía la racha al círculo.
+-- ---------------------------------------------------------------------------
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000002","role":"authenticated"}';
+
+-- usePrayForSomeone: `plan_owner_id` lo reescribe `set_intercession_owner`.
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.intercessions (plan_day_id, intercessor_id, message)
+    values ('c2c2d000-0000-0000-0000-000000000002',
+            'c2c20000-0000-0000-0000-000000000002', 'Oro contigo')
+  $q$),
+  'praying for somebody the way the app does still works');
+
+select pg_temp.assert(
+  pg_temp.denied($q$
+    insert into public.group_prayer_days (group_id, plan_day_id, user_id)
+    values ('c2c2c000-0000-0000-0000-000000000001',
+            'c2c2d000-0000-0000-0000-000000000002',
+            'c2c20000-0000-0000-0000-000000000002')
+  $q$),
+  'a circle day is not written by hand');
+
+-- useMarkCircleDay
+select pg_temp.assert(
+  public.mark_circle_day('c2c2d000-0000-0000-0000-000000000002'),
+  'it is marked as prayed through its RPC');
+
+-- useTogglePostPrayer, useFollowUser, useBlockUser
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.post_prayers (post_id, user_id)
+    values ('c2c2e000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000002')
+  $q$)
+  and not pg_temp.raises($q$
+    insert into public.follows (follower_id, followee_id)
+    values ('c2c20000-0000-0000-0000-000000000002', 'c2c20000-0000-0000-0000-000000000001')
+  $q$)
+  and not pg_temp.raises($q$
+    insert into public.blocks (blocker_id, blocked_id)
+    values ('c2c20000-0000-0000-0000-000000000002', 'c2c20000-0000-0000-0000-000000000003')
+  $q$),
+  'praying for a post, following and blocking still work');
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('intercessions',     'plan_day_id, intercessor_id',
+         $v$'c2c2d000-0000-0000-0000-000000000002', 'c2c20000-0000-0000-0000-000000000002'$v$,
+         'created_at',        $v$'2999-01-01'$v$),
+      ('intercessions',     'plan_day_id, intercessor_id',
+         $v$'c2c2d000-0000-0000-0000-000000000002', 'c2c20000-0000-0000-0000-000000000002'$v$,
+         'message_hidden_at', 'now()'),
+      ('post_prayers',      'post_id, user_id',
+         $v$'c2c2e000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000002'$v$,
+         'created_at',        $v$'2000-01-01'$v$),
+      ('follows',           'follower_id, followee_id',
+         $v$'c2c20000-0000-0000-0000-000000000002', 'c2c20000-0000-0000-0000-000000000001'$v$,
+         'created_at',        $v$'2000-01-01'$v$),
+      ('blocks',            'blocker_id, blocked_id',
+         $v$'c2c20000-0000-0000-0000-000000000002', 'c2c20000-0000-0000-0000-000000000003'$v$,
+         'created_at',        $v$'2000-01-01'$v$)
+    ) as v (tbl, cols, vals, col, val)
+  loop
+    if not pg_temp.denied(format(
+      'insert into public.%I (%s, %I) values (%s, %s)',
+      forced.tbl, forced.cols, forced.col, forced.vals, forced.val))
+    then
+      raise exception 'FAIL  a new % row cannot choose its own %', forced.tbl, forced.col;
+    end if;
+    raise notice 'PASS  a new % row cannot choose its own %', forced.tbl, forced.col;
+  end loop;
+end;
+$$;
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"c2c20000-0000-0000-0000-000000000001","role":"authenticated"}';
+
+-- useMarkPrayed / la cola offline
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.prayer_logs (plan_day_id, user_id)
+    values ('c2c2d000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000001')
+  $q$),
+  'marking a day as prayed the way the app does still works');
+
+-- useToggleHighlight, useSaveNote (upsert de PostgREST)
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.bible_highlights (user_id, book_id, chapter, verse)
+    values ('c2c20000-0000-0000-0000-000000000001', 43, 3, 16)
+  $q$)
+  and not pg_temp.raises($q$
+    insert into public.bible_notes (user_id, book_id, chapter, verse, body)
+    values ('c2c20000-0000-0000-0000-000000000001', 43, 3, 16, 'Primera nota')
+    on conflict (user_id, book_id, chapter, verse) do update
+      set user_id = excluded.user_id, book_id = excluded.book_id,
+          chapter = excluded.chapter, verse = excluded.verse, body = excluded.body
+  $q$)
+  and not pg_temp.raises($q$
+    insert into public.bible_notes (user_id, book_id, chapter, verse, body)
+    values ('c2c20000-0000-0000-0000-000000000001', 43, 3, 16, 'La nota, corregida')
+    on conflict (user_id, book_id, chapter, verse) do update
+      set user_id = excluded.user_id, book_id = excluded.book_id,
+          chapter = excluded.chapter, verse = excluded.verse, body = excluded.body
+  $q$),
+  'highlighting a verse and writing (and rewriting) a note still work');
+
+-- useAddListItem, useSetItemAnswered
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.prayer_list_items (user_id, body, tag)
+    values ('c2c20000-0000-0000-0000-000000000001', 'Por mi vecina', 'familia')
+  $q$),
+  'adding to your prayer list still works');
+
+with changed as (
+  update public.prayer_list_items set answered_at = now()
+   where id = 'c2c2a000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and marking an item answered') from changed;
+
+-- useUpdateEmailPreferences
+with changed as (
+  update public.email_preferences set cadence = 'weekly', social = false, nudge = false
+   where user_id = 'c2c20000-0000-0000-0000-000000000001'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and choosing which emails you get') from changed;
+
+-- useTogglePlanCircle
+select pg_temp.assert(
+  not pg_temp.raises($q$
+    insert into public.plan_shares (plan_id, group_id, created_by)
+    values ('c2c2f000-0000-0000-0000-000000000001', 'c2c2c000-0000-0000-0000-000000000001',
+            'c2c20000-0000-0000-0000-000000000001')
+  $q$),
+  'and sharing your plan with your circle');
+
+-- La dueña del plan oculta el mensaje que le mandaron (useReportIntercession).
+with changed as (
+  update public.intercessions set message_hidden_at = now()
+   where plan_day_id = 'c2c2d000-0000-0000-0000-000000000002'
+  returning 1)
+select pg_temp.assert(count(*) = 1, 'and hiding a message somebody prayed for you') from changed;
+
+do $$
+declare
+  forced record;
+begin
+  for forced in
+    select * from (values
+      ('prayer_logs',       'plan_day_id, user_id',
+         $v$'c2c2d000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000001'$v$,
+         'completed_at', $v$'2000-01-01'$v$),
+      ('prayer_logs',       'plan_day_id, user_id',
+         $v$'c2c2d000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000001'$v$,
+         'note',         $v$'una nota'$v$),
+      ('bible_highlights',  'user_id, book_id, chapter, verse',
+         $v$'c2c20000-0000-0000-0000-000000000001', 43, 3, 17$v$,
+         'created_at',   $v$'2000-01-01'$v$),
+      ('bible_notes',       'user_id, book_id, chapter, verse, body',
+         $v$'c2c20000-0000-0000-0000-000000000001', 43, 3, 17, 'Nota'$v$,
+         'created_at',   $v$'2000-01-01'$v$),
+      ('prayer_list_items', 'user_id, body',
+         $v$'c2c20000-0000-0000-0000-000000000001', 'Algo'$v$,
+         'created_at',   $v$'2000-01-01'$v$),
+      ('prayer_list_items', 'user_id, body',
+         $v$'c2c20000-0000-0000-0000-000000000001', 'Algo'$v$,
+         'answered_at',  'now()'),
+      ('plan_shares',       'plan_id, group_id, created_by',
+         $v$'c2c2f000-0000-0000-0000-000000000001', 'c2c2c000-0000-0000-0000-000000000001', 'c2c20000-0000-0000-0000-000000000001'$v$,
+         'created_at',   $v$'2000-01-01'$v$),
+      ('email_preferences', 'user_id',
+         $v$'c2c20000-0000-0000-0000-000000000001'$v$,
+         'cadence',      $v$'daily'$v$)
+    ) as v (tbl, cols, vals, col, val)
+  loop
+    if not pg_temp.denied(format(
+      'insert into public.%I (%s, %I) values (%s, %s)',
+      forced.tbl, forced.cols, forced.col, forced.vals, forced.val))
+    then
+      raise exception 'FAIL  a new % row cannot choose its own %', forced.tbl, forced.col;
+    end if;
+    raise notice 'PASS  a new % row cannot choose its own %', forced.tbl, forced.col;
+  end loop;
+
+  for forced in
+    select * from (values
+      ('bible_notes',       'created_at',       $v$'2000-01-01'$v$),
+      ('bible_notes',       'updated_at',       $v$'2000-01-01'$v$),
+      ('prayer_list_items', 'body',             $v$'Otra cosa'$v$),
+      ('prayer_list_items', 'created_at',       $v$'2000-01-01'$v$),
+      ('email_preferences', 'sunset_at',        'null'),
+      ('email_preferences', 'previous_cadence', $v$'daily'$v$),
+      ('email_preferences', 'updated_at',       $v$'2000-01-01'$v$)
+    ) as v (tbl, col, val)
+  loop
+    if not pg_temp.denied(format(
+      'update public.%I set %I = %s where user_id = %L',
+      forced.tbl, forced.col, forced.val, 'c2c20000-0000-0000-0000-000000000001'))
+    then
+      raise exception 'FAIL  a % row''s % is not the client''s to rewrite', forced.tbl, forced.col;
+    end if;
+    raise notice 'PASS  a % row''s % is not the client''s to rewrite', forced.tbl, forced.col;
+  end loop;
+end;
+$$;
+
+commit;
+
+-- ---------------------------------------------------------------------------
+-- Catálogo: ningún INSERT ni UPDATE de tabla entera para los roles de la API
+--
+-- Lo que abre el hueco no es una policy mal escrita: es un `grant insert,
+-- update on <tabla>` de tabla entera, que deja escribir también las columnas
+-- que pone el servidor. Una tabla nueva de `public` concede sus escrituras por
+-- columna (`grant insert (a, b) …`), con exactamente lo que manda la app. Si
+-- alguna de verdad necesita la tabla entera, entra en esta lista con su
+-- porqué, para que sea una decisión y no un descuido. Hoy no hay ninguna.
+-- ---------------------------------------------------------------------------
+select coalesce(string_agg(format('%s:%s:%s', r.rolname, c.relname, p.priv), ', '
+                           order by r.rolname, c.relname, p.priv), '')
+         as table_wide_writes
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  cross join (values ('anon'), ('authenticated')) as r (rolname)
+  cross join (values ('INSERT'), ('UPDATE')) as p (priv)
+ where n.nspname = 'public'
+   and c.relkind in ('r', 'p', 'v', 'm', 'f')
+   and has_table_privilege(r.rolname, c.oid, p.priv)
+   and not exists (
+     select 1
+       from (values
+         -- ('authenticated', '<tabla>', '<porqué>'). Ninguna por ahora.
+         (null::name, null::name, null::text)
+       ) as allowed (rolname, relname, why)
+      where allowed.rolname = r.rolname
+        and allowed.relname = c.relname
+   ) \gset
+
+select pg_temp.assert(
+  :'table_wide_writes' = '',
+  'no public table grants table-wide INSERT or UPDATE to the API roles'
+    || coalesce(nullif(': ' || :'table_wide_writes', ': '), ''));
+
 \echo ''
 \echo '================================'
 \echo ' ALL RLS ASSERTIONS PASSED'
