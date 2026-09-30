@@ -19,6 +19,7 @@ import {
   usePrayerList,
   useSetItemAnswered,
 } from "@/core/list/queries";
+import { useAction } from "@/core/toast/useAction";
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Txt } from "@/components/ui/Text";
@@ -46,7 +47,10 @@ export default function PrayerList() {
   const remove = useDeleteListItem(userId);
 
   const [draft, setDraft] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  // Los fallos, por el toast del sistema (core/toast/useAction.ts), que además
+  // distingue «sin conexión» de «algo salió mal». Aquí eran una línea roja
+  // entre el campo y la lista que no se iba hasta la acción siguiente.
+  const { run } = useAction();
   // Borrar pide dos toques y el segundo va en rojo: aquí hay nombres de gente.
   const [confirming, setConfirming] = useState<string | null>(null);
 
@@ -55,16 +59,6 @@ export default function PrayerList() {
   const items = data ?? [];
   const pending = items.filter((item) => !item.answered_at);
   const answered = items.filter((item) => item.answered_at);
-
-  const run = async (action: () => Promise<unknown>) => {
-    setError(null);
-
-    try {
-      await action();
-    } catch {
-      setError(t("common.errorGeneric"));
-    }
-  };
 
   const handleAdd = async () => {
     const body = draft.trim();
@@ -148,12 +142,6 @@ export default function PrayerList() {
                 onPress={() => void handleAdd()}
               />
             </View>
-
-            {error ? (
-              <Txt variant="caption" tone="danger" accessibilityRole="alert">
-                {error}
-              </Txt>
-            ) : null}
 
             {/* El temporizador es lo que convierte una lista en una práctica, así
             que va arriba y no escondido al final. Sin peticiones no se pinta:

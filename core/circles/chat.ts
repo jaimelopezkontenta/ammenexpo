@@ -20,6 +20,7 @@ import {
   olderThanFilter,
   withNewestPage,
 } from "@/core/circles/chatPages";
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 
 export type { ChatMessage } from "@/core/circles/chatPages";
@@ -104,7 +105,8 @@ export const useCircleMessages = (
     queryKey: qk.circleMessages(circleId),
     enabled: Boolean(circleId) && Boolean(userId),
     initialPageParam: null as MessageCursor | null,
-    queryFn: ({ pageParam }) => fetchMessagePage(circleId!, userId!, pageParam),
+    queryFn: ({ pageParam }) =>
+      fetchMessagePage(circleId!, requireUserId(userId), pageParam),
     getNextPageParam: nextMessageCursor,
     // De módulo, no en línea: así React Query no la vuelve a pasar por cada
     // página en cada render.
@@ -212,7 +214,7 @@ export const useSendMessage = (
 
       const { error } = await supabase.from("messages").insert({
         conversation_id: conversationId!,
-        sender_id: userId!,
+        sender_id: requireUserId(userId),
         body: trimmed,
       });
 
@@ -265,7 +267,7 @@ export const useReportMessage = (userId: string | undefined) =>
   useMutation({
     mutationFn: async (messageId: string) => {
       const { error } = await supabase.from("reports").insert({
-        reporter_id: userId!,
+        reporter_id: requireUserId(userId),
         target_type: "message",
         target_id: messageId,
       });

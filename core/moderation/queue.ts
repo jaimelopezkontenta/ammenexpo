@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PAGE_SIZE, usePagedQuery } from "@/core/paging";
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export type ReportStatus = "open" | "reviewed" | "dismissed";
 
@@ -303,7 +304,7 @@ export const useReportProfile = (userId: string | undefined) =>
   useMutation({
     mutationFn: async (profileId: string) => {
       const { error } = await supabase.from("reports").insert({
-        reporter_id: userId!,
+        reporter_id: requireUserId(userId),
         target_type: "profile",
         target_id: profileId,
       });

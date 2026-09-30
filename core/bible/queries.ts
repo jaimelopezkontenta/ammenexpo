@@ -14,6 +14,7 @@ import type { BibleBook } from "./navigation";
 import { useBibleVersion } from "./useBibleVersion";
 import { type BibleVersion, DEFAULT_BIBLE_VERSION } from "./versions";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export type Verse = {
   verse: number;
@@ -191,7 +192,7 @@ export const useReadingPosition = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("profile_settings")
         .select("last_read_book_id, last_read_chapter, last_read_verse")
-        .eq("id", userId!)
+        .eq("id", requireUserId(userId))
         .maybeSingle();
 
       if (error) throw error;
@@ -224,7 +225,7 @@ export const useSaveReadingPosition = (userId: string | undefined) => {
           last_read_verse: position.verse,
           last_read_at: new Date().toISOString(),
         })
-        .eq("id", userId!);
+        .eq("id", requireUserId(userId));
 
       if (error) throw error;
 

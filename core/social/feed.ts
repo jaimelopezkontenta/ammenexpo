@@ -130,14 +130,19 @@ export type PersonPost = {
   is_mine: boolean;
 };
 
-/** Lo que esa persona pidió en el muro abierto. Nunca lo anónimo. */
-export const usePersonPosts = (userId: string | undefined) =>
+/**
+ * Lo que esa persona pidió en el muro abierto. Nunca lo anónimo.
+ *
+ * `personId` es el perfil que se mira, no quien mira: que falte no es «sin
+ * sesión», así que no pasa por `requireUserId`.
+ */
+export const usePersonPosts = (personId: string | undefined) =>
   useQuery({
-    queryKey: qk.personPosts(userId),
-    enabled: Boolean(userId),
+    queryKey: qk.personPosts(personId),
+    enabled: Boolean(personId),
     queryFn: async (): Promise<PersonPost[]> => {
       const { data, error } = await supabase.rpc("person_posts", {
-        p_user_id: userId!,
+        p_user_id: personId!,
       });
 
       if (error) throw error;
@@ -154,13 +159,13 @@ export type PersonPlan = {
   is_mine: boolean;
 };
 
-export const usePersonPlans = (userId: string | undefined) =>
+export const usePersonPlans = (personId: string | undefined) =>
   useQuery({
-    queryKey: qk.personPlans(userId),
-    enabled: Boolean(userId),
+    queryKey: qk.personPlans(personId),
+    enabled: Boolean(personId),
     queryFn: async (): Promise<PersonPlan[]> => {
       const { data, error } = await supabase.rpc("person_plans", {
-        p_user_id: userId!,
+        p_user_id: personId!,
       });
 
       if (error) throw error;

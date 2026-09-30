@@ -1,4 +1,5 @@
 import { X } from "@/components/ui/icons";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
@@ -6,6 +7,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated from "react-native-reanimated";
 
 import { Glass } from "@/components/Glass";
+import { createActionMenuRunner } from "@/components/ui/actionMenuRunner";
+import { useSheetClosed } from "@/components/ui/sheetClose";
 import { SheetGrabHandle, useSheetDrag } from "@/components/ui/sheetDrag";
 import { Tap } from "@/components/ui/Tap";
 import { Txt } from "@/components/ui/Text";
@@ -18,6 +21,11 @@ export type ActionMenuItem = {
   onPress: () => void;
   danger?: boolean;
   disabled?: boolean;
+  /**
+   * Hacerla cuando el menú ya se haya ido, no en el mismo toque: para lo que
+   * abre otro Modal (una confirmación) o navega (AGENTS.md).
+   */
+  afterClose?: boolean;
 };
 
 /**
@@ -25,15 +33,23 @@ export type ActionMenuItem = {
  *
  * El patrón es el del cajón del plan — Modal + scrim mudo + tarjeta de vidrio —
  * para que las acciones de un perfil no vivan al final de un scroll.
+ *
+ * `onClosed` y `afterClose` son el mismo contrato que `Sheet`: una llamada
+ * por cierre, cuando el Modal ya no está, también en Android y en web
+ * (`useSheetClosed`). Primero la acción aplazada, luego el `onClosed` del
+ * padre.
  */
 export const ActionMenu = ({
   visible,
   onClose,
+  onClosed,
   title,
   actions,
 }: {
   visible: boolean;
   onClose: () => void;
+  /** Tras cerrar del todo (el Modal ya no está). */
+  onClosed?: () => void;
   title: string;
   actions: ActionMenuItem[];
 }) => {
@@ -41,6 +57,15 @@ export const ActionMenu = ({
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const { panGesture, dragStyle } = useSheetDrag(onClose, visible);
+  const [runner] = useState(createActionMenuRunner);
+  const handleClosed = useSheetClosed(visible, () => {
+    runner.closed();
+    onClosed?.();
+  });
+
+  useEffect(() => {
+    if (visible) runner.opened();
+  }, [runner, visible]);
 
   return (
     <Modal
@@ -48,6 +73,7 @@ export const ActionMenu = ({
       transparent
       animationType="fade"
       onRequestClose={onClose}
+      onDismiss={handleClosed}
       statusBarTranslucent
     >
       <View className="flex-1 justify-end">
@@ -102,10 +128,7 @@ export const ActionMenu = ({
                   key={item.key}
                   accessibilityRole="button"
                   disabled={item.disabled}
-                  onPress={() => {
-                    onClose();
-                    item.onPress();
-                  }}
+                  onPress={() => runner.press(item, onClose)}
                   className="min-h-11 justify-center py-2"
                 >
                   <Txt

@@ -4,6 +4,7 @@ import { track } from "@/core/observability/track";
 import { supabase } from "@/utils/supabase";
 import type { Database } from "@/types/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 /** A plan someone else shared with me, showing their day for today. */
 export type SharedPlan = {
@@ -126,7 +127,7 @@ export const usePrayForSomeone = (userId: string | undefined) => {
       // día: el tipo generado lo pide porque no tiene default, el cliente no lo sabe.
       const { error } = await supabase.from("intercessions").insert({
         plan_day_id: dayId,
-        intercessor_id: userId!,
+        intercessor_id: requireUserId(userId),
         message: message?.trim().slice(0, MESSAGE_MAX) || null,
       } as Database["public"]["Tables"]["intercessions"]["Insert"]);
 
@@ -188,7 +189,7 @@ export const useReportIntercession = (userId: string | undefined) => {
       reason?: string;
     }) => {
       const { error } = await supabase.from("reports").insert({
-        reporter_id: userId!,
+        reporter_id: requireUserId(userId),
         target_type: "intercession",
         target_id: intercessionId,
         reason: reason?.slice(0, 1000) ?? null,

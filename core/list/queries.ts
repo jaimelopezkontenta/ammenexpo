@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export const ITEM_MAX = 280;
 export const TAG_MAX = 40;
@@ -52,7 +53,7 @@ export const useAddListItem = (userId: string | undefined) => {
       if (!body) return;
 
       const { error } = await supabase.from("prayer_list_items").insert({
-        user_id: userId!,
+        user_id: requireUserId(userId),
         body,
         tag: input.tag?.trim().slice(0, TAG_MAX) || null,
       });

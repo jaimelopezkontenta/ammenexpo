@@ -8,6 +8,7 @@ import { Card } from "@/components/Card";
 import { ChoiceChips } from "@/components/ChoiceChips";
 import { EmailInviteField } from "@/components/email/EmailInviteField";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
+import { requireUserId } from "@/core/auth/requireUserId";
 import { useUserId } from "@/core/auth/useUserId";
 import { useMyCircles } from "@/core/circles/queries";
 import {
@@ -116,7 +117,8 @@ export default function SharePlan() {
     }
   };
 
-  const handleCreate = () => run(() => createLink.mutateAsync(userId!));
+  const handleCreate = () =>
+    run(() => createLink.mutateAsync(requireUserId(userId)));
 
   const handleRevoke = async () => {
     if (!link) return;

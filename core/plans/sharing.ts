@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/utils/supabase";
 
+import { requireUserId } from "@/core/auth/requireUserId";
 import { qk } from "@/core/query/keys";
 export type ShareLink = {
   id: string;
@@ -146,7 +147,7 @@ export const useTogglePlanCircle = (
       const { error } = await supabase.from("plan_shares").insert({
         plan_id: planId!,
         group_id: circleId,
-        created_by: userId!,
+        created_by: requireUserId(userId),
       });
 
       if (error) throw error;

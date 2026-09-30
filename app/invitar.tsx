@@ -5,9 +5,14 @@ import { Txt } from "@/components/ui/Text";
 import { Card } from "@/components/Card";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { EmailInviteField } from "@/components/email/EmailInviteField";
+import { RotateInviteLink } from "@/components/RotateInviteLink";
 import { useUserId } from "@/core/auth/useUserId";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
-import { useCreateInviteCode, useMyInviteCode } from "@/core/social/invites";
+import {
+  useCreateInviteCode,
+  useMyInviteCode,
+  useRotateMyInviteCode,
+} from "@/core/social/invites";
 import { useToast } from "@/core/toast/ToastProvider";
 
 /**
@@ -35,6 +40,7 @@ export default function Invite() {
     refetch,
   } = useMyInviteCode(userId);
   const create = useCreateInviteCode(userId);
+  const rotate = useRotateMyInviteCode(userId);
 
   const handleShare = async () => {
     try {
@@ -94,6 +100,12 @@ export default function Invite() {
       />
 
       {code ? <EmailInviteField kind="app" token={code} /> : null}
+
+      {/* Solo con un enlace que renovar: sin código todavía, «Invitar amigos»
+          ya crea el primero. */}
+      {code ? (
+        <RotateInviteLink kind="app" rotate={() => rotate.mutateAsync()} />
+      ) : null}
     </ScreenScaffold>
   );
 }
