@@ -13,6 +13,7 @@ import {
 import type { Streak } from "./streak";
 
 import { qk } from "@/core/query/keys";
+import { requireUserId } from "@/core/auth/requireUserId";
 export { liveStreak, type Streak } from "./streak";
 
 export type Profile = {
@@ -65,13 +66,13 @@ export const useProfile = (userId: string | undefined) =>
         supabase
           .from("profiles")
           .select("display_name, avatar_url")
-          .eq("id", userId!)
+          .eq("id", requireUserId(userId))
           .maybeSingle(),
         supabase.rpc("my_profile_data").maybeSingle(),
         supabase
           .from("profile_settings")
           .select("reminder_hours, timezone, locale")
-          .eq("id", userId!)
+          .eq("id", requireUserId(userId))
           .maybeSingle(),
       ]);
 
@@ -106,7 +107,7 @@ export const useUpdateProfile = (userId: string | undefined) => {
         const { data, error } = await supabase
           .from("profiles")
           .update({ display_name: changes.displayName.trim().slice(0, 80) })
-          .eq("id", userId!)
+          .eq("id", requireUserId(userId))
           .select("id");
 
         if (error) throw error;
@@ -119,7 +120,7 @@ export const useUpdateProfile = (userId: string | undefined) => {
         const { data, error } = await supabase
           .from("profile_settings")
           .update({ reminder_hours: changes.reminderHours })
-          .eq("id", userId!)
+          .eq("id", requireUserId(userId))
           .select("id");
 
         if (error) throw error;
@@ -213,7 +214,7 @@ export const useOnboardingAnswers = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("profile_settings")
         .select("onboarding_answers")
-        .eq("id", userId!)
+        .eq("id", requireUserId(userId))
         .maybeSingle();
 
       if (error) throw error;
@@ -256,7 +257,7 @@ export const usePublicProfile = (userId: string | undefined) =>
     enabled: Boolean(userId),
     queryFn: async (): Promise<PublicProfile | null> => {
       const { data, error } = await supabase.rpc("public_profile", {
-        p_user_id: userId!,
+        p_user_id: requireUserId(userId),
       });
 
       if (error) throw error;
@@ -282,7 +283,7 @@ export const useUpdateTimezone = (userId: string | undefined) => {
       const { data, error } = await supabase
         .from("profile_settings")
         .update({ timezone })
-        .eq("id", userId!)
+        .eq("id", requireUserId(userId))
         .select("id");
 
       if (error) throw error;

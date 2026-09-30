@@ -193,21 +193,6 @@ module.exports = defineConfig([
     rules: { "no-restricted-imports": "off" },
   },
   {
-    // Pendiente: db-6. Otro frente edita estos ficheros a la vez y todavía
-    // llevan sus `userId!`: aquí solo se levanta esa regla (el resto del
-    // contrato sigue). Se quita el bloque al fusionar.
-    files: [
-      "core/profile/**/*.{ts,tsx}",
-      "core/auth/SessionProvider.tsx",
-      "core/auth/pendingToken.ts",
-      "core/notifications/**/*.{ts,tsx}",
-      "core/legal/**/*.{ts,tsx}",
-      "core/onboarding/**/*.{ts,tsx}",
-    ],
-    ignores: ["**/*.test.{ts,tsx}"],
-    rules: { "no-restricted-syntax": ["error", ...CONTRACT_SYNTAX] },
-  },
-  {
     // La única que puede llamar a router.back(): es la que comprueba el historial.
     files: ["core/nav/safeBack.ts"],
     rules: { "no-restricted-syntax": "off" },

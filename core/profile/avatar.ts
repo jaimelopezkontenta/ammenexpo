@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/utils/supabase";
 
 import { qk } from "@/core/query/keys";
+import { requireUserId } from "@/core/auth/requireUserId";
 /**
  * `expo-image-picker` no reescala: solo recomprime. Con el recorte cuadrado y
  * esta calidad, una foto de móvil se queda muy por debajo del tope de 2 MiB del
@@ -64,7 +65,7 @@ export const useUploadAvatar = (userId: string | undefined) => {
       const blob = await response.arrayBuffer();
 
       const extension = asset.mimeType === "image/png" ? "png" : "jpg";
-      const path = `${userId!}/avatar.${extension}`;
+      const path = `${requireUserId(userId)}/avatar.${extension}`;
 
       const { error } = await supabase.storage
         .from("avatars")
@@ -87,7 +88,7 @@ export const useUploadAvatar = (userId: string | undefined) => {
       const { data, error: profileError } = await supabase
         .from("profiles")
         .update({ avatar_url: url })
-        .eq("id", userId!)
+        .eq("id", requireUserId(userId))
         .select("id");
 
       if (profileError) throw profileError;
@@ -118,12 +119,15 @@ export const useRemoveAvatar = (userId: string | undefined) => {
     mutationFn: async () => {
       await supabase.storage
         .from("avatars")
-        .remove([`${userId!}/avatar.jpg`, `${userId!}/avatar.png`]);
+        .remove([
+          `${requireUserId(userId)}/avatar.jpg`,
+          `${requireUserId(userId)}/avatar.png`,
+        ]);
 
       const { data, error } = await supabase
         .from("profiles")
         .update({ avatar_url: null })
-        .eq("id", userId!)
+        .eq("id", requireUserId(userId))
         .select("id");
 
       if (error) throw error;

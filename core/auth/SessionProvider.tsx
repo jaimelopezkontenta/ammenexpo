@@ -20,6 +20,7 @@ import { clearUserScopedStorage } from "@/core/storage/storage";
 
 import { qk } from "@/core/query/keys";
 
+import { requireUserId } from "./requireUserId";
 type SessionState = {
   session: Session | null;
   /** True until the stored session has been read. */
@@ -122,7 +123,7 @@ export const SessionProvider = ({
       const { data: settings, error } = await supabase
         .from("profile_settings")
         .select("onboarding_answers, terms_version")
-        .eq("id", userId!)
+        .eq("id", requireUserId(userId))
         .maybeSingle();
 
       // Swallowing this used to turn any network blip into "false", which the
