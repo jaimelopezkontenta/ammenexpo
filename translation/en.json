@@ -418,7 +418,13 @@
     "joining": "Joining…",
     "sharedTitle": "Shared with this circle",
     "sharedMine": "Your plan",
-    "sharedEmpty": "No plan is being shared here yet."
+    "sharedEmpty": "No plan is being shared here yet.",
+    "rotateInvite": "Renew the invite link",
+    "rotateInviteHint": "The current link will stop working",
+    "rotateInviteTitle": "Renew the circle link?",
+    "rotateInviteBody": "The current link will stop working right away, including anywhere you have already shared it. Everyone already in the circle stays in.",
+    "rotateInviteConfirm": "Renew the link",
+    "rotateInviteDone": "Link renewed. The old one no longer works."
   },
   "feed": {
     "title": "Prayer requests",
@@ -484,7 +490,13 @@
     "linkLabel": "Your link",
     "message": "I'm using Ammen to pray every day. Want to join?",
     "landing": "{{name}} is inviting you to pray on Ammen",
-    "landingUnknown": "You've been invited to pray on Ammen"
+    "landingUnknown": "You've been invited to pray on Ammen",
+    "rotate": "Renew my link",
+    "rotateHint": "The current link will stop working",
+    "rotateTitle": "Renew your link?",
+    "rotateBody": "The current link will stop working right away, including anywhere you have already shared it. Anyone who already joined with it keeps everything as it was.",
+    "rotateConfirm": "Renew the link",
+    "rotateDone": "Link renewed. The old one no longer works."
   },
   "email": {
     "title": "Email",

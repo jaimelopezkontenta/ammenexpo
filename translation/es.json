@@ -418,7 +418,13 @@
     "joining": "Uniéndote…",
     "sharedTitle": "Se comparte con este círculo",
     "sharedMine": "Tu plan",
-    "sharedEmpty": "Todavía no se comparte ningún plan aquí."
+    "sharedEmpty": "Todavía no se comparte ningún plan aquí.",
+    "rotateInvite": "Renovar el enlace de invitación",
+    "rotateInviteHint": "El enlace de ahora dejará de funcionar",
+    "rotateInviteTitle": "¿Renovar el enlace del círculo?",
+    "rotateInviteBody": "El enlace de ahora dejará de funcionar al momento, también donde ya lo hayas compartido. Quien ya está en el círculo sigue dentro.",
+    "rotateInviteConfirm": "Renovar el enlace",
+    "rotateInviteDone": "Enlace renovado. El anterior ya no funciona."
   },
   "feed": {
     "title": "Peticiones",
@@ -484,7 +490,13 @@
     "linkLabel": "Tu enlace",
     "message": "Estoy usando Ammen para orar cada día. ¿Te unes?",
     "landing": "{{name}} te invita a orar en Ammen",
-    "landingUnknown": "Te han invitado a orar en Ammen"
+    "landingUnknown": "Te han invitado a orar en Ammen",
+    "rotate": "Renovar mi enlace",
+    "rotateHint": "El enlace de ahora dejará de funcionar",
+    "rotateTitle": "¿Renovar tu enlace?",
+    "rotateBody": "El enlace de ahora dejará de funcionar al momento, también donde ya lo hayas compartido. Quien ya entró con él se queda como estaba.",
+    "rotateConfirm": "Renovar el enlace",
+    "rotateDone": "Enlace renovado. El anterior ya no funciona."
   },
   "email": {
     "title": "Correo",

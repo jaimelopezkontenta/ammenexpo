@@ -7,7 +7,8 @@ import { Button } from "@/components/Button";
 import { Txt } from "@/components/ui/Text";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { LoadingState } from "@/components/ScreenState";
-import { useSession } from "@/core/auth/SessionProvider";
+import { useUserId } from "@/core/auth/useUserId";
+import { canRotateCircleInvite } from "@/core/circles/inviteRotation";
 import {
   useCanCreateCirclePlan,
   useCircle,
@@ -18,12 +19,14 @@ import {
   useLeaveCircle,
   useMarkCircleDay,
   useRemoveMember,
+  useRotateCircleInviteToken,
 } from "@/core/circles/queries";
 import { Avatar } from "@/components/Avatar";
 import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Card } from "@/components/Card";
 import { CirclePlanCard } from "@/components/CirclePlanCard";
 import { EmailInviteField } from "@/components/email/EmailInviteField";
+import { RotateInviteLink } from "@/components/RotateInviteLink";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useBlockUser } from "@/core/moderation/blocks";
 import { buildShareUrl, shareOrCopy } from "@/core/share";
@@ -34,8 +37,7 @@ import { Tap } from "@/components/ui/Tap";
 export default function CircleDetail() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { session } = useSession();
-  const userId = session?.user.id;
+  const userId = useUserId();
 
   const { data: circle, isLoading, isLoadingError, refetch } = useCircle(id);
   const { data: members, isLoadingError: membersFailed } = useCircleMembers(id);
@@ -46,6 +48,7 @@ export default function CircleDetail() {
   const markCircleDay = useMarkCircleDay(id, userId);
   const leave = useLeaveCircle(userId);
   const removeMember = useRemoveMember(id);
+  const rotateInvite = useRotateCircleInviteToken(id);
   const block = useBlockUser(userId);
 
   // Los resultados de acción —"listo", "no se pudo"— van por el toast del
@@ -98,6 +101,8 @@ export default function CircleDetail() {
   const isAdmin = (members ?? []).some(
     (m) => m.user_id === userId && m.role !== "member",
   );
+  // Renovar el enlace, solo a quien la RPC se lo va a aceptar.
+  const canRotateInvite = canRotateCircleInvite(userId, circle, members);
 
   const handleRemove = async (memberId: string) => {
     if (pendingRemoval !== memberId) {
@@ -174,6 +179,12 @@ export default function CircleDetail() {
       </Card>
       {inviteToken ? (
         <EmailInviteField kind="circle" token={inviteToken} />
+      ) : null}
+      {canRotateInvite ? (
+        <RotateInviteLink
+          kind="circle"
+          rotate={() => rotateInvite.mutateAsync()}
+        />
       ) : null}
     </View>
   ) : null;

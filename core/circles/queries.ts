@@ -284,12 +284,18 @@ export const useJoinPublicCircle = (userId: string | undefined) => {
   });
 };
 
-/** The invite token, which no longer travels with the circle row. */
+/**
+ * The invite token, which no longer travels with the circle row.
+ *
+ * Sin `staleTime: Infinity` desde que se puede renovar: si otra persona que
+ * administra el círculo lo cambia, quien lo tenía en caché compartía un
+ * enlace muerto hasta recargar. El refresco por defecto (al volver a la
+ * pantalla) basta.
+ */
 export const useCircleInviteToken = (circleId: string | undefined) =>
   useQuery({
     queryKey: qk.circleInviteToken(circleId),
     enabled: Boolean(circleId),
-    staleTime: Infinity,
     queryFn: async (): Promise<string | null> => {
       const { data, error } = await supabase.rpc("circle_invite_token", {
         p_group_id: circleId!,
@@ -300,6 +306,36 @@ export const useCircleInviteToken = (circleId: string | undefined) =>
       return (data as string | null) ?? null;
     },
   });
+
+/**
+ * Renovar el enlace de invitación del círculo, para cuando se ha escapado.
+ *
+ * Solo quien lo administra (la RPC lo comprueba y responde 42501 a los
+ * demás). El token viejo deja de canjearse en el acto y quien ya entró sigue
+ * dentro. Lo nuevo va directo a la caché: la pantalla enseña el enlace que
+ * vale sin otro viaje, y nada puede compartir el viejo después de esto.
+ */
+export const useRotateCircleInviteToken = (circleId: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<string> => {
+      // Una mutación no tiene `enabled`: sin círculo no se pregunta nada.
+      if (!circleId) throw new Error("rotate_invite_no_circle");
+
+      const { data, error } = await supabase.rpc("rotate_circle_invite_token", {
+        p_group_id: circleId,
+      });
+
+      if (error) throw error;
+
+      return data;
+    },
+    onSuccess: (token) => {
+      queryClient.setQueryData(qk.circleInviteToken(circleId), token);
+    },
+  });
+};
 
 /**
  * Removing somebody from a circle.
