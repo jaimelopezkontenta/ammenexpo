@@ -6,6 +6,7 @@ import { View } from "react-native";
 
 import { DawnBackground } from "@/components/DawnBackground";
 import { Avatar } from "@/components/Avatar";
+import { useBlockConfirm } from "@/components/BlockConfirm";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
@@ -87,8 +88,16 @@ export default function PersonProfile() {
     );
   };
 
-  const handleBlock = () =>
-    run(() => block.mutateAsync(id), t("moderation.blockDone"));
+  const handleBlock = (blockedId: string) =>
+    run(() => block.mutateAsync(blockedId), t("moderation.blockDone"));
+  // «Bloquear» del menú bloqueaba en el mismo toque, sin la pregunta que ya
+  // hacen el censo del círculo, el chat y la comunidad. Pregunta, y lo hace
+  // cuando el menú ya se ha ido (`afterClose`): dos Modal a la vez, uno
+  // entrando y otro saliendo, es lo que iOS no garantiza. Va sobre las ramas
+  // tempranas (es un hook).
+  const blockConfirm = useBlockConfirm(
+    (blockedId) => void handleBlock(blockedId),
+  );
 
   const handleReport = () =>
     run(() => report.mutateAsync(id), t("moderation.reportDone"));
@@ -324,13 +333,13 @@ export default function PersonProfile() {
               label: t("moderation.block"),
               danger: true,
               disabled: block.isPending,
-              onPress: () => {
-                void handleBlock();
-              },
+              afterClose: true,
+              onPress: () => blockConfirm.ask(id, person.display_name),
             },
           ]}
         />
       ) : null}
+      {blockConfirm.dialog}
     </>
   );
 }
