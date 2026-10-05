@@ -50,17 +50,17 @@ ajustarlos allí.
 
 | # | Decisión | Condiciona | Recomendación |
 |---|---|---|---|
-| J2 | Alta: **captcha (Turnstile)** ya; confirmación de correo después (código de 6 dígitos + SMTP propio) | Abuso de invitaciones y coste de LLM por cuenta. Hoy `[auth.captcha]` está apagado y la confirmación también | Captcha y topes primero |
+| J2 | Alta: **captcha (Turnstile)** ya; confirmación de correo después (código de 6 dígitos + SMTP propio) | Abuso de invitaciones y coste de LLM por cuenta. Hoy `[auth.captcha]` está apagado y la confirmación también | Captcha y topes primero. **Estado 2026-10-05:** `config.toml` trae el bloque listo (provider `turnstile`, secreto por `env(TURNSTILE_SECRET_KEY)`); encenderlo exige en la misma ola el widget + `captcha_token` en `signUp`/`signIn` y sus e2e — sin cliente, bloquea altas y logins. Faltan tus claves de Cloudflare (sitekey + secret) para hacerlo |
 | J3 | Tope de gasto del workspace de Anthropic y alerta diaria (`generation_ledger`) | Coste | Tú fijas el presupuesto |
 | J4 | Legal antes de correo en producción: consentimiento y encargados (Anthropic, Resend) para datos de creencias (Art. 9 RGPD), región de producción, opt-in por defecto del correo no transaccional (LSSI) | Encender el correo; elegir región | Revisión legal breve |
 | J5 | Plazos de retención (90/180/30/7 días de `purge_expired_rows()`) | Retención | Aceptarlos o cambiarlos con una migración |
-| J6 | Biblia inglesa: **World English Bible** (dominio público). Supuesto salvo que digas KJV | Contenido en inglés | Confirmar |
-| J6b | Los términos ahora nombran las dos Biblias (RVR1909 y WEB): ¿subir `TERMS_VERSION` (obliga a reaceptar) o no? | Términos | No subirla si el cambio es solo informativo |
+| J6 | Biblia inglesa: **World English Bible** (dominio público). Supuesto salvo que digas KJV | Contenido en inglés | Confirmar. **Confirmada el 2026-10-05** |
+| J6b | Los términos ahora nombran las dos Biblias (RVR1909 y WEB): ¿subir `TERMS_VERSION` (obliga a reaceptar) o no? | Términos | No subirla si el cambio es solo informativo. **Decidido el 2026-10-05: no se sube** (cambio solo informativo; `TERMS_VERSION` sigue en `2026-08-02`). Si lo quieres al revés, dilo y se sube con migración |
 | J7 | Recursos de crisis por país (`core/crisis/resources.ts`): quién valida los números y el texto | Pantalla de crisis | Un especialista; cada entrada dice «pendiente de revisión» |
 | J8 | Jerarquía de H1 (una sesión mirando capturas) | Sistema visual | — |
 | J10 | Proteger `main` exigiendo CI | Hoy el único guardián es CI tras el push | Baja prioridad |
 | J11 | Modelo del generador: hoy `claude-sonnet-5`; existe `claude-sonnet-5-5` | Calidad/coste | Evaluarlo con un conjunto de planes antes de cambiar |
-| J12 | Correo de hábito: sale siempre en español (falta el idioma en el perfil) | Usuarios en inglés | Guardar idioma en `profile_settings` |
+| J12 | Correo de hábito: sale siempre en español (falta el idioma en el perfil) | Usuarios en inglés | Guardar idioma en `profile_settings`. **Hecho en código el 2026-10-05** (ya estaba: `LanguageSwitcher` persiste con `useUpdateLocale` y el hábito usa `profile_settings.locale` — cubierto por `email.sql`: verso WEB en inglés, RVR en español) |
 
 ## 3. Cuentas y dispositivos (lote nativo)
 
@@ -111,11 +111,19 @@ si vuelve a aparecer uno. Lo que queda, por prioridad:
    consentimiento, y un admin que no es dueño puede pasar un círculo de privado a público (quien
    entre lee el historial).
 2. `app/plus.tsx` deja teclear un correo que el servidor ya ignora (guarda el de la cuenta): el
-   campo debería ser de solo lectura.
+   campo debería ser de solo lectura. **Hecho el 2026-10-05** (campo no editable + aviso «usamos
+   el correo de tu cuenta», con su clave es+en).
 3. `complete_onboarding` guarda `p_answers` sin validar la forma ni el tamaño; acaba en el prompt
-   (que lo filtra) y en los correos (`gender`).
+   (que lo filtra) y en los correos (`gender`). **Hecho el 2026-10-05**: `validate_onboarding_answers`
+   (`20261005071900`, forma y tamaño — no catálogo, que ya filtran lectura y prompt) con 12
+   assertions en `flows.sql`.
 4. Los privilegios por defecto de `public` dan TRUNCATE, REFERENCES, TRIGGER y MAINTAIN a `anon` y
-   `authenticated` en cada tabla nueva. PostgREST no los expone, pero sobran.
+   `authenticated` en cada tabla nueva. PostgREST no los expone, pero sobran. **A medias el
+   2026-10-05**: ninguna tabla los concede hoy (verificado) y el catálogo de `rls.sql` ya los
+   prohíbe junto a INSERT/UPDATE; pero la REGLA por defecto sigue dándolos y solo un superusuario
+   la recorta (las migraciones corren como `postgres` y no pueden). **Paso manual pendiente por
+   entorno** (local hecho; falta staging y, cuando exista, producción): como superusuario,
+   reescribir la regla `supabase_admin|public|r` a `postgres,service_role=ALL + anon,authenticated=arwd`.
 
 **Tras el `db push` a staging**, además de lo del runbook: comprobar los permisos con
 `information_schema.column_privileges` (`grantee = 'authenticated'`) y buscar rastro de abusos
@@ -143,8 +151,12 @@ migración alinea las filas de `plus_waitlist`).
 - **Rotar el enlace de invitación** (RPC `rotate_circle_invite_token` y
   `rotate_my_invite_code`, con tests): sin botón en la app. Además el cliente debe
   invalidar `qk.inviteCode`, que hoy no caduca nunca.
+  **Corregido el 2026-10-05: el doc estaba desactualizado** — los botones existen
+  (`app/invitar.tsx`, `app/circulo/[id]`) y los hooks actualizan la caché
+  (`core/social/invites.ts`, `core/circles/queries.ts`).
 - **Selector de versión de la Biblia** solo en el lector; la pestaña Biblia muestra la
-  versión pero no deja cambiarla.
+  versión pero no deja cambiarla. **Hecho el 2026-10-05**: `components/BibleVersionPicker.tsx`
+  compartido entre lector y pestaña.
 - **El plan de un círculo** sale en el idioma de quien lo crea, no en el de cada miembro.
 - **Los planes ya existentes** conservan su texto y versículos (RVR, español); un plan
   nuevo pedido con la app en inglés sale en inglés.
@@ -155,8 +167,10 @@ migración alinea las filas de `plus_waitlist`).
   escritorio querían 11,5 px y se ven a 14): decidir si se quieren de verdad.
 - **Errata en el prompt español del generador** («Diríjete» por «Dirígete»): no se
   corrigió a propósito (el prompt español está fijado byte a byte por un test); si se
-  arregla, actualizar la huella en el mismo commit.
+  arregla, actualizar la huella en el mismo commit. **Arreglado el 2026-10-05**
+  (femenino y masculino) **con sus dos huellas actualizadas** en `prompt.test.ts`.
 - **`circulo/[id]` mientras carga no tiene cabecera** (ni título ni volver).
+  **Hecho el 2026-10-05**: `ScreenScaffold` con `loading` + `skeleton="circle"`.
 
 ## 5. Cosas que el código ya no puede resolver solo
 

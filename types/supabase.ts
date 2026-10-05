@@ -2978,6 +2978,10 @@ export type Database = {
         Returns: boolean
       }
       valid_timezone: { Args: { tz: string }; Returns: string }
+      validate_onboarding_answers: {
+        Args: { p_answers: Json }
+        Returns: undefined
+      }
       verify_email_prefs_token: { Args: { p_token: string }; Returns: string }
       verse_of_the_day: {
         Args: { p_version?: string }

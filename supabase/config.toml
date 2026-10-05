@@ -224,11 +224,17 @@ token_verifications = 30
 # Number of Web3 logins that can be made in a 5 minute interval per IP address.
 web3 = 30
 
+# Captcha en el alta (J2: Turnstile ya, confirmación de correo después). El
+# secreto vive FUERA del repo (esta clave se lee del entorno al arrancar):
+# pégalo en tu `.env` local (gitignored) como TURNSTILE_SECRET_KEY y el
+# sitekey en el widget del cliente. OJO: encender esto en el servidor sin el
+# `captcha_token` del cliente bloquea altas y logins (el widget + el token en
+# `signUp`/`signIn` van en la misma ola, con sus e2e).
 # Configure one of the supported captcha providers: `hcaptcha`, `turnstile`.
 # [auth.captcha]
 # enabled = true
-# provider = "hcaptcha"
-# secret = ""
+# provider = "turnstile"
+# secret = "env(TURNSTILE_SECRET_KEY)"
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.

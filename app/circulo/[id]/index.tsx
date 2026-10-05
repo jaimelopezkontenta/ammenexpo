@@ -6,7 +6,6 @@ import { View } from "react-native";
 import { Button } from "@/components/Button";
 import { Txt } from "@/components/ui/Text";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
-import { LoadingState } from "@/components/ScreenState";
 import { useUserId } from "@/core/auth/useUserId";
 import { canRotateCircleInvite } from "@/core/circles/inviteRotation";
 import {
@@ -73,8 +72,11 @@ export default function CircleDetail() {
     (memberId) => void handleBlock(memberId),
   );
 
+  // Con cabecera también cargando: sin ella no había título ni volver.
   if (isLoading) {
-    return <LoadingState skeleton="circle" />;
+    return (
+      <ScreenScaffold title={t("circles.title")} loading skeleton="circle" />
+    );
   }
 
   // These two used to be one branch with no header and no controls, so a flaky

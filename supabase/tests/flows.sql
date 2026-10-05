@@ -800,6 +800,124 @@ select pg_temp.assert(
 
 commit;
 
+-- ===========================================================================
+-- Las respuestas del onboarding tienen forma y tamaño
+--
+-- `complete_onboarding` guardaba `p_answers` tal cual: ese jsonb acaba en el
+-- prompt del generador y en los correos (`gender`), así que una forma
+-- inesperada o un tamaño absurdo es superficie abierta. La validación es de
+-- forma y tamaño, no de catálogo (eso ya lo filtran la lectura y el prompt).
+-- ===========================================================================
+begin;
+
+insert into auth.users (id, email, aud, role, raw_user_meta_data)
+values ('66666666-6666-6666-6666-666666666666', 'forma@test.local',
+        'authenticated', 'authenticated', '{"display_name":"Forma"}');
+
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"66666666-6666-6666-6666-666666666666","role":"authenticated"}';
+
+select pg_temp.assert(
+  (public.complete_onboarding(
+     'Forma',
+     '{"seasons":["work","health"],"season":"work","topics":["peace"],"gender":"feminine","custom_topic":"Mi madre","reminder_keys":["morning"]}'::jsonb,
+     'UTC',
+     array[8]::smallint[],
+     'es') ->> 'ok') = 'true',
+  'a full valid shape is accepted');
+
+select pg_temp.assert(
+  (select onboarding_answers ->> 'gender' from public.profile_settings
+    where id = '66666666-6666-6666-6666-666666666666') = 'feminine',
+  'and stored as sent');
+
+select pg_temp.assert(
+  (public.complete_onboarding(
+     'Forma',
+     '{"seasons":[],"topics":[],"custom_topic":null,"gender":null}'::jsonb,
+     'UTC',
+     array[8]::smallint[],
+     'es') ->> 'ok') = 'true',
+  'empty arrays and explicit nulls are accepted, like the app sends');
+
+select pg_temp.assert(
+  (public.complete_onboarding(
+     'Forma',
+     jsonb_build_object(
+       'seasons', (select jsonb_agg(repeat('s', 64)) from generate_series(1, 32)),
+       'topics', (select jsonb_agg(repeat('t', 64)) from generate_series(1, 32))),
+     'UTC',
+     array[8]::smallint[],
+     'es') ->> 'ok') = 'true',
+  'arrays at their caps are still accepted');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.complete_onboarding(
+      'Forma', '["work"]'::jsonb, 'UTC', array[8]::smallint[], 'es')
+  $q$),
+  'answers must be an object, not an array');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.complete_onboarding(
+      'Forma', null, 'UTC', array[8]::smallint[], 'es')
+  $q$),
+  'answers cannot be null');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.complete_onboarding(
+      'Forma', '{"seasons":["work"],"hacker":1}'::jsonb,
+      'UTC', array[8]::smallint[], 'es')
+  $q$),
+  'unknown keys are rejected');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.complete_onboarding(
+      'Forma', '{"seasons":"work"}'::jsonb,
+      'UTC', array[8]::smallint[], 'es')
+  $q$),
+  'seasons must be an array, not text');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.complete_onboarding(
+      'Forma', '{"topics":["peace",7]}'::jsonb,
+      'UTC', array[8]::smallint[], 'es')
+  $q$),
+  'array entries must be text, not numbers');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.complete_onboarding(
+      'Forma',
+      jsonb_build_object('custom_topic', repeat('x', 501)),
+      'UTC', array[8]::smallint[], 'es')
+  $q$),
+  'a custom topic over 500 characters is rejected');
+
+select pg_temp.assert(
+  pg_temp.raises($q$
+    select public.complete_onboarding(
+      'Forma',
+      jsonb_build_object('gender', repeat('y', 33)),
+      'UTC', array[8]::smallint[], 'es')
+  $q$),
+  'a gender over 32 characters is rejected');
+
+select pg_temp.assert(
+  (select jsonb_array_length(onboarding_answers -> 'seasons')
+     from public.profile_settings
+    where id = '66666666-6666-6666-6666-666666666666') = 32,
+  'rejected calls write nothing: the last valid answers stay');
+
+commit;
+
 \echo '===================================='
 \echo ' ACQUISITION LOOP ASSERTIONS PASSED'
 \echo '===================================='

@@ -93,13 +93,13 @@ describe("el prompt español no cambia", () => {
 
   it("el prompt del usuario: primer tramo, tramo posterior y trato masculino", () => {
     expect(sha256(firstStretch())).toBe(
-      "77c4a4364ef7a52c8a215d88899752dab29680502dc4ab1b0657c02df63991a2",
+      "8949ddab5e047775538e8e02397543d5b82d1750738e78a4e92edcbbfabc43f8",
     );
     expect(sha256(laterStretch())).toBe(
       "58b526a7a948b4d212337c29d79283df1c32bf6faf686e332799f655ed95ed20",
     );
     expect(sha256(masculine())).toBe(
-      "dfb0b13a23f800b52b712a604d29aaa95e0ae74c0d05deb63d283a9531424b46",
+      "f4da9709c3229ad0333b4cbd823d7d75160d956516abd2d920373948ede2fbcf",
     );
   });
 

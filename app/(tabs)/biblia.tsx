@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { TabHeader } from "@/components/TabHeader";
+import { BibleVersionPicker } from "@/components/BibleVersionPicker";
 import { Card } from "@/components/Card";
 import { DawnBackground } from "@/components/DawnBackground";
 import { TextField } from "@/components/TextField";
@@ -82,9 +83,9 @@ export default function Bible() {
 
   const [query, setQuery] = useState("");
   const colors = useThemeColors();
-  // La búsqueda y el salto van en la versión que se lee; se elige en el
-  // lector y esta pestaña, montada detrás, se entera sola.
-  const { version } = useBibleVersion();
+  // La búsqueda y el salto van en la versión que se lee; se elige aquí o en
+  // el lector y la otra pantalla, montada detrás, se entera sola.
+  const { version, setVersion } = useBibleVersion();
 
   const {
     data: books,
@@ -126,10 +127,9 @@ export default function Bible() {
         keyboardShouldPersistTaps="handled"
       >
         {/* El título ya lo dice TabHeader; repetirlo aquí eran dos "Biblia"
-          apiladas empujando el buscador hacia abajo. Queda la edición. */}
-        <Txt variant="body" tone="secondary">
-          {t(`bible.versionName.${version}`)}
-        </Txt>
+          apiladas empujando el buscador hacia abajo. Queda el selector de
+          edición, el mismo del lector. */}
+        <BibleVersionPicker version={version} onVersion={setVersion} />
 
         <TextField
           label={t("bible.searchLabel")}

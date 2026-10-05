@@ -59,9 +59,10 @@ export default function Plus() {
 
   // `null` means "not edited", so the field shows the prefilled value until the
   // person types — the same draft-over-server pattern as the plan form and the
-  // profile. The name starts from the profile, the email from the session.
+  // profile. The name starts from the profile. The email is the account's
+  // (`pin_waitlist_email` fixes it server-side on every write): it is shown,
+  // not typed.
   const [draftName, setDraftName] = useState<string | null>(null);
-  const [draftEmail, setDraftEmail] = useState<string | null>(null);
   // True once this session's submit succeeded, so the screen can say "quedaste
   // en la lista" rather than "ya estabas" for the row that just appeared. On a
   // fresh visit the server row decides, which is the honest "ya estabas".
@@ -71,7 +72,7 @@ export default function Plus() {
   const { scrollBottom } = useScreenPadding();
 
   const name = draftName ?? profile?.display_name ?? "";
-  const email = draftEmail ?? session?.user.email ?? "";
+  const email = session?.user.email ?? "";
 
   const fieldError = waitlistInputError(name, email);
 
@@ -195,7 +196,9 @@ export default function Plus() {
                   <TextField
                     label={t("paywall.waitlistEmail")}
                     value={email}
-                    onChangeText={setDraftEmail}
+                    // De solo lectura: el servidor fija el correo de la cuenta
+                    // en cada escritura y lo tecleado se ignora.
+                    editable={false}
                     // Para el correo existe la clave de siempre; para el nombre
                     // no hay «el nombre es obligatorio» en ningún idioma, así que
                     // un nombre vacío desactiva el botón en vez de inventar un
@@ -203,11 +206,10 @@ export default function Plus() {
                     error={
                       fieldError === "email" ? t("auth.emailInvalid") : null
                     }
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    textContentType="emailAddress"
                   />
+                  <Txt variant="caption" tone="secondary">
+                    {t("paywall.waitlistEmailHint")}
+                  </Txt>
 
                   {error ? (
                     <Txt

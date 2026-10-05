@@ -265,9 +265,9 @@ export const PROMPT_LABELS: Record<
     },
     genders: {
       feminine:
-        'Diríjete a ella en femenino. Los adjetivos y participios que la describan van en femenino ("sola", "acompañada", "cansada").',
+        'Dirígete a ella en femenino. Los adjetivos y participios que la describan van en femenino ("sola", "acompañada", "cansada").',
       masculine:
-        'Diríjete a él en masculino. Los adjetivos y participios que lo describan van en masculino ("solo", "acompañado", "cansado").',
+        'Dirígete a él en masculino. Los adjetivos y participios que lo describan van en masculino ("solo", "acompañado", "cansado").',
       neutral:
         'Escribe evitando marcas de género al referirte a la persona. Reformula en lugar de usar "@" o "x": en vez de "no estás solo", escribe "no caminas sin compañía".',
     },

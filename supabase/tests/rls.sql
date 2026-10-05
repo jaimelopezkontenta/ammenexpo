@@ -2464,6 +2464,7 @@ commit;
 
 -- ---------------------------------------------------------------------------
 -- Catálogo: ningún INSERT ni UPDATE de tabla entera para los roles de la API
+-- (y tampoco TRUNCATE, REFERENCES, TRIGGER ni MAINTAIN)
 --
 -- Lo que abre el hueco no es una policy mal escrita: es un `grant insert,
 -- update on <tabla>` de tabla entera, que deja escribir también las columnas
@@ -2471,30 +2472,36 @@ commit;
 -- columna (`grant insert (a, b) …`), con exactamente lo que manda la app. Si
 -- alguna de verdad necesita la tabla entera, entra en esta lista con su
 -- porqué, para que sea una decisión y no un descuido. Hoy no hay ninguna.
+--
+-- TRUNCATE/REFERENCES/TRIGGER/MAINTAIN ni siquiera los expone PostgREST, pero
+-- sobran igual: las reglas por defecto se los daban a cada tabla nueva y se
+-- recortaron a mano (solo un superusuario toca reglas ajenas; en staging y
+-- producción va por el editor SQL).
 -- ---------------------------------------------------------------------------
 select coalesce(string_agg(format('%s:%s:%s', r.rolname, c.relname, p.priv), ', '
                            order by r.rolname, c.relname, p.priv), '')
-         as table_wide_writes
-  from pg_class c
-  join pg_namespace n on n.oid = c.relnamespace
-  cross join (values ('anon'), ('authenticated')) as r (rolname)
-  cross join (values ('INSERT'), ('UPDATE')) as p (priv)
- where n.nspname = 'public'
-   and c.relkind in ('r', 'p', 'v', 'm', 'f')
-   and has_table_privilege(r.rolname, c.oid, p.priv)
-   and not exists (
-     select 1
-       from (values
-         -- ('authenticated', '<tabla>', '<porqué>'). Ninguna por ahora.
-         (null::name, null::name, null::text)
-       ) as allowed (rolname, relname, why)
-      where allowed.rolname = r.rolname
-        and allowed.relname = c.relname
-   ) \gset
+          as table_wide_writes
+   from pg_class c
+   join pg_namespace n on n.oid = c.relnamespace
+   cross join (values ('anon'), ('authenticated')) as r (rolname)
+   cross join (values ('INSERT'), ('UPDATE'), ('TRUNCATE'), ('REFERENCES'),
+                      ('TRIGGER'), ('MAINTAIN')) as p (priv)
+  where n.nspname = 'public'
+    and c.relkind in ('r', 'p', 'v', 'm', 'f')
+    and has_table_privilege(r.rolname, c.oid, p.priv)
+    and not exists (
+      select 1
+        from (values
+          -- ('authenticated', '<tabla>', '<porqué>'). Ninguna por ahora.
+          (null::name, null::name, null::text)
+        ) as allowed (rolname, relname, why)
+       where allowed.rolname = r.rolname
+         and allowed.relname = c.relname
+    ) \gset
 
 select pg_temp.assert(
   :'table_wide_writes' = '',
-  'no public table grants table-wide INSERT or UPDATE to the API roles'
+  'no public table grants table-wide writes to the API roles'
     || coalesce(nullif(': ' || :'table_wide_writes', ': '), ''));
 
 \echo ''

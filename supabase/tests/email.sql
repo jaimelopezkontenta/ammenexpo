@@ -584,6 +584,12 @@ update public.profile_settings
        timezone = 'UTC'
  where id in (:EVA, :FEDE, :GABI, :HUGO, :IRIS);
 
+-- Iris no entra hasta su sección (EN-3): con cadencia `off` los enqueues
+-- previos la saltan. Sin esto, si la suite corre en la hora de su reminder
+-- por defecto, la sección del sunset le encola el hábito con el locale viejo
+-- y el assert del correo encolado falla por idempotencia diaria.
+update public.email_preferences set cadence = 'off' where user_id = :IRIS;
+
 insert into public.prayer_plans (id, owner_id, title, duration_days, start_date, visibility)
 values ('eeee0000-0000-0000-0000-000000000001', :EVA, 'Plan de Eva', 7, current_date, 'link');
 
