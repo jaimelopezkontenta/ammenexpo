@@ -19,9 +19,74 @@
 | Visual onboarding | `visual-onboarding.spec.ts` | 4 pasos × 2 pantallas |
 | Orar (nuevo) | `prayer-hub.spec.ts` | Crear plan, marcar día orado, día bloqueado |
 | Biblia (nuevo) | `bible-tab.spec.ts` | Selector versión, búsqueda, tamaño fuente, navegación capítulos |
-| **Total** | **19 specs** | **~66 tests funcionales + baselines visuales** |
+| **Total** | **23 specs** | **~76 tests funcionales + baselines visuales** |
 
 ## Qué FALTA para UAT completo
+
+### A. Flujo de alta completo (no solo via invitación)
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Alta → onboarding → Hoy | Crear cuenta sin invitación, 4 pasos onboarding, aterriza en Hoy | Media | ✅ `fresh-account.spec.ts` |
+| Onboarding con género neutro | Verifica flujo completo con género neutro | Baja | — |
+| Onboarding con todos los topics | Verifica que todos los checkboxes funcionan | Baja | — |
+
+### B. Flujo de oración (hub)
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Generar plan | Formulario → loading → plan generado → aterrizaje en Hoy | Media | ✅ `prayer-hub.spec.ts` |
+| Plan generado aparece en Orar | Verifica que el plan nuevo aparece en la lista | Baja | ✅ `prayer-hub.spec.ts` |
+| Marcar día como orado | Click en "Oré" → feedback visual → contador actualiza | Baja | ✅ `prayer-hub.spec.ts` |
+| Día bloqueado no accesible | Día 2 no se puede orar si día 1 no está marcado | Media | ✅ `prayer-hub.spec.ts` |
+
+### C. Biblia — pestaña Biblia
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Selector versión en pestaña Biblia | Cambiar RV→WEB desde pestaña (no solo lector) | Baja | ✅ `bible-tab.spec.ts` |
+| A-/A+ del lector | Texto se hace más pequeño/grande | Baja | ✅ `bible-tab.spec.ts` |
+| Navegación capítulos | Ir a capítulo siguiente/anterior | Baja | ✅ `bible-tab.spec.ts` |
+| Búsqueda Biblia | Buscar texto → resultados → abrir versículo | Baja | ✅ `bible-tab.spec.ts` |
+
+### D. Círculo — chat
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Enviar mensaje en chat | Escribir → enviar → aparece en conversación | Media | ✅ `circle-chat.spec.ts` |
+| Mensaje aparece para otro miembro | Contexto B ve mensaje de A | Media | ✅ `circle-chat.spec.ts` |
+| Chat no accesible desde fuera del círculo | Preview rechaza | Media | ✅ `circle-chat.spec.ts` |
+
+### E. Comunidad
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Feed de comunidad | Ver planes públicos, testimonios | Baja | ✅ `community.spec.ts` |
+| Ver perfil de otro usuario | Navegar a persona → ver planes públicos | Baja | ✅ `community.spec.ts` |
+| Interceder desde comunidad | Click en intercesión desde feed | Media | — |
+
+### F. Perfil
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Cambiar idioma → persiste | ES→EN → recargar → sigue en EN | Media | — |
+| Modo oscuro → persiste | Toggle → recargar → sigue oscuro | Media | — |
+| Exportar datos (web) | Botón export → descarga JSON | Baja | — |
+| Aceptar términos | Verificar que aparecen términos actuales | Baja | — |
+
+### G. Plus
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Correo de solo lectura | Campo no editable, muestra aviso | Baja | — |
+| Cuota de planes | Contador visible, mensaje al llegar a tope | Media | — |
+
+### H. Crisis
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Acceder a pantalla crisis | Botón → pantalla con recursos | Baja | — |
+| Números de crisis visibles | España, US, México, Argentina, Alemania | Baja | — |
+
+### I. Lector de Biblia
+| Test | Qué verifica | Dificultad | Estado |
+|---|---|---|---|
+| Abrir versículo del día | Click → abre lector | Baja | — |
+| Compartir versículo | Botón compartir → preview | Baja | — |
+| Descargar imagen | html2canvas → descarga | Media | — |
+
 
 ### A. Flujo de alta completo (no solo via invitación)
 | Test | Qué verifica | Dificultad |
