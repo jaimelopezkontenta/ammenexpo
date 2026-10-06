@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { runSqlScalar, SEED_A } from "./helpers/sql";
+import { runSqlScalar, SEED_A, SEED_B } from "./helpers/sql";
 
 /**
  * RDY-08 — chat de círculos: enviar mensaje, recibir, y acceso restringido.
