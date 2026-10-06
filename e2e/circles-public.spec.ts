@@ -68,7 +68,7 @@ test.describe("círculos — directorio público", () => {
       await expect(guestPage.getByText(circleName)).toBeVisible({
         timeout: 10_000,
       });
-      await guestPage.getByRole("button", { name: "Unirme" }).click();
+      await guestPage.getByRole("button", { name: "Unirme" }).first().click();
 
       await expect(guestPage).toHaveURL(new RegExp(`/circulo/${groupId}`), {
         timeout: 15_000,

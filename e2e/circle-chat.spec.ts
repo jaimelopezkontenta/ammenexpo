@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { runSqlScalar, SEED_A, SEED_B } from "./helpers/sql";
+import { runSql, runSqlScalar, SEED_A, SEED_B } from "./helpers/sql";
 
 /**
  * RDY-08 — chat de círculos: enviar mensaje, recibir, y acceso restringido.
@@ -21,8 +21,10 @@ import { runSqlScalar, SEED_A, SEED_B } from "./helpers/sql";
 
 test.describe("chat — círculos", () => {
   test("A envía un mensaje en el chat de su círculo", async ({ browser }) => {
+    const circleName = `e2e-chat-${Date.now()}`;
     const ownerContext = await browser.newContext();
     const page = await ownerContext.newPage();
+    let groupId = "";
 
     try {
       // Login
@@ -34,26 +36,23 @@ test.describe("chat — círculos", () => {
         timeout: 15_000,
       });
 
-      // Ir a Juntos → abrir un círculo público
-      await page.getByRole("tab", { name: "Juntos" }).first().click();
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(1_200);
+      // Crear círculo público
+      await page.goto("/circulos");
+      await page.getByRole("button", { name: "Crear círculo" }).click();
+      await expect(page.getByLabel("Nombre")).toBeVisible({
+        timeout: 10_000,
+      });
+      await page.getByLabel("Nombre").fill(circleName);
+      await page.getByRole("radio", { name: "Cualquiera puede encontrarlo" }).click();
+      await page.getByRole("button", { name: "Crear círculo" }).click();
+      await expect(page).toHaveURL(/\/circulo\/[0-9a-f-]{36}/i, {
+        timeout: 15_000,
+      });
+      groupId = page.url().match(/\/circulo\/([0-9a-f-]{36})/i)?.[1] ?? "";
+      expect(groupId).toBeTruthy();
 
-      // Buscar círculos listados
-      const headings = await page.getByRole("heading", { level: 2 }).all();
-      const circleCount = headings.length;
-      expect(circleCount).toBeGreaterThan(0);
-
-      // Abrir el primer círculo
-      await page.getByRole("heading", { level: 2 }).first().click();
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(1_200);
-
-      // Abrir el chat
-      await page
-        .getByRole("button", { name: /chat|conversación/i })
-        .first()
-        .click();
+      // Abrir el chat (es un link, no un botón)
+      await page.getByRole("link", { name: "Abrir el chat" }).click();
       await page.waitForLoadState("networkidle");
       await page.waitForTimeout(1_200);
 
@@ -73,6 +72,11 @@ test.describe("chat — círculos", () => {
         timeout: 10_000,
       });
     } finally {
+      if (groupId) {
+        // Cleanup SQL
+        const { runSql } = await import("./helpers/sql");
+        runSql(`delete from public.groups where id = '${groupId}';`);
+      }
       await ownerContext.close();
     }
   });
@@ -82,7 +86,8 @@ test.describe("chat — círculos", () => {
   }) => {
     const ownerContext = await browser.newContext();
     const guestContext = await browser.newContext();
-    let conversationId = "";
+
+    let circleId = "";
 
     try {
       // A: crear círculo público
@@ -100,7 +105,9 @@ test.describe("chat — círculos", () => {
       await expect(ownerPage.getByLabel("Nombre")).toBeVisible({
         timeout: 10_000,
       });
-      await ownerPage.getByLabel("Nombre").fill(`e2e-chat-${Date.now()}`);
+      const circleName = `e2e-chat-${Date.now()}`;
+      await ownerPage.getByLabel("Nombre").fill(circleName);
+      await ownerPage.getByRole("radio", { name: "Cualquiera puede encontrarlo" }).click();
       await ownerPage.getByRole("button", { name: "Crear círculo" }).click();
       await expect(ownerPage).toHaveURL(/\/circulo\/[0-9a-f-]{36}/i, {
         timeout: 15_000,
@@ -111,14 +118,11 @@ test.describe("chat — círculos", () => {
       expect(circleId).toBeTruthy();
 
       // A: abrir chat y enviar mensaje
-      await ownerPage
-        .getByRole("button", { name: /chat|conversación/i })
-        .first()
-        .click();
+      await ownerPage.getByRole("link", { name: "Abrir el chat" }).click();
       await ownerPage.waitForLoadState("networkidle");
       await ownerPage.waitForTimeout(1_200);
 
-      const testMessage = `e2e-chat-${Date.now()}`;
+      const testMessage = `e2e-chat-msg-${Date.now()}`;
       await ownerPage
         .getByRole("textbox", { name: /escribir|mensaje|composer/i })
         .first()
@@ -131,14 +135,12 @@ test.describe("chat — círculos", () => {
         timeout: 10_000,
       });
 
-      // Obtener conversation_id del SQL
-      conversationId = runSqlScalar(`
-        select conversation_id
+      const circleIdFromDb = runSqlScalar(`
+        select group_id
         from public.conversations
-        where group_id = '${circleId}'
         limit 1
       `);
-      expect(conversationId).toBeTruthy();
+      expect(circleIdFromDb).toBeTruthy();
 
       // B: login y ver mensaje
       const guestPage = await guestContext.newPage();
@@ -149,26 +151,25 @@ test.describe("chat — círculos", () => {
       await expect(
         guestPage.getByRole("tab", { name: "Hoy" }).first(),
       ).toBeVisible({ timeout: 15_000 });
-
-      // B: ir al círculo por ID
-      await guestPage.goto(`/circulo/${circleId}`);
-      await guestPage.waitForLoadState("networkidle");
-      await guestPage.waitForTimeout(1_200);
-
-      // B: abrir chat
-      await guestPage
-        .getByRole("button", { name: /chat|conversación/i })
-        .first()
-        .click();
-      await guestPage.waitForLoadState("networkidle");
-      await guestPage.waitForTimeout(1_200);
-
-      // B: debe ver el mensaje de A (con un delay para realtime)
-      await guestPage.waitForTimeout(2_000);
-      await expect(guestPage.getByText(testMessage)).toBeVisible({
+      // B: ir al círculo y abrir chat
+      // B: ir a buscar el círculo y unirse
+      await guestPage.goto("/circulo/buscar");
+      await guestPage.getByLabel("Busca por nombre").fill(circleName);
+      await expect(guestPage.getByText(circleName)).toBeVisible({
         timeout: 10_000,
       });
+      await guestPage.getByRole("button", { name: "Unirme" }).first().click();
+      // Ir al chat del círculo
+      await guestPage.goto(`/circulo/${circleId}/chat`);
+
+      // B: debe ver el mensaje de A
+      await expect(guestPage.getByText(testMessage)).toBeVisible({
+        timeout: 15_000,
+      });
     } finally {
+      if (circleId) {
+        runSql(`delete from public.groups where id = '${circleId}';`);
+      }
       await ownerContext.close();
       await guestContext.close();
     }

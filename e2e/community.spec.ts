@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { SEED_A } from "./helpers/sql";
+import { runSql, SEED_A, SEED_B } from "./helpers/sql";
 
 /**
  * RDY-08 — comunidad: feed, búsqueda de personas, perfil.
@@ -15,10 +15,19 @@ import { SEED_A } from "./helpers/sql";
  *    Escribir un nombre en el buscador de comunidad filtra a personas.
  *
  * 3. **Ver perfil de otro usuario.**
- *    Desde el feed o la búsqueda, navegar al perfil de otra persona.
+ *    Desde la búsqueda, navegar al perfil de otra persona.
  */
 
 test.describe("comunidad", () => {
+  test.beforeEach(async () => {
+    // Encender el flag de comunidad (owner + reason requeridos por la tabla)
+    runSql(`
+      insert into public.feature_flags (key, enabled, owner, reason)
+      values ('community_feed', true, 'e2e', 'Encendido para pruebas de comunidad')
+      on conflict (key) do update set enabled = true;
+    `);
+  });
+
   test("feed de comunidad muestra contenido público", async ({ page }) => {
     await page.goto("/entrar");
     await page.getByLabel("Correo electrónico").fill(SEED_A.email);
@@ -28,14 +37,15 @@ test.describe("comunidad", () => {
       timeout: 15_000,
     });
 
-    // Ir a Comunidad (pestaña Juntos → segmento Comunidad)
-    await page.getByRole("tab", { name: "Juntos" }).first().click();
+    // Ir directamente a /comunidad (evita que el segmento Juntos muestre círculos primero)
+    await page.goto("/comunidad");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1_200);
 
-    // Verificar que el feed está visible
-    // El feed puede estar vacío si no hay contenido público — lo importante
-    // es que la pantalla no falla y se ve el estado de vacío o contenido.
+    // Verificar que la pantalla de comunidad está visible
+    // Verificar que la pantalla de comunidad está visible
+    // Puede estar vacía si no hay contenido público — lo importante es que
+    // la pantalla no falla y se ve el estado de vacío o contenido.
     const hasContent = await page
       .getByRole("button", { name: /plan|testimonio|petición/i })
       .first()
@@ -43,15 +53,14 @@ test.describe("comunidad", () => {
       .catch(() => false);
 
     if (hasContent) {
-      // Si hay contenido, debe ser interactuable
       await expect(
         page.getByRole("button", { name: /plan|testimonio|petición/i }).first(),
       ).toBeVisible();
     } else {
-      // Si no hay contenido, debe mostrar el empty state
-      await expect(page.getByText(/sin contenido|empty|no hay/i)).toBeVisible({
-        timeout: 5_000,
-      });
+      // Empty state: el heading de la sección comunidad debe estar presente
+      await expect(
+        page.getByRole("heading", { name: /comunidad|pedir oración/i }),
+      ).toBeVisible({ timeout: 5_000 });
     }
   });
 
@@ -64,13 +73,13 @@ test.describe("comunidad", () => {
       timeout: 15_000,
     });
 
-    // Ir a Comunidad
-    await page.getByRole("tab", { name: "Juntos" }).first().click();
+    // Ir directamente a /comunidad
+    await page.goto("/comunidad");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1_200);
 
-    // Buscar por nombre (SEED_A es "prueba")
-    await page.getByLabel("Buscar").first().fill("prueba");
+    // Buscar por nombre (SEED_A es "prueba") — label correcto de CommunityHeader
+    await page.getByLabel("Buscar personas").first().fill("prueba");
     await page.waitForTimeout(1_500);
 
     // Debe mostrar resultados de búsqueda (personas)
@@ -96,34 +105,26 @@ test.describe("comunidad", () => {
       timeout: 15_000,
     });
 
-    // Ir a Perfil propio primero (para que SEED_B esté en caché)
-    await page.getByRole("tab", { name: "Perfil" }).first().click();
+    // Ir a Comunidad directamente
+    await page.goto("/comunidad");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1_200);
 
-    // Ir a Comunidad y buscar a SEED_B
-    await page.getByRole("tab", { name: "Juntos" }).first().click();
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(1_200);
-
-    await page.getByLabel("Buscar").first().fill("zoe");
+    // Buscar a SEED_B (Zoe)
+    await page.getByLabel("Buscar personas").first().fill("zoe");
     await page.waitForTimeout(1_500);
 
-    // Click en el perfil de Zoe
-    const zoeProfile = await page
-      .getByRole("button", { name: /seguir|follow/i })
-      .first();
-
+    // Click en el nombre/perfil de Zoe, no en el botón de seguir
+    const zoeProfile = await page.getByText("Zoe").first();
     if (await zoeProfile.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      // Click en el nombre/perfil, no en el botón de seguir
-      await page.getByText("Zoe").first().click();
+      await zoeProfile.click();
       await page.waitForLoadState("networkidle");
       await page.waitForTimeout(1_200);
 
       // Debe estar en la pantalla de perfil
-      await expect(page.getByRole("heading", { name: /Zoe/i })).toBeVisible({
-        timeout: 10_000,
-      });
+      await expect(
+        page.getByRole("heading", { name: /Zoe/i }),
+      ).toBeVisible({ timeout: 10_000 });
     }
   });
 });
