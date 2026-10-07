@@ -76,7 +76,7 @@ test.describe("plus", () => {
 
     if (generatorVisible) {
       // Verificar que hay algún indicador de cuota o límite
-      const bodyText = await page.textContent("body");
+      const bodyText = (await page.textContent("body")) ?? "";
       // El cuerpo debe tener contenido (no crash)
       expect(bodyText.length).toBeGreaterThan(0);
     } else {

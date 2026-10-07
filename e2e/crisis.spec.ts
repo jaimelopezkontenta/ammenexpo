@@ -66,7 +66,7 @@ test.describe("crisis", () => {
 
       // Verificar que hay al menos un número de teléfono visible
       // Los números típicos: 024 (España), 988 (US), 024 (México), 135 (Argentina)
-      const pageContent = await page.textContent("body");
+      const pageContent = (await page.textContent("body")) ?? "";
       // Al menos debe tener texto de crisis o recursos
       expect(pageContent.length).toBeGreaterThan(0);
     } else {

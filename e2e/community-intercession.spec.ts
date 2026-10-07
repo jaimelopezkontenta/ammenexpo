@@ -34,7 +34,7 @@ test.describe("comunidad — intercesión", () => {
 
     // Verificar que la pantalla de comunidad carga
     // Puede estar vacía o tener contenido — lo importante es que no crash
-    const bodyText = await page.textContent("body");
+    const bodyText = (await page.textContent("body")) ?? "";
     expect(bodyText.length).toBeGreaterThan(0);
 
     // Verificar que hay botón de interceder o amen
