@@ -2918,6 +2918,7 @@ export type Database = {
         Returns: string
       }
       rotate_my_invite_code: { Args: never; Returns: string }
+      run_avatar_cleanup: { Args: never; Returns: Json }
       run_email_jobs: { Args: never; Returns: Json }
       run_queue_drains: { Args: never; Returns: Json }
       search_bible: {
