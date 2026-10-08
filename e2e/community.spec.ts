@@ -122,9 +122,9 @@ test.describe("comunidad", () => {
       await page.waitForTimeout(1_200);
 
       // Debe estar en la pantalla de perfil
-      await expect(
-        page.getByRole("heading", { name: /Zoe/i }),
-      ).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole("heading", { name: /Zoe/i })).toBeVisible({
+        timeout: 10_000,
+      });
     }
   });
 });

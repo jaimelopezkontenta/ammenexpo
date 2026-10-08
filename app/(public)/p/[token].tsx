@@ -217,7 +217,11 @@ export default function SharedPlanPreviewScreen() {
           </View>
 
           {data.scripture_text ? (
-            <Card label={t("plan.scripture")} className="gap-2">
+            <Card
+              label={t("plan.scripture")}
+              labelVariant="editorialSm"
+              className="gap-2"
+            >
               <Txt variant="reading">{data.scripture_text}</Txt>
               {data.scripture_ref ? (
                 <Txt variant="editorial">{data.scripture_ref}</Txt>
@@ -231,6 +235,7 @@ export default function SharedPlanPreviewScreen() {
           {data.intercessor_prayer ? (
             <Card
               label={t("intercession.prayerFor", { name: data.owner_name })}
+              labelVariant="editorialSm"
               className="gap-2"
             >
               <Txt variant="reading">{data.intercessor_prayer}</Txt>

@@ -33,7 +33,10 @@ export type TxtVariant =
   | "label" // el rótulo de un campo
   | "labelStrong" // el rótulo en semibold: acciones de texto, el número del badge
   | "overline" // el rótulo diminuto en mayúsculas que abre una sección
-  | "editorial"; // la itálica de los rótulos de tarjeta
+  | "editorial" // la itálica de los rótulos de tarjeta
+  | "editorialSm" // el rótulo de cursiva de las tarjetas de plan: 16 px (prototipo)
+  | "readingLg" // la oración de la lista, a letra grande: 24 px (prototipo)
+  | "labelRail"; // la etiqueta del raíl de escritorio: 11,5 px (prototipo)
 
 export type TxtTone =
   | "primary"
@@ -75,6 +78,9 @@ const VARIANT: Record<TxtVariant, string> = {
   labelStrong: "font-sans-semibold text-sm",
   overline: "font-sans-semibold text-xs uppercase tracking-wide",
   editorial: "font-editorial text-lg",
+  editorialSm: "font-editorial text-base",
+  readingLg: "font-serif text-2xl leading-reading",
+  labelRail: "font-sans-medium text-[11.5px]",
 };
 
 const TONE: Record<TxtTone, string> = {
@@ -106,6 +112,9 @@ const DEFAULT_TONE: Record<TxtVariant, TxtTone> = {
   labelStrong: "primary",
   overline: "secondary",
   editorial: "accent",
+  editorialSm: "accent",
+  readingLg: "primary",
+  labelRail: "primary",
 };
 
 export const Txt = ({

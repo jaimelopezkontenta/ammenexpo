@@ -10,9 +10,9 @@ test.describe("lector de Biblia", () => {
     await page.getByLabel("Correo electrónico").fill("prueba@ammen.local");
     await page.getByLabel("Contraseña").fill("ammen1234");
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a Biblia
     await page.getByRole("tab", { name: "Biblia" }).click();
@@ -42,9 +42,9 @@ test.describe("lector de Biblia", () => {
     await page.getByLabel("Correo electrónico").fill("prueba@ammen.local");
     await page.getByLabel("Contraseña").fill("ammen1234");
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a Biblia
     await page.getByRole("tab", { name: "Biblia" }).click();
@@ -68,9 +68,7 @@ test.describe("lector de Biblia", () => {
       const shareLink = page.getByRole("link", {
         name: /compartir|share|enviar/i,
       });
-      const isShareLinkVisible = await shareLink
-        .isVisible()
-        .catch(() => false);
+      const isShareLinkVisible = await shareLink.isVisible().catch(() => false);
       if (isShareLinkVisible) {
         // No ejecutamos el share real, solo verificamos que existe
         expect(true).toBe(true);
@@ -85,9 +83,9 @@ test.describe("lector de Biblia", () => {
     await page.getByLabel("Correo electrónico").fill("prueba@ammen.local");
     await page.getByLabel("Contraseña").fill("ammen1234");
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a Biblia
     await page.getByRole("tab", { name: "Biblia" }).click();

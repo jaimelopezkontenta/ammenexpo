@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { ViewProps } from "react-native";
 
 import { Glass } from "@/components/Glass";
-import { Txt } from "@/components/ui/Text";
+import { Txt, type TxtVariant } from "@/components/ui/Text";
 
 /**
  * La superficie sobre la que va casi todo: el versículo, el tema, una petición,
@@ -18,12 +18,14 @@ import { Txt } from "@/components/ui/Text";
  */
 export const Card = ({
   label,
+  labelVariant = "editorial",
   children,
   className,
   flat = false,
   ...viewProps
 }: ViewProps & {
   label?: string;
+  labelVariant?: TxtVariant;
   children: ReactNode;
   /** Dentro de una lista virtualizada: translucidez sin desenfoque. */
   flat?: boolean;
@@ -35,7 +37,7 @@ export const Card = ({
     {...viewProps}
   >
     {label ? (
-      <Txt variant="editorial" className="mb-2">
+      <Txt variant={labelVariant} className="mb-2">
         {label}
       </Txt>
     ) : null}

@@ -12,9 +12,9 @@ test.describe("perfil", () => {
     await page.getByLabel("Correo electrónico").fill(SEED_A.email);
     await page.getByLabel("Contraseña").fill(SEED_A.password);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a perfil
     await page.getByRole("tab", { name: "Perfil" }).click();
@@ -33,9 +33,9 @@ test.describe("perfil", () => {
 
     // Recargar y verificar que persiste
     await page.reload();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Verificar que el idioma se guardó en profile_settings
     const locale = runSqlScalar(
@@ -50,9 +50,9 @@ test.describe("perfil", () => {
     await page.getByLabel("Correo electrónico").fill(SEED_A.email);
     await page.getByLabel("Contraseña").fill(SEED_A.password);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a perfil y cambiar a oscuro
     await page.getByRole("tab", { name: "Perfil" }).click();
@@ -72,9 +72,9 @@ test.describe("perfil", () => {
 
     // Recargar y verificar que persiste
     await page.reload();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test("exportar datos — botón visible", async ({ page }) => {
@@ -82,9 +82,9 @@ test.describe("perfil", () => {
     await page.getByLabel("Correo electrónico").fill(SEED_A.email);
     await page.getByLabel("Contraseña").fill(SEED_A.password);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a perfil
     await page.getByRole("tab", { name: "Perfil" }).click();
@@ -111,9 +111,9 @@ test.describe("perfil", () => {
     await page.getByLabel("Correo electrónico").fill(SEED_A.email);
     await page.getByLabel("Contraseña").fill(SEED_A.password);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a perfil → términos
     await page.getByRole("tab", { name: "Perfil" }).click();

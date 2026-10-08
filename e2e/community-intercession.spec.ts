@@ -23,9 +23,9 @@ test.describe("comunidad — intercesión", () => {
     await page.getByLabel("Correo electrónico").fill(SEED_A.email);
     await page.getByLabel("Contraseña").fill(SEED_A.password);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a comunidad
     await page.goto("/comunidad");

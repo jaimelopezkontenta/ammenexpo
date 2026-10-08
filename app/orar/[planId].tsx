@@ -159,7 +159,7 @@ function PrayForSomeone({ planId }: { planId: string }) {
             <Txt variant="overline">
               {t("common.day", { number: plan.day_number })}
             </Txt>
-            <Txt variant="display">{plan.day_title}</Txt>
+            <Txt variant="title">{plan.day_title}</Txt>
             <Txt variant="body" tone="secondary">
               {plan.plan_title}
             </Txt>

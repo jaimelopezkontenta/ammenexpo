@@ -75,12 +75,13 @@ export const NavRail = ({
             >
               {options.tabBarIcon?.({ focused, color, size: 24 })}
               <Txt
-                variant="label"
+                variant="labelRail"
                 numberOfLines={1}
-                // La tinta acompaña al icono (ember al enfocar). El raíl
-                // pedía además 11,5 px con `text-[11.5px]`, pero esa clase
-                // nunca ganó al `text-sm` de label (va antes en la hoja): el
-                // raíl siempre se vio a 14 px, y así sigue.
+                // La tinta acompaña al icono (ember al enfocar): es dinámica,
+                // de la rama JS del tema, y no encaja en ningún `tone` fijo.
+                // `labelRail` (11,5 px) es la variante que el raíl pidió desde
+                // el prototipo; una clase `text-[11.5px]` sobre `label` nunca
+                // le ganaba al `text-sm` (orden alfabético de la hoja).
                 style={{ color }}
               >
                 {label}

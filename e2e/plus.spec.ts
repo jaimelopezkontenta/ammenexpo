@@ -12,9 +12,9 @@ test.describe("plus", () => {
     await page.getByLabel("Correo electrónico").fill(SEED_A.email);
     await page.getByLabel("Contraseña").fill(SEED_A.password);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a Plus
     const plusLink = page.getByRole("link", { name: /plus|premium|pro/i });
@@ -29,8 +29,8 @@ test.describe("plus", () => {
       // Verificar que el campo de correo no es editable
       const emailInput = page.getByLabel("Correo electrónico");
       const isDisabled = await emailInput.isDisabled().catch(() => false);
-      const isReadOnly = await emailInput.evaluate(
-        (el) => el.hasAttribute("readonly"),
+      const isReadOnly = await emailInput.evaluate((el) =>
+        el.hasAttribute("readonly"),
       );
 
       // El campo debe ser de solo lectura o deshabilitado
@@ -60,9 +60,9 @@ test.describe("plus", () => {
     await page.getByLabel("Correo electrónico").fill(SEED_A.email);
     await page.getByLabel("Contraseña").fill(SEED_A.password);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(
-      page.getByRole("tab", { name: "Hoy" }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("tab", { name: "Hoy" }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Ir a orar y verificar que hay un contador de planes
     await page.goto("/orar");

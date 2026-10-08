@@ -43,7 +43,9 @@ test.describe("chat — círculos", () => {
         timeout: 10_000,
       });
       await page.getByLabel("Nombre").fill(circleName);
-      await page.getByRole("radio", { name: "Cualquiera puede encontrarlo" }).click();
+      await page
+        .getByRole("radio", { name: "Cualquiera puede encontrarlo" })
+        .click();
       await page.getByRole("button", { name: "Crear círculo" }).click();
       await expect(page).toHaveURL(/\/circulo\/[0-9a-f-]{36}/i, {
         timeout: 15_000,
@@ -107,7 +109,9 @@ test.describe("chat — círculos", () => {
       });
       const circleName = `e2e-chat-${Date.now()}`;
       await ownerPage.getByLabel("Nombre").fill(circleName);
-      await ownerPage.getByRole("radio", { name: "Cualquiera puede encontrarlo" }).click();
+      await ownerPage
+        .getByRole("radio", { name: "Cualquiera puede encontrarlo" })
+        .click();
       await ownerPage.getByRole("button", { name: "Crear círculo" }).click();
       await expect(ownerPage).toHaveURL(/\/circulo\/[0-9a-f-]{36}/i, {
         timeout: 15_000,

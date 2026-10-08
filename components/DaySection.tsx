@@ -46,7 +46,7 @@ export const DaySection = ({
           end={{ x: 1, y: 1 }}
           style={styles.warm}
         >
-          <Txt variant="editorial" className="mb-2">
+          <Txt variant="editorialSm" className="mb-2">
             {label}
           </Txt>
           {children}
@@ -56,7 +56,7 @@ export const DaySection = ({
   }
 
   return (
-    <Card label={label} className="gap-2">
+    <Card label={label} labelVariant="editorialSm" className="gap-2">
       {children}
     </Card>
   );

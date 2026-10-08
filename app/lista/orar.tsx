@@ -167,7 +167,7 @@ export default function PrayThrough() {
           </View>
 
           <Txt
-            variant="reading"
+            variant="readingLg"
             className="text-center"
             accessibilityRole={done ? "alert" : undefined}
             accessibilityLiveRegion={done ? "polite" : undefined}
