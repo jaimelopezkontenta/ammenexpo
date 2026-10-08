@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ammen — resumen 7-8 octubre 2026</title>
+<style>
+  :root {
+    --plum: #3d3148;
+    --plum-soft: #6b5d78;
+    --cream: #faf6f0;
+    --card: #ffffff;
+    --ember: #c97b4a;
+    --ember-soft: #f5e0d0;
+    --ok: #3e7d4f;
+    --ok-soft: #e4efe6;
+    --line: #e8e0d8;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--cream);
+    color: var(--plum);
+    line-height: 1.55;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 { font-size: 34px; font-weight: 600; letter-spacing: -0.02em; }
+  .lede { font-size: 17px; color: var(--plum-soft); margin: 10px 0 8px; max-width: 720px; }
+  .badge {
+    display: inline-block; background: var(--ok-soft); color: var(--ok);
+    border-radius: 999px; padding: 4px 14px; font-size: 14px; font-family: sans-serif;
+    margin: 6px 0 30px;
+  }
+  h2 {
+    font-size: 22px; font-weight: 600; margin: 46px 0 6px;
+    padding-top: 26px; border-top: 1px solid var(--line);
+  }
+  h2 .n { color: var(--ember); font-family: sans-serif; font-size: 14px; margin-right: 8px; }
+  h3 { font-size: 17px; font-weight: 600; margin: 22px 0 4px; }
+  p { margin: 8px 0; max-width: 760px; }
+  .sub { color: var(--plum-soft); font-size: 15px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 16px 0; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+  figure {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(61,49,72,.06);
+  }
+  figure img { width: 100%; display: block; }
+  figcaption {
+    font-family: sans-serif; font-size: 13px; color: var(--plum-soft);
+    padding: 10px 14px; border-top: 1px solid var(--line);
+  }
+  figcaption b { color: var(--plum); }
+  .tag {
+    display: inline-block; font-family: sans-serif; font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; border-radius: 4px; padding: 2px 8px; margin-right: 6px;
+  }
+  .tag.antes { background: var(--ember-soft); color: var(--ember); }
+  .tag.despues { background: var(--ok-soft); color: var(--ok); }
+  ul { margin: 8px 0 8px 22px; max-width: 760px; }
+  li { margin: 5px 0; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 22px; margin: 14px 0;
+  }
+  .card h3 { margin-top: 0; }
+  .pill {
+    display: inline-block; font-family: sans-serif; font-size: 12px;
+    background: var(--ember-soft); color: var(--ember); border-radius: 999px;
+    padding: 2px 10px; margin-left: 8px; vertical-align: middle;
+  }
+  code {
+    font-family: ui-monospace, Consolas, monospace; font-size: 13px;
+    background: #f1ebe3; border-radius: 4px; padding: 1px 5px;
+  }
+  .check { color: var(--ok); font-weight: 600; }
+  .q {
+    background: #f4efe9; border-left: 3px solid var(--ember);
+    padding: 10px 16px; border-radius: 0 10px 10px 0; margin: 12px 0;
+    font-size: 15px; max-width: 760px;
+  }
+  .q b { font-family: sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--ember); display: block; margin-bottom: 2px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0; }
+  @media (max-width: 760px) { .grid3 { grid-template-columns: 1fr; } }
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); font-family: sans-serif; font-size: 13px; color: var(--plum-soft); }
+  footer code { font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Ammen — qué hicimos estos dos días</h1>
+<p class="lede">Del 7 al 8 de octubre: una auditoría de grasa en el código, la causa real del CI en rojo,
+una limpieza automática de fotos huérfanas, un fallo oculto que hubiera impedido enviar
+correos y avisos, y los ajustes de diseño pendientes. Todo verificado.</p>
+<span class="badge">✓ CI completo en verde (run 37772109027, 23 min)</span>
+
+<h2><span class="n">01</span>Lo que hicimos</h2>
+
+<div class="card">
+  <h3>Limpieza del código (auditoría)</h3>
+  <p class="sub">Revisamos los 312 ficheros de la app, las 63 funciones del servidor y las dependencias buscando
+  lo que nadie usa. Dos cosas muertas, eliminadas sin tocar nada más. El resto del código quedó igual.</p>
+</div>
+
+<div class="card">
+  <h3>El CI estaba en rojo y nadie sabía por qué <span class="pill">la causa raíz</span></h3>
+  <p class="sub">Las comprobaciones automáticas fallaban con cada cambio desde hacía días. La causa: una regla de
+  permisos de seguridad se había ajustado <i>a mano</i> en las bases locales, pero nunca se guardó en el «plan» que
+  se aplica en cada base nueva. Resultado: cada comprobación montaba una base limpia donde la regla volvía a estar
+  rota. Lo versionamos (migración <code>api_role_default_privs</code>) y el CI volvió a verde con las 15 suites de
+  base de datos pasando sobre una base recién montada.</p>
+</div>
+
+<div class="card">
+  <h3>Fotos de perfil huérfanas <span class="pill">nuevo</span></h3>
+  <p class="sub">Cuando alguien se borraba la cuenta o cambiaba de foto, a veces la foto vieja se quedaba en el
+  servidor para siempre. Ahora hay una limpieza diaria automática: encuentra las fotos sin dueño y las borra de
+  verdad. Verificada de cabo a cabo en local: se sube una foto huérfana, se dispara la limpieza, y el fichero
+  físico desaparece.</p>
+</div>
+
+<div class="card">
+  <h3>El fallo que nadie veía: los avisos automáticos no viajaban <span class="pill">el hallazgo</span></h3>
+  <p class="sub">Probando la limpieza anterior, descubrimos que el sistema que «mandar cosas automáticamente»
+  (recordatorios, correos, avisos de oración) llevaba desde septiembre un fallo oculto: le faltaba una llave para
+  abrir la puerta del servidor, y como el error pasaba en silencio, nadie lo notaba. <b>Sin este arreglo, al
+  encender el programador, ni el correo ni los avisos habrían salido jamás.</b> Lo arreglamos para los tres
+  sistemas a la vez y dejamos guardado un test que lo impediría de nuevo.</p>
+</div>
+
+<div class="card">
+  <h3>Diseño: lo que el prototipo medía y la app no cumplía</h3>
+  <ul>
+    <li><b>Jerarquía de títulos coherente:</b> el título del día en la vista de un plan era más grande que en sus dos hermanas; ahora las tres usan el mismo tamaño.</li>
+    <li><b>Tres tamaños pendientes del diseño original:</b> rótulos de tarjeta a 16 px (se veían a 18), la oración de la lista a 24 px (se veía a 18), y las etiquetas del menú inferior de escritorio a 11,5 px (se veían a 14).</li>
+    <li><b>Las «fotos de referencia» que detectan cambios visuales</b> se regeneraron en los dos sistemas (Windows y Linux) y las 20 capturas de la prueba de usuario se volvieran a tomar.</li>
+  </ul>
+</div>
+
+<h2><span class="n">02</span>Verificación</h2>
+<p>Todo lo anterior pasó el control completo del proyecto, que tarda 23 minutos y que ahora <b>vuelve a ser verde</b>:</p>
+<ul>
+  <li><span class="check">✓</span> 1358 pruebas unitarias</li>
+  <li><span class="check">✓</span> 15 suites de base de datos sobre una base recién montada (antes era imposible)</li>
+  <li><span class="check">✓</span> Pruebas de usuario completo en navegador (64)</li>
+  <li><span class="check">✓</span> Regresión visual en claro y oscuro, 11 pantallas por modo</li>
+</ul>
+<p class="sub">Un detalle honesto: una captura (Avisos, móvil) falló una vez por un fallo de toma de foto —dos
+avisos superpuestos a mitad de transición, un 1% de píxeles, en una pantalla que ningún cambio tocó. El
+reintento pasó y todo quedó verde.</p>
+
+<h2><span class="n">03</span>Para tus ojos (la sesión pendiente J8)</h2>
+<p>Cuatro pares antes/después de los cambios de diseño. Cada uno viene con la pregunta que te corresponde
+responder.</p>
+
+<h3>El título del día en un plan (la vista compartida)</h3>
+<div class="grid2">
+  <figure>
+    <img src="antes/plan-dias-movil-visual-win32.png" alt="Antes: plan de días">
+    <figcaption><span class="tag antes">Antes</span> Título grande (estilo «portada»), desentonaba con el resto.</figcaption>
+  </figure>
+  <figure>
+    <img src="../../../e2e/visual.spec.ts-snapshots/plan-dias-movil-visual-win32.png" alt="Después: plan de días">
+    <figcaption><span class="tag despues">Después</span> Mismo tamaño que en Hoy y en el día del plan.</figcaption>
+  </figure>
+</div>
+<div class="q"><b>¿Pregunta</b>¿El título así te parece coherente, o querías que fuera exactamente el otro (más grande)?</div>
+
+<h3>La pantalla de Hoy (rótulos de tarjeta y menú inferior)</h3>
+<div class="grid2">
+  <figure>
+    <img src="antes/hoy-escritorio-visual-win32.png" alt="Antes: Hoy">
+    <figcaption><span class="tag antes">Antes</span> Rótulos «Palabra» / «Qué significa» a 18 px; etiquetas del menú a 14 px.</figcaption>
+  </figure>
+  <figure>
+    <img src="../../../e2e/visual.spec.ts-snapshots/hoy-escritorio-visual-win32.png" alt="Después: Hoy">
+    <figcaption><span class="tag despues">Después</span> Rótulos a 16 px (como medía el diseño); etiquetas del menú a 11,5 px.</figcaption>
+  </figure>
+</div>
+
+<h3>La pestaña Orar (mis planes / mi lista)</h3>
+<div class="grid2">
+  <figure>
+    <img src="antes/orar-escritorio-visual-win32.png" alt="Antes: Orar">
+    <figcaption><span class="tag antes">Antes</span> «Mis planes» / «Mi lista» a 18 px.</figcaption>
+  </figure>
+  <figure>
+    <img src="../../../e2e/visual.spec.ts-snapshots/orar-escritorio-visual-win32.png" alt="Después: Orar">
+    <figcaption><span class="tag despues">Después</span> A 16 px, como el resto de rótulos de tarjeta.</figcaption>
+  </figure>
+</div>
+
+<h3>El lector de la Biblia (letra y botón A− / A+)</h3>
+<p class="sub">La letra del lector ahora respeta los tres tamaños. Las tres capturas son el estado actual:
+compruébalo con los ojos (era lo que pedía el pendiente).</p>
+<div class="grid3">
+  <figure>
+    <img src="../lector-letra/antes/02-a-menos.png" alt="Lector letra A−">
+    <figcaption><b>A−</b> (pequeño)</figcaption>
+  </figure>
+  <figure>
+    <img src="../lector-letra/antes/01-base.png" alt="Lector letra base">
+    <figcaption><b>Base</b></figcaption>
+  </figure>
+  <figure>
+    <img src="../lector-letra/antes/03-a-mas.png" alt="Lector letra A+">
+    <figcaption><b>A+</b> (grande)</figcaption>
+  </figure>
+</div>
+<div class="q"><b>¿Pregunta</b>¿Los tres tamaños se distinguen bien? ¿El A+ no se te hace demasiado grande?</div>
+
+<h2><span class="n">04</span>Lo que queda de tu lado</h2>
+
+<div class="card">
+  <h3>Staging (lo más urgente — hay una seguridad abierta esperando)</h3>
+  <p class="sub">La fuga del chat de círculos (quien salía de un círculo seguía dentro) sigue abierta en staging
+  hasta hacer <code>db push</code>. El orden exacto está en <code>docs/runbooks/staging-web.md</code>, resumido:</p>
+  <ul>
+    <li>Restaurar el proyecto en el panel de Supabase y copiar la base (<code>pg_dump</code>).</li>
+    <li><code>db push</code> (trae todas las migraciones nuevas, incluida la regla de permisos arreglada).</li>
+    <li>Poner los 4 secretos en Vault + 3 en la nube (instrucciones en <code>docs/runbooks/secrets-sync.md</code>).</li>
+    <li>Desplegar las 7 funciones del servidor (ahora incluye la limpieza de fotos).</li>
+    <li>Descartar lo acumulado (<code>skip_stale_queue_rows</code>) y <b>encender el programador</b>: ahí es donde por fin viajan los correos y avisos.</li>
+    <li>Probar en remoto y desplegar la web.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>Decisiones tuyas</h3>
+  <ul>
+    <li><b>Legal antes de producción:</b> revisión corta de consentimiento (datos de creencias, Art. 9) y región del servidor. Bloquea el correo en producción, no el de staging.</li>
+    <li><b>Cloudflare:</b> dos claves para el captcha anti-abuso en el alta de cuentas (el código ya está listo).</li>
+    <li><b>Docker Hub:</b> una clave para que las pruebas automáticas dejen de parpadear por límite de descargas (2 minutos de trabajo).</li>
+    <li><b>Las 4 preguntas de arriba</b> (la sesión J8).</li>
+  </ul>
+</div>
+
+<footer>
+  <p>Commits de estos dos días en <code>main</code>:</p>
+  <p><code>c8689a1</code> auditoría + CI &nbsp;·&nbsp; <code>a7b2ea8</code> diseño B+C &nbsp;·&nbsp;
+  <code>adcd014</code> permisos versionados &nbsp;·&nbsp; <code>e9995dd</code> limpieza de fotos + llave de colas &nbsp;·&nbsp;
+  <code>d7ccdd5</code> tipos &nbsp;·&nbsp; <code>a7c1e68</code> referencias visuales Linux &nbsp;·&nbsp; <code>aad4d1f</code> capturas UAT</p>
+  <p>Generado el 8-oct-2026 por el agente. Imágenes: baselines visuales del repo (estado real probado por CI).</p>
+</footer>
+
+</body>
+</html>
