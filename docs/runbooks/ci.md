@@ -8,7 +8,7 @@ Todo vive en `.github/`. Nada de CI despliega: los deploys los hace una persona.
 | ---------------------------- | ---------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `verify` · `verify`          | PR y push a `main`           | sí      | Guard de migraciones, tipos de la base, `npm run verify`, Playwright bajo la CSP, el visual y el presupuesto del bundle |
 | `verify` · `functions-types` | ídem, en paralelo            | sí      | `deno check` de las seis edge functions                                                                                 |
-| `verify` · `expo-health`     | ídem, en paralelo            | no      | `expo-doctor` y `expo install --check` (hoy fallan los dos; ver abajo)                                                  |
+| `verify` · `expo-health`     | ídem, en paralelo            | mixto   | `expo install --check` bloqueante (al día a 2026-10-05) y `expo-doctor` con aviso `::warning` (aviso remoto, no bloqueante)  |
 | `visual-baselines`           | a mano (`workflow_dispatch`) | —       | Genera las baselines Linux de la regresión visual y las sube como artefacto                                             |
 | Dependabot                   | semanal                      | —       | Acciones de GitHub; en npm solo avisos de seguridad                                                                     |
 
@@ -236,21 +236,17 @@ de Deno del job.
 
 ## `expo-health`
 
-`expo-doctor` y `expo install --check` con `continue-on-error` y una anotación
-`::warning::` si fallan. A 2026-09-29 los dos fallan sobre `main`:
+A 2026-10-05 el estado cambió: `npx expo install --fix` dejó las dependencias
+al día (los 10 paquetes rezagados de 2026-09-29 — `expo` 56.0.18 vs
+`~56.0.23`, `expo-router`, `expo-image`, … — desaparecieron) y se quitó el
+`continue-on-error` de `expo install --check`: es determinista, y si un PR
+vuelve a desalinear las versiones de Expo, el job se pinta rojo.
 
-- `expo install --check`: 10 paquetes de SDK 56 con parches por detrás
-  (`expo` 56.0.18 vs `~56.0.23`, `expo-router` 56.2.17 vs `~56.2.21`, `expo-image`,
-  `expo-image-picker`, `expo-linking`, `expo-notifications`, `expo-sharing`,
-  `expo-splash-screen`, `expo-constants`, `@expo/metro-runtime`). Se arregla con
-  `npx expo install --fix` (toca `package.json` y el lock).
-- `expo-doctor` (20 de 22): esa misma comprobación de versiones y una que consulta
-  un aviso remoto («Hermes V1 con regresión de memoria» en `expo@56.0.18`; lo
-  arregla `expo` ≥ 57.0.9 o React Native ≥ 0.86.2).
-
-Al dejar el repo al día, quitar el `continue-on-error` de `expo install --check`
-(es determinista). `expo-doctor` no debería ser bloqueante: parte de su resultado
-depende de datos remotos.
+`expo-doctor` sigue con `continue-on-error` y una anotación `::warning::` si
+falla: una de sus comprobaciones consulta un aviso remoto («Hermes V1 con
+regresión de memoria» en `expo@56.0.18`; lo arregla `expo` ≥ 57.0.9 o React
+Native ≥ 0.86.2). Esa parte cambia sin que cambie el repo, y por eso no es
+bloqueante.
 
 ## Dependabot
 

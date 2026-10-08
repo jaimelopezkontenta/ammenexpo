@@ -73,7 +73,10 @@ ningún dispositivo** y exige un **binario nuevo** (no llega por OTA). Todo est�
   cada entorno de EAS.
 - Dominio y DNS para universal links, `EXPO_PUBLIC_UNIVERSAL_LINK_HOST`, y rellenar las
   plantillas de `docs/runbooks/universal-links/` con el Team ID y el SHA-256 reales.
-  `firebase.json` hoy ignora `**/.*`: `.well-known` no se serviría sin cambiarlo.
+  `firebase.json` **ya** sirve `public/.well-known/` (verificado 2026-10-05: el
+  glob de `firebase-tools` con `**/.*` no recorta subdirectorios de dotfiles y
+  `expo export` los copia vía `fs.cp`); la cabecera `Content-Type:
+  application/json` para `/.well-known/**` ya está en el fichero.
 - Decidir `expo-updates` (hoy **no** está instalado y `eas.json` ya no declara canales).
 - Probar en dispositivo real la lista de la sección 3 del runbook (login/logout/reinicio,
   migración de una sesión antigua, modo avión, exportar >1 MB, tap de push, universal

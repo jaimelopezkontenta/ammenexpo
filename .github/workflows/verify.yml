@@ -157,18 +157,17 @@ jobs:
   # `expo install --check` (¿cada paquete de Expo en la versión que pide el SDK?).
   # Sin Supabase ni Playwright.
   #
-  # NO bloqueante, a propósito: a 2026-09-29 los dos fallan sobre el repo tal
-  # cual está, y ocultarlo o volver rojo cada PR por ello serían peores:
-  #   - `expo install --check`: 10 paquetes de SDK 56 con parches por detrás de
-  #     lo que pide el SDK (expo 56.0.18 vs ~56.0.23, expo-router 56.2.17 vs
-  #     ~56.2.21…). Se arregla con `npx expo install --fix` (toca package.json y
-  #     el lock: una decisión de dependencias, no de CI).
-  #   - `expo-doctor`: una de sus 22 comprobaciones consulta un aviso remoto
-  #     («Hermes V1 con regresión de memoria» en expo 56.0.18; lo arregla
-  #     expo >= 57.0.9 o React Native >= 0.86.2). Es la parte que cambia sin que
-  #     cambie el repo, y por eso no puede ser un check obligatorio tal cual.
-  # Cuando `npx expo install --fix` deje el repo al día, quitar el
-  # `continue-on-error` de `expo install --check`: ese sí es determinista.
+  # `expo install --check` ES bloqueante (determinista): a 2026-10-05 el repo
+  # está al día (`npx expo install --fix` dejó así; los 10 paquetes rezagados
+  # de 2026-09-29 — expo 56.0.18 vs ~56.0.23, expo-router 56.2.17 vs
+  # ~56.2.21, etc. — desaparecieron) y se quitó su `continue-on-error`. Si un
+  # PR vuelve a desalinear las versiones de Expo, este paso lo pinta rojo.
+  #
+  # `expo-doctor` sigue con `continue-on-error` y una anotación `::warning`:
+  # una de sus comprobaciones consulta un aviso remoto («Hermes V1 con
+  # regresión de memoria» en expo 56.0.18; lo arregla expo >= 57.0.9 o React
+  # Native >= 0.86.2). Es la parte que cambia sin que cambie el repo, y por
+  # eso no puede ser un check obligatorio tal cual.
   expo-health:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -189,15 +188,16 @@ jobs:
         run: npx --yes expo-doctor
 
       # `CI=true` (lo pone GitHub) lo hace no interactivo: informa y sale con 1,
-      # no pregunta ni instala nada.
+      # no pregunta ni instala nada. Bloqueante a propósito: es determinista y
+      # es la alarma de que un PR ha desalineado las versiones de Expo.
       - name: expo install --check
         id: install-check
-        continue-on-error: true
         run: npx expo install --check
 
       # Un paso con `continue-on-error` que falla queda en verde en el job y
+      # Un paso con `continue-on-error` que falla queda en verde en el job y
       # pasa desapercibido: la anotación lo sube a la cabecera del PR.
-      - name: Avisar si alguna comprobación de Expo falló
-        if: ${{ steps.doctor.outcome == 'failure' || steps.install-check.outcome == 'failure' }}
+      - name: Avisar si expo-doctor falló
+        if: ${{ steps.doctor.outcome == 'failure' }}
         run: |
-          echo "::warning title=Dependencias de Expo::expo-doctor=${{ steps.doctor.outcome }}, expo install --check=${{ steps.install-check.outcome }}. No bloquea (estado conocido, ver comentario del job en verify.yml y docs/runbooks/ci.md)."
+          echo "::warning title=expo-doctor::falló una comprobación de expo-doctor (no bloquea: parte del resultado depende de avisos remotos; ver el comentario del job en verify.yml y docs/runbooks/ci.md)."

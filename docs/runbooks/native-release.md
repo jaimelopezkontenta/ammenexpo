@@ -138,11 +138,11 @@ Decisión del dueño. Pasos cuando haya dominio:
    certificado de firma de Play App Signing; añade también la del keystore de
    EAS si quieres que verifiquen los builds internos). Las plantillas están
    fuera de `public/` para que no se sirvan valores falsos.
-3. **Firebase Hosting:** `firebase.json` ignora `**/.*`, así que hoy
-   `.well-known` **no se desplegaría**; hay que ajustar ese `ignore`. Añadir
-   `Content-Type: application/json` para `/.well-known/apple-app-site-association`,
-   sin redirecciones. Comprobar que `expo export` copia `.well-known` a
-   `dist/`.
+3. **Firebase Hosting:** verificado 2026-10-05: el `ignore` actual (`**/.*`)
+   **sí** despliega `.well-known/*` (el glob de `firebase-tools` solo recorta
+   dotfiles directos como `.env`, no subdirectorios) y `expo export` copia los
+   dotfiles de `public/` a `dist/` (vía `fs.cp`). La cabecera `Content-Type:
+   application/json` para `/.well-known/**` ya está en `firebase.json`.
 4. Definir `EXPO_PUBLIC_UNIVERSAL_LINK_HOST` en el entorno de EAS y hacer
    build nuevo: `app.config.js` añade `ios.associatedDomains` y un
    `intentFilter` `autoVerify` https para `/p/` y `/c/`.

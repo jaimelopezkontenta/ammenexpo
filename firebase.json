@@ -89,6 +89,19 @@
             "value": "public, max-age=31536000, immutable"
           }
         ]
+      },
+      {
+        // Apple y Android exigen application/json en estos ficheros (sin
+        // extensión, el hosting los serviría como octet-stream y la
+        // verificación de universal/app links fallaría en silencio). La regla
+        // es inofensiva mientras `public/.well-known/` no exista.
+        "source": "/.well-known/**",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
       }
     ]
   }

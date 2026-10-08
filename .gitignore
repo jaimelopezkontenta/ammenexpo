@@ -51,6 +51,7 @@ diseno/
 
 # Herramientas de agente y scratch de sesiones locales.
 .opencode/
+.pi/
 .playwright-mcp/
 .swarm/
 .cursor/*.log

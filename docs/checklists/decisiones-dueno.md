@@ -1,5 +1,7 @@
 # Resumen de decisiones del dueño (J2–J12)
 
+**⚠️ Superado (2026-10-05):** la lista canónica de pendientes es [`docs/runbooks/pendientes-del-dueno.md`](../runbooks/pendientes-del-dueno.md). Este resumen (2026-07-09) usa una numeración J distinta (aquí J8 = universal links; hoy J8 = jerarquía H1) y antecede a varios cambios.
+
 **Fecha:** 2026-07-09  
 **Estado:** 3 confirmadas, 5 pendientes, 4 sin acción requerida
 

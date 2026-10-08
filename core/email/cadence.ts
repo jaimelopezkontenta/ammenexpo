@@ -11,6 +11,3 @@ export type EmailPreferences = {
 export const isEmailCadence = (value: unknown): value is EmailCadence =>
   typeof value === "string" &&
   (EMAIL_CADENCES as readonly string[]).includes(value);
-
-export const cadenceLabelKey = (cadence: EmailCadence): string =>
-  `email.cadence.${cadence}`;

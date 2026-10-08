@@ -31,10 +31,10 @@ ejecutarlo.
 | EN-2 | El lector lee en la versión activa (elegida o la del idioma), selector, versículo del día por versión | `860a3f9` | ✅ |
 | EN-3 | Los planes se escriben, verifican y guardan en el idioma de la persona | `f7adad4` | ✅ |
 | EN-4 | e2e en inglés (interfaz + lector WEB↔RVR + búsqueda) | `e2e/english.spec.ts` | ✅ |
-| 3a | Cliente Supabase tipado, fábrica `qk` de claves de caché (184 claves) con ESLint, `isLoadingError` | ver ADR 0006 | ✅ (quedan los `userId!` de `core/**/queries.ts`) |
+| 3a | Cliente Supabase tipado, fábrica `qk` de claves de caché (184 claves) con ESLint, `isLoadingError` | ver ADR 0006 | ✅ (2026-10-05: verificado, 0 `userId!` en `core/`, `app/`, `components/`) |
 | 3b | `SessionProvider` + `AppEffects`, Hoy y moderación partidos, `useAction`, `useUserId`, claves de almacenamiento | `1d5ce27` | ✅ |
 | 3c | Feeds en `FlatList`, Comunidad partida, chat paginado, lector con `VerseRow` | `e91bc79` | ✅ |
-| 3d | Paridad legal, claves versionadas y limpieza al cerrar sesión, tests de lógica pura (sin RNTL: no hay renderizador RN para Vitest) | `ffd2acd`, `1d5ce27` | ✅ parcial |
+| 3d | Paridad legal, claves versionadas y limpieza al cerrar sesión, tests de lógica pura | `ffd2acd`, `1d5ce27` | ✅ (parcial por diseño: sin RNTL — no hay renderizador RN para Vitest) |
 | 4a | Edge functions: helpers compartidos, validación, presupuesto de reintentos, logs con correlación, 6/6 pasan `deno check` | `65dfe22` | ✅ |
 | 4b | Runner `db:test`, cobertura de correo, arreglo de un test intermitente | `01a659b` | ✅ (sin «reset suave»: descartado) |
 | 4c | CI: `deno check`, expo-health, Dependabot, baselines Linux, presupuesto de bundle | `b72f610`, `37e5333` | ✅ |
