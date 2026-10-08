@@ -49,15 +49,47 @@ El id en Secret Manager **es** el nombre de la variable de la Edge Function.
 | `ANTHROPIC_API_KEY` | `ANTHROPIC_API_KEY` |
 | `PUSH_SENDER_ENABLED` | `PUSH_SENDER_ENABLED` |
 | `AMMEN_PUSH_INVOKE_SECRET` | `AMMEN_PUSH_INVOKE_SECRET` |
+| `AMMEN_AVATAR_CLEANUP_INVOKE_SECRET` | `AMMEN_AVATAR_CLEANUP_INVOKE_SECRET` |
 
 No se sincronizan (solo local): `UNSLOTH_URL`, `UNSLOTH_MODEL`, `UNSLOTH_API_KEY`.
 
-**`AMMEN_EMAIL_INVOKE_SECRET` y `AMMEN_PUSH_INVOKE_SECRET` son obligatorios
-fuera de local** (desde el 2026-09-29): sin ellos, `send-email`,
-`enqueue-emails` y `send-intercession-push` rechazan toda llamada con 401
+**`AMMEN_EMAIL_INVOKE_SECRET`, `AMMEN_PUSH_INVOKE_SECRET` y
+`AMMEN_AVATAR_CLEANUP_INVOKE_SECRET` son obligatorios fuera de local**
+(desde el 2026-09-29; el de avatares desde el 2026-10-08): sin ellos,
+`send-email`, `enqueue-emails`, `send-intercession-push` y `cleanup-avatars`
+rechazan toda llamada con 401
 (fail-closed, `supabase/functions/_shared/invoker.ts`). Antes, sin secreto,
 no exigían el header y quedaban abiertas a cualquiera.
 Supabase inyecta solo `SUPABASE_URL` / `ANON` / `SERVICE_ROLE`; no van aquí.
+
+Los programas de `pg_cron` (`run_queue_drains`, `run_email_jobs`,
+`run_avatar_cleanup`) leen de **Vault** los valores que necesitan para llamar a
+las funciones, y dos son obligatorios para que las llamadas lleguen:
+
+- `ammen_email_invoke_secret`, `ammen_push_invoke_secret` y
+  `ammen_avatar_cleanup_invoke_secret`: cada uno se convierte en el header
+  `x-ammen-invoker` de su función (el valor es el mismo que el secreto de
+  invocación de arriba).
+- `ammen_anon_key`: Kong exige algún JWT en la ruta de funciones (sin él, 401
+  antes de que la función vea el invoker), así que las llamadas llevan la anon
+  key como `apikey`. No es un secreto — la app la lleva incrustada — pero es la
+  única forma portable de que la SQL la lea.
+
+```sql
+select vault.create_secret('<valor>', 'ammen_email_invoke_secret');
+select vault.create_secret('<valor>', 'ammen_push_invoke_secret');
+select vault.create_secret('<valor>', 'ammen_avatar_cleanup_invoke_secret');
+select vault.create_secret('<anon key del proyecto>', 'ammen_anon_key');
+-- Comprobar: cuatro filas, ninguna vacía.
+select name, length(decrypted_secret) > 0 as tiene_valor
+  from vault.decrypted_secrets
+ where name in ('ammen_email_invoke_secret', 'ammen_push_invoke_secret',
+                'ammen_avatar_cleanup_invoke_secret', 'ammen_anon_key')
+ order by name;
+```
+
+Sin su fila, cada programa responde `missing_secret` (con qué falta) y no hace
+nada: las filas de las colas no se pierden, esperan.
 
 Valores típicos de staging (no son secretos de marca; sí pasan por Secret
 Manager porque las Edge Functions no tienen otro canal de env remoto):

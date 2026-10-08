@@ -152,6 +152,7 @@ jobs:
           resend-webhook/index.ts
           send-intercession-push/index.ts
           generate-prayer-plan/index.ts
+          cleanup-avatars/index.ts
 
   # Salud de las dependencias de Expo: `expo-doctor` (22 comprobaciones) y
   # `expo install --check` (¿cada paquete de Expo en la versión que pide el SDK?).

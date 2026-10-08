@@ -31,9 +31,14 @@ Orden exacto en `docs/runbooks/staging-web.md` (secciones «Migraciones rescatad
    ejecute funciones que no debe).
 6. Configurar la URL base de avatares del proyecto (ajuste que documenta el runbook).
 7. Desplegar las Edge Functions (`send-email`, `enqueue-emails`, `email-unsubscribe`,
-   `resend-webhook`, `send-intercession-push`, `generate-prayer-plan`) con sus secretos
-   en Secret Manager **y** en Vault (`AMMEN_EMAIL_INVOKE_SECRET`,
-   `AMMEN_PUSH_INVOKE_SECRET` son **obligatorios**: sin ellos las funciones se cierran).
+   `resend-webhook`, `send-intercession-push`, `generate-prayer-plan`,
+   `cleanup-avatars`) con sus secretos en Secret Manager **y** en Vault
+   (`AMMEN_EMAIL_INVOKE_SECRET`, `AMMEN_PUSH_INVOKE_SECRET` y
+   `AMMEN_AVATAR_CLEANUP_INVOKE_SECRET` son **obligatorios**: sin ellos las
+   funciones se cierran; y en Vault además los cuatro valores que los
+   programas de pg_cron leen (los tres `*_invoke_secret` y `ammen_anon_key`,
+   que Kong exige como `apikey` en cada llamada) —
+   docs/runbooks/secrets-sync.md.
 8. Antes de encender el programador: `skip_stale_queue_rows(...)` para no enviar de golpe lo
    acumulado desde agosto; después `scheduler_settings.enabled = true` (enciende también
    `run_email_jobs` y la retención).

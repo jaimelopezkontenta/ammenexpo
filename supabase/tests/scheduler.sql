@@ -79,8 +79,9 @@ commit;
 -- ===========================================================================
 select pg_temp.assert(
   (select count(*) from cron.job
-    where jobname in ('ammen-queue-drains', 'ammen-email-jobs', 'ammen-retention')) = 3,
-  'pg_cron has the three scheduler jobs');
+    where jobname in ('ammen-queue-drains', 'ammen-email-jobs', 'ammen-retention',
+                      'ammen-avatar-cleanup')) = 4,
+  'pg_cron has the four scheduler jobs');
 
 select pg_temp.assert(
   (select not enabled from public.scheduler_settings where id),
@@ -138,6 +139,11 @@ begin;
 
 update public.scheduler_settings set enabled = true where id;
 
+-- Kong exige un JWT en la ruta de funciones: las llamadas llevan la anon key
+-- (20261008101508), que el test siembra para no ensuciar los asserts de
+-- missing_secret de cada secreto.
+select vault.create_secret('anon-key-prueba', 'ammen_anon_key');
+
 select pg_temp.assert(
   (public.run_queue_drains() -> 'called') = '[]'::jsonb,
   'with nothing pending, no function is called');
@@ -167,6 +173,13 @@ select pg_temp.assert(
     where url = 'http://kong:8000/functions/v1/send-email'
     order by id desc limit 1) = 'secreto-de-prueba',
   'the call carries the invoke secret from Vault');
+
+select pg_temp.assert(
+  (select headers ->> 'apikey'
+     from net.http_request_queue
+    where url = 'http://kong:8000/functions/v1/send-email'
+    order by id desc limit 1) = 'anon-key-prueba',
+  'and the call carries the anon key Kong requires, from Vault');
 
 -- S2 en correo: programado para mañana no es trabajo de ahora.
 update public.email_outbox set status = 'sent' where idempotency_key = 'scheduler-test-on';
@@ -217,6 +230,67 @@ select pg_temp.assert(
     where url = 'http://kong:8000/functions/v1/send-intercession-push'
     order by id desc limit 1) = 'secreto-push',
   'and that call carries the push secret, not the email one');
+
+select pg_temp.assert(
+  (select headers ->> 'apikey'
+     from net.http_request_queue
+    where url = 'http://kong:8000/functions/v1/send-intercession-push'
+    order by id desc limit 1) = 'anon-key-prueba',
+  'and that call carries the anon key too');
+
+rollback;
+-- ===========================================================================
+-- run_avatar_cleanup: el barrido de avatares huérfanos (20261008075543)
+--
+-- No borra nada él: decide si llamar a la edge function con el mismo contrato
+-- de puertas que las colas. La detección de huérfanos es de orphans.ts (Vitest).
+-- ===========================================================================
+begin;
+select pg_temp.assert(
+  has_table_privilege('service_role', 'public.profiles', 'SELECT'),
+  'service_role can read profiles: the sweep needs to know which file each user references');
+
+select pg_temp.assert(
+  public.run_avatar_cleanup() ->> 'reason' = 'disabled',
+  'switched off, the avatar sweep does not run');
+
+select pg_temp.assert(
+  (select count(*) from net.http_request_queue where url like '%/cleanup-avatars') = 0,
+  'and no call is queued');
+
+update public.scheduler_settings set enabled = true where id;
+
+select vault.create_secret('anon-key-prueba', 'ammen_anon_key');
+
+select pg_temp.assert(
+  public.run_avatar_cleanup()
+    = '{"ok": false, "reason": "missing_secret", "missing": ["ammen_avatar_cleanup_invoke_secret"]}'::jsonb,
+  'with no secret in Vault it says missing_secret, not ok');
+
+select pg_temp.assert(
+  (select count(*) from net.http_request_queue where url like '%/cleanup-avatars') = 0,
+  'and it does not call cleanup-avatars without the invoker header');
+
+select vault.create_secret('secreto-avatar', 'ammen_avatar_cleanup_invoke_secret');
+
+select pg_temp.assert(
+  public.run_avatar_cleanup()
+    = '{"ok": true, "called": "cleanup-avatars"}'::jsonb,
+  'with the secret it calls cleanup-avatars');
+
+select pg_temp.assert(
+  (select headers ->> 'x-ammen-invoker'
+     from net.http_request_queue
+    where url = 'http://kong:8000/functions/v1/cleanup-avatars'
+    order by id desc limit 1) = 'secreto-avatar',
+  'and that call carries the avatar secret from Vault');
+
+select pg_temp.assert(
+  (select headers ->> 'apikey'
+     from net.http_request_queue
+    where url = 'http://kong:8000/functions/v1/cleanup-avatars'
+    order by id desc limit 1) = 'anon-key-prueba',
+  'and that call carries the anon key Kong requires');
 
 rollback;
 
