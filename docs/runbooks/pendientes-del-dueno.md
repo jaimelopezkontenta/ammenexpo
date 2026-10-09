@@ -11,9 +11,10 @@ programador de colas los hace una persona, nunca CI ni un agente
 
 ## 1. Staging (lo más urgente: hay un arreglo de seguridad esperando)
 
-La fuga del chat de círculos (quien sale de un círculo seguía leyendo y escribiendo)
-está corregida en el repo pero **sigue abierta en staging hasta el `db push`**.
-Staging (`ammen-staging`, Supabase `syprzdjznuppckenuaua`) estaba pausado.
+La fuga del chat de círculos (quien sale de un círculo seguía leyendo y
+escribiendo) **está cerrada en staging desde el 2026-10-09** (primer push tras
+el rescate; `20260929062118_circle_chat_membership`). Staging (`ammen-staging`,
+Supabase `syprzdjznuppckenuaua`) está restaurado y activo.
 
 Orden exacto en `docs/runbooks/staging-web.md` (secciones «Migraciones rescatadas»,
 «Programador de colas» y «Rollback»). Resumen:
@@ -43,6 +44,12 @@ Orden exacto en `docs/runbooks/staging-web.md` (secciones «Migraciones rescatad
    acumulado desde agosto; después `scheduler_settings.enabled = true` (enciende también
    `run_email_jobs` y la retención).
 9. Smoke remoto (sección «Smoke remoto» del runbook) y, solo entonces, desplegar la web.
+
+**Estado 2026-10-09:** pasos 1–6 hechos (proyecto restaurado; backup
+`.tmp/staging-backup-2026-10-09.sql`; 8 versiones reparadas como revertidas
+(incluida `20260908100000`, que era la export original); 47 migraciones
+aplicadas hasta `20261008101508`; R1 + catálogo + legado ACL verificados —
+ver 4a; URL de avatares configurada, 0 URLs ajenas). Quedan 7, 8 y 9.
 
 `generate-prayer-plan` cambió sus códigos de respuesta (400 con motivo, 500
 `persist_failed`/`claim_failed`, 503 `auth_unavailable`/`not_configured`); la app ya los
@@ -125,13 +132,18 @@ si vuelve a aparecer uno. Lo que queda, por prioridad:
    (que lo filtra) y en los correos (`gender`). **Hecho el 2026-10-05**: `validate_onboarding_answers`
    (`20261005071900`, forma y tamaño — no catálogo, que ya filtran lectura y prompt) con 12
    assertions en `flows.sql`.
-4. Los privilegios por defecto de `public` dan TRUNCATE, REFERENCES, TRIGGER y MAINTAIN a `anon` y
-   `authenticated` en cada tabla nueva. PostgREST no los expone, pero sobran. **A medias el
-   2026-10-05**: ninguna tabla los concede hoy (verificado) y el catálogo de `rls.sql` ya los
-   prohíbe junto a INSERT/UPDATE; pero la REGLA por defecto sigue dándolos y solo un superusuario
-   la recorta (las migraciones corren como `postgres` y no pueden). **Paso manual pendiente por
-   entorno** (local hecho; falta staging y, cuando exista, producción): como superusuario,
-   reescribir la regla `supabase_admin|public|r` a `postgres,service_role=ALL + anon,authenticated=arwd`.
+4. Los privilegios por defecto de `public` daban TRUNCATE, REFERENCES, TRIGGER y
+   MAINTAIN (y, en proyectos antiguos, `arwd` completo) a `anon` y `authenticated`
+   en cada tabla nueva. PostgREST no expone los cuatro últimos, pero sobran.
+   **Local hecho el 2026-10-05; staging hecho el 2026-10-09** (psql como
+   superusuario `postgres`, vía Docker; `alter default privileges ... revoke`).
+   La regla quedó idéntica a la local: tablas `postgres=ALL, service_role=Dxtm`
+   y nada para `anon`/`authenticated`; secuencias, solo UPDATE para los roles de
+   API. **Ojo:** el texto anterior decía «reescribir la regla
+   `supabase_admin|public|r` a `postgres,service_role=ALL + anon,authenticated=arwd`»
+   — estaba desactualizado; la regla válida es la de la local, que no da
+   escrituras de `anon`/`authenticated` por defecto (el catálogo de `rls.sql` lo
+   exige para toda tabla, también las futuras). **Falta producción, cuando exista.**
 
 **Tras el `db push` a staging**, además de lo del runbook: comprobar los permisos con
 `information_schema.column_privileges` (`grantee = 'authenticated'`) y buscar rastro de abusos
@@ -153,6 +165,22 @@ de alguien que no es del círculo o con `last_read_at` en el futuro; `conversati
 `AAAA-MM-DD`; `groups.streak_count` mayor que los días de su plan; y `email_outbox` con
 `template = 'waitlist'` a una dirección que no es la de la cuenta (ya enviados: no se deshacen; la
 migración alinea las filas de `plus_waitlist`).
+
+**Verificado el 2026-10-09** (primer push, 47 migraciones hasta
+`20261008101508`): catálogo del final de `rls.sql` vacío; R1 en verde (anon solo
+las 8 de la lista, 0 en colas/admin para `authenticated`, regla de funciones
+`{postgres=X/postgres}`); Vault con `ammen_email_hmac_secret` y columna vieja
+vacia; `email_lifecycle` aplicada (la remota `20260908100000` era la
+`export_personal_collections` original: revertida antes del push, confirmado con
+`to_regclass('public.email_preferences')` en falso). Staging era un proyecto
+antiguo: 32 tablas daban `arwd` a `anon` y quedaban restos a `authenticated`
+(166 `revoke` por diff contra la local; ver la sección «Tablas con legado» del
+runbook); después, `pg_default_acl` idéntico al de la local. Trazas de abuso:
+todo 0 — 0 admins, 0 tokens malformados, 0 `owner_id` descuadrados, 0 fechas
+futuras, 0 miembros fuera del círculo, 0 `share_links` de grupo activos, 0
+colas pendientes; solo 2 `profile_settings` con términos aceptados antes del
+2026-08-13 (cuentas de test de agosto, `terms_version` 2026-08-02: legítimas,
+no abuso).
 
 ## 4b. Producto: lo que quedó sin pantalla
 

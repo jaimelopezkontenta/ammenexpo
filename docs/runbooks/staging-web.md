@@ -215,10 +215,16 @@ leer su historial. El próximo push, en este orden:
 4. `npx supabase db push --linked --dry-run`, revisar la lista y después sin
    `--dry-run`.
 5. Anotar aquí la última versión aplicada en staging:
-   _(pendiente: primer push tras el rescate)_.
+   `20261008101508` (scheduler_calls_api_key), aplicada el 2026-10-09 —
+   primer push tras el rescate: 47 migraciones, de `20260908100000`
+   (email_lifecycle; la remota era la export_personal_collections original,
+   revertida antes del push) hasta la ola del 2026-10-08.
 
-Hasta ese push, la fuga del chat de círculos (quien sale sigue leyendo) sigue
-abierta en staging. Siempre la base primero y la web después.
+La fuga del chat de círculos (quien sale sigue leyendo) está cerrada en
+staging desde el 2026-10-09: `20260929062118_circle_chat_membership` reescribió
+`is_conversation_member` para que una `conversation_members` vieja no dé
+lectura ni escritura en el chat del círculo. Siempre la base primero y la web
+después.
 
 ## Programador de colas (Oleada 1b, 2026-09-29)
 
@@ -364,6 +370,18 @@ Dos pasos a mano, en el SQL Editor, **justo después del push**:
    ```
    La lista completa de funciones cerradas está en `supabase/tests/rls.sql`
    (sección «El catálogo, entero»).
+
+**Tablas con legado en proyectos antiguos** (descubierto en staging,
+2026-10-09): los proyectos creados antes del barrido daban `arwd` de tabla
+entera a `anon`/`authenticated` y la regla por defecto lo reproducía en cada
+tabla nueva. Las migraciones del barrido solo tocan lo que ellas conceden, no
+limpian el legado. Arreglo puntual: diff de `relacl` de todas las tablas de
+`public` (la local es el estado objetivo) contra el entorno y `revoke` de los
+bits de más de `anon`/`authenticated` (en staging, 166 revokes); después,
+`alter default privileges ... revoke` hasta que `pg_default_acl` sea idéntico
+al de la local (tablas: `postgres=ALL, service_role=Dxtm` y nada para los roles
+de API; secuencias: solo UPDATE para estos). Verificar con la consulta de
+catálogo del final de `rls.sql` (tiene que salir vacía).
 
 ## Secreto de los enlaces de baja, en Vault (Oleada 4b, 2026-09-29)
 
